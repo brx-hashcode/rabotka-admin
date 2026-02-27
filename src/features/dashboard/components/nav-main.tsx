@@ -29,7 +29,7 @@ export const NavMain = ({
               variant="outline"
             >
               <IconMessage className="size-4" />
-              <span>Messages</span>
+              <span>Direct messages</span>
             </Button>
           </SidebarMenuItem>
         </SidebarMenu>
