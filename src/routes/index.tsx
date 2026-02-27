@@ -1,15 +1,44 @@
-import { Button } from "#/components/ui/button";
-import { ThemeToggle } from "#/components/theme-toggle";
-import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react"
+import { createFileRoute } from "@tanstack/react-router"
 
-export const Route = createFileRoute("/")({ component: App });
+import dashboardData from "#/app/dashboard/data.json"
+import { AppSidebar } from "#/components/app-sidebar"
+import { ChartAreaInteractive } from "#/components/chart-area-interactive"
+import { DataTable, schema } from "#/components/data-table"
+import { SectionCards } from "#/components/section-cards"
+import { SiteHeader } from "#/components/site-header"
+import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar"
+import type { z } from "zod"
 
-function App() {
+export const Route = createFileRoute("/")({
+  component: DashboardPage,
+})
+
+function DashboardPage() {
   return (
-    <div>
-      <h1>Hello World</h1>
-      <Button>Click me</Button>
-      <ThemeToggle />
-    </div>
-  );
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
+              <DataTable data={dashboardData as z.infer<typeof schema>[]} />
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  )
 }
