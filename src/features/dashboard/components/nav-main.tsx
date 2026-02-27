@@ -25,8 +25,8 @@ export const NavMain = ({
           <SidebarMenuItem className="flex items-center gap-2">
             <Button
               size="sm"
-              className="h-9 w-full justify-start gap-2 px-3 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
+              className="h-9 w-full justify-start gap-2 px-3 group-data-[collapsible=icon]:opacity-0 cursor-pointer"
+              variant="default"
             >
               <IconMessage className="size-4" />
               <span>Direct messages</span>

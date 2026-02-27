@@ -11,6 +11,11 @@
 }
 
 :root {
+  /* Rabotka brand colors (aligned with rabotka-client) */
+  --whatsapp: 142 70% 49%;
+  --whatsapp-dark: 142 72% 42%;
+  --whatsapp-light: 142 60% 95%;
+
   --sea-ink: #173a40;
   --sea-ink-soft: #416166;
   --lagoon: #4fb8b2;
@@ -37,7 +42,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* Use WhatsApp green as primary */
+  --primary: hsl(var(--whatsapp));
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -360,7 +366,8 @@ a {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
+  /* Dark mode primary still uses WhatsApp green */
+  --primary: hsl(var(--whatsapp));
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
