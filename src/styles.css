@@ -387,6 +387,19 @@ a {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Hide scrollbars but keep scroll behavior */
+html,
+body,
+[data-slot="sidebar-inset"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+[data-slot="sidebar-inset"]::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
