@@ -1,4 +1,5 @@
 import { Button } from "#/components/ui/button";
+import { ThemeToggle } from "#/components/theme-toggle";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -8,6 +9,7 @@ function App() {
     <div>
       <h1>Hello World</h1>
       <Button>Click me</Button>
+      <ThemeToggle />
     </div>
   );
 }
