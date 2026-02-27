@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 import {
   IconChartBar,
   IconDashboard,
@@ -6,18 +6,19 @@ import {
   IconFileWord,
   IconFolder,
   IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NavDocuments } from "./nav-documents"
-import { NavMain } from "./nav-main"
-import { NavSecondary } from "./nav-secondary"
-import { NavUser } from "./nav-user"
+import rabotkaLogo from "#/assets/rabotka-logo.png";
+
+import { NavDocuments } from "./nav-documents";
+import { NavMain } from "./nav-main";
+import { NavSecondary } from "./nav-secondary";
+import { NavUser } from "./nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -26,13 +27,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "#/components/ui/sidebar"
+} from "#/components/ui/sidebar";
+import { Link } from "@tanstack/react-router";
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Rabotka",
+    email: "admin@rabotka",
+    avatar: rabotkaLogo,
   },
   navMain: [
     { title: "Dashboard", url: "#", icon: IconDashboard },
@@ -51,7 +53,7 @@ const data = {
     { name: "Reports", url: "#", icon: IconReport },
     { name: "Word Assistant", url: "#", icon: IconFileWord },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -61,12 +63,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+              <Link to="/" aria-label="Rabotka dashboard">
+                <img
+                  src={rabotkaLogo}
+                  alt="Rabotka"
+                  className="size-5 rounded-sm"
+                />
+                <span className="text-base font-semibold">Rabotka</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -80,5 +86,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
