@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
+import {
+  getCoreRowModel,
+  useReactTable,
+  type ColumnDef,
+} from "@tanstack/react-table";
 
 import { Table } from "#/components/table/table";
 import { TableBottom } from "#/components/table/table-bottom";
@@ -11,14 +15,10 @@ export type DataTableProps<TData, TValue> = Readonly<{
   data: TData[];
   columns: ColumnDef<TData, TValue>[];
   isLoading?: boolean;
-  /** When true, shows footer with pagination (TableBottom). Same as showFooter for paginated tables. */
   isPaginated?: boolean;
-  /** Total item count from server (required when isPaginated is true). */
   totalCount?: number;
-  /** Default page size when not in URL (e.g. 10). Passed to TableBottom as initialLimit. */
   initialPageSize?: number;
   header?: ReactNode;
-  /** Custom footer content when not paginated. Footer is shown when isPaginated or footer is provided. */
   footer?: ReactNode;
   emptyMessage?: string;
   getRowId?: (row: TData) => string;
@@ -57,18 +57,11 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col gap-0 overflow-hidden rounded-lg border">
       {header != null && <TableHeader>{header}</TableHeader>}
-      <Table
-        table={table}
-        isLoading={isLoading}
-        emptyMessage={emptyMessage}
-      />
+      <Table table={table} isLoading={isLoading} emptyMessage={emptyMessage} />
       {showFooter && (
         <TableFooter>
           {isPaginated ? (
-            <TableBottom
-              total={totalCount}
-              initialLimit={initialPageSize}
-            />
+            <TableBottom total={totalCount} initialLimit={initialPageSize} />
           ) : (
             footer
           )}

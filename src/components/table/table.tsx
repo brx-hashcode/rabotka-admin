@@ -1,7 +1,4 @@
-import {
-  flexRender,
-  type Table as TableInstance,
-} from "@tanstack/react-table";
+import { flexRender, type Table as TableInstance } from "@tanstack/react-table";
 
 import {
   Table as UITable,
@@ -20,17 +17,16 @@ type TableProps<TData> = Readonly<{
 
 const SKELETON_ROWS = 4;
 
-function SkeletonLoader<TData>({
-  columnCount,
-}: {
-  columnCount: number;
-}) {
+const SkeletonLoader = ({ columnCount }: Readonly<{ columnCount: number }>) => {
   return (
     <>
       {Array.from({ length: SKELETON_ROWS }).map((_, rowIndex) => (
-        <TableRow key={`skeleton-${rowIndex}`}>
+        <TableRow key={`skeleton-${rowIndex + 1}`}>
           {Array.from({ length: columnCount }).map((_, colIndex) => (
-            <TableCell key={`skeleton-${rowIndex}-${colIndex}`} className="h-12">
+            <TableCell
+              key={`skeleton-${rowIndex}-${colIndex}`}
+              className="h-12"
+            >
               <div className="bg-muted h-6 w-full animate-pulse rounded" />
             </TableCell>
           ))}
@@ -38,7 +34,7 @@ function SkeletonLoader<TData>({
       ))}
     </>
   );
-}
+};
 
 export function Table<TData>({
   table,
@@ -59,7 +55,7 @@ export function Table<TData>({
                   ? null
                   : flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
               </TableHead>
             ))}
@@ -77,20 +73,14 @@ export function Table<TData>({
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
             </TableRow>
           ))
         ) : (
           <TableRow>
-            <TableCell
-              colSpan={columnCount}
-              className="h-24 text-center"
-            >
+            <TableCell colSpan={columnCount} className="h-24 text-center">
               {emptyMessage}
             </TableCell>
           </TableRow>

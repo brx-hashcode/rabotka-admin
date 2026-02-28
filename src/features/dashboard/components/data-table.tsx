@@ -280,7 +280,6 @@ export const DataTable = ({
           isLoading={false}
           isPaginated={false}
           getRowId={(row) => row.id.toString()}
-          enableRowSelection
         />
       </TabsContent>
       <TabsContent
