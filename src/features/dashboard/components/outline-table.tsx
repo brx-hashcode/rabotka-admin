@@ -152,7 +152,7 @@ export const DataTable = ({
   data: z.infer<typeof schema>[];
 }>) => {
   const [activeTab, setActiveTab] = useQueryState(
-    "recentActivitiesTab",
+    "selected-recent-activity-tab",
     parseAsStringEnum<RecentActivitiesTab>(
       RECENT_ACTIVITIES_TABS.map((tab) => tab.value),
     ).withDefault(DEFAULT_RECENT_ACTIVITIES_TAB),

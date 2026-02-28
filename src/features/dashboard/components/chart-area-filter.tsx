@@ -20,7 +20,7 @@ const TIME_RANGE_OPTIONS: { label: string; value: TimeRange }[] = [
 
 export const ChartAreaFilter = () => {
   const [timeRange, setTimeRange] = useQueryState(
-    "timeRange",
+    "selected-time-range",
     parseAsStringEnum<TimeRange>(
       TIME_RANGE_OPTIONS.map((option) => option.value),
     ).withDefault(TIME_RANGE_OPTIONS[0].value),
