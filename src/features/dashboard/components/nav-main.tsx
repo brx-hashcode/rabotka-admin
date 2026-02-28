@@ -9,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "#/components/ui/sidebar";
+import { useCallback } from "react";
 
 export const NavMain = ({
   items,
@@ -21,6 +22,13 @@ export const NavMain = ({
 }>) => {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
+
+  const isActiveLink = useCallback(
+    (url: string) => {
+      return pathname === url || (url !== "/" && pathname.startsWith(url));
+    },
+    [pathname],
+  );
 
   return (
     <SidebarGroup>
@@ -39,9 +47,7 @@ export const NavMain = ({
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive =
-              pathname === item.url ||
-              (item.url !== "/" && pathname.startsWith(item.url));
+            const isActive = isActiveLink(item.url);
 
             return (
               <SidebarMenuItem key={item.title}>
