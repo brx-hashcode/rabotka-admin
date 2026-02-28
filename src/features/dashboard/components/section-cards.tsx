@@ -7,7 +7,7 @@ import {
 const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
   {
     id: "revenue",
-    title: "Total Revenue",
+    title: "Revenue generated",
     value: formatXAF(2_348_000),
     trend: "up",
     trendPercentage: 9.2,
@@ -16,7 +16,7 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
   },
   {
     id: "profiles",
-    title: "Total Profiles",
+    title: "Profiles created",
     value: "2,146",
     trend: "up",
     trendPercentage: 6.4,
@@ -25,7 +25,7 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
   },
   {
     id: "jobs",
-    title: "Active Jobs",
+    title: "Jobs posted",
     value: "312",
     trend: "up",
     trendPercentage: 11.8,
@@ -34,7 +34,7 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
   },
   {
     id: "applications",
-    title: "Total Applications",
+    title: "Applications received",
     value: "1,987",
     trend: "up",
     trendPercentage: 7.1,

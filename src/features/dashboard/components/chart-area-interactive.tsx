@@ -1,7 +1,7 @@
-import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import * as React from "react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
-import { useIsMobile } from "#/hooks/use-mobile"
+import { useIsMobile } from "#/hooks/use-mobile";
 import {
   Card,
   CardAction,
@@ -9,23 +9,23 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "#/components/ui/card"
+} from "#/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "#/components/ui/chart"
+} from "#/components/ui/chart";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#/components/ui/select"
-import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group"
+} from "#/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
-export const description = "An interactive area chart"
+export const description = "An interactive area chart";
 
 const chartData = [
   { date: "2024-04-01", jobCreated: 222, jobFilled: 150 },
@@ -119,42 +119,42 @@ const chartData = [
   { date: "2024-06-28", jobCreated: 149, jobFilled: 200 },
   { date: "2024-06-29", jobCreated: 103, jobFilled: 160 },
   { date: "2024-06-30", jobCreated: 446, jobFilled: 400 },
-]
+];
 
 const chartConfig = {
   jobs: { label: "Jobs" },
   jobCreated: { label: "Job created", color: "#3b82f6" },
   jobFilled: { label: "Job filled", color: "var(--primary)" },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function ChartAreaInteractive() {
-  const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState("90d")
+  const isMobile = useIsMobile();
+  const [timeRange, setTimeRange] = React.useState("90d");
 
   React.useEffect(() => {
-    if (isMobile) setTimeRange("7d")
-  }, [isMobile])
+    if (isMobile) setTimeRange("7d");
+  }, [isMobile]);
 
   const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
-    const referenceDate = new Date("2024-06-30")
-    let daysToSubtract = 90
-    if (timeRange === "30d") daysToSubtract = 30
-    else if (timeRange === "7d") daysToSubtract = 7
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
-    return date >= startDate
-  })
+    const date = new Date(item.date);
+    const referenceDate = new Date("2024-06-30");
+    let daysToSubtract = 90;
+    if (timeRange === "30d") daysToSubtract = 30;
+    else if (timeRange === "7d") daysToSubtract = 7;
+    const startDate = new Date(referenceDate);
+    startDate.setDate(startDate.getDate() - daysToSubtract);
+    return date >= startDate;
+  });
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Jobs</CardTitle>
+        <CardTitle>Job Activity</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Job created vs job filled for the last 3 months
+            Jobs posted vs jobs filled over the last 3 months
           </span>
-          <span className="@[540px]/card:hidden">Last 3 months</span>
+          <span className="@[540px]/card:hidden">Last 3 months activity</span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -230,11 +230,11 @@ export function ChartAreaInteractive() {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
+                const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
-                })
+                });
               }}
             />
             <ChartTooltip
@@ -269,5 +269,5 @@ export function ChartAreaInteractive() {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }
