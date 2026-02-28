@@ -254,11 +254,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
 ];
 
-export function DataTable({
+export const DataTable = ({
   data,
-}: {
+}: Readonly<{
   data: z.infer<typeof schema>[];
-}) {
+}>) => {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -481,7 +481,7 @@ export function DataTable({
       </TabsContent>
     </Tabs>
   );
-}
+};
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -503,7 +503,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+const TableCellViewer = ({
+  item,
+}: Readonly<{ item: z.infer<typeof schema> }>) => {
   const isMobile = useIsMobile();
 
   return (
@@ -660,4 +662,4 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
       </DrawerContent>
     </Drawer>
   );
-}
+};
