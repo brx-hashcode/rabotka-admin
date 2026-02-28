@@ -10,4 +10,3 @@ export {
   SiteHeader,
   schema,
 } from "./components"
-export { DashboardLayout } from "./layouts/dashboard-layout"

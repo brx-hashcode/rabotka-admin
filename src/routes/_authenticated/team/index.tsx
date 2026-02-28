@@ -1,12 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Layout } from "#/layouts";
 import TeamPage from "#/pages/team";
-import { DashboardLayout } from "#/features/dashboard";
 
 export const Route = createFileRoute("/_authenticated/team/")({
   component: () => (
-    <DashboardLayout>
+    <Layout
+      title="Team"
+      description="Coming soon."
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Team" },
+      ]}
+    >
       <TeamPage />
-    </DashboardLayout>
+    </Layout>
   ),
 });

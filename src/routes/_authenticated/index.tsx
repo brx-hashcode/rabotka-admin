@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Layout } from "#/layouts";
 import DashboardPage from "#/pages/dashboard";
-import { DashboardLayout } from "#/features/dashboard";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: () => (
-    <DashboardLayout>
+    <Layout>
       <DashboardPage />
-    </DashboardLayout>
+    </Layout>
   ),
 });

@@ -55,7 +55,7 @@ export const NavMain = ({
                   asChild
                   tooltip={item.title}
                   isActive={isActive}
-                  className="data-[active=true]:text-white"
+                  className="text-white data-[active=true]:text-white"
                 >
                   <Link to={item.url}>
                     {item.icon && <item.icon />}
