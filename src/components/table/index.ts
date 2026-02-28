@@ -1,3 +1,9 @@
+export {
+  getCommonColumns,
+  type ColumnsActionsComponent,
+  type ColumnsActionsProps,
+  type DataTableColumnMeta,
+} from "./data-table-column";
 export { DataTable, type DataTableProps } from "./data-table";
 export { Table } from "./table";
 export { TableBottom } from "./table-bottom";
