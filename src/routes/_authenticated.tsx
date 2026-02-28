@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated")({
-  component: RouteComponent,
-});
+  beforeLoad: async () => {
+    console.log("beforeLoad check for the user auth status");
+  },
 
-function RouteComponent() {
-  return <div>Hello "/_authenticated"!</div>;
-}
+  component: Outlet,
+});
