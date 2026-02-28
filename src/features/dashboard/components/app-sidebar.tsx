@@ -1,14 +1,14 @@
 import * as React from "react";
 import {
-  IconChartBar,
+  IconBriefcase,
   IconDashboard,
   IconDatabase,
+  IconFileText,
   IconFileWord,
-  IconFolder,
   IconHelp,
-  IconListDetails,
   IconReport,
   IconSettings,
+  IconUser,
   IconUsers,
 } from "@tabler/icons-react";
 
@@ -36,11 +36,11 @@ const data = {
     avatar: rabotkaLogo,
   },
   navMain: [
-    { title: "Dashboard", url: "#", icon: IconDashboard },
-    { title: "Lifecycle", url: "#", icon: IconListDetails },
-    { title: "Analytics", url: "#", icon: IconChartBar },
-    { title: "Projects", url: "#", icon: IconFolder },
-    { title: "Team", url: "#", icon: IconUsers },
+    { title: "Dashboard", url: "/", icon: IconDashboard },
+    { title: "Profiles", url: "/profiles", icon: IconUser },
+    { title: "Jobs", url: "/jobs", icon: IconBriefcase },
+    { title: "Applications", url: "/applications", icon: IconFileText },
+    { title: "Team", url: "/team", icon: IconUsers },
   ],
   navSecondary: [
     { title: "Settings", url: "#", icon: IconSettings },
