@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 import { Providers } from "#/app/providers";
 import "../styles.css";
@@ -12,7 +13,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <Providers>
-      <Outlet />
+      <NuqsAdapter>
+        <Outlet />
+      </NuqsAdapter>
       <TanStackDevtools
         config={{
           position: "bottom-right",
@@ -27,3 +30,4 @@ function RootComponent() {
     </Providers>
   );
 }
+
