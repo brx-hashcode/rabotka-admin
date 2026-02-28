@@ -1,193 +1,124 @@
-Welcome to your new TanStack Start app! 
+# Rabotka Admin
 
-# Getting Started
+The **admin portal** for **Rabotka** — the WhatsApp-based job platform connecting informal workers and employers in African cities, starting with Brazzaville, Congo. This is the internal operations dashboard, not the public landing page.
 
-To run this application:
+## About Rabotka Admin
+
+Rabotka Admin is the **admin portal**: the internal dashboard used by platform operators and partners to monitor activity, manage workers and employers, and run the platform. It shares Rabotka’s mission — **Find work. Find help. Directly on WhatsApp** — and is built for the same values: simple, trusted, and focused on local impact. The public-facing site and user experience live in the separate **rabotka-client** (landing) project.
+
+### Key Features
+
+- **Dashboard & Analytics** — Overview of platform usage, trends, and key metrics
+- **Worker & Employer Management** — View and manage verified profiles and connections
+- **Content & Configuration** — Centralized content and config for consistency across the product
+- **Modern UI** — Responsive dashboard with sidebar navigation and theme support
+- **Data Tables & Charts** — Tables and interactive charts for exploring data
+- **Aligned with Rabotka** — Same design language and philosophy as the landing/client app
+
+### Vision
+
+The admin portal supports the same vision as Rabotka: informal workers and employers in African cities, connected simply and reliably. This internal dashboard keeps operations transparent, efficient, and aligned with that mission.
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Build Tool | Vite 7 |
+| Framework | React 19 |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4 + tw-animate-css |
+| UI Components | shadcn/ui (Radix UI primitives) |
+| Routing | TanStack Router (file-based) |
+| Charts | Recharts |
+| Tables | TanStack Table |
+| Drag & Drop | @dnd-kit (sortable) |
+| Icons | Lucide React, Tabler Icons |
+| Testing | Vitest + Testing Library |
+
+## Project Structure
+
+```
+src/
+├── main.tsx          # App entry
+├── router.tsx        # TanStack Router setup
+├── routeTree.gen.ts  # Generated route tree (do not edit)
+├── styles.css        # Global styles
+├── app/              # App-level providers and data
+│   ├── providers/    # React providers (theme, etc.)
+│   └── dashboard/    # Dashboard data (e.g. data.json)
+├── assets/           # Static assets (images, etc.)
+├── config/           # App configuration
+├── content/          # Content and copy
+│   └── dashboard/    # Dashboard content
+├── components/       # Shared UI components
+│   ├── ui/           # shadcn/ui components (sidebar, button, card, chart, etc.)
+│   ├── theme-provider.tsx
+│   └── theme-toggle.tsx
+├── features/         # Feature-based modules
+│   └── dashboard/
+│       ├── components/   # AppSidebar, SiteHeader, charts, data-table, nav-*
+│       └── layouts/     # Dashboard layout (sidebar + main)
+├── hooks/            # Custom React hooks (e.g. use-mobile)
+├── lib/              # Utilities (e.g. utils.ts)
+├── pages/            # Page components (e.g. dashboard.tsx)
+└── routes/           # TanStack Router file-based routes
+    ├── __root.tsx    # Root layout
+    └── index.tsx     # Index route
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm (recommended) or npm
+
+### Installation
 
 ```bash
+# Clone the repository (from project root)
+git clone https://github.com/bruxx-6243/rabotka-admin.git
+cd rabotka-admin
+
+# Install dependencies
 pnpm install
+
+# Start development server (port 3000)
 pnpm dev
 ```
 
-# Building For Production
+### Available Scripts
 
-To build this application for production:
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start development server with hot reload |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview production build |
+| `pnpm test` | Run tests |
 
-```bash
-pnpm build
-```
+## Development Notes
 
-## Testing
+### Feature Organization
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+Dashboard logic lives under `src/features/dashboard/`:
 
-```bash
-pnpm test
-```
+- **`layouts/`** — `dashboard-layout.tsx` (SidebarProvider, AppSidebar, SiteHeader, main content)
+- **`components/`** — AppSidebar, SiteHeader, nav-main, nav-user, nav-documents, nav-secondary, chart-area-interactive, data-table, section-cards
 
-## Styling
+App-level providers and dashboard data live under `src/app/` (e.g. `providers/index.tsx`, `dashboard/data.json`).
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+### Component Organization
 
-### Removing Tailwind CSS
+- **`src/components/ui/`** — shadcn/ui base components (sidebar, button, card, chart, table, etc.)
+- **`src/components/`** — theme-provider, theme-toggle
+- **`src/features/dashboard/components/`** — Dashboard-specific UI (AppSidebar, SiteHeader, charts, nav, data-table)
 
-If you prefer not to use Tailwind CSS:
+### Design System
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
+- **Theme** — Light/dark via `next-themes`; shared with Rabotka’s visual identity
+- **Layout** — Sidebar + main content; responsive and accessible
+- **Charts** — Recharts with interactive area charts for dashboard metrics
 
+## License
 
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Private project.
