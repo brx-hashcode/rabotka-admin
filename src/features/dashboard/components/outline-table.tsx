@@ -1,5 +1,6 @@
 import { IconDotsVertical } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useMemo } from "react";
 import { z } from "zod";
 
@@ -24,7 +25,14 @@ import {
   DataTable as ReusableDataTable,
   getCommonColumns,
 } from "#/components/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
+import { Tabs, TabsContent } from "#/components/ui/tabs";
+import {
+  ACTIVE_RECENT_ACTIVITIES_TABS,
+  DEFAULT_RECENT_ACTIVITIES_TAB,
+  RECENT_ACTIVITIES_TABS,
+  RecentActivitiesTabs,
+  type RecentActivitiesTab,
+} from "./recent-activities-tabs";
 
 export const schema = z.object({
   id: z.number(),
@@ -143,43 +151,30 @@ export const DataTable = ({
 }: Readonly<{
   data: z.infer<typeof schema>[];
 }>) => {
+  const [activeTab, setActiveTab] = useQueryState(
+    "recentActivitiesTab",
+    parseAsStringEnum<RecentActivitiesTab>(
+      RECENT_ACTIVITIES_TABS.map((tab) => tab.value),
+    ).withDefault(DEFAULT_RECENT_ACTIVITIES_TAB),
+  );
+
+  const tabValue = activeTab ?? DEFAULT_RECENT_ACTIVITIES_TAB;
+
   return (
     <Tabs
-      defaultValue="outline"
+      value={tabValue}
+      onValueChange={(value) => setActiveTab(value as RecentActivitiesTab)}
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-        </TabsList>
+        <RecentActivitiesTabs />
         <div className="flex items-center gap-2" />
       </div>
       <TabsContent
-        value="outline"
+        value={DEFAULT_RECENT_ACTIVITIES_TAB}
         className="relative flex flex-col gap-4 overflow-auto"
       >
         <ReusableDataTable
@@ -192,16 +187,13 @@ export const DataTable = ({
         />
       </TabsContent>
       <TabsContent
-        value="past-performance"
+        value={ACTIVE_RECENT_ACTIVITIES_TABS[1]}
         className="flex flex-col px-4 lg:px-6"
       >
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
       <TabsContent
-        value="focus-documents"
+        value={ACTIVE_RECENT_ACTIVITIES_TABS[2]}
         className="flex flex-col px-4 lg:px-6"
       >
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>

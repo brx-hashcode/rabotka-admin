@@ -1,9 +1,16 @@
-export { AppSidebar } from "./app-sidebar"
-export { ChartAreaInteractive } from "./chart-area-interactive"
-export { DataTable, schema } from "./outline-table"
-export { NavDocuments } from "./nav-documents"
-export { NavMain } from "./nav-main"
-export { NavSecondary } from "./nav-secondary"
-export { NavUser } from "./nav-user"
-export { SectionCards } from "./section-cards"
-export { SiteHeader } from "./site-header"
+export { AppSidebar } from "./app-sidebar";
+export { ChartAreaInteractive } from "./chart-area-interactive";
+export { DataTable, schema } from "./outline-table";
+export { NavDocuments } from "./nav-documents";
+export { NavMain } from "./nav-main";
+export { NavSecondary } from "./nav-secondary";
+export { NavUser } from "./nav-user";
+export { SectionCards } from "./section-cards";
+export { SiteHeader } from "./site-header";
+export { RecentActivitiesTable } from "./recent-activities-table";
+export {
+  RecentActivitiesTabs,
+  DEFAULT_RECENT_ACTIVITIES_TAB,
+  ACTIVE_RECENT_ACTIVITIES_TABS,
+  type RecentActivitiesTab,
+} from "./recent-activities-tabs";

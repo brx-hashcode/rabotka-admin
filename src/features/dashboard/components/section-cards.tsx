@@ -11,8 +11,8 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
     value: formatXAF(2_348_000),
     trend: "up",
     trendPercentage: 9.2,
-    descriptionLine1: "Revenue increasing steadily",
-    descriptionLine2: "Driven by paid job postings",
+    descriptionLine1: "Total revenue accumulated",
+    descriptionLine2: "Income from paid job postings and penalties",
   },
   {
     id: "profiles",
@@ -20,8 +20,8 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
     value: "2,146",
     trend: "up",
     trendPercentage: 6.4,
-    descriptionLine1: "New users joining weekly",
-    descriptionLine2: "Organic and referral growth",
+    descriptionLine1: "Total number of user profiles ever registered",
+    descriptionLine2: "Includes all users, whether created organically",
   },
   {
     id: "jobs",
@@ -29,8 +29,8 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
     value: "312",
     trend: "up",
     trendPercentage: 11.8,
-    descriptionLine1: "More employers posting jobs",
-    descriptionLine2: "Higher activity than last month",
+    descriptionLine1: "Cumulative number of jobs posted",
+    descriptionLine2: "All job postings from all employers to date",
   },
   {
     id: "applications",
@@ -38,8 +38,8 @@ const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
     value: "1,987",
     trend: "up",
     trendPercentage: 7.1,
-    descriptionLine1: "Healthy candidate engagement",
-    descriptionLine2: "Average 6.3 applications per job",
+    descriptionLine1: "Total number of job applications received",
+    descriptionLine2: "Sum of all job applications submitted by workers",
   },
 ];
 
