@@ -38,7 +38,7 @@ export const schema = z.object({
 
 type OutlineRow = z.infer<typeof schema>;
 
-function OutlineRowActions({ row }: Readonly<{ row: OutlineRow }>) {
+const OutlineRowActions = ({ row }: Readonly<{ row: OutlineRow }>) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,7 +60,7 @@ function OutlineRowActions({ row }: Readonly<{ row: OutlineRow }>) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
 const outlineColumns: ColumnDef<OutlineRow, unknown>[] = [
   {
@@ -131,12 +131,12 @@ const outlineColumns: ColumnDef<OutlineRow, unknown>[] = [
   },
 ];
 
-export function createOutlineColumns(): ColumnDef<OutlineRow, unknown>[] {
+const createOutlineColumns = (): ColumnDef<OutlineRow, unknown>[] => {
   return getCommonColumns<OutlineRow>({
     additionalColumns: outlineColumns,
     columnsActions: OutlineRowActions,
   });
-}
+};
 
 export const DataTable = ({
   data,
