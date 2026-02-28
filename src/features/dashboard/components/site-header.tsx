@@ -1,3 +1,4 @@
+import { DirectMessagesButton } from "#/features/direct-messages-button";
 import { Separator } from "#/components/ui/separator";
 import { ThemeToggle } from "#/components/theme-toggle";
 import { SidebarTrigger } from "#/components/ui/sidebar";
@@ -15,6 +16,7 @@ export function SiteHeader() {
           Потому что каждый заслуживает работу
         </h1>
         <div className="ml-auto flex items-center gap-2">
+          <DirectMessagesButton />
           <ThemeToggle />
         </div>
       </div>

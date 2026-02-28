@@ -1,7 +1,6 @@
-import { IconMessage, type Icon } from "@tabler/icons-react";
+import { type Icon } from "@tabler/icons-react";
 
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Button } from "#/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -33,18 +32,6 @@ export const NavMain = ({
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <Button
-              size="sm"
-              className="h-9 w-full justify-start gap-2 px-3 group-data-[collapsible=icon]:opacity-0 cursor-pointer"
-              variant="default"
-            >
-              <IconMessage className="size-4" />
-              <span>Direct messages</span>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => {
             const isActive = isActiveLink(item.url);

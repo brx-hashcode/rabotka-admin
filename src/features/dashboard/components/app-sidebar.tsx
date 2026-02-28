@@ -1,7 +1,6 @@
 import * as React from "react";
 import {
   IconBriefcase,
-  IconDashboard,
   IconDatabase,
   IconFileText,
   IconFileWord,
@@ -10,6 +9,7 @@ import {
   IconSettings,
   IconUser,
   IconUsers,
+  IconLayoutGrid,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -36,7 +36,7 @@ const data = {
     avatar: rabotkaLogo,
   },
   navMain: [
-    { title: "Dashboard", url: "/", icon: IconDashboard },
+    { title: "Dashboard", url: "/", icon: IconLayoutGrid },
     { title: "Profiles", url: "/profiles", icon: IconUser },
     { title: "Jobs", url: "/jobs", icon: IconBriefcase },
     { title: "Applications", url: "/applications", icon: IconFileText },

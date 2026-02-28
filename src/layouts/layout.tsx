@@ -40,9 +40,7 @@ export function Layout({
     if (!hasBreadcrumbs && (title != null || description != null)) {
       return (
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          {title != null && (
-            <h1 className="text-2xl font-semibold">{title}</h1>
-          )}
+          {title != null && <h1 className="text-2xl font-semibold">{title}</h1>}
           {description != null && (
             <p className="text-muted-foreground">{description}</p>
           )}
