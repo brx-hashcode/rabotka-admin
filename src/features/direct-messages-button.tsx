@@ -19,11 +19,7 @@ export const DirectMessagesButton = ({
         <span>Direct messages</span>
       </Button>
 
-      {isOpen && (
-        <div className="">
-          <h1>Direct messages</h1>
-        </div>
-      )}
+      <div></div>
     </>
   );
 };

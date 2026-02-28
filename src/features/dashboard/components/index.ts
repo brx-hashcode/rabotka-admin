@@ -1,6 +1,6 @@
 export { AppSidebar } from "./app-sidebar"
 export { ChartAreaInteractive } from "./chart-area-interactive"
-export { DataTable, schema } from "./data-table"
+export { DataTable, schema } from "./outline-table"
 export { NavDocuments } from "./nav-documents"
 export { NavMain } from "./nav-main"
 export { NavSecondary } from "./nav-secondary"
