@@ -100,8 +100,9 @@ export function Table<TData>({
   const columnCount = table.getAllColumns().length;
 
   return (
-    <UITable>
-      <TableHeader className="bg-muted sticky top-0 z-10">
+    <div className="overflow-hidden rounded-lg border">
+      <UITable>
+        <TableHeader className="bg-muted sticky top-0 z-10">
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
@@ -131,6 +132,7 @@ export function Table<TData>({
           emptyMessage={emptyMessage}
         />
       </TableBody>
-    </UITable>
+      </UITable>
+    </div>
   );
 }

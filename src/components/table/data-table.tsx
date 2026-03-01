@@ -4,6 +4,8 @@ import {
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type Table as TableInstance,
+  type VisibilityState,
 } from "@tanstack/react-table";
 
 import { Table } from "#/components/table/table";
@@ -18,7 +20,9 @@ export type DataTableProps<TData, TValue> = Readonly<{
   isPaginated?: boolean;
   totalCount?: number;
   initialPageSize?: number;
-  header?: ReactNode;
+  header?:
+    | ReactNode
+    | ((table: TableInstance<TData>) => ReactNode);
   footer?: ReactNode;
   emptyMessage?: string;
   getRowId?: (row: TData) => string;
@@ -39,25 +43,37 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    state: {
+      ...(enableRowSelection && { rowSelection }),
+      columnVisibility,
+    },
     ...(enableRowSelection && {
       enableRowSelection: true,
-      state: { rowSelection },
       onRowSelectionChange: setRowSelection,
     }),
+    onColumnVisibilityChange: setColumnVisibility,
     ...(getRowId && { getRowId }),
   });
 
   const showFooter = isPaginated || footer != null;
 
+  const headerContent =
+    header == null
+      ? null
+      : typeof header === "function"
+        ? header(table)
+        : header;
+
   return (
-    <div className="flex flex-col gap-0 overflow-hidden rounded-lg border">
-      {header != null && <TableHeader>{header}</TableHeader>}
-      <Table table={table} isLoading={isLoading} emptyMessage={emptyMessage} />
+    <div className="flex flex-col gap-0 overflow-hidden rounded-lg">
+      {headerContent != null && <TableHeader>{headerContent}</TableHeader>}
+      <Table<TData> table={table} isLoading={isLoading} emptyMessage={emptyMessage} />
       {showFooter && (
         <TableFooter>
           {isPaginated ? (

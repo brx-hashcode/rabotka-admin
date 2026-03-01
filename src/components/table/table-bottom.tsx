@@ -23,10 +23,7 @@ type TableBottomProps = Readonly<{
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 
-export function TableBottom({
-  total,
-  initialLimit = 10,
-}: TableBottomProps) {
+export function TableBottom({ total, initialLimit = 10 }: TableBottomProps) {
   const {
     currentPage,
     totalPages,
@@ -48,7 +45,7 @@ export function TableBottom({
   const canGoLast = currentPage < totalPages;
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 px-4 py-3">
+    <div className="flex w-full items-center justify-between gap-4 py-3">
       <div className="flex-1" />
       <div className="flex w-full items-center gap-4 lg:w-fit lg:gap-8">
         <div className="hidden items-center gap-2 lg:flex">

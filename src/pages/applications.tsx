@@ -1,3 +1,7 @@
 export default function ApplicationsPage() {
-  return null;
+  return (
+    <div>
+      <h1>Applications</h1>
+    </div>
+  )
 }

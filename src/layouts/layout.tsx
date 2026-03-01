@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "#/components/ui/breadcrumb";
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
-import { AppSidebar, SiteHeader } from "#/features/dashboard/components";
+import { AppSidebar, SiteHeader } from "#/layouts";
 
 export type LayoutBreadcrumb = Readonly<{ label: string; href?: string }>;
 

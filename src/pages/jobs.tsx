@@ -1,3 +1,7 @@
 export default function JobsPage() {
-  return null;
+  return (
+    <div>
+      <h1>Jobs</h1>
+    </div>
+  )
 }
