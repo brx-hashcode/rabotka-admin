@@ -2,17 +2,23 @@ import type { TableHeaderToolbarFilterOption } from "#/components/table";
 import type { Profile } from "./profile-columns";
 
 export const statusOptions: readonly TableHeaderToolbarFilterOption[] = [
-  { value: "Backlog", label: "Backlog", count: 21 },
-  { value: "Todo", label: "Todo", count: 21 },
-  { value: "In Progress", label: "In Progress", count: 20 },
-  { value: "Done", label: "Done", count: 19 },
-  { value: "Canceled", label: "Canceled", count: 19 },
+  { value: "Backlog", label: "Backlog" },
+  { value: "Todo", label: "Todo" },
+  { value: "In Progress", label: "In Progress" },
+  { value: "Done", label: "Done" },
+  { value: "Canceled", label: "Canceled" },
 ] as const;
 
 export const priorityOptions: readonly TableHeaderToolbarFilterOption[] = [
-  { value: "Low", label: "Low", count: 8 },
-  { value: "Medium", label: "Medium", count: 12 },
-  { value: "High", label: "High", count: 10 },
+  { value: "Low", label: "Low" },
+  { value: "Medium", label: "Medium" },
+  { value: "High", label: "High" },
+] as const;
+
+
+export const whatsappStatusOptions: readonly TableHeaderToolbarFilterOption[] = [
+  { value: "Connected", label: "Connected" },
+  { value: "Disconnected", label: "Disconnected" },
 ] as const;
 
 export const mockProfiles: readonly Profile[] = [

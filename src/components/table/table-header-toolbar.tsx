@@ -26,7 +26,6 @@ import { cn } from "#/lib/utils";
 export type TableHeaderToolbarFilterOption = Readonly<{
   value: string;
   label: string;
-  count?: number;
 }>;
 
 export type TableHeaderToolbarFilter = Readonly<{
@@ -35,21 +34,21 @@ export type TableHeaderToolbarFilter = Readonly<{
   options: readonly TableHeaderToolbarFilterOption[];
 }>;
 
-export type TableHeaderToolbarProps = Readonly<{
+export type TableHeaderToolbarProps<TData = unknown> = Readonly<{
   searchParamKey?: string;
   searchPlaceholder?: string;
   filters?: readonly TableHeaderToolbarFilter[];
-  table?: TableInstance<unknown>;
+  table?: TableInstance<TData>;
   children?: ReactNode;
 }>;
 
-export function TableHeaderToolbar({
+export function TableHeaderToolbar<TData = unknown>({
   searchParamKey = "q",
   searchPlaceholder,
   filters = [],
   table,
   children,
-}: TableHeaderToolbarProps) {
+}: TableHeaderToolbarProps<TData>) {
   const showSearch = searchPlaceholder != null;
   const showFilters = filters.length > 0;
   const showView = table != null;
@@ -97,17 +96,19 @@ export function TableHeaderToolbar({
     <div className="flex flex-wrap items-center gap-2">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         {showSearch && (
-          <div className="relative min-w-[200px] max-w-sm flex-1">
+          <div className="relative min-w-[200px] max-w-sm flex-1 rounded-md border border-input bg-background shadow-xs">
             <SearchIcon
-              className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2"
+              className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2"
               aria-hidden
             />
             <Input
-              type="search"
               placeholder={searchPlaceholder ?? "Filter..."}
               value={search}
               onChange={(e) => setSearch(e.target.value || null)}
-              className={cn("h-9 pl-8", search && "pr-8")}
+              className={cn(
+                "h-9 border-0 bg-transparent pl-9 shadow-none focus-visible:ring-0",
+                search && "pr-8",
+              )}
             />
             {search && (
               <Button
@@ -247,7 +248,7 @@ function FilterDropdown({
             />
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="my-0" />
+        <DropdownMenuSeparator />
         {filteredOptions.map((option) => (
           <DropdownMenuItem
             key={option.value}
@@ -264,16 +265,11 @@ function FilterDropdown({
               aria-hidden
             />
             <span className="min-w-0 flex-1">{option.label}</span>
-            {option.count != null && (
-              <span className="text-muted-foreground shrink-0 text-xs">
-                {option.count}
-              </span>
-            )}
           </DropdownMenuItem>
         ))}
         {selected.length > 0 && (
           <>
-            <DropdownMenuSeparator className="my-0" />
+            <DropdownMenuSeparator />
             <Button
               type="button"
               variant="ghost"
@@ -290,7 +286,9 @@ function FilterDropdown({
   );
 }
 
-function ViewDropdown({ table }: Readonly<{ table: TableInstance<unknown> }>) {
+function ViewDropdown<TData>({
+  table,
+}: Readonly<{ table: TableInstance<TData> }>) {
   const columns = table.getAllColumns().filter((col) => col.getCanHide());
 
   if (columns.length === 0) return null;
