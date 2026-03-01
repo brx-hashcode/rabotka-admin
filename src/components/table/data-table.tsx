@@ -20,9 +20,7 @@ export type DataTableProps<TData, TValue> = Readonly<{
   isPaginated?: boolean;
   totalCount?: number;
   initialPageSize?: number;
-  header?:
-    | ReactNode
-    | ((table: TableInstance<TData>) => ReactNode);
+  header?: ReactNode | ((table: TableInstance<TData>) => ReactNode);
   footer?: ReactNode;
   emptyMessage?: string;
   getRowId?: (row: TData) => string;
@@ -63,17 +61,19 @@ export function DataTable<TData, TValue>({
 
   const showFooter = isPaginated || footer != null;
 
-  const headerContent =
-    header == null
-      ? null
-      : typeof header === "function"
-        ? header(table)
-        : header;
+  let headerContent: ReactNode = null;
+  if (header != null) {
+    headerContent = typeof header === "function" ? header(table) : header;
+  }
 
   return (
     <div className="flex flex-col gap-0 overflow-hidden rounded-lg">
       {headerContent != null && <TableHeader>{headerContent}</TableHeader>}
-      <Table<TData> table={table} isLoading={isLoading} emptyMessage={emptyMessage} />
+      <Table<TData>
+        table={table}
+        isLoading={isLoading}
+        emptyMessage={emptyMessage}
+      />
       {showFooter && (
         <TableFooter>
           {isPaginated ? (
