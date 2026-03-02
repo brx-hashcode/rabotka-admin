@@ -1,6 +1,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { getCommonColumns } from "#/components/table";
+import { Button } from "#/components/ui/button";
+import { EyeIcon } from "lucide-react";
 
 export type ProfileStatus =
   | "Backlog"
@@ -57,4 +59,17 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
 
 export const profileColumns = getCommonColumns<Profile>({
   additionalColumns: profileDataColumns,
+  columnsActions: ({ row }) => {
+    return (
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={() => {
+          alert(`View profile ${row.title}`);
+        }}
+      >
+        <EyeIcon className="size-4" aria-hidden />
+      </Button>
+    );
+  },
 });
