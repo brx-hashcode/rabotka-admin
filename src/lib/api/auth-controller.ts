@@ -46,7 +46,7 @@ export class AdminAuthController extends AdminBaseController {
 
   async logout(): Promise<{ success: boolean }> {
     try {
-      return await this.post<{ success: boolean }>("/auth/admin/logout");
+      return await this.post<{ success: boolean }>("/auth/admin/logout", {});
     } catch (error) {
       this.handleError(error);
     }

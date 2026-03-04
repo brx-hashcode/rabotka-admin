@@ -44,11 +44,6 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
   const navigate = useNavigate();
   const initials = getInitials(user.name);
 
-  async function handleLogout() {
-    await logout().catch(() => null);
-    await navigate({ to: "/auth/login" });
-  }
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -59,7 +54,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarFallback className="rounded-lg font-semibold">
+                <AvatarFallback className="font-semibold bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -81,7 +76,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg font-semibold">
+                  <AvatarFallback className="font-semibold bg-primary text-primary-foreground">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -95,13 +90,21 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
                 <IconUserCircle />
                 Mon compte
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              variant="destructive"
+              onSelect={async (event) => {
+                event.preventDefault();
+                await logout().catch(() => null);
+                await navigate({ to: "/auth/login" });
+              }}
+            >
               <IconLogout />
               Se déconnecter
             </DropdownMenuItem>
