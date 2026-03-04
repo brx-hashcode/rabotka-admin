@@ -16,6 +16,7 @@ import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
+import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -53,10 +54,17 @@ const AuthenticatedApplicationsIndexRoute =
     path: '/applications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProfilesProfileIdRoute =
+  AuthenticatedProfilesProfileIdRouteImport.update({
+    id: '/profiles/$profileId',
+    path: '/profiles/$profileId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth/login': typeof AuthLoginRoute
+  '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/profiles/': typeof AuthenticatedProfilesIndexRoute
@@ -65,6 +73,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/': typeof AuthenticatedIndexRoute
+  '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/profiles': typeof AuthenticatedProfilesIndexRoute
@@ -75,6 +84,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/profiles/': typeof AuthenticatedProfilesIndexRoute
@@ -85,17 +95,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth/login'
+    | '/profiles/$profileId'
     | '/applications/'
     | '/jobs/'
     | '/profiles/'
     | '/team/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth/login' | '/' | '/applications' | '/jobs' | '/profiles' | '/team'
+  to:
+    | '/auth/login'
+    | '/'
+    | '/profiles/$profileId'
+    | '/applications'
+    | '/jobs'
+    | '/profiles'
+    | '/team'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth/login'
     | '/_authenticated/'
+    | '/_authenticated/profiles/$profileId'
     | '/_authenticated/applications/'
     | '/_authenticated/jobs/'
     | '/_authenticated/profiles/'
@@ -158,11 +177,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profiles/$profileId': {
+      id: '/_authenticated/profiles/$profileId'
+      path: '/profiles/$profileId'
+      fullPath: '/profiles/$profileId'
+      preLoaderRoute: typeof AuthenticatedProfilesProfileIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedProfilesIndexRoute: typeof AuthenticatedProfilesIndexRoute
@@ -171,6 +198,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedProfilesIndexRoute: AuthenticatedProfilesIndexRoute,

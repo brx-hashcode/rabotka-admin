@@ -3,20 +3,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { getCommonColumns } from "#/components/table";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
+import { ProfileRowActions } from "./profile-row-actions";
 import {
   getAccountStatusLabel,
   getProfileTypeLabel,
   getVerificationStatusLabel,
 } from "#/lib/status-labels";
-import { IconDotsVertical } from "@tabler/icons-react";
 
 export type Profile = AdminProfileListItem;
 
@@ -98,19 +91,6 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     ),
   },
   {
-    id: "address",
-    accessorKey: "address",
-    header: "Address",
-    cell: ({ row }) => (
-      <span
-        className="max-w-[200px] truncate block text-muted-foreground text-sm"
-        title={row.original.address}
-      >
-        {row.original.address ?? "—"}
-      </span>
-    ),
-  },
-  {
     id: "status",
     accessorKey: "status",
     header: "Status",
@@ -130,11 +110,7 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     cell: ({ row }) => {
       const type = row.original.profileType;
       const variant = type === "EMPLOYER" ? "default" : "secondary";
-      return (
-        <Badge variant={variant}>
-          {getProfileTypeLabel(type)}
-        </Badge>
-      );
+      return <Badge variant={variant}>{getProfileTypeLabel(type)}</Badge>;
     },
   },
   {
@@ -169,19 +145,6 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     header: "Reliability score",
     cell: ({ row }) => (
       <span className="text-sm">{row.original.reliabilityScore ?? "—"}</span>
-    ),
-  },
-  {
-    id: "description",
-    accessorKey: "description",
-    header: "About",
-    cell: ({ row }) => (
-      <span
-        className="max-w-[200px] truncate block text-muted-foreground text-sm"
-        title={row.original.description}
-      >
-        {row.original.description ?? "—"}
-      </span>
     ),
   },
   {
@@ -222,33 +185,5 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
 
 export const profileColumns = getCommonColumns<Profile>({
   additionalColumns: profileDataColumns,
-  columnsActions: ({ row }) => {
-    const profile = row;
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" aria-label="Open actions">
-            <IconDotsVertical className="size-4" aria-hidden />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => alert(`Update ${profile.id}`)}>
-            Update
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => alert(`Activate ${profile.id}`)}>
-            Activate
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => alert(`Deactivate ${profile.id}`)}>
-            Deactivate
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => alert(`Delete ${profile.id}`)}
-          >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  },
+  columnsActions: ({ row }) => <ProfileRowActions profile={row} />,
 });
