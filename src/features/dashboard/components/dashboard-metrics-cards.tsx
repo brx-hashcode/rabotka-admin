@@ -80,7 +80,7 @@ export function DashboardMetricsCards({
               <Card key={metric.id} className="@container/card">
                 <CardHeader>
                   <CardDescription>{metric.title}</CardDescription>
-                  <CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+                  <CardTitle className="text-4xl font-bold tabular-nums @[250px]/card:text-4xl">
                     {metric.value}
                   </CardTitle>
                   <CardAction>
