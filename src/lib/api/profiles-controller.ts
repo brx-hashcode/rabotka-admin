@@ -55,6 +55,19 @@ export type AdminVerifyProfileParams = {
 
 export type AdminUpdateStatusParams = {
   status: string;
+  reason?: string;
+};
+
+export type AdminLogEntry = {
+  id: string;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  userId: string | null;
+  userName: string | null;
+  profileId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
 };
 
 export type AdminProfilesResponse = {
@@ -132,6 +145,22 @@ export class AdminProfilesController extends AdminBaseController {
     );
     return this.patch<AdminProfileDetailResponse>(url, data);
   }
+
+  async confirmPayment(id: string): Promise<AdminProfileDetailResponse> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/confirm-payment`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminProfileDetailResponse>(url, {});
+  }
+
+  async getLogs(id: string): Promise<AdminLogEntry[]> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/logs`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminLogEntry[]>(url);
+  }
 }
 
 const controller = new AdminProfilesController();
@@ -141,3 +170,5 @@ export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
 export const updateProfileStatus =
   controller.updateProfileStatus.bind(controller);
+export const confirmPayment = controller.confirmPayment.bind(controller);
+export const getProfileLogs = controller.getLogs.bind(controller);

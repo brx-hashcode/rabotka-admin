@@ -139,7 +139,7 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
       )}
 
       {/* KYC Documents */}
-      <div>
+      <div className="min-w-0">
         <h3 className="mb-3 text-sm font-semibold">KYC Documents</h3>
         {profile.kycDocuments.length === 0 ? (
           <Card className="py-8">
@@ -151,7 +151,7 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             {profile.kycDocuments.map((doc) => (
               <KycDocumentCard
                 key={doc.id}

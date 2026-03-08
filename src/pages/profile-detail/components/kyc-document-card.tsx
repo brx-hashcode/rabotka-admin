@@ -18,7 +18,7 @@ export function KycDocumentCard({ doc, onPreview }: Props) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.documentUrl);
 
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <div className="bg-muted relative flex h-36 items-center justify-center">
         {isImage ? (
           <img

@@ -1,24 +1,46 @@
 import { useState } from "react";
-import { IconShieldCheck, IconUserCheck } from "@tabler/icons-react";
+import {
+  IconShieldCheck,
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconCreditCard,
+} from "@tabler/icons-react";
+import { useQueryState, parseAsStringEnum } from "nuqs";
 
 import { useProfileDetail } from "#/hooks/use-profile-detail";
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
-import { getProfileTypeLabel } from "#/lib/status-labels";
 
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 
 import { ProfileForm } from "./profile-detail/components/profile-form";
-import { ProfileSummary } from "./profile-detail/components/profile-summary";
+import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
+import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
+import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
+
+type ProfileTab = "general" | "kyc" | "timeline";
+
+const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
+  { label: "General", value: "general" },
+  { label: "KYC Information", value: "kyc" },
+  { label: "Timeline", value: "timeline" },
+];
+
+const profileTabParser = parseAsStringEnum<ProfileTab>(
+  PROFILE_TABS.map((t) => t.value),
+).withDefault("general");
 
 export default function ProfileDetailPage({
   profileId,
 }: {
   profileId: string;
 }) {
+  const [activeTab, setActiveTab] = useQueryState("tab", profileTabParser);
+
   const {
     profile,
     isLoading,
@@ -29,10 +51,17 @@ export default function ProfileDetailPage({
     isVerifying,
     updateStatus: submitStatus,
     isUpdatingStatus,
+    confirmPayment: submitConfirmPayment,
+    isConfirmingPayment,
+    logs,
+    isLoadingLogs,
   } = useProfileDetail(profileId);
 
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [statusModalTarget, setStatusModalTarget] = useState<
+    "ACTIVE" | "SUSPENDED"
+  >("ACTIVE");
   const [drawerDoc, setDrawerDoc] = useState<AdminKycDocumentItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -49,14 +78,19 @@ export default function ProfileDetailPage({
   const handleKycSubmit = async (
     decision: "VERIFIED" | "REJECTED",
     reason?: string,
+    _files?: File[],
   ) => {
     await submitVerify({ decision, reason });
     setKycModalOpen(false);
   };
 
-  const handleStatusSubmit = async (status: string) => {
-    await submitStatus({ status });
+  const handleStatusSubmit = async (status: string, reason?: string) => {
+    await submitStatus({ status, reason });
     setStatusModalOpen(false);
+  };
+
+  const handleConfirmPayment = async () => {
+    await submitConfirmPayment();
   };
 
   const handlePreviewDoc = (doc: AdminKycDocumentItem) => {
@@ -64,11 +98,18 @@ export default function ProfileDetailPage({
     setDrawerOpen(true);
   };
 
-  // Conditional action visibility based on current status
-  const showKycAction =
+  // Conditional actions based on current state
+  const canVerifyKyc =
     profile != null && profile.verificationStatus !== "VERIFIED";
-  const showStatusAction =
-    profile != null && profile.status !== "BANNED";
+  const canActivate =
+    profile != null &&
+    profile.status !== "ACTIVE" &&
+    profile.status !== "BANNED";
+  const canDeactivate = profile != null && profile.status === "ACTIVE";
+  const canConfirmPayment =
+    profile != null && profile.status === "PENDING_PAYMENT";
+
+  const tabValue = activeTab ?? "general";
 
   // Loading state
   if (isLoading) {
@@ -79,7 +120,12 @@ export default function ProfileDetailPage({
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-4 w-32" />
           </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+          </div>
         </div>
+        <Skeleton className="h-10 w-80" />
         <div className="grid grid-cols-5 gap-6">
           <div className="col-span-5 space-y-4 lg:col-span-3">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -111,54 +157,97 @@ export default function ProfileDetailPage({
 
   return (
     <div className="space-y-6 pt-4">
-      {/* Header + Action bar */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="truncate text-xl font-semibold">
-            {profile.firstName} {profile.lastName}
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            {getProfileTypeLabel(profile.profileType)} — {profile.email}
-          </p>
+      <Tabs
+        value={tabValue}
+        onValueChange={(value) => setActiveTab(value as ProfileTab)}
+        className="w-full"
+      >
+        {/* Header: Tabs + Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <TabsList className="h-9 w-full sm:w-auto">
+            {PROFILE_TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {canConfirmPayment && (
+              <Button
+                variant="default"
+                onClick={handleConfirmPayment}
+                disabled={isConfirmingPayment}
+              >
+                <IconCreditCard className="size-4" />
+                {isConfirmingPayment ? "Confirming..." : "Confirm Payment"}
+              </Button>
+            )}
+            {canVerifyKyc && (
+              <Button variant="outline" onClick={() => setKycModalOpen(true)}>
+                <IconShieldCheck className="size-4" />
+                KYC Verification
+              </Button>
+            )}
+            {canActivate && !canConfirmPayment && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStatusModalTarget("ACTIVE");
+                  setStatusModalOpen(true);
+                }}
+              >
+                <IconPlayerPlay className="size-4" />
+                Activate
+              </Button>
+            )}
+            {canDeactivate && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStatusModalTarget("SUSPENDED");
+                  setStatusModalOpen(true);
+                }}
+              >
+                <IconPlayerPause className="size-4" />
+                Suspend
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {showKycAction && (
-            <Button variant="outline" onClick={() => setKycModalOpen(true)}>
-              <IconShieldCheck className="size-4" />
-              KYC Verification
-            </Button>
-          )}
-          {showStatusAction && (
-            <Button variant="outline" onClick={() => setStatusModalOpen(true)}>
-              <IconUserCheck className="size-4" />
-              Status Verification
-            </Button>
-          )}
-        </div>
-      </div>
 
-      {/* Main 5-column grid */}
-      <div className="grid grid-cols-5 gap-6">
-        {/* Left — 3 cols */}
-        <div className="col-span-5 lg:col-span-3">
-          <ProfileForm
-            profile={profile}
-            onSave={handleSave}
-            isSaving={isUpdating}
-          />
-        </div>
 
-        {/* Right — 2 cols */}
-        <div className="col-span-5 lg:col-span-2">
-          <ProfileSummary
+        {/* General Tab */}
+        <TabsContent value="general">
+          <div className="grid grid-cols-5 gap-6">
+            <div className="col-span-5 min-w-0 lg:col-span-3">
+              <ProfileForm
+                profile={profile}
+                onSave={handleSave}
+                isSaving={isUpdating}
+              />
+            </div>
+            <div className="col-span-5 min-w-0 lg:col-span-2">
+              <ProfileGeneralSummary profile={profile} />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* KYC Information Tab */}
+        <TabsContent value="kyc">
+          <ProfileKycContent
             profile={profile}
             onPreviewDoc={handlePreviewDoc}
           />
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Modals — only mounted when relevant */}
-      {showKycAction && (
+        {/* Timeline Tab */}
+        <TabsContent value="timeline">
+          <ProfileTimeline logs={logs} isLoading={isLoadingLogs} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      {canVerifyKyc && (
         <KycVerificationModal
           open={kycModalOpen}
           onOpenChange={setKycModalOpen}
@@ -168,11 +257,12 @@ export default function ProfileDetailPage({
         />
       )}
 
-      {showStatusAction && (
+      {(canActivate || canDeactivate) && (
         <StatusVerificationModal
           open={statusModalOpen}
           onOpenChange={setStatusModalOpen}
           currentStatus={profile.status}
+          targetStatus={statusModalTarget}
           onSubmit={handleStatusSubmit}
           isPending={isUpdatingStatus}
         />

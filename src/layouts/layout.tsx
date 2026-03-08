@@ -80,7 +80,7 @@ export function Layout({
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2 px-4 lg:px-6">
             {renderPageHeader()}
-            <div>{children}</div>
+            <div className="pb-6">{children}</div>
           </div>
         </div>
       </SidebarInset>

@@ -7,7 +7,6 @@ import { getVerificationStatusLabel } from "#/lib/status-labels";
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import { Textarea } from "#/components/ui/textarea";
-import { Separator } from "#/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -17,19 +16,22 @@ import {
   DialogDescription,
 } from "#/components/ui/dialog";
 
-import {
-  statusBadgeVariant,
-  docCategoryLabel,
-  docTypeLabel,
-} from "../helpers";
+import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
+import { ImageUploadZone } from "./image-upload-zone";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profile: AdminProfileDetailResponse;
-  onSubmit: (decision: "VERIFIED" | "REJECTED", reason?: string) => void;
+  onSubmit: (
+    decision: "VERIFIED" | "REJECTED",
+    reason?: string,
+    files?: File[],
+  ) => void;
   isPending: boolean;
 };
+
+const MIN_FILES_REQUIRED = 2;
 
 export function KycVerificationModal({
   open,
@@ -43,22 +45,48 @@ export function KycVerificationModal({
   );
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [files]);
 
   useEffect(() => {
     if (!open) {
       setDecision(null);
       setReason("");
       setReasonError(false);
+      setFiles([]);
+      setPreviews([]);
     }
   }, [open]);
 
+  const canSubmit =
+    decision != null &&
+    (decision !== "REJECTED" || reason.trim().length > 0) &&
+    !reasonError &&
+    files.length >= MIN_FILES_REQUIRED;
+
+  const addFiles = (newFiles: File[]) => {
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = () => {
-    if (!decision) return;
+    if (!canSubmit) return;
     if (decision === "REJECTED" && !reason.trim()) {
       setReasonError(true);
       return;
     }
-    onSubmit(decision, reason.trim() || undefined);
+    onSubmit(decision, reason.trim() || undefined, files);
   };
 
   return (
@@ -73,42 +101,6 @@ export function KycVerificationModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Documents reference */}
-          {profile.kycDocuments.length > 0 && (
-            <div className="space-y-2">
-              {profile.kycDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="bg-muted/50 flex items-center gap-3 rounded-md border p-2.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {docCategoryLabel(doc.documentCategory)}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {docTypeLabel(doc.documentType)}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={statusBadgeVariant(doc.verificationStatus)}
-                    className="shrink-0"
-                  >
-                    {getVerificationStatusLabel(doc.verificationStatus)}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {profile.kycDocuments.length === 0 && (
-            <p className="text-muted-foreground py-2 text-center text-sm">
-              No documents uploaded.
-            </p>
-          )}
-
-          <Separator />
-
-          {/* Decision */}
           <div className="grid grid-cols-2 gap-3">
             <Button
               type="button"
@@ -137,7 +129,48 @@ export function KycVerificationModal({
             </Button>
           </div>
 
-          {/* Reason — required for rejection */}
+          <ImageUploadZone
+            files={files}
+            previews={previews}
+            onAdd={addFiles}
+            onRemove={removeFile}
+            label="KYC supporting documents"
+            maxSize={5 * 1024 * 1024}
+          />
+          {files.length > 0 && files.length < MIN_FILES_REQUIRED && (
+            <p className="text-destructive text-xs">
+              At least {MIN_FILES_REQUIRED} documents are required to submit.
+              Please add {MIN_FILES_REQUIRED - files.length} more.
+            </p>
+          )}
+
+          {/* Profile's existing KYC documents (reference) */}
+          {profile.kycDocuments.length > 0 && (
+            <div className="space-y-2">
+              {profile.kycDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="bg-muted/50 flex items-center gap-3 rounded-md border p-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {docCategoryLabel(doc.documentCategory)}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {docTypeLabel(doc.documentType)}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={statusBadgeVariant(doc.verificationStatus)}
+                    className="shrink-0"
+                  >
+                    {getVerificationStatusLabel(doc.verificationStatus)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
               Reason{" "}
@@ -176,7 +209,7 @@ export function KycVerificationModal({
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!decision || isPending}>
+          <Button onClick={handleSubmit} disabled={!canSubmit || isPending}>
             {isPending ? "Submitting..." : "Confirm"}
           </Button>
         </DialogFooter>

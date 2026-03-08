@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { IconUser } from "@tabler/icons-react";
 
 import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 
@@ -7,6 +8,7 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Separator } from "#/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "#/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -24,16 +26,16 @@ type FormData = {
   description: string;
 };
 
-function FieldLabel({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
       {children}
     </label>
   );
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
 type Props = {
@@ -89,12 +91,44 @@ export function ProfileForm({ profile, onSave, isSaving }: Props) {
     setInitialForm(form);
   };
 
+  const initials = getInitials(profile.firstName, profile.lastName);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Profile Information</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Avatar section */}
+        <div className="mb-6 flex items-center gap-4">
+          <Avatar className="border-border size-20 border-4 shadow-md">
+            {profile.avatarUrl ? (
+              <AvatarImage
+                src={profile.avatarUrl}
+                alt={`${profile.firstName} ${profile.lastName}`}
+                className="object-cover"
+              />
+            ) : null}
+            <AvatarFallback className="text-xl">
+              {initials || <IconUser className="size-8" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-lg font-semibold">
+              {profile.firstName} {profile.lastName}
+            </p>
+            <p className="text-muted-foreground truncate text-sm">
+              {profile.email}
+            </p>
+            <p className="text-muted-foreground truncate text-xs">
+              {profile.phone}
+            </p>
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        {/* Editable fields */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-5">
           <div className="space-y-1.5">
             <FieldLabel>First Name</FieldLabel>
@@ -138,7 +172,8 @@ export function ProfileForm({ profile, onSave, isSaving }: Props) {
             <Textarea
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
-              className="min-h-[80px] resize-y"
+              className="min-h-[80px] resize-none"
+              rows={2}
             />
           </div>
         </div>
@@ -186,15 +221,16 @@ export function ProfileForm({ profile, onSave, isSaving }: Props) {
           </div>
           <div className="space-y-1.5">
             <FieldLabel>WhatsApp Connected</FieldLabel>
-            <Input
-              value={profile.whatsappConnected ? "Yes" : "No"}
-              disabled
-            />
+            <Input value={profile.whatsappConnected ? "Yes" : "No"} disabled />
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Button onClick={handleSave} disabled={!isDirty || isSaving}>
+        <div className="mt-6 flex min-w-0 justify-end gap-2">
+          <Button
+            onClick={handleSave}
+            disabled={!isDirty || isSaving}
+            className="shrink-0"
+          >
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>

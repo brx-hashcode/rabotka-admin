@@ -5,6 +5,8 @@ import {
   updateProfile,
   verifyProfile,
   updateProfileStatus,
+  confirmPayment,
+  getProfileLogs,
   type AdminProfileDetailResponse,
   type AdminUpdateProfileParams,
   type AdminVerifyProfileParams,
@@ -14,6 +16,7 @@ import {
 export function useProfileDetail(profileId: string) {
   const queryClient = useQueryClient();
   const queryKey = ["admin", "profiles", profileId];
+  const logsQueryKey = ["admin", "profiles", profileId, "logs"];
 
   const query = useQuery({
     queryKey,
@@ -21,11 +24,21 @@ export function useProfileDetail(profileId: string) {
     enabled: !!profileId,
   });
 
+  const logsQuery = useQuery({
+    queryKey: logsQueryKey,
+    queryFn: () => getProfileLogs(profileId),
+    enabled: !!profileId,
+  });
+
+  const invalidateLogs = () =>
+    queryClient.invalidateQueries({ queryKey: logsQueryKey });
+
   const updateMutation = useMutation({
     mutationFn: (data: AdminUpdateProfileParams) =>
       updateProfile(profileId, data),
     onSuccess: (data) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
+      invalidateLogs();
       toast.success("Profile updated successfully");
     },
     onError: () => {
@@ -38,6 +51,7 @@ export function useProfileDetail(profileId: string) {
       verifyProfile(profileId, data),
     onSuccess: (data) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
+      invalidateLogs();
       toast.success("KYC verification submitted");
     },
     onError: () => {
@@ -50,10 +64,23 @@ export function useProfileDetail(profileId: string) {
       updateProfileStatus(profileId, data),
     onSuccess: (data) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
+      invalidateLogs();
       toast.success("Status updated successfully");
     },
     onError: () => {
       toast.error("Failed to update status");
+    },
+  });
+
+  const confirmPaymentMutation = useMutation({
+    mutationFn: () => confirmPayment(profileId),
+    onSuccess: (data) => {
+      queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
+      invalidateLogs();
+      toast.success("Payment confirmed successfully");
+    },
+    onError: () => {
+      toast.error("Failed to confirm payment");
     },
   });
 
@@ -69,5 +96,9 @@ export function useProfileDetail(profileId: string) {
     isVerifying: verifyMutation.isPending,
     updateStatus: statusMutation.mutateAsync,
     isUpdatingStatus: statusMutation.isPending,
+    confirmPayment: confirmPaymentMutation.mutateAsync,
+    isConfirmingPayment: confirmPaymentMutation.isPending,
+    logs: logsQuery.data ?? [],
+    isLoadingLogs: logsQuery.isLoading,
   };
 }
