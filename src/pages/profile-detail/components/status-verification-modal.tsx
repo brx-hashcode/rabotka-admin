@@ -14,20 +14,18 @@ import {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentStatus: string;
   targetStatus: "ACTIVE" | "SUSPENDED";
-  onSubmit: (status: string, reason?: string) => void;
+  onSubmit: (status: "ACTIVE" | "SUSPENDED", reason?: string) => void;
   isPending: boolean;
 };
 
 export function StatusVerificationModal({
   open,
   onOpenChange,
-  currentStatus,
   targetStatus,
   onSubmit,
   isPending,
-}: Props) {
+}: Readonly<Props>) {
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
 
