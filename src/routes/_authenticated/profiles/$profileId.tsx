@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Layout } from "#/layouts";
+import ProfileDetailPage from "#/pages/profile-detail-page";
 
 export const Route = createFileRoute("/_authenticated/profiles/$profileId")({
-  component: ProfileDetailPage,
+  component: ProfilePage,
 });
 
-function ProfileDetailPage() {
+function ProfilePage() {
   const { profileId } = Route.useParams();
 
   return (
@@ -18,14 +19,7 @@ function ProfileDetailPage() {
         { label: "Profile" },
       ]}
     >
-      <div className="space-y-4">
-        <p className="text-muted-foreground text-sm">
-          Profile ID: <code className="rounded bg-muted px-1 py-0.5">{profileId}</code>
-        </p>
-        <p className="text-muted-foreground text-sm">
-          Detail content can be implemented here (e.g. fetch profile by ID and display).
-        </p>
-      </div>
+      <ProfileDetailPage profileId={profileId} />
     </Layout>
   );
 }
