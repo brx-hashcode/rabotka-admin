@@ -1,4 +1,6 @@
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { useQueryState } from "nuqs";
 
 import {
   Card,
@@ -14,103 +16,12 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "#/components/ui/chart";
-import { ChartAreaFilter } from "./chart-area-filter";
-
-export const description = "An interactive area chart";
-
-const chartData = [
-  { date: "2024-04-01", jobCreated: 222, jobFilled: 150 },
-  { date: "2024-04-02", jobCreated: 97, jobFilled: 180 },
-  { date: "2024-04-03", jobCreated: 167, jobFilled: 120 },
-  { date: "2024-04-04", jobCreated: 242, jobFilled: 260 },
-  { date: "2024-04-05", jobCreated: 373, jobFilled: 290 },
-  { date: "2024-04-06", jobCreated: 301, jobFilled: 340 },
-  { date: "2024-04-07", jobCreated: 245, jobFilled: 180 },
-  { date: "2024-04-08", jobCreated: 409, jobFilled: 320 },
-  { date: "2024-04-09", jobCreated: 59, jobFilled: 110 },
-  { date: "2024-04-10", jobCreated: 261, jobFilled: 190 },
-  { date: "2024-04-11", jobCreated: 327, jobFilled: 350 },
-  { date: "2024-04-12", jobCreated: 292, jobFilled: 210 },
-  { date: "2024-04-13", jobCreated: 342, jobFilled: 380 },
-  { date: "2024-04-14", jobCreated: 137, jobFilled: 220 },
-  { date: "2024-04-15", jobCreated: 120, jobFilled: 170 },
-  { date: "2024-04-16", jobCreated: 138, jobFilled: 190 },
-  { date: "2024-04-17", jobCreated: 446, jobFilled: 360 },
-  { date: "2024-04-18", jobCreated: 364, jobFilled: 410 },
-  { date: "2024-04-19", jobCreated: 243, jobFilled: 180 },
-  { date: "2024-04-20", jobCreated: 89, jobFilled: 150 },
-  { date: "2024-04-21", jobCreated: 137, jobFilled: 200 },
-  { date: "2024-04-22", jobCreated: 224, jobFilled: 170 },
-  { date: "2024-04-23", jobCreated: 138, jobFilled: 230 },
-  { date: "2024-04-24", jobCreated: 387, jobFilled: 290 },
-  { date: "2024-04-25", jobCreated: 215, jobFilled: 250 },
-  { date: "2024-04-26", jobCreated: 75, jobFilled: 130 },
-  { date: "2024-04-27", jobCreated: 383, jobFilled: 420 },
-  { date: "2024-04-28", jobCreated: 122, jobFilled: 180 },
-  { date: "2024-04-29", jobCreated: 315, jobFilled: 240 },
-  { date: "2024-04-30", jobCreated: 454, jobFilled: 380 },
-  { date: "2024-05-01", jobCreated: 165, jobFilled: 220 },
-  { date: "2024-05-02", jobCreated: 293, jobFilled: 310 },
-  { date: "2024-05-03", jobCreated: 247, jobFilled: 190 },
-  { date: "2024-05-04", jobCreated: 385, jobFilled: 420 },
-  { date: "2024-05-05", jobCreated: 481, jobFilled: 390 },
-  { date: "2024-05-06", jobCreated: 498, jobFilled: 520 },
-  { date: "2024-05-07", jobCreated: 388, jobFilled: 300 },
-  { date: "2024-05-08", jobCreated: 149, jobFilled: 210 },
-  { date: "2024-05-09", jobCreated: 227, jobFilled: 180 },
-  { date: "2024-05-10", jobCreated: 293, jobFilled: 330 },
-  { date: "2024-05-11", jobCreated: 335, jobFilled: 270 },
-  { date: "2024-05-12", jobCreated: 197, jobFilled: 240 },
-  { date: "2024-05-13", jobCreated: 197, jobFilled: 160 },
-  { date: "2024-05-14", jobCreated: 448, jobFilled: 490 },
-  { date: "2024-05-15", jobCreated: 473, jobFilled: 380 },
-  { date: "2024-05-16", jobCreated: 338, jobFilled: 400 },
-  { date: "2024-05-17", jobCreated: 499, jobFilled: 420 },
-  { date: "2024-05-18", jobCreated: 315, jobFilled: 350 },
-  { date: "2024-05-19", jobCreated: 235, jobFilled: 180 },
-  { date: "2024-05-20", jobCreated: 177, jobFilled: 230 },
-  { date: "2024-05-21", jobCreated: 82, jobFilled: 140 },
-  { date: "2024-05-22", jobCreated: 81, jobFilled: 120 },
-  { date: "2024-05-23", jobCreated: 252, jobFilled: 290 },
-  { date: "2024-05-24", jobCreated: 294, jobFilled: 220 },
-  { date: "2024-05-25", jobCreated: 201, jobFilled: 250 },
-  { date: "2024-05-26", jobCreated: 213, jobFilled: 170 },
-  { date: "2024-05-27", jobCreated: 420, jobFilled: 460 },
-  { date: "2024-05-28", jobCreated: 233, jobFilled: 190 },
-  { date: "2024-05-29", jobCreated: 78, jobFilled: 130 },
-  { date: "2024-05-30", jobCreated: 340, jobFilled: 280 },
-  { date: "2024-05-31", jobCreated: 178, jobFilled: 230 },
-  { date: "2024-06-01", jobCreated: 178, jobFilled: 200 },
-  { date: "2024-06-02", jobCreated: 470, jobFilled: 410 },
-  { date: "2024-06-03", jobCreated: 103, jobFilled: 160 },
-  { date: "2024-06-04", jobCreated: 439, jobFilled: 380 },
-  { date: "2024-06-05", jobCreated: 88, jobFilled: 140 },
-  { date: "2024-06-06", jobCreated: 294, jobFilled: 250 },
-  { date: "2024-06-07", jobCreated: 323, jobFilled: 370 },
-  { date: "2024-06-08", jobCreated: 385, jobFilled: 320 },
-  { date: "2024-06-09", jobCreated: 438, jobFilled: 480 },
-  { date: "2024-06-10", jobCreated: 155, jobFilled: 200 },
-  { date: "2024-06-11", jobCreated: 92, jobFilled: 150 },
-  { date: "2024-06-12", jobCreated: 492, jobFilled: 420 },
-  { date: "2024-06-13", jobCreated: 81, jobFilled: 130 },
-  { date: "2024-06-14", jobCreated: 426, jobFilled: 380 },
-  { date: "2024-06-15", jobCreated: 307, jobFilled: 350 },
-  { date: "2024-06-16", jobCreated: 371, jobFilled: 310 },
-  { date: "2024-06-17", jobCreated: 475, jobFilled: 520 },
-  { date: "2024-06-18", jobCreated: 107, jobFilled: 170 },
-  { date: "2024-06-19", jobCreated: 341, jobFilled: 290 },
-  { date: "2024-06-20", jobCreated: 408, jobFilled: 450 },
-  { date: "2024-06-21", jobCreated: 169, jobFilled: 210 },
-  { date: "2024-06-22", jobCreated: 317, jobFilled: 270 },
-  { date: "2024-06-23", jobCreated: 480, jobFilled: 530 },
-  { date: "2024-06-24", jobCreated: 132, jobFilled: 180 },
-  { date: "2024-06-25", jobCreated: 141, jobFilled: 190 },
-  { date: "2024-06-26", jobCreated: 434, jobFilled: 380 },
-  { date: "2024-06-27", jobCreated: 448, jobFilled: 490 },
-  { date: "2024-06-28", jobCreated: 149, jobFilled: 200 },
-  { date: "2024-06-29", jobCreated: 103, jobFilled: 160 },
-  { date: "2024-06-30", jobCreated: 446, jobFilled: 400 },
-];
+import {
+  ChartAreaFilter,
+  TIME_RANGE_QUERY_KEY,
+  timeRangeParser,
+} from "./chart-area-filter";
+import { getJobActivity } from "#/lib/api/dashboard-controller";
 
 const chartConfig = {
   jobs: { label: "Jobs" },
@@ -118,16 +29,36 @@ const chartConfig = {
   jobFilled: { label: "Job filled", color: "var(--primary)" },
 } satisfies ChartConfig;
 
+const DESCRIPTION_LABELS: Record<string, string> = {
+  "90d": "Jobs posted vs jobs filled over the last 3 months",
+  "30d": "Jobs posted vs jobs filled over the last 30 days",
+  "7d": "Jobs posted vs jobs filled over the last 7 days",
+};
+
+const SHORT_LABELS: Record<string, string> = {
+  "90d": "Last 3 months activity",
+  "30d": "Last 30 days activity",
+  "7d": "Last 7 days activity",
+};
+
 export function ChartAreaInteractive() {
+  const [timeRange] = useQueryState(TIME_RANGE_QUERY_KEY, timeRangeParser);
+  const range = timeRange ?? "90d";
+
+  const { data: chartData = [] } = useQuery({
+    queryKey: ["admin", "dashboard", "job-activity", range],
+    queryFn: () => getJobActivity({ range }),
+  });
+
   return (
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Job Activity</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Jobs posted vs jobs filled over the last 3 months
+            {DESCRIPTION_LABELS[range]}
           </span>
-          <span className="@[540px]/card:hidden">Last 3 months activity</span>
+          <span className="@[540px]/card:hidden">{SHORT_LABELS[range]}</span>
         </CardDescription>
         <CardAction>
           <ChartAreaFilter />
