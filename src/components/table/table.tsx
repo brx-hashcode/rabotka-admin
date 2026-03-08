@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import { cn } from "#/lib/utils";
 
 type AlignMeta = { align?: "left" | "right" | "center" };
 
@@ -64,15 +65,12 @@ function TableBodyContent<TData>({
     return (
       <>
         {rows.map((row) => (
-          <TableRow
-            key={row.id}
-            data-state={row.getIsSelected() && "selected"}
-          >
+          <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
             {row.getVisibleCells().map((cell) => (
               <TableCell
                 key={cell.id}
                 className={getAlignClass(
-                  cell.column.columnDef.meta as AlignMeta | undefined
+                  cell.column.columnDef.meta as AlignMeta | undefined,
                 )}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -103,35 +101,38 @@ export function Table<TData>({
     <div className="overflow-hidden rounded-lg border">
       <UITable>
         <TableHeader className="bg-muted sticky top-0 z-10">
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                colSpan={header.colSpan}
-                className={getAlignClass(
-                  header.column.columnDef.meta as AlignMeta | undefined
-                )}
-              >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        <TableBodyContent
-          table={table}
-          isLoading={isLoading}
-          columnCount={columnCount}
-          emptyMessage={emptyMessage}
-        />
-      </TableBody>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  className={cn(
+                    getAlignClass(
+                      header.column.columnDef.meta as AlignMeta | undefined,
+                    ),
+                    "uppercase",
+                  )}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          <TableBodyContent
+            table={table}
+            isLoading={isLoading}
+            columnCount={columnCount}
+            emptyMessage={emptyMessage}
+          />
+        </TableBody>
       </UITable>
     </div>
   );

@@ -1,7 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { getCommonColumns } from "#/components/table";
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { getCommonColumns, ProfileCell } from "#/components/table";
 import { Badge } from "#/components/ui/badge";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
 import { ProfileRowActions } from "./profile-row-actions";
@@ -12,12 +11,6 @@ import {
 } from "#/lib/status-labels";
 
 export type Profile = AdminProfileListItem;
-
-function getInitials(firstName: string, lastName: string): string {
-  const a = firstName?.trim()[0] ?? "";
-  const b = lastName?.trim()[0] ?? "";
-  return (a + b).toUpperCase().slice(0, 2) || "?";
-}
 
 function getStatusBadgeVariant(
   status: string,
@@ -54,29 +47,13 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     header: "Profile",
     cell: ({ row }) => {
       const p = row.original;
-      const name = `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim() || "—";
-      const initials = getInitials(p.firstName ?? "", p.lastName ?? "");
+      const name = `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim();
       return (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            {p.avatarUrl ? (
-              <AvatarImage
-                src={p.avatarUrl}
-                alt={name}
-                className="object-cover"
-              />
-            ) : null}
-            <AvatarFallback className="font-semibold bg-primary text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">{name}</span>
-            <span className="text-muted-foreground truncate text-xs">
-              {p.email ?? "—"}
-            </span>
-          </div>
-        </div>
+        <ProfileCell
+          name={name}
+          email={p.email ?? ""}
+          avatarUrl={p.avatarUrl}
+        />
       );
     },
   },

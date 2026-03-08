@@ -16,4 +16,6 @@ export {
   type TableHeaderToolbarProps,
 } from "./table-header-toolbar";
 
+export { ProfileCell } from "./profile-cell";
+
 export type { ColumnDef } from "@tanstack/react-table";
