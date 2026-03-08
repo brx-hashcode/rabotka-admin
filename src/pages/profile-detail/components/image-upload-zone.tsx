@@ -20,7 +20,7 @@ export function ImageUploadZone({
   onRemove,
   label = "Supporting Images",
   maxSize = 5 * 1024 * 1024,
-}: Props) {
+}: Readonly<Props>) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const images = acceptedFiles.filter((f) => f.type.startsWith("image/"));
@@ -44,6 +44,15 @@ export function ImageUploadZone({
 
   const hasFiles = previews.length > 0;
 
+  let zoneVariantClass: string;
+  if (isDragActive) {
+    zoneVariantClass = "border-dashed border-primary bg-primary/5";
+  } else if (hasFiles) {
+    zoneVariantClass = "border hover:border-primary/50";
+  } else {
+    zoneVariantClass = "hover:border-primary hover:bg-primary/5 border-dashed";
+  }
+
   return (
     <div className="space-y-2">
       <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
@@ -54,11 +63,7 @@ export function ImageUploadZone({
         {...(hasFiles ? {} : getRootProps())}
         className={cn(
           "group relative overflow-hidden rounded-xl border transition-all duration-200",
-          isDragActive
-            ? "border-dashed border-primary bg-primary/5"
-            : hasFiles
-              ? "border hover:border-primary/50"
-              : "hover:border-primary hover:bg-primary/5 border-dashed",
+          zoneVariantClass,
         )}
       >
         <input {...getInputProps()} className="sr-only" />
@@ -68,7 +73,7 @@ export function ImageUploadZone({
             <div className="grid grid-cols-3 gap-3">
               {previews.map((url, i) => (
                 <div
-                  key={i}
+                  key={url}
                   className="group/thumb relative aspect-square w-full overflow-hidden rounded-lg border"
                 >
                   <img
@@ -76,8 +81,7 @@ export function ImageUploadZone({
                     alt={files[i]?.name ?? "upload"}
                     className="h-full w-full object-cover"
                   />
-                  {/* Bottom overlay with filename */}
-                  <div className="from-background/80 absolute bottom-0 left-0 right-0 bg-gradient-to-t to-transparent p-1.5">
+                  <div className="from-background/80 absolute bottom-0 left-0 right-0 bg-linearto-t to-transparent p-1.5">
                     <p className="text-foreground truncate text-[10px] font-medium">
                       {files[i]?.name}
                     </p>
@@ -100,7 +104,6 @@ export function ImageUploadZone({
                 </div>
               ))}
 
-              {/* Add more button */}
               <button
                 type="button"
                 onClick={(e) => {
