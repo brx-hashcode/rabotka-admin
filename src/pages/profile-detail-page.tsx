@@ -35,9 +35,9 @@ const profileTabParser = parseAsStringEnum<ProfileTab>(
 
 export default function ProfileDetailPage({
   profileId,
-}: {
+}: Readonly<{
   profileId: string;
-}) {
+}>) {
   const [activeTab, setActiveTab] = useQueryState("tab", profileTabParser);
 
   const {
@@ -83,7 +83,10 @@ export default function ProfileDetailPage({
     setKycModalOpen(false);
   };
 
-  const handleStatusSubmit = async (status: string, reason?: string) => {
+  const handleStatusSubmit = async (
+    status: "ACTIVE" | "SUSPENDED",
+    reason?: string,
+  ) => {
     await submitStatus({ status, reason });
     setStatusModalOpen(false);
   };
@@ -214,7 +217,6 @@ export default function ProfileDetailPage({
           </div>
         </div>
 
-
         {/* General Tab */}
         <TabsContent value="general">
           <div className="grid grid-cols-5 gap-6">
@@ -256,7 +258,6 @@ export default function ProfileDetailPage({
         <StatusVerificationModal
           open={statusModalOpen}
           onOpenChange={setStatusModalOpen}
-          currentStatus={profile.status}
           targetStatus={statusModalTarget}
           onSubmit={handleStatusSubmit}
           isPending={isUpdatingStatus}
