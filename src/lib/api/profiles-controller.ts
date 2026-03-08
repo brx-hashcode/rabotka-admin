@@ -21,6 +21,42 @@ export type AdminProfileListItem = {
   updatedAt: string;
 };
 
+export type AdminKycDocumentItem = {
+  id: string;
+  documentType: string | null;
+  documentCategory: string;
+  documentUrl: string;
+  verificationStatus: string;
+  verifiedAt: string | null;
+  verifiedBy: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+};
+
+export type AdminProfileDetailResponse = AdminProfileListItem & {
+  jobOffersCount: number;
+  applicationsCount: number;
+  penaltiesCount: number;
+  unpaidPenaltiesCount: number;
+  kycDocuments: AdminKycDocumentItem[];
+};
+
+export type AdminUpdateProfileParams = {
+  firstName?: string;
+  lastName?: string;
+  description?: string;
+  address?: string;
+};
+
+export type AdminVerifyProfileParams = {
+  decision: "VERIFIED" | "REJECTED";
+  reason?: string;
+};
+
+export type AdminUpdateStatusParams = {
+  status: string;
+};
+
 export type AdminProfilesResponse = {
   data: AdminProfileListItem[];
   total: number;
@@ -55,7 +91,53 @@ export class AdminProfilesController extends AdminBaseController {
     const url = this.createURL("/admin/profiles", query);
     return this.get<AdminProfilesResponse>(url);
   }
+
+  async getById(id: string): Promise<AdminProfileDetailResponse> {
+    const url = this.createURL(
+      `/admin/profiles/${id}`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminProfileDetailResponse>(url);
+  }
+
+  async updateProfile(
+    id: string,
+    data: AdminUpdateProfileParams,
+  ): Promise<AdminProfileDetailResponse> {
+    const url = this.createURL(
+      `/admin/profiles/${id}`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminProfileDetailResponse>(url, data);
+  }
+
+  async verifyProfile(
+    id: string,
+    data: AdminVerifyProfileParams,
+  ): Promise<AdminProfileDetailResponse> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/verify`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminProfileDetailResponse>(url, data);
+  }
+
+  async updateProfileStatus(
+    id: string,
+    data: AdminUpdateStatusParams,
+  ): Promise<AdminProfileDetailResponse> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/status`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminProfileDetailResponse>(url, data);
+  }
 }
 
 const controller = new AdminProfilesController();
 export const getProfilesList = controller.getList.bind(controller);
+export const getProfileById = controller.getById.bind(controller);
+export const updateProfile = controller.updateProfile.bind(controller);
+export const verifyProfile = controller.verifyProfile.bind(controller);
+export const updateProfileStatus =
+  controller.updateProfileStatus.bind(controller);
