@@ -22,12 +22,11 @@ import { KycVerificationModal } from "./profile-detail/components/kyc-verificati
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 
-type ProfileTab = "general" | "kyc" | "timeline";
+type ProfileTab = "general" | "kyc";
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
   { label: "KYC Information", value: "kyc" },
-  { label: "Timeline", value: "timeline" },
 ];
 
 const profileTabParser = parseAsStringEnum<ProfileTab>(
@@ -36,9 +35,9 @@ const profileTabParser = parseAsStringEnum<ProfileTab>(
 
 export default function ProfileDetailPage({
   profileId,
-}: Readonly<{
+}: {
   profileId: string;
-}>) {
+}) {
   const [activeTab, setActiveTab] = useQueryState("tab", profileTabParser);
 
   const {
@@ -84,10 +83,7 @@ export default function ProfileDetailPage({
     setKycModalOpen(false);
   };
 
-  const handleStatusSubmit = async (
-    status: "ACTIVE" | "SUSPENDED",
-    reason?: string,
-  ) => {
+  const handleStatusSubmit = async (status: string, reason?: string) => {
     await submitStatus({ status, reason });
     setStatusModalOpen(false);
   };
@@ -218,6 +214,7 @@ export default function ProfileDetailPage({
           </div>
         </div>
 
+
         {/* General Tab */}
         <TabsContent value="general">
           <div className="grid grid-cols-5 gap-6">
@@ -228,8 +225,9 @@ export default function ProfileDetailPage({
                 isSaving={isUpdating}
               />
             </div>
-            <div className="col-span-5 min-w-0 lg:col-span-2">
+            <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
               <ProfileGeneralSummary profile={profile} />
+              <ProfileTimeline logs={logs} isLoading={isLoadingLogs} />
             </div>
           </div>
         </TabsContent>
@@ -240,11 +238,6 @@ export default function ProfileDetailPage({
             profile={profile}
             onPreviewDoc={handlePreviewDoc}
           />
-        </TabsContent>
-
-        {/* Timeline Tab */}
-        <TabsContent value="timeline">
-          <ProfileTimeline logs={logs} isLoading={isLoadingLogs} />
         </TabsContent>
       </Tabs>
 
@@ -263,6 +256,7 @@ export default function ProfileDetailPage({
         <StatusVerificationModal
           open={statusModalOpen}
           onOpenChange={setStatusModalOpen}
+          currentStatus={profile.status}
           targetStatus={statusModalTarget}
           onSubmit={handleStatusSubmit}
           isPending={isUpdatingStatus}

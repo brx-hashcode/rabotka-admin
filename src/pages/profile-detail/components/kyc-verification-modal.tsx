@@ -39,7 +39,7 @@ export function KycVerificationModal({
   profile,
   onSubmit,
   isPending,
-}: Readonly<Props>) {
+}: Props) {
   const [decision, setDecision] = useState<"VERIFIED" | "REJECTED" | null>(
     null,
   );
