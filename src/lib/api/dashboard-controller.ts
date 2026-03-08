@@ -6,11 +6,30 @@ export type JobActivityDataPoint = {
   jobFilled: number;
 };
 
+export type DashboardMetrics = {
+  revenue: number;
+  revenueTrend: number;
+  profilesCount: number;
+  profilesTrend: number;
+  jobsCount: number;
+  jobsTrend: number;
+  applicationsCount: number;
+  applicationsTrend: number;
+};
+
 export type JobActivityParams = {
   range?: "90d" | "30d" | "7d";
 };
 
 export class AdminDashboardController extends AdminBaseController {
+  async getMetrics(): Promise<DashboardMetrics> {
+    const url = this.createURL(
+      "/admin/dashboard/metrics",
+      new URLSearchParams(),
+    );
+    return this.get<DashboardMetrics>(url);
+  }
+
   async getJobActivity(
     params: JobActivityParams,
   ): Promise<JobActivityDataPoint[]> {
@@ -24,4 +43,5 @@ export class AdminDashboardController extends AdminBaseController {
 }
 
 const controller = new AdminDashboardController();
+export const getMetrics = controller.getMetrics.bind(controller);
 export const getJobActivity = controller.getJobActivity.bind(controller);
