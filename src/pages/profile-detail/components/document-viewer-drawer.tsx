@@ -21,10 +21,24 @@ const LazyDocViewer = lazy(() =>
 const getDocViewerRenderers = () =>
   import("@cyntler/react-doc-viewer").then((mod) => mod.DocViewerRenderers);
 
+export type ViewerDocument = {
+  url: string;
+  title: string;
+  description: string;
+};
+
+export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
+  return {
+    url: doc.documentUrl,
+    title: docCategoryLabel(doc.documentCategory),
+    description: `${docTypeLabel(doc.documentType)} — Uploaded ${formatDate(doc.createdAt)}`,
+  };
+}
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  document: AdminKycDocumentItem | null;
+  document: ViewerDocument | null;
 };
 
 export function DocumentViewerDrawer({
@@ -43,20 +57,15 @@ export function DocumentViewerDrawer({
   if (!document) return null;
 
   const docs = [
-    { uri: document.documentUrl, fileType: getFileType(document.documentUrl) },
+    { uri: document.url, fileType: getFileType(document.url) },
   ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[50vw]">
         <SheetHeader>
-          <SheetTitle>
-            {docCategoryLabel(document.documentCategory)}
-          </SheetTitle>
-          <SheetDescription>
-            {docTypeLabel(document.documentType)} — Uploaded{" "}
-            {formatDate(document.createdAt)}
-          </SheetDescription>
+          <SheetTitle>{document.title}</SheetTitle>
+          <SheetDescription>{document.description}</SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-auto px-4 pb-4">
           <Suspense

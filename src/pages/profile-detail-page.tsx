@@ -8,7 +8,7 @@ import {
 import { useQueryState, parseAsStringEnum } from "nuqs";
 
 import { useProfileDetail } from "#/hooks/use-profile-detail";
-import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
+import type { ViewerDocument } from "./profile-detail/components/document-viewer-drawer";
 
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -61,7 +61,7 @@ export default function ProfileDetailPage({
   const [statusModalTarget, setStatusModalTarget] = useState<
     "ACTIVE" | "SUSPENDED"
   >("ACTIVE");
-  const [drawerDoc, setDrawerDoc] = useState<AdminKycDocumentItem | null>(null);
+  const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Handlers
@@ -77,9 +77,9 @@ export default function ProfileDetailPage({
   const handleKycSubmit = async (
     decision: "VERIFIED" | "REJECTED",
     reason?: string,
-    _files?: File[],
+    files?: File[],
   ) => {
-    await submitVerify({ decision, reason });
+    await submitVerify({ decision, reason, files });
     setKycModalOpen(false);
   };
 
@@ -95,7 +95,7 @@ export default function ProfileDetailPage({
     await submitConfirmPayment();
   };
 
-  const handlePreviewDoc = (doc: AdminKycDocumentItem) => {
+  const handlePreviewDoc = (doc: ViewerDocument) => {
     setDrawerDoc(doc);
     setDrawerOpen(true);
   };
@@ -113,7 +113,6 @@ export default function ProfileDetailPage({
 
   const tabValue = activeTab ?? "general";
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-6 pt-4">

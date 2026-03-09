@@ -33,12 +33,20 @@ export type AdminKycDocumentItem = {
   createdAt: string;
 };
 
+export type AdminVerificationImageItem = {
+  id: string;
+  imageUrl: string;
+  uploadedBy: string | null;
+  createdAt: string;
+};
+
 export type AdminProfileDetailResponse = AdminProfileListItem & {
   jobOffersCount: number;
   applicationsCount: number;
   penaltiesCount: number;
   unpaidPenaltiesCount: number;
   kycDocuments: AdminKycDocumentItem[];
+  verificationImages: AdminVerificationImageItem[];
 };
 
 export type AdminUpdateProfileParams = {
@@ -51,6 +59,7 @@ export type AdminUpdateProfileParams = {
 export type AdminVerifyProfileParams = {
   decision: "VERIFIED" | "REJECTED";
   reason?: string;
+  files?: File[];
 };
 
 export type AdminUpdateStatusParams = {
@@ -132,7 +141,17 @@ export class AdminProfilesController extends AdminBaseController {
       `/admin/profiles/${id}/verify`,
       new URLSearchParams(),
     );
-    return this.patch<AdminProfileDetailResponse>(url, data);
+    const formData = new FormData();
+    formData.append("decision", data.decision);
+    if (data.reason) {
+      formData.append("reason", data.reason);
+    }
+    if (data.files) {
+      for (const file of data.files) {
+        formData.append("files", file);
+      }
+    }
+    return this.patch<AdminProfileDetailResponse>(url, formData);
   }
 
   async updateProfileStatus(

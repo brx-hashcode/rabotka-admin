@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { Skeleton } from "#/components/ui/skeleton";
 
-
 type Props = {
   logs: AdminLogEntry[];
   isLoading: boolean;
@@ -168,7 +167,7 @@ export function ProfileTimeline({ logs, isLoading }: Props) {
         <CardTitle className="text-sm">Activity Timeline</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        <div className="relative max-h-90 overflow-y-auto pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {/* Vertical line */}
           <div className="bg-border absolute top-0 bottom-0 left-4 w-px" />
 

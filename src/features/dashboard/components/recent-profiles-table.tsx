@@ -55,6 +55,16 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     ),
   },
   {
+    id: "address",
+    accessorKey: "address",
+    header: "Address",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-sm">
+        {row.original.address ?? "—"}
+      </span>
+    ),
+  },
+  {
     id: "profileType",
     accessorKey: "profileType",
     header: "Type",

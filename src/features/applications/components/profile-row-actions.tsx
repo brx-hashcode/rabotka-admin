@@ -1,6 +1,6 @@
-import { buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 
 type ProfileRowActionsProps = Readonly<{
@@ -8,13 +8,20 @@ type ProfileRowActionsProps = Readonly<{
 }>;
 
 export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
+  const navigate = useNavigate();
   return (
-    <Link
-      to="/profiles/$profileId"
-      params={{ profileId: profile.id }}
-      className={buttonVariants({ variant: "ghost", size: "icon" })}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() =>
+        navigate({
+          to: "/profiles/$profileId",
+          params: { profileId: profile.id },
+          replace: true,
+        })
+      }
     >
       <EyeIcon className="size-4" aria-hidden />
-    </Link>
+    </Button>
   );
 }

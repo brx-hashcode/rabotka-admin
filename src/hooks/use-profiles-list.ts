@@ -23,9 +23,7 @@ const profilesParsers = {
   ),
 };
 
-function toWhatsappConnected(
-  arr: string[],
-): boolean | undefined {
+function toWhatsappConnected(arr: string[]): boolean | undefined {
   if (arr.length === 0) return undefined;
   const v = arr[0]?.toLowerCase();
   if (v === "true" || v === "1") return true;
@@ -52,7 +50,14 @@ export function useProfilesList() {
       return;
     }
     setPage(1);
-  }, [q, status, profile_type, whatsappConnectedArr, verification_status, setPage]);
+  }, [
+    q,
+    status,
+    profile_type,
+    whatsappConnectedArr,
+    verification_status,
+    setPage,
+  ]);
 
   const params = {
     page: queryState.page,
