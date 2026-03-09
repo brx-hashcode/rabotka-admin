@@ -105,7 +105,7 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
 export function RecentProfilesTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-profiles"],
-    queryFn: () => getProfilesList({ page: 1, limit: 5 }),
+    queryFn: () => getProfilesList({ page: 1, limit: 8 }),
   });
 
   return (

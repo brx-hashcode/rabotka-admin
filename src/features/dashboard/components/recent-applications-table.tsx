@@ -28,6 +28,18 @@ function getStatusBadgeVariant(
 
 const columns: ColumnDef<AdminApplicationListItem>[] = [
   {
+    id: "employer",
+    accessorKey: "employerName",
+    header: "Employer",
+    cell: ({ row }) => (
+      <ProfileCell
+        name={row.original.employerName}
+        email={row.original.employerEmail}
+        avatarUrl={row.original.employerAvatarUrl}
+      />
+    ),
+  },
+  {
     id: "worker",
     accessorKey: "workerName",
     header: "Worker",
@@ -39,6 +51,7 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
       />
     ),
   },
+
   {
     id: "jobTitle",
     accessorKey: "jobTitle",
@@ -51,18 +64,7 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
       </div>
     ),
   },
-  {
-    id: "employer",
-    accessorKey: "employerName",
-    header: "Employer",
-    cell: ({ row }) => (
-      <ProfileCell
-        name={row.original.employerName}
-        email={row.original.employerEmail}
-        avatarUrl={row.original.employerAvatarUrl}
-      />
-    ),
-  },
+
   {
     id: "status",
     accessorKey: "status",
@@ -94,7 +96,7 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
 export function RecentApplicationsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-applications"],
-    queryFn: () => getApplicationsList({ page: 1, limit: 5 }),
+    queryFn: () => getApplicationsList({ page: 1, limit: 8 }),
   });
 
   return (

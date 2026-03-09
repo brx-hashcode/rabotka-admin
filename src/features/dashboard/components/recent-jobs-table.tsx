@@ -78,6 +78,23 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
     ),
   },
   {
+    id: "scheduledAt",
+    accessorKey: "scheduledAt",
+    header: "Scheduled at",
+    cell: ({ row }) => {
+      const v = row.original.scheduledAt;
+      if (!v) return "—";
+      return (
+        <span className="text-muted-foreground text-sm">
+          {new Date(v).toLocaleString(undefined, {
+            dateStyle: "short",
+            timeStyle: "short",
+          })}
+        </span>
+      );
+    },
+  },
+  {
     id: "paymentFlow",
     accessorKey: "paymentFlow",
     header: "Payment",
@@ -105,7 +122,7 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
 export function RecentJobsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-jobs"],
-    queryFn: () => getJobOffersList({ page: 1, limit: 5 }),
+    queryFn: () => getJobOffersList({ page: 1, limit: 8 }),
   });
 
   return (
