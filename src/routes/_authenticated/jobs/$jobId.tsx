@@ -1,31 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Layout } from "#/layouts";
+import JobDetailPage from "#/pages/job-detail-page";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId")({
-  component: JobDetailPage,
+  component: RouteComponent,
 });
 
-function JobDetailPage() {
+function RouteComponent() {
   const { jobId } = Route.useParams();
 
   return (
     <Layout
-      title="Job"
+      title="Job Offer"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Job" },
+        { label: "Job Details" },
       ]}
     >
-      <div className="space-y-4">
-        <p className="text-muted-foreground text-sm">
-          Job ID: <code className="rounded bg-muted px-1 py-0.5">{jobId}</code>
-        </p>
-        <p className="text-muted-foreground text-sm">
-          Detail content can be implemented here (e.g. fetch job by ID and display).
-        </p>
-      </div>
+      <JobDetailPage jobId={jobId} />
     </Layout>
   );
 }

@@ -107,9 +107,8 @@ export default function ProfileDetailPage({
     profile != null &&
     profile.status !== "ACTIVE" &&
     profile.status !== "BANNED";
-  const canDeactivate = profile != null && profile.status === "ACTIVE";
-  const canConfirmPayment =
-    profile != null && profile.status === "PENDING_PAYMENT";
+  const canDeactivate = profile?.status === "ACTIVE";
+  const canConfirmPayment = profile?.status === "PENDING_PAYMENT";
 
   const tabValue = activeTab ?? "general";
 

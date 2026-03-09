@@ -26,7 +26,7 @@ type FormData = {
   description: string;
 };
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
       {children}
@@ -49,7 +49,7 @@ type Props = {
   isSaving: boolean;
 };
 
-export function ProfileForm({ profile, onSave, isSaving }: Props) {
+export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
   const [form, setForm] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -173,7 +173,7 @@ export function ProfileForm({ profile, onSave, isSaving }: Props) {
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-[80px] resize-none"
-              rows={2}
+              rows={6}
             />
           </div>
         </div>
