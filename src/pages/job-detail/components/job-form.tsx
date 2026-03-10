@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 
-import type { AdminJobOfferDetailResponse } from "#/lib/api/jobs-controller";
-import type { AdminUpdateJobOfferParams } from "#/lib/api/jobs-controller";
-import {
-  getJobOfferStatusLabel,
-  getPaymentFlowLabel,
-} from "#/lib/status-labels";
+import type {
+  AdminJobOfferDetailResponse,
+  AdminUpdateJobOfferParams,
+} from "#/lib/api/jobs-controller";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -49,9 +47,10 @@ type Props = {
   job: AdminJobOfferDetailResponse;
   onSave: (data: AdminUpdateJobOfferParams) => Promise<void>;
   isSaving: boolean;
+  disabled?: boolean;
 };
 
-export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
+export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   const [form, setForm] = useState<FormData>({
     title: "",
     description: "",
@@ -94,8 +93,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.amount !== initialForm.amount)
-      params.amount = Number(form.amount);
+    if (form.amount !== initialForm.amount) params.amount = Number(form.amount);
     if (form.paymentFlow !== initialForm.paymentFlow)
       params.paymentFlow = form.paymentFlow;
     if (form.address !== initialForm.address) params.address = form.address;
@@ -113,13 +111,13 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
         <CardTitle>Job Details</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Editable fields */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-5">
           <div className="col-span-2 space-y-1.5">
             <FieldLabel>Title</FieldLabel>
             <Input
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
+              disabled={disabled}
             />
           </div>
 
@@ -130,6 +128,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-20 resize-none"
               rows={4}
+              disabled={disabled}
             />
           </div>
 
@@ -139,6 +138,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
               type="datetime-local"
               value={form.scheduledAt}
               onChange={(e) => updateField("scheduledAt", e.target.value)}
+              disabled={disabled}
             />
           </div>
 
@@ -148,6 +148,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
               type="number"
               value={form.amount}
               onChange={(e) => updateField("amount", e.target.value)}
+              disabled={disabled}
             />
           </div>
 
@@ -156,6 +157,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
             <Input
               value={form.address}
               onChange={(e) => updateField("address", e.target.value)}
+              disabled={disabled}
             />
           </div>
 
@@ -167,6 +169,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
               onChange={(e) => updateField("quantity", e.target.value)}
               min={1}
               max={100}
+              disabled={disabled}
             />
           </div>
 
@@ -177,7 +180,8 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
               onChange={(e) => updateField("note", e.target.value)}
               placeholder="Optional note..."
               className="min-h-16 resize-none"
-              rows={2}
+              rows={3}
+              disabled={disabled}
             />
           </div>
         </div>
@@ -191,6 +195,7 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
             <Select
               value={form.paymentFlow}
               onValueChange={(v) => updateField("paymentFlow", v)}
+              disabled={disabled}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -218,15 +223,17 @@ export function JobForm({ job, onSave, isSaving }: Readonly<Props>) {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={!isDirty || isSaving}
-            className="shrink-0"
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+        {!disabled && (
+          <div className="mt-6 flex justify-end">
+            <Button
+              onClick={handleSave}
+              disabled={!isDirty || isSaving}
+              className="shrink-0"
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

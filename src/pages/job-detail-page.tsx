@@ -15,6 +15,8 @@ export default function JobDetailPage({
   const { job, isLoading, isError, updateJob, isUpdating } =
     useJobDetail(jobId);
 
+  const isEditable = job?.status === "ACTIVE";
+
   const handleSave = async (data: AdminUpdateJobOfferParams) => {
     await updateJob(data);
   };
@@ -33,7 +35,10 @@ export default function JobDetailPage({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-lg" />
+                <Skeleton
+                  key={`skeleton-${i + 1}`}
+                  className="h-20 rounded-lg"
+                />
               ))}
             </div>
             <Skeleton className="h-32 w-full rounded-lg" />
@@ -55,18 +60,21 @@ export default function JobDetailPage({
   }
 
   return (
-    <div className="space-y-8 pt-2">
-      {/* Main content: job form + summary */}
+    <div className="space-y-8 pt-6">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
-          <JobForm job={job} onSave={handleSave} isSaving={isUpdating} />
+          <JobForm
+            job={job}
+            onSave={handleSave}
+            isSaving={isUpdating}
+            disabled={!isEditable}
+          />
         </div>
         <div className="min-w-0">
           <JobSummary job={job} />
         </div>
       </div>
 
-      {/* Applications */}
       <section>
         <JobApplicationsTable applications={job.applications} />
       </section>

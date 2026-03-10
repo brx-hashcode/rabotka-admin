@@ -101,9 +101,18 @@ export class AdminJobOffersController extends AdminBaseController {
     );
     return this.patch<AdminJobOfferDetailResponse>(url, data as Record<string, unknown>);
   }
+
+  async deleteJobOffer(id: string): Promise<void> {
+    const url = this.createURL(
+      `/admin/job-offers/${id}`,
+      new URLSearchParams(),
+    );
+    await this.delete<void>(url);
+  }
 }
 
 const controller = new AdminJobOffersController();
 export const getJobOffersList = controller.getList.bind(controller);
 export const getJobOfferById = controller.getById.bind(controller);
 export const updateJobOffer = controller.updateJobOffer.bind(controller);
+export const deleteJobOffer = controller.deleteJobOffer.bind(controller);

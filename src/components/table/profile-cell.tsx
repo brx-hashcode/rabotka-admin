@@ -6,14 +6,18 @@ type ProfileCellProps = {
   avatarUrl: string | null;
 };
 
-function getInitials(name: string): string {
+function getInitials(name: Readonly<string>): string {
   const parts = name.trim().split(/\s+/);
   const a = parts[0]?.[0] ?? "";
   const b = parts[1]?.[0] ?? "";
   return (a + b).toUpperCase().slice(0, 2) || "?";
 }
 
-export function ProfileCell({ name, email, avatarUrl }: ProfileCellProps) {
+export function ProfileCell({
+  name,
+  email,
+  avatarUrl,
+}: Readonly<ProfileCellProps>) {
   const displayName = name || "—";
   const initials = getInitials(displayName);
 

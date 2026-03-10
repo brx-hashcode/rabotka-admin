@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import {
   getJobOfferById,
   updateJobOffer,
+  deleteJobOffer,
   type AdminJobOfferDetailResponse,
   type AdminUpdateJobOfferParams,
 } from "#/lib/api/jobs-controller";
@@ -29,6 +30,17 @@ export function useJobDetail(jobId: string) {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteJobOffer(jobId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "job-offers"] });
+      toast.success("Job offer deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete job offer");
+    },
+  });
+
   return {
     job: query.data ?? null,
     isLoading: query.isLoading,
@@ -37,5 +49,7 @@ export function useJobDetail(jobId: string) {
     refetch: query.refetch,
     updateJob: updateMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
+    deleteJob: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
   };
 }

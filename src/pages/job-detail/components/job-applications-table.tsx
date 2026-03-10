@@ -20,7 +20,6 @@ const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
       <Link
         to="/profiles/$profileId"
         params={{ profileId: row.original.workerId }}
-        className="block no-underline hover:opacity-90"
       >
         <ProfileCell
           name={row.original.workerName}
@@ -41,11 +40,6 @@ const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
           <Badge variant={statusBadgeVariant(app.status)}>
             {getApplicationStatusLabel(app.status)}
           </Badge>
-          {app.cancellationReason && (
-            <p className="text-muted-foreground max-w-48 text-xs">
-              {app.cancellationReason}
-            </p>
-          )}
         </div>
       );
     },
