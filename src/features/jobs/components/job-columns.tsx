@@ -134,6 +134,23 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
       }
     },
   },
+  {
+    id: "updatedAt",
+    accessorKey: "updatedAt",
+    header: "Updated at",
+    cell: ({ row }) => {
+      const v = row.original.updatedAt;
+      if (!v) return "—";
+      try {
+        return new Date(v).toLocaleString(undefined, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      } catch {
+        return String(v);
+      }
+    },
+  },
 ];
 
 export const jobColumns = getCommonColumns<JobOffer>({

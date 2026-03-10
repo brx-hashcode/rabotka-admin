@@ -116,6 +116,23 @@ const penaltyDataColumns: ColumnDef<Penalty, unknown>[] = [
       }
     },
   },
+  {
+    id: "updatedAt",
+    accessorKey: "updatedAt",
+    header: "Updated at",
+    cell: ({ row }) => {
+      const v = row.original.updatedAt;
+      if (!v) return "—";
+      try {
+        return new Date(v).toLocaleString(undefined, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      } catch {
+        return String(v);
+      }
+    },
+  },
 ];
 
 export const penaltyColumns = getCommonColumns<Penalty>({

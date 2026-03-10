@@ -75,6 +75,11 @@ export class AdminUsersController extends AdminBaseController {
     const url = this.createURL(`/user/${id}/deactivate`, new URLSearchParams());
     return this.patch<AdminUserListItem>(url, {});
   }
+
+  async remove(id: string): Promise<{ success: boolean }> {
+    const url = this.createURL(`/user/${id}`, new URLSearchParams());
+    return this.delete<{ success: boolean }>(url);
+  }
 }
 
 const controller = new AdminUsersController();
@@ -84,3 +89,4 @@ export const updateAdminUser = (id: string, data: UpdateAdminUserParams) =>
   controller.update(id, data);
 export const activateAdminUser = (id: string) => controller.activate(id);
 export const deactivateAdminUser = (id: string) => controller.deactivate(id);
+export const deleteAdminUser = (id: string) => controller.remove(id);

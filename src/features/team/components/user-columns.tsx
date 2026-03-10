@@ -99,6 +99,16 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
       </span>
     ),
   },
+  {
+    id: "updatedAt",
+    accessorKey: "updatedAt",
+    header: "Updated At",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-sm">
+        {formatDate(row.original.updatedAt)}
+      </span>
+    ),
+  },
 ];
 
 export const userColumns = getCommonColumns<AdminUser>({

@@ -146,6 +146,9 @@ a:hover {
   color: #246f76;
 }
 
+img {
+  pointer-events: none;
+}
 code {
   font-size: 0.9em;
   border: 1px solid var(--line);

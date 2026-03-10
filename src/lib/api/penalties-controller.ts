@@ -14,6 +14,7 @@ export type AdminPenaltyListItem = {
   appliedAt: string;
   paidAt: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type AdminPenaltiesResponse = {
