@@ -109,7 +109,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
     profile.status !== "BANNED" &&
     profile.status !== "PENDING_PAYMENT";
   const canDeactivate = profile.status === "ACTIVE";
-  const canVerifyKyc = profile.verificationStatus !== "VERIFIED";
 
   return (
     <>
