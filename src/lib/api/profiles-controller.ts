@@ -222,6 +222,14 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileMessage[]>(url);
   }
 
+  async sendVerificationLink(id: string): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/send-verification-link`,
+      new URLSearchParams(),
+    );
+    return this.post<{ success: boolean }>(url, {});
+  }
+
   async sendMessage(
     id: string,
     channel: "WHATSAPP" | "EMAIL",
@@ -247,3 +255,4 @@ export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const sendVerificationLink = controller.sendVerificationLink.bind(controller);

@@ -4,8 +4,13 @@ import {
   IconPlayerPlay,
   IconPlayerPause,
   IconCreditCard,
+  IconSend,
+  IconBrandWhatsapp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { useQueryState, parseAsStringEnum } from "nuqs";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { useProfileDetail } from "#/hooks/use-profile-detail";
 import type { ViewerDocument } from "./profile-detail/components/document-viewer-drawer";
@@ -13,6 +18,13 @@ import type { ViewerDocument } from "./profile-detail/components/document-viewer
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 
 import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
@@ -24,6 +36,8 @@ import { KycVerificationModal } from "./profile-detail/components/kyc-verificati
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
+import { createPaymentLink } from "#/lib/api/payment-requests-controller";
+import { sendVerificationLink } from "#/lib/api/profiles-controller";
 
 type ProfileTab = "general" | "kyc" | "payments" | "messages";
 
@@ -62,6 +76,8 @@ export default function ProfileDetailPage({
   } = useProfileDetail(profileId);
 
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
+  const [sendPaymentLinkOpen, setSendPaymentLinkOpen] = useState(false);
+  const [sendVerifLinkOpen, setSendVerifLinkOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [statusModalTarget, setStatusModalTarget] = useState<
@@ -69,6 +85,28 @@ export default function ProfileDetailPage({
   >("ACTIVE");
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const { mutate: sendPaymentLink, isPending: isSendingLink } = useMutation({
+    mutationFn: () => createPaymentLink(profileId),
+    onSuccess: () => {
+      setSendPaymentLinkOpen(false);
+      toast.success("Payment link sent via WhatsApp.");
+    },
+    onError: () => {
+      toast.error("Failed to send payment link.");
+    },
+  });
+
+  const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
+    mutationFn: () => sendVerificationLink(profileId),
+    onSuccess: () => {
+      setSendVerifLinkOpen(false);
+      toast.success("WhatsApp verification link sent.");
+    },
+    onError: () => {
+      toast.error("Failed to send verification link.");
+    },
+  });
 
   const handleSave = async (data: {
     firstName: string;
@@ -114,6 +152,8 @@ export default function ProfileDetailPage({
     profile.status !== "BANNED";
   const canDeactivate = profile?.status === "ACTIVE";
   const canConfirmPayment = profile?.status === "PENDING_PAYMENT";
+  const canSendPaymentLink = profile?.status === "PENDING_PAYMENT";
+  const canSendVerifLink = profile?.whatsappConnected === false;
 
   const tabValue = activeTab ?? "general";
 
@@ -140,7 +180,10 @@ export default function ProfileDetailPage({
           <div className="col-span-5 space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={`skeleton-${i + 1}`} className="h-20 rounded-lg" />
+                <Skeleton
+                  key={`skeleton-${i + 1}`}
+                  className="h-20 rounded-lg"
+                />
               ))}
             </div>
           </div>
@@ -164,7 +207,7 @@ export default function ProfileDetailPage({
       <Tabs
         value={tabValue}
         onValueChange={(value) => setActiveTab(value as ProfileTab)}
-        className="w-full"
+        className="w-full space-y-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <TabsList className="h-9 w-full sm:w-auto">
@@ -178,47 +221,66 @@ export default function ProfileDetailPage({
               </TabsTrigger>
             ))}
           </TabsList>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            {canConfirmPayment && (
-              <Button
-                variant="default"
-                onClick={() => setConfirmPaymentOpen(true)}
-              >
-                <IconCreditCard className="size-4" />
-                Confirm Payment
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Actions
+                <IconChevronDown className="size-4" />
               </Button>
-            )}
-            {canVerifyKyc && (
-              <Button variant="outline" onClick={() => setKycModalOpen(true)}>
-                <IconShieldCheck className="size-4" />
-                KYC Verification
-              </Button>
-            )}
-            {canActivate && !canConfirmPayment && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStatusModalTarget("ACTIVE");
-                  setStatusModalOpen(true);
-                }}
-              >
-                <IconPlayerPlay className="size-4" />
-                Activate
-              </Button>
-            )}
-            {canDeactivate && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStatusModalTarget("SUSPENDED");
-                  setStatusModalOpen(true);
-                }}
-              >
-                <IconPlayerPause className="size-4" />
-                Suspend
-              </Button>
-            )}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {canSendVerifLink && (
+                <DropdownMenuItem onClick={() => setSendVerifLinkOpen(true)}>
+                  <IconBrandWhatsapp className="size-4" />
+                  Send verification link
+                </DropdownMenuItem>
+              )}
+              {canSendPaymentLink && (
+                <DropdownMenuItem onClick={() => setSendPaymentLinkOpen(true)}>
+                  <IconSend className="size-4" />
+                  Send payment link
+                </DropdownMenuItem>
+              )}
+              {canConfirmPayment && (
+                <DropdownMenuItem onClick={() => setConfirmPaymentOpen(true)}>
+                  <IconCreditCard className="size-4" />
+                  Confirm payment
+                </DropdownMenuItem>
+              )}
+              {canVerifyKyc && (
+                <DropdownMenuItem onClick={() => setKycModalOpen(true)}>
+                  <IconShieldCheck className="size-4" />
+                  KYC Verification
+                </DropdownMenuItem>
+              )}
+              {(canVerifyKyc || canSendVerifLink || canSendPaymentLink || canConfirmPayment) &&
+                (canActivate || canDeactivate) && <DropdownMenuSeparator />}
+              {canActivate && !canConfirmPayment && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setStatusModalTarget("ACTIVE");
+                    setStatusModalOpen(true);
+                  }}
+                >
+                  <IconPlayerPlay className="size-4" />
+                  Activate
+                </DropdownMenuItem>
+              )}
+              {canDeactivate && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => {
+                    setStatusModalTarget("SUSPENDED");
+                    setStatusModalOpen(true);
+                  }}
+                >
+                  <IconPlayerPause className="size-4" />
+                  Suspend
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <TabsContent value="general">
@@ -258,6 +320,28 @@ export default function ProfileDetailPage({
           />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={sendVerifLinkOpen}
+        onOpenChange={setSendVerifLinkOpen}
+        title="Send verification link"
+        description="This will generate a new WhatsApp verification link and send it to the profile's phone number. Any previous link will remain valid until it expires."
+        actionLabel="Send via WhatsApp"
+        onConfirm={() => sendVerifLink()}
+        isPending={isSendingVerifLink}
+        variant="default"
+      />
+
+      <ConfirmDialog
+        open={sendPaymentLinkOpen}
+        onOpenChange={setSendPaymentLinkOpen}
+        title="Send payment link"
+        description="This will generate a payment link and send it to the profile via WhatsApp. The previous link (if any) will still be valid."
+        actionLabel="Send via WhatsApp"
+        onConfirm={() => sendPaymentLink()}
+        isPending={isSendingLink}
+        variant="default"
+      />
 
       <ConfirmDialog
         open={confirmPaymentOpen}

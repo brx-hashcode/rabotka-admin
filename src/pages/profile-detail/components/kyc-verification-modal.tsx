@@ -20,7 +20,7 @@ import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
 import { ImageUploadZone } from "./image-upload-zone";
 import { cn } from "#/lib/utils";
 
-type Props = {
+type KycVerificationModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profile: AdminProfileDetailResponse;
@@ -34,13 +34,55 @@ type Props = {
 
 const MIN_FILES_REQUIRED = 2;
 
+const REASON_PLACEHOLDER = {
+  REJECTED: "Provide a reason for rejection...",
+  VERIFIED: "Add a comment...",
+} as const;
+
+function ReasonField({
+  decision,
+  reason,
+  reasonError,
+  onReasonChange,
+}: Readonly<{
+  decision: "VERIFIED" | "REJECTED" | null;
+  reason: string;
+  reasonError: boolean;
+  onReasonChange: (value: string) => void;
+}>) {
+  const isRejected = decision === "REJECTED";
+  const placeholder = isRejected
+    ? REASON_PLACEHOLDER.REJECTED
+    : REASON_PLACEHOLDER.VERIFIED;
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+        Reason {isRejected ? <span className="text-destructive">*</span> : "(optional)"}
+      </label>
+      <Textarea
+        placeholder={placeholder}
+        value={reason}
+        rows={3}
+        onChange={(e) => onReasonChange(e.target.value)}
+        className={cn("resize-none", reasonError && "border-destructive")}
+      />
+      {reasonError && (
+        <p className="text-destructive text-xs">
+          A reason is required when rejecting.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function KycVerificationModal({
   open,
   onOpenChange,
   profile,
   onSubmit,
   isPending,
-}: Props) {
+}: Readonly<KycVerificationModalProps>) {
   const [decision, setDecision] = useState<"VERIFIED" | "REJECTED" | null>(
     null,
   );
@@ -171,38 +213,15 @@ export function KycVerificationModal({
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Reason{" "}
-              {decision === "REJECTED" ? (
-                <span className="text-destructive">*</span>
-              ) : (
-                "(optional)"
-              )}
-            </label>
-            <Textarea
-              placeholder={
-                decision === "REJECTED"
-                  ? "Provide a reason for rejection..."
-                  : "Add a comment..."
-              }
-              value={reason}
-              rows={3}
-              onChange={(e) => {
-                setReason(e.target.value);
-                if (e.target.value.trim()) setReasonError(false);
-              }}
-              className={cn(
-                reasonError ? "border-destructive" : "",
-                "resize-none",
-              )}
-            />
-            {reasonError && (
-              <p className="text-destructive text-xs">
-                A reason is required when rejecting.
-              </p>
-            )}
-          </div>
+          <ReasonField
+            decision={decision}
+            reason={reason}
+            reasonError={reasonError}
+            onReasonChange={(value) => {
+              setReason(value);
+              if (value.trim()) setReasonError(false);
+            }}
+          />
         </div>
 
         <DialogFooter>
