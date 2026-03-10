@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { IconCreditCard, IconFileText, IconCheck, IconX } from "@tabler/icons-react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Card, CardContent } from "#/components/ui/card";
 import {
   getProfilePaymentRequests,
   type AdminProfilePaymentRequest,
@@ -152,77 +152,115 @@ function PaymentRequestCard({
   const canProcess = request.status === "SUBMITTED";
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <CardTitle className="text-sm font-medium">
-            Payment Request
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant={cfg.variant}>{cfg.label}</Badge>
-            {canProcess && (
-              <>
-                <Button size="sm" variant="default" onClick={onApprove}>
-                  <IconCheck className="mr-1 size-3.5" />
-                  Approve
-                </Button>
-                <Button size="sm" variant="destructive" onClick={onReject}>
-                  <IconX className="mr-1 size-3.5" />
-                  Reject
-                </Button>
-              </>
+    <Card className="overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
+        <div className="flex items-center gap-2">
+          <IconCreditCard className="text-muted-foreground size-4 shrink-0" />
+          <span className="text-sm font-semibold">Payment Request</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+          {canProcess && (
+            <>
+              <Button size="sm" variant="default" onClick={onApprove}>
+                <IconCheck className="mr-1 size-3.5" />
+                Approve
+              </Button>
+              <Button size="sm" variant="destructive" onClick={onReject}>
+                <IconX className="mr-1 size-3.5" />
+                Reject
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Two-column body */}
+      <div className="grid grid-cols-1 divide-y lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+        {/* Left — details */}
+        <div className="space-y-4 p-5">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <InfoField label="Created" value={formatDate(request.createdAt)} />
+            <InfoField label="Updated" value={formatDate(request.updatedAt)} />
+            {request.paymentReference && (
+              <InfoField
+                label="Reference"
+                value={request.paymentReference}
+                mono
+              />
             )}
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-          <div>
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">Created</p>
-            <p className="mt-0.5 font-medium">{formatDate(request.createdAt)}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">Updated</p>
-            <p className="mt-0.5 font-medium">{formatDate(request.updatedAt)}</p>
-          </div>
-          {request.paymentReference && (
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wide">Reference</p>
-              <p className="mt-0.5 font-medium font-mono text-xs">{request.paymentReference}</p>
+
+          {request.rejectionNote && (
+            <div className="rounded-md bg-destructive/10 px-4 py-3">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-destructive/70">
+                Rejection reason
+              </p>
+              <p className="text-sm text-destructive">{request.rejectionNote}</p>
             </div>
+          )}
+
+          {request.proofImages.length === 0 && (
+            <p className="text-muted-foreground text-xs italic">
+              No proof of payment uploaded.
+            </p>
           )}
         </div>
 
-        {request.rejectionNote && (
-          <div className="rounded bg-destructive/10 p-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Rejection reason</p>
-            <p className="text-sm text-destructive">{request.rejectionNote}</p>
-          </div>
-        )}
-
-        {request.proofImages.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Proof of payment</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {request.proofImages.map((url, i) => (
-                <ProofImageCard
-                  key={url}
-                  url={url}
-                  index={i}
-                  onPreview={() =>
-                    onPreviewDoc({
-                      url,
-                      title: `Proof of payment ${i + 1}`,
-                      description: `Uploaded — ${formatDate(request.createdAt)}`,
-                    })
-                  }
-                />
-              ))}
+        {/* Right — proof images */}
+        <div className="p-5">
+          {request.proofImages.length > 0 ? (
+            <>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Proof of payment ({request.proofImages.length})
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {request.proofImages.map((url, i) => (
+                  <ProofImageCard
+                    key={url}
+                    url={url}
+                    index={i}
+                    onPreview={() =>
+                      onPreviewDoc({
+                        url,
+                        title: `Proof of payment ${i + 1}`,
+                        description: `Submitted — ${formatDate(request.createdAt)}`,
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full min-h-[100px] items-center justify-center">
+              <p className="text-muted-foreground text-sm">No images attached.</p>
             </div>
-          </div>
-        )}
-      </CardContent>
+          )}
+        </div>
+      </div>
     </Card>
+  );
+}
+
+function InfoField({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+        {label}
+      </p>
+      <p className={`mt-0.5 text-sm font-medium ${mono ? "font-mono" : ""}`}>
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -235,23 +273,32 @@ function ProofImageCard({
   index: number;
   onPreview: () => void;
 }) {
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
-      <div className="bg-muted relative flex h-28 items-center justify-center">
-        {isImage ? (
+      <div
+        className="bg-muted relative flex h-32 cursor-pointer items-center justify-center overflow-hidden transition-opacity hover:opacity-90"
+        onClick={onPreview}
+      >
+        {!imgFailed ? (
           <img
             src={url}
             alt={`Proof ${index + 1}`}
             className="h-full w-full object-cover"
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <IconFileText className="text-muted-foreground size-10" />
         )}
       </div>
       <div className="p-2">
-        <Button variant="outline" size="sm" className="w-full text-xs" onClick={onPreview}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
+          onClick={onPreview}
+        >
           Preview
         </Button>
       </div>
