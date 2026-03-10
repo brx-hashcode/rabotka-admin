@@ -29,6 +29,26 @@ export type AdminApplicationsResponse = {
   limit: number;
 };
 
+export type AdminApplicationPenaltyItem = {
+  id: string;
+  amount: number;
+  reason: string | null;
+  appliedAt: string;
+  paidAt: string | null;
+};
+
+export type AdminApplicationDetailResponse = AdminApplicationListItem & {
+  jobScheduledAt: string;
+  jobAmount: number;
+  jobAddress: string;
+  jobPaymentFlow: string;
+  jobStatus: string;
+  jobQuantity: number;
+  workerReliabilityScore: number | null;
+  employerPhone: string;
+  penalties: AdminApplicationPenaltyItem[];
+};
+
 export type AdminApplicationsListParams = {
   page?: number;
   limit?: number;
@@ -53,7 +73,16 @@ export class AdminApplicationsController extends AdminBaseController {
     const url = this.createURL("/admin/applications", query);
     return this.get<AdminApplicationsResponse>(url);
   }
+
+  async getById(id: string): Promise<AdminApplicationDetailResponse> {
+    const url = this.createURL(
+      `/admin/applications/${id}`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminApplicationDetailResponse>(url);
+  }
 }
 
 const controller = new AdminApplicationsController();
 export const getApplicationsList = controller.getList.bind(controller);
+export const getApplicationById = controller.getById.bind(controller);

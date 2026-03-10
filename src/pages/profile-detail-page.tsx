@@ -64,7 +64,6 @@ export default function ProfileDetailPage({
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Handlers
   const handleSave = async (data: {
     firstName: string;
     lastName: string;
@@ -100,7 +99,6 @@ export default function ProfileDetailPage({
     setDrawerOpen(true);
   };
 
-  // Conditional actions based on current state
   const canVerifyKyc =
     profile != null && profile.verificationStatus !== "VERIFIED";
   const canActivate =
@@ -129,13 +127,13 @@ export default function ProfileDetailPage({
         <div className="grid grid-cols-5 gap-6">
           <div className="col-span-5 space-y-4 lg:col-span-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={`skeleton-${i + 1}`} className="h-12 w-full" />
             ))}
           </div>
           <div className="col-span-5 space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-lg" />
+                <Skeleton key={`skeleton-${i + 1}`} className="h-20 rounded-lg" />
               ))}
             </div>
           </div>
@@ -144,7 +142,6 @@ export default function ProfileDetailPage({
     );
   }
 
-  // Error state
   if (isError || !profile) {
     return (
       <div className="flex h-64 items-center justify-center pt-4">
@@ -156,17 +153,20 @@ export default function ProfileDetailPage({
   }
 
   return (
-    <div className="space-y-6 pt-4">
+    <div className="space-y-6 pt-6">
       <Tabs
         value={tabValue}
         onValueChange={(value) => setActiveTab(value as ProfileTab)}
         className="w-full"
       >
-        {/* Header: Tabs + Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <TabsList className="h-9 w-full sm:w-auto">
             {PROFILE_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value}>
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="cursor-pointer"
+              >
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -215,7 +215,6 @@ export default function ProfileDetailPage({
           </div>
         </div>
 
-        {/* General Tab */}
         <TabsContent value="general">
           <div className="grid grid-cols-5 gap-6">
             <div className="col-span-5 min-w-0 lg:col-span-3">
@@ -232,7 +231,6 @@ export default function ProfileDetailPage({
           </div>
         </TabsContent>
 
-        {/* KYC Information Tab */}
         <TabsContent value="kyc">
           <ProfileKycContent
             profile={profile}
@@ -241,7 +239,6 @@ export default function ProfileDetailPage({
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
       {canVerifyKyc && (
         <KycVerificationModal
           open={kycModalOpen}

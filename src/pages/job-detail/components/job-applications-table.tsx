@@ -65,7 +65,7 @@ const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
       return (
         <span className="inline-flex items-center gap-1 text-xs text-destructive">
           <IconAlertTriangle className="size-3.5" />
-          {app.penaltyAmount != null ? formatAmount(app.penaltyAmount) : "Yes"}
+          {app.penaltyAmount == null ? "Yes" : formatAmount(app.penaltyAmount)}
         </span>
       );
     },

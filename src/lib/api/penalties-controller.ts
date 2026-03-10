@@ -23,6 +23,16 @@ export type AdminPenaltiesResponse = {
   limit: number;
 };
 
+export type AdminPenaltyDetailResponse = AdminPenaltyListItem & {
+  jobOfferId: string;
+  jobScheduledAt: string;
+  jobAmount: number;
+  jobAddress: string;
+  jobPaymentFlow: string;
+  jobStatus: string;
+  applicationStatus: string;
+};
+
 export type AdminPenaltiesListParams = {
   page?: number;
   limit?: number;
@@ -45,7 +55,16 @@ export class AdminPenaltiesController extends AdminBaseController {
     const url = this.createURL("/admin/penalties", query);
     return this.get<AdminPenaltiesResponse>(url);
   }
+
+  async getById(id: string): Promise<AdminPenaltyDetailResponse> {
+    const url = this.createURL(
+      `/admin/penalties/${id}`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminPenaltyDetailResponse>(url);
+  }
 }
 
 const controller = new AdminPenaltiesController();
 export const getPenaltiesList = controller.getList.bind(controller);
+export const getPenaltyById = controller.getById.bind(controller);

@@ -38,7 +38,7 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
-type Props = {
+type ProfileFormProps = {
   profile: AdminProfileDetailResponse;
   onSave: (data: {
     firstName: string;
@@ -49,7 +49,11 @@ type Props = {
   isSaving: boolean;
 };
 
-export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
+export function ProfileForm({
+  profile,
+  onSave,
+  isSaving,
+}: Readonly<ProfileFormProps>) {
   const [form, setForm] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -99,7 +103,6 @@ export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
         <CardTitle>Profile Information</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Avatar section */}
         <div className="mb-6 flex items-center gap-4">
           <Avatar className="border-border size-20 border-4 shadow-md">
             {profile.avatarUrl ? (
@@ -128,7 +131,6 @@ export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
 
         <Separator className="mb-6" />
 
-        {/* Editable fields */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-5">
           <div className="space-y-1.5">
             <FieldLabel>First Name</FieldLabel>
@@ -180,7 +182,6 @@ export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
 
         <Separator className="my-6" />
 
-        {/* Read-only fields */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           <div className="space-y-1.5">
             <FieldLabel>Profile Type</FieldLabel>
@@ -212,9 +213,9 @@ export function ProfileForm({ profile, onSave, isSaving }: Readonly<Props>) {
             <FieldLabel>Reliability Score</FieldLabel>
             <Input
               value={
-                profile.reliabilityScore != null
-                  ? String(profile.reliabilityScore)
-                  : "—"
+                profile.reliabilityScore == null
+                  ? "—"
+                  : String(profile.reliabilityScore)
               }
               disabled
             />
