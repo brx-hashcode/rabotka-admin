@@ -198,7 +198,11 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
                         { value: "ADMIN", label: "Admin" },
                         { value: "SUPER_ADMIN", label: "Super Admin" },
                       ].map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
+                        <SelectItem
+                          key={role.value}
+                          value={role.value}
+                          className="uppercase"
+                        >
                           {role.label}
                         </SelectItem>
                       ))}
