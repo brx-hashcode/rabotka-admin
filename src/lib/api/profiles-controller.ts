@@ -89,6 +89,7 @@ export type AdminProfileMessage = {
   platform: string;
   body: string;
   createdAt: string;
+  sentByName: string | null;
 };
 
 export type AdminLogEntry = {

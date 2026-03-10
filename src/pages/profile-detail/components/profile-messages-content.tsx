@@ -158,7 +158,7 @@ export function ProfileMessagesContent({
       </div>
 
       {/* Chat area */}
-      <CardContent className="flex flex-col gap-4 p-5 overflow-y-auto flex-1 min-h-0">
+      <CardContent className="flex flex-col gap-4 p-5 overflow-y-auto flex-1 min-h-0 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} profileName={profileName} adminName={adminName} />
         ))}
@@ -190,7 +190,7 @@ function MessageBubble({
       )}
     >
       <span className="text-xs text-muted-foreground px-1">
-        {isOutbound ? adminName : profileName}
+        {isOutbound ? (message.sentByName ?? adminName) : profileName}
       </span>
       <div
         className={cn(
