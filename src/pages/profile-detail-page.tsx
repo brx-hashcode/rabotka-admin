@@ -17,16 +17,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
+import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
+import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 
-type ProfileTab = "general" | "kyc";
+type ProfileTab = "general" | "kyc" | "payments" | "messages";
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
   { label: "KYC Information", value: "kyc" },
+  { label: "Payments", value: "payments" },
+  { label: "Messages", value: "messages" },
 ];
 
 const profileTabParser = parseAsStringEnum<ProfileTab>(
@@ -235,6 +239,20 @@ export default function ProfileDetailPage({
           <ProfileKycContent
             profile={profile}
             onPreviewDoc={handlePreviewDoc}
+          />
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <ProfilePaymentsContent
+            profileId={profileId}
+            onPreviewDoc={handlePreviewDoc}
+          />
+        </TabsContent>
+
+        <TabsContent value="messages">
+          <ProfileMessagesContent
+            profileId={profileId}
+            profileName={`${profile.firstName} ${profile.lastName}`}
           />
         </TabsContent>
       </Tabs>

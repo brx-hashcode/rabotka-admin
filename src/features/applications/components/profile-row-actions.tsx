@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { EyeIcon, MoreHorizontal } from "lucide-react";
-import { IconLink } from "@tabler/icons-react";
+import { IconSend } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "#/components/ui/button";
 import {
@@ -20,17 +19,13 @@ type ProfileRowActionsProps = Readonly<{
 
 export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
 
   const sendLinkMutation = useMutation({
     mutationFn: () => createPaymentLink(profile.id),
-    onSuccess: ({ paymentUrl }) => {
-      navigator.clipboard.writeText(paymentUrl).catch(() => {});
-      setCopied(true);
-      toast.success("Payment link created and copied to clipboard.");
-      setTimeout(() => setCopied(false), 3000);
+    onSuccess: () => {
+      toast.success("Payment link sent via WhatsApp.");
     },
-    onError: () => toast.error("Failed to create payment link."),
+    onError: () => toast.error("Failed to send payment link."),
   });
 
   const canSendPaymentLink = profile.status === "PENDING_PAYMENT";
@@ -60,8 +55,8 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
           disabled={!canSendPaymentLink || sendLinkMutation.isPending}
           onClick={() => sendLinkMutation.mutate()}
         >
-          <IconLink className="mr-2 size-4" />
-          {copied ? "Link copied!" : "Send payment link"}
+          <IconSend className="mr-2 size-4" />
+          {sendLinkMutation.isPending ? "Sending..." : "Send payment link"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

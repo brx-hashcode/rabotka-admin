@@ -67,6 +67,30 @@ export type AdminUpdateStatusParams = {
   reason?: string;
 };
 
+export type AdminProfilePaymentRequest = {
+  id: string;
+  profileId: string;
+  profileName: string;
+  profileEmail: string;
+  profilePhone: string;
+  profileStatus: string;
+  profileType: string;
+  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED";
+  paymentReference: string | null;
+  proofImages: string[];
+  rejectionNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminProfileMessage = {
+  id: string;
+  direction: "INBOUND" | "OUTBOUND";
+  platform: string;
+  body: string;
+  createdAt: string;
+};
+
 export type AdminLogEntry = {
   id: string;
   action: string;
@@ -180,6 +204,22 @@ export class AdminProfilesController extends AdminBaseController {
     );
     return this.get<AdminLogEntry[]>(url);
   }
+
+  async getPaymentRequests(id: string): Promise<AdminProfilePaymentRequest[]> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/payment-requests`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminProfilePaymentRequest[]>(url);
+  }
+
+  async getMessages(id: string): Promise<AdminProfileMessage[]> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/messages`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminProfileMessage[]>(url);
+  }
 }
 
 const controller = new AdminProfilesController();
@@ -191,3 +231,5 @@ export const updateProfileStatus =
   controller.updateProfileStatus.bind(controller);
 export const confirmPayment = controller.confirmPayment.bind(controller);
 export const getProfileLogs = controller.getLogs.bind(controller);
+export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
+export const getProfileMessages = controller.getMessages.bind(controller);

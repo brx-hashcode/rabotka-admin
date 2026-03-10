@@ -35,7 +35,7 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
     header: "Profile",
     cell: ({ row }) => (
       <ProfileCell
-        name={row.original.profileName}
+        name={row.getValue("profileName")}
         email={row.original.profileEmail}
       />
     ),
@@ -55,8 +55,9 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const cfg = STATUS_BADGE[row.original.status] ?? {
-        label: row.original.status,
+      const status = row.original.status;
+      const cfg = STATUS_BADGE[status] ?? {
+        label: status,
         variant: "secondary" as const,
       };
       return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -89,6 +90,6 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
 export const paymentRequestColumns = getCommonColumns<PaymentRequest>({
   additionalColumns: paymentRequestDataColumns,
   columnsActions: ({ row }) => (
-    <PaymentRequestRowActions request={row.original} />
+    <PaymentRequestRowActions request={row} />
   ),
 });
