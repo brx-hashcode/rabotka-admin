@@ -8,18 +8,10 @@ import {
 } from "@tabler/icons-react";
 
 import type { AdminApplicationDetailResponse } from "#/lib/api/applications-controller";
-import {
-  getApplicationStatusLabel,
-  getJobOfferStatusLabel,
-} from "#/lib/status-labels";
-
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-
-import { statusBadgeVariant, formatDate } from "../helpers";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -36,59 +28,6 @@ type Props = {
 export function ApplicationSummary({ application }: Readonly<Props>) {
   return (
     <div className="space-y-6">
-      {/* Status cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Status
-            </p>
-            <Badge
-              variant={statusBadgeVariant(application.status)}
-              className="mt-1"
-            >
-              {getApplicationStatusLabel(application.status)}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Job Status
-            </p>
-            <Badge
-              variant={statusBadgeVariant(application.jobStatus)}
-              className="mt-1"
-            >
-              {getJobOfferStatusLabel(application.jobStatus)}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Applied
-            </p>
-            <p className="mt-1 text-sm font-medium">
-              {formatDate(application.createdAt)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Penalty
-            </p>
-            <p className="mt-1 text-sm font-medium">
-              {application.penaltyApplied ? "Yes" : "No"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Worker card */}
       <Card>
         <CardHeader className="pb-0">

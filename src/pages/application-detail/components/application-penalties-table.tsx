@@ -4,11 +4,12 @@ import { Link } from "@tanstack/react-router";
 import type { AdminApplicationPenaltyItem } from "#/lib/api/applications-controller";
 
 import { DataTable } from "#/components/table";
+import { getCommonColumns } from "#/components/table/data-table-column";
 import { Badge } from "#/components/ui/badge";
 
 import { formatDateTime, formatAmount } from "../helpers";
 
-const columns: ColumnDef<AdminApplicationPenaltyItem>[] = [
+const dataColumns: ColumnDef<AdminApplicationPenaltyItem>[] = [
   {
     id: "amount",
     accessorKey: "amount",
@@ -61,22 +62,22 @@ const columns: ColumnDef<AdminApplicationPenaltyItem>[] = [
       </span>
     ),
   },
-  {
-    id: "actions",
-    header: () => <div className="hidden">Actions</div>,
-    cell: ({ row }) => (
-      <Link
-        to="/penalties/$penaltyId"
-        params={{ penaltyId: row.original.id }}
-        className="text-primary text-xs hover:underline"
-      >
-        View
-      </Link>
-    ),
-    enableSorting: false,
-    size: 60,
-  },
 ];
+
+const PenaltyRowActions = ({ row }: { row: AdminApplicationPenaltyItem }) => (
+  <Link
+    to="/penalties/$penaltyId"
+    params={{ penaltyId: row.id }}
+    className="text-primary text-xs hover:underline"
+  >
+    View
+  </Link>
+);
+
+const columns = getCommonColumns<AdminApplicationPenaltyItem>({
+  additionalColumns: dataColumns,
+  columnsActions: PenaltyRowActions,
+});
 
 type Props = {
   penalties: AdminApplicationPenaltyItem[];
@@ -87,6 +88,7 @@ export function ApplicationPenaltiesTable({ penalties }: Readonly<Props>) {
     <DataTable
       data={penalties}
       columns={columns}
+      enableRowSelection
       header={
         <h3 className="text-base font-semibold">
           Penalties ({penalties.length})

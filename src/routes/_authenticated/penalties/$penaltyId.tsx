@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Layout } from "#/layouts";
+import PenaltyDetailPage from "#/pages/penalty-detail-page";
 
 export const Route = createFileRoute("/_authenticated/penalties/$penaltyId")({
-  component: PenaltyDetailPage,
+  component: RouteComponent,
 });
 
-function PenaltyDetailPage() {
+function RouteComponent() {
   const { penaltyId } = Route.useParams();
 
   return (
@@ -15,19 +16,10 @@ function PenaltyDetailPage() {
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
         { label: "Penalties", href: "/penalties" },
-        { label: "Penalty" },
+        { label: "Penalty Details" },
       ]}
     >
-      <div className="space-y-4">
-        <p className="text-muted-foreground text-sm">
-          Penalty ID:{" "}
-          <code className="rounded bg-muted px-1 py-0.5">{penaltyId}</code>
-        </p>
-        <p className="text-muted-foreground text-sm">
-          Detail content can be implemented here (e.g. fetch penalty by ID and
-          display).
-        </p>
-      </div>
+      <PenaltyDetailPage penaltyId={penaltyId} />
     </Layout>
   );
 }
