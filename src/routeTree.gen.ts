@@ -15,6 +15,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
 import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
+import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
@@ -51,6 +52,12 @@ const AuthenticatedPenaltiesIndexRoute =
   AuthenticatedPenaltiesIndexRouteImport.update({
     id: '/penalties/',
     path: '/penalties/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPaymentRequestsIndexRoute =
+  AuthenticatedPaymentRequestsIndexRouteImport.update({
+    id: '/payment-requests/',
+    path: '/payment-requests/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profiles/': typeof AuthenticatedProfilesIndexRoute
   '/team/': typeof AuthenticatedTeamIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
+  '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profiles': typeof AuthenticatedProfilesIndexRoute
   '/team': typeof AuthenticatedTeamIndexRoute
@@ -125,6 +134,7 @@ export interface FileRoutesById {
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profiles/': typeof AuthenticatedProfilesIndexRoute
   '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/applications/'
     | '/jobs/'
+    | '/payment-requests/'
     | '/penalties/'
     | '/profiles/'
     | '/team/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/applications'
     | '/jobs'
+    | '/payment-requests'
     | '/penalties'
     | '/profiles'
     | '/team'
@@ -167,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/applications/'
     | '/_authenticated/jobs/'
+    | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profiles/'
     | '/_authenticated/team/'
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/penalties'
       fullPath: '/penalties/'
       preLoaderRoute: typeof AuthenticatedPenaltiesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/payment-requests/': {
+      id: '/_authenticated/payment-requests/'
+      path: '/payment-requests'
+      fullPath: '/payment-requests/'
+      preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/jobs/': {
@@ -274,6 +294,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
+  AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfilesIndexRoute: typeof AuthenticatedProfilesIndexRoute
   AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
@@ -288,6 +309,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
+  AuthenticatedPaymentRequestsIndexRoute:
+    AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
   AuthenticatedProfilesIndexRoute: AuthenticatedProfilesIndexRoute,
   AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
