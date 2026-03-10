@@ -11,6 +11,7 @@ import {
   sendProfileMessage,
   type AdminProfileMessage,
 } from "#/lib/api/profiles-controller";
+import { useAdminMe } from "#/hooks/use-admin-me";
 
 type Channel = "WHATSAPP" | "EMAIL";
 
@@ -35,6 +36,8 @@ export function ProfileMessagesContent({
   profileName,
 }: Readonly<Props>) {
   const queryClient = useQueryClient();
+  const { data: adminMe } = useAdminMe();
+  const adminName = adminMe?.name ?? "Admin";
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -157,7 +160,7 @@ export function ProfileMessagesContent({
       {/* Chat area */}
       <CardContent className="flex flex-col gap-4 p-5 overflow-y-auto flex-1 min-h-0">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} profileName={profileName} />
+          <MessageBubble key={msg.id} message={msg} profileName={profileName} adminName={adminName} />
         ))}
         <div ref={bottomRef} />
       </CardContent>
@@ -171,9 +174,11 @@ export function ProfileMessagesContent({
 function MessageBubble({
   message,
   profileName,
+  adminName,
 }: Readonly<{
   message: AdminProfileMessage;
   profileName: string;
+  adminName: string;
 }>) {
   const isOutbound = message.direction === "OUTBOUND";
 
@@ -185,7 +190,7 @@ function MessageBubble({
       )}
     >
       <span className="text-xs text-muted-foreground px-1">
-        {isOutbound ? "System" : profileName}
+        {isOutbound ? adminName : profileName}
       </span>
       <div
         className={cn(
