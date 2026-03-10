@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconDots, IconEdit, IconUserCheck, IconUserOff } from "@tabler/icons-react";
-
 import {
-  activateAdminUser,
-  deactivateAdminUser,
-  type AdminUserListItem,
-} from "#/lib/api/users-controller";
+  IconDots,
+  IconEdit,
+  IconUserCheck,
+  IconUserOff,
+} from "@tabler/icons-react";
 
+import { type AdminUserListItem } from "#/lib/api/users-controller";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -15,40 +14,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ConfirmDialog } from "./confirm-dialog";
 import { UserModal } from "./user-modal";
+import { useToggleUserStatus } from "../hooks/use-toggle-user-status";
+
+const STATUS_ACTIONS = {
+  active: {
+    label: "Deactivate",
+    icon: IconUserOff,
+    title: "Deactivate user",
+    description:
+      "This will prevent the user from accessing the admin panel. You can always re-activate them later.",
+    variant: "destructive" as const,
+  },
+  inactive: {
+    label: "Activate",
+    icon: IconUserCheck,
+    title: "Activate user",
+    description:
+      "This will allow the user to access the admin panel again.",
+    variant: "default" as const,
+  },
+} as const;
 
 type Props = {
   user: AdminUserListItem;
 };
 
 export function UserRowActions({ user }: Readonly<Props>) {
-  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    keyof typeof STATUS_ACTIONS | null
+  >(null);
 
-  const activateMutation = useMutation({
-    mutationFn: () => activateAdminUser(user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-    },
-  });
+  const toggleStatus = useToggleUserStatus(user.id, user.isActive);
+  const confirmAction = pendingAction ? STATUS_ACTIONS[pendingAction] : null;
 
-  const deactivateMutation = useMutation({
-    mutationFn: () => deactivateAdminUser(user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-    },
-  });
-
-  const handleDeactivateClick = () => {
-    if (globalThis.confirm("Are you sure you want to deactivate this user?")) {
-      deactivateMutation.mutate();
-    }
-  };
-
-  const handleActivateClick = () => {
-    if (globalThis.confirm("Are you sure you want to activate this user?")) {
-      activateMutation.mutate();
-    }
+  const handleConfirm = () => {
+    toggleStatus.mutate(undefined, {
+      onSuccess: () => setPendingAction(null),
+    });
   };
 
   return (
@@ -65,25 +70,35 @@ export function UserRowActions({ user }: Readonly<Props>) {
             <IconEdit className="mr-2 size-4" />
             Edit
           </DropdownMenuItem>
-          {user.isActive ? (
-            <DropdownMenuItem
-              onClick={handleDeactivateClick}
-              disabled={deactivateMutation.isPending}
-            >
-              <IconUserOff className="mr-2 size-4" />
-              Deactivate
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={handleActivateClick}
-              disabled={activateMutation.isPending}
-            >
-              <IconUserCheck className="mr-2 size-4" />
-              Activate
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem
+            disabled={!user.isActive || toggleStatus.isPending}
+            onClick={() => setPendingAction("active")}
+          >
+            <IconUserOff className="mr-2 size-4" />
+            Deactivate
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={user.isActive || toggleStatus.isPending}
+            onClick={() => setPendingAction("inactive")}
+          >
+            <IconUserCheck className="mr-2 size-4" />
+            Activate
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ConfirmDialog
+        open={pendingAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAction(null);
+        }}
+        title={confirmAction?.title ?? ""}
+        description={confirmAction?.description ?? ""}
+        actionLabel={confirmAction?.label ?? ""}
+        onConfirm={handleConfirm}
+        isPending={toggleStatus.isPending}
+        variant={confirmAction?.variant}
+      />
 
       <UserModal open={editOpen} onOpenChange={setEditOpen} user={user} />
     </>
