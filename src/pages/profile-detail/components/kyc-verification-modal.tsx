@@ -18,6 +18,7 @@ import {
 
 import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
 import { ImageUploadZone } from "./image-upload-zone";
+import { cn } from "#/lib/utils";
 
 type Props = {
   open: boolean;
@@ -91,7 +92,7 @@ export function KycVerificationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-full max-w-xl">
         <DialogHeader>
           <DialogTitle>KYC Verification</DialogTitle>
           <DialogDescription>
@@ -144,7 +145,6 @@ export function KycVerificationModal({
             </p>
           )}
 
-          {/* Profile's existing KYC documents (reference) */}
           {profile.kycDocuments.length > 0 && (
             <div className="space-y-2">
               {profile.kycDocuments.map((doc) => (
@@ -187,11 +187,15 @@ export function KycVerificationModal({
                   : "Add a comment..."
               }
               value={reason}
+              rows={3}
               onChange={(e) => {
                 setReason(e.target.value);
                 if (e.target.value.trim()) setReasonError(false);
               }}
-              className={reasonError ? "border-destructive" : ""}
+              className={cn(
+                reasonError ? "border-destructive" : "",
+                "resize-none",
+              )}
             />
             {reasonError && (
               <p className="text-destructive text-xs">

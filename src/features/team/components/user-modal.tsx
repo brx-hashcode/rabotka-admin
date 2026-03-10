@@ -189,7 +189,7 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
                   <FormLabel>Role</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full uppercase">
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                     </FormControl>
@@ -198,11 +198,7 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
                         { value: "ADMIN", label: "Admin" },
                         { value: "SUPER_ADMIN", label: "Super Admin" },
                       ].map((role) => (
-                        <SelectItem
-                          key={role.value}
-                          value={role.value}
-                          className="uppercase"
-                        >
+                        <SelectItem key={role.value} value={role.value}>
                           {role.label}
                         </SelectItem>
                       ))}
