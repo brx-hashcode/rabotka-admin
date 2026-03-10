@@ -34,6 +34,7 @@ import { ProfileMessagesContent } from "./profile-detail/components/profile-mess
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
+import { PaymentVerificationModal } from "./profile-detail/components/payment-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { createPaymentLink } from "#/lib/api/payment-requests-controller";
@@ -134,8 +135,11 @@ export default function ProfileDetailPage({
     setStatusModalOpen(false);
   };
 
-  const handleConfirmPayment = async () => {
-    await submitConfirmPayment();
+  const handleConfirmPayment = async (
+    decision: "ACCEPTED" | "REJECTED",
+    reason?: string,
+  ) => {
+    await submitConfirmPayment({ decision, reason });
     setConfirmPaymentOpen(false);
   };
 
@@ -230,55 +234,58 @@ export default function ProfileDetailPage({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {canSendVerifLink && (
-                <DropdownMenuItem onClick={() => setSendVerifLinkOpen(true)}>
-                  <IconBrandWhatsapp className="size-4" />
-                  Send verification link
-                </DropdownMenuItem>
-              )}
-              {canSendPaymentLink && (
-                <DropdownMenuItem onClick={() => setSendPaymentLinkOpen(true)}>
-                  <IconSend className="size-4" />
-                  Send payment link
-                </DropdownMenuItem>
-              )}
-              {canConfirmPayment && (
-                <DropdownMenuItem onClick={() => setConfirmPaymentOpen(true)}>
-                  <IconCreditCard className="size-4" />
-                  Confirm payment
-                </DropdownMenuItem>
-              )}
-              {canVerifyKyc && (
-                <DropdownMenuItem onClick={() => setKycModalOpen(true)}>
-                  <IconShieldCheck className="size-4" />
-                  KYC Verification
-                </DropdownMenuItem>
-              )}
-              {(canVerifyKyc || canSendVerifLink || canSendPaymentLink || canConfirmPayment) &&
-                (canActivate || canDeactivate) && <DropdownMenuSeparator />}
-              {canActivate && !canConfirmPayment && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    setStatusModalTarget("ACTIVE");
-                    setStatusModalOpen(true);
-                  }}
-                >
-                  <IconPlayerPlay className="size-4" />
-                  Activate
-                </DropdownMenuItem>
-              )}
-              {canDeactivate && (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => {
-                    setStatusModalTarget("SUSPENDED");
-                    setStatusModalOpen(true);
-                  }}
-                >
-                  <IconPlayerPause className="size-4" />
-                  Suspend
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                disabled={!canSendVerifLink}
+                onClick={() => canSendVerifLink && setSendVerifLinkOpen(true)}
+              >
+                <IconBrandWhatsapp className="size-4" />
+                Send verification link
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canSendPaymentLink}
+                onClick={() => canSendPaymentLink && setSendPaymentLinkOpen(true)}
+              >
+                <IconSend className="size-4" />
+                Send payment link
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canConfirmPayment}
+                onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
+              >
+                <IconCreditCard className="size-4" />
+                Confirm payment
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canVerifyKyc}
+                onClick={() => canVerifyKyc && setKycModalOpen(true)}
+              >
+                <IconShieldCheck className="size-4" />
+                KYC Verification
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!canActivate || canConfirmPayment}
+                onClick={() => {
+                  if (!canActivate || canConfirmPayment) return;
+                  setStatusModalTarget("ACTIVE");
+                  setStatusModalOpen(true);
+                }}
+              >
+                <IconPlayerPlay className="size-4" />
+                Activate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canDeactivate}
+                className={canDeactivate ? "text-destructive focus:text-destructive" : ""}
+                onClick={() => {
+                  if (!canDeactivate) return;
+                  setStatusModalTarget("SUSPENDED");
+                  setStatusModalOpen(true);
+                }}
+              >
+                <IconPlayerPause className="size-4" />
+                Suspend
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -343,15 +350,11 @@ export default function ProfileDetailPage({
         variant="default"
       />
 
-      <ConfirmDialog
+      <PaymentVerificationModal
         open={confirmPaymentOpen}
         onOpenChange={setConfirmPaymentOpen}
-        title="Confirm payment"
-        description="This will manually mark the payment as confirmed and activate the profile's account. Only do this if you have verified the payment outside the system."
-        actionLabel="Confirm payment"
-        onConfirm={handleConfirmPayment}
+        onSubmit={handleConfirmPayment}
         isPending={isConfirmingPayment}
-        variant="default"
       />
 
       {canVerifyKyc && (

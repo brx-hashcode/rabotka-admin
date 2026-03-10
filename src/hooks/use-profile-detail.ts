@@ -30,8 +30,13 @@ export function useProfileDetail(profileId: string) {
     enabled: !!profileId,
   });
 
+  const paymentsQueryKey = ["admin", "profiles", profileId, "payment-requests"];
+
   const invalidateLogs = () =>
     queryClient.invalidateQueries({ queryKey: logsQueryKey });
+
+  const invalidatePayments = () =>
+    queryClient.invalidateQueries({ queryKey: paymentsQueryKey });
 
   const updateMutation = useMutation({
     mutationFn: (data: AdminUpdateProfileParams) =>
@@ -73,14 +78,20 @@ export function useProfileDetail(profileId: string) {
   });
 
   const confirmPaymentMutation = useMutation({
-    mutationFn: () => confirmPayment(profileId),
-    onSuccess: (data) => {
+    mutationFn: (data: { decision: "ACCEPTED" | "REJECTED"; reason?: string }) =>
+      confirmPayment(profileId, data.decision, data.reason),
+    onSuccess: (data, variables) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
       invalidateLogs();
-      toast.success("Payment confirmed successfully");
+      invalidatePayments();
+      if (variables.decision === "ACCEPTED") {
+        toast.success("Payment confirmed. Profile is now active.");
+      } else {
+        toast.success("Payment rejected.");
+      }
     },
     onError: () => {
-      toast.error("Failed to confirm payment");
+      toast.error("Failed to process payment decision");
     },
   });
 

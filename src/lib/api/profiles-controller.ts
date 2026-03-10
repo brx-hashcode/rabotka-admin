@@ -190,12 +190,16 @@ export class AdminProfilesController extends AdminBaseController {
     return this.patch<AdminProfileDetailResponse>(url, data);
   }
 
-  async confirmPayment(id: string): Promise<AdminProfileDetailResponse> {
+  async confirmPayment(
+    id: string,
+    decision: "ACCEPTED" | "REJECTED",
+    reason?: string,
+  ): Promise<AdminProfileDetailResponse> {
     const url = this.createURL(
       `/admin/profiles/${id}/confirm-payment`,
       new URLSearchParams(),
     );
-    return this.patch<AdminProfileDetailResponse>(url, {});
+    return this.patch<AdminProfileDetailResponse>(url, { decision, reason });
   }
 
   async getLogs(id: string): Promise<AdminLogEntry[]> {
