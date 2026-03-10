@@ -220,6 +220,18 @@ export class AdminProfilesController extends AdminBaseController {
     );
     return this.get<AdminProfileMessage[]>(url);
   }
+
+  async sendMessage(
+    id: string,
+    channel: "WHATSAPP" | "EMAIL",
+    message: string,
+  ): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/messages`,
+      new URLSearchParams(),
+    );
+    return this.post<{ success: boolean }>(url, { channel, message });
+  }
 }
 
 const controller = new AdminProfilesController();
@@ -232,4 +244,5 @@ export const updateProfileStatus =
 export const confirmPayment = controller.confirmPayment.bind(controller);
 export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
+export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);

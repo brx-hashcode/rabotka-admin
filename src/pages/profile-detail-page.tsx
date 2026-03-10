@@ -23,6 +23,7 @@ import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
+import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 type ProfileTab = "general" | "kyc" | "payments" | "messages";
 
@@ -60,6 +61,7 @@ export default function ProfileDetailPage({
     isLoadingLogs,
   } = useProfileDetail(profileId);
 
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [statusModalTarget, setStatusModalTarget] = useState<
@@ -96,6 +98,7 @@ export default function ProfileDetailPage({
 
   const handleConfirmPayment = async () => {
     await submitConfirmPayment();
+    setConfirmPaymentOpen(false);
   };
 
   const handlePreviewDoc = (doc: ViewerDocument) => {
@@ -179,11 +182,10 @@ export default function ProfileDetailPage({
             {canConfirmPayment && (
               <Button
                 variant="default"
-                onClick={handleConfirmPayment}
-                disabled={isConfirmingPayment}
+                onClick={() => setConfirmPaymentOpen(true)}
               >
                 <IconCreditCard className="size-4" />
-                {isConfirmingPayment ? "Confirming..." : "Confirm Payment"}
+                Confirm Payment
               </Button>
             )}
             {canVerifyKyc && (
@@ -256,6 +258,17 @@ export default function ProfileDetailPage({
           />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={confirmPaymentOpen}
+        onOpenChange={setConfirmPaymentOpen}
+        title="Confirm payment"
+        description="This will manually mark the payment as confirmed and activate the profile's account. Only do this if you have verified the payment outside the system."
+        actionLabel="Confirm payment"
+        onConfirm={handleConfirmPayment}
+        isPending={isConfirmingPayment}
+        variant="default"
+      />
 
       {canVerifyKyc && (
         <KycVerificationModal
