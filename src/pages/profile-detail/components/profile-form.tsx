@@ -45,6 +45,8 @@ type ProfileFormProps = {
     lastName: string;
     address: string;
     description: string;
+    email: string;
+    phone: string;
   }) => Promise<void>;
   isSaving: boolean;
 };
@@ -91,6 +93,8 @@ export function ProfileForm({
       lastName: form.lastName,
       address: form.address,
       description: form.description,
+      email: form.email,
+      phone: form.phone,
     });
     setInitialForm(form);
   };
