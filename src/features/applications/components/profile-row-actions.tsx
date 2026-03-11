@@ -168,9 +168,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!canDeactivate}
-            className={
-              canDeactivate ? "text-destructive focus:text-destructive" : ""
-            }
             onClick={() => canDeactivate && setSuspendOpen(true)}
           >
             <IconPlayerPause className="size-4" />

@@ -243,7 +243,9 @@ export default function ProfileDetailPage({
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={!canSendPaymentLink}
-                onClick={() => canSendPaymentLink && setSendPaymentLinkOpen(true)}
+                onClick={() =>
+                  canSendPaymentLink && setSendPaymentLinkOpen(true)
+                }
               >
                 <IconSend className="size-4" />
                 Send payment link
@@ -276,7 +278,6 @@ export default function ProfileDetailPage({
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={!canDeactivate}
-                className={canDeactivate ? "text-destructive focus:text-destructive" : ""}
                 onClick={() => {
                   if (!canDeactivate) return;
                   setStatusModalTarget("SUSPENDED");
