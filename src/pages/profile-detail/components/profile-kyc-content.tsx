@@ -23,7 +23,6 @@ type Props = {
 export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
   return (
     <div className="space-y-6">
-      {/* KYC Overview */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="gap-2 py-4">
           <CardContent className="px-4">
@@ -64,7 +63,6 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
         )}
       </div>
 
-      {/* Rejection Reason */}
       {profile.rejectionReason && (
         <Card>
           <CardHeader>
@@ -78,7 +76,6 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
         </Card>
       )}
 
-      {/* KYC Documents */}
       <div>
         <h3 className="mb-4 text-sm font-semibold uppercase">Documents</h3>
         {profile.kycDocuments.length === 0 ? (
@@ -103,10 +100,9 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
         )}
       </div>
 
-      {/* Verification Images (uploaded by admin during verification) */}
       {profile.verificationImages && profile.verificationImages.length > 0 && (
         <div>
-          <h3 className="mb-4 text-sm font-semibold flex items-center gap-2">
+          <h3 className="mb-4 text-sm font-semibold flex items-center gap-2 uppercase tracking-wide">
             <IconShieldCheck className="size-4" />
             Verification Images
           </h3>
