@@ -35,8 +35,9 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
     header: "Profile",
     cell: ({ row }) => (
       <ProfileCell
-        name={row.getValue("profileName")}
+        name={row.original.profileName}
         email={row.original.profileEmail}
+        avatarUrl={null}
       />
     ),
   },

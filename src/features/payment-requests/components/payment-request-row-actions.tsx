@@ -1,25 +1,23 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  IconCheck,
-  IconX,
-} from "@tabler/icons-react";
+import { EyeIcon, MoreHorizontal } from "lucide-react";
+import { IconCreditCard } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Button } from "#/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
-import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
+import { PaymentVerificationModal } from "#/pages/profile-detail/components/payment-verification-modal";
 import {
   approvePaymentRequest,
   rejectPaymentRequest,
   type AdminPaymentRequestListItem,
 } from "#/lib/api/payment-requests-controller";
-import { RejectDialog } from "./reject-dialog";
 
 type PaymentRequestRowActionsProps = Readonly<{
   request: AdminPaymentRequestListItem;
@@ -28,16 +26,19 @@ type PaymentRequestRowActionsProps = Readonly<{
 export function PaymentRequestRowActions({
   request,
 }: PaymentRequestRowActionsProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin", "payment-requests"] });
 
   const approveMutation = useMutation({
     mutationFn: () => approvePaymentRequest(request.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "payment-requests"] });
+      invalidate();
       toast.success("Payment request approved.");
-      setApproveOpen(false);
+      setModalOpen(false);
     },
     onError: () => toast.error("Failed to approve payment request."),
   });
@@ -45,14 +46,26 @@ export function PaymentRequestRowActions({
   const rejectMutation = useMutation({
     mutationFn: (note: string) => rejectPaymentRequest(request.id, note),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "payment-requests"] });
+      invalidate();
       toast.success("Payment request rejected.");
-      setRejectOpen(false);
+      setModalOpen(false);
     },
     onError: () => toast.error("Failed to reject payment request."),
   });
 
   const canProcess = request.status === "SUBMITTED";
+  const isPending = approveMutation.isPending || rejectMutation.isPending;
+
+  const handleDecision = (
+    decision: "ACCEPTED" | "REJECTED",
+    reason?: string,
+  ) => {
+    if (decision === "ACCEPTED") {
+      approveMutation.mutate();
+    } else {
+      rejectMutation.mutate(reason ?? "");
+    }
+  };
 
   return (
     <>
@@ -63,41 +76,35 @@ export function PaymentRequestRowActions({
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem
-            disabled={!canProcess}
-            onClick={() => setApproveOpen(true)}
+            onClick={() =>
+              navigate({
+                to: "/profiles/$profileId",
+                params: { profileId: request.profileId },
+                search: { tab: "payments" },
+              })
+            }
           >
-            <IconCheck className="mr-2 size-4 text-green-600" />
-            Approve
+            <EyeIcon className="size-4" />
+            View profile
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={!canProcess}
-            onClick={() => setRejectOpen(true)}
-            className="text-destructive focus:text-destructive"
+            onClick={() => canProcess && setModalOpen(true)}
           >
-            <IconX className="mr-2 size-4" />
-            Reject
+            <IconCreditCard className="size-4" />
+            Process payment
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ConfirmDialog
-        open={approveOpen}
-        onOpenChange={setApproveOpen}
-        title="Approve payment"
-        description="This will mark the payment as approved and activate the user's account."
-        actionLabel="Approve"
-        onConfirm={() => approveMutation.mutate()}
-        isPending={approveMutation.isPending}
-        variant="default"
-      />
-
-      <RejectDialog
-        open={rejectOpen}
-        onOpenChange={setRejectOpen}
-        isPending={rejectMutation.isPending}
-        onConfirm={(note) => rejectMutation.mutate(note)}
+      <PaymentVerificationModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSubmit={handleDecision}
+        isPending={isPending}
       />
     </>
   );
