@@ -5,4 +5,5 @@
 
 export const appConfig = {
   appName: "Rabotka Admin",
-} as const
+  apiUrl: "/api/v1",
+} as const;

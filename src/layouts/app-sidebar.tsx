@@ -1,7 +1,8 @@
 import * as React from "react";
 import {
+  IconAlertTriangle,
   IconBriefcase,
-  IconDatabase,
+IconDatabase,
   IconFileText,
   IconFileWord,
   IconHelp,
@@ -28,32 +29,36 @@ import {
   SidebarMenuItem,
 } from "#/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
+import { useAdminMe } from "#/hooks/use-admin-me";
 
-const data = {
-  user: {
-    name: "Rabotka",
-    email: "admin@rabotka",
-    avatar: rabotkaLogo,
-  },
-  navMain: [
-    { title: "Dashboard", url: "/", icon: IconLayoutGrid },
-    { title: "Profiles", url: "/profiles", icon: IconUser },
-    { title: "Jobs", url: "/jobs", icon: IconBriefcase },
-    { title: "Applications", url: "/applications", icon: IconFileText },
-    { title: "Team", url: "/team", icon: IconUsers },
-  ],
-  navSecondary: [
-    { title: "Settings", url: "#", icon: IconSettings },
-    { title: "Get Help", url: "#", icon: IconHelp },
-  ],
-  documents: [
-    { name: "Data Library", url: "#", icon: IconDatabase },
-    { name: "Reports", url: "#", icon: IconReport },
-    { name: "Word Assistant", url: "#", icon: IconFileWord },
-  ],
-};
+const navMain = [
+  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
+  { title: "Profiles", url: "/profiles", icon: IconUser },
+  { title: "Jobs", url: "/jobs", icon: IconBriefcase },
+  { title: "Applications", url: "/applications", icon: IconFileText },
+  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
+{ title: "Team", url: "/team", icon: IconUsers },
+];
+
+const navSecondary = [
+  { title: "Settings", url: "#", icon: IconSettings },
+  { title: "Get Help", url: "#", icon: IconHelp },
+];
+
+const documents = [
+  { name: "Data Library", url: "#", icon: IconDatabase },
+  { name: "Reports", url: "#", icon: IconReport },
+  { name: "Word Assistant", url: "#", icon: IconFileWord },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: admin } = useAdminMe();
+
+  const user = {
+    name: admin?.name ?? "Admin",
+    email: admin?.email ?? "",
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -76,12 +81,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavDocuments items={documents} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

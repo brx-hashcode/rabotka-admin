@@ -1,75 +1,166 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { getCommonColumns } from "#/components/table";
-import { Button } from "#/components/ui/button";
-import { EyeIcon } from "lucide-react";
+import { getCommonColumns, ProfileCell } from "#/components/table";
+import { Badge } from "#/components/ui/badge";
+import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
+import { ProfileRowActions } from "./profile-row-actions";
+import {
+  getAccountStatusLabel,
+  getProfileTypeLabel,
+  getVerificationStatusLabel,
+} from "#/lib/status-labels";
 
-export type ProfileStatus =
-  | "Backlog"
-  | "Todo"
-  | "In Progress"
-  | "Done"
-  | "Canceled";
+export type Profile = AdminProfileListItem;
 
-export type ProfilePriority = "Low" | "Medium" | "High";
+function getStatusBadgeVariant(
+  status: string,
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "ACTIVE":
+      return "default";
+    case "BANNED":
+      return "destructive";
+    case "SUSPENDED":
+      return "secondary";
+    default:
+      return "outline";
+  }
+}
 
-export type Profile = Readonly<{
-  id: string;
-  title: string;
-  status: ProfileStatus;
-  priority: ProfilePriority;
-}>;
+function getVerificationStatusBadgeVariant(
+  status: string,
+): "default" | "secondary" | "destructive" {
+  switch (status) {
+    case "VERIFIED":
+      return "default";
+    case "REJECTED":
+      return "destructive";
+    default:
+      return "secondary";
+  }
+}
 
 const profileDataColumns: ColumnDef<Profile, unknown>[] = [
   {
-    id: "task",
-    accessorKey: "id",
-    header: "Task",
-    cell: ({ row }) => (
-      <span className="font-mono text-muted-foreground text-xs">
-        {row.original.id}
-      </span>
-    ),
+    id: "profile",
+    accessorKey: "firstName",
+    header: "Profile",
+    cell: ({ row }) => {
+      const p = row.original;
+      const name = `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim();
+      return (
+        <ProfileCell
+          name={name}
+          email={p.email ?? ""}
+          avatarUrl={p.avatarUrl}
+        />
+      );
+    },
   },
   {
-    id: "title",
-    accessorKey: "title",
-    header: "Title",
+    id: "phone",
+    accessorKey: "phone",
+    header: "Phone",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.title}</span>
+      <span className="text-muted-foreground text-sm">
+        {row.original.phone ?? "—"}
+      </span>
     ),
   },
   {
     id: "status",
     accessorKey: "status",
     header: "Status",
+    cell: ({ row }) => {
+      const status = String(row.original.status);
+      return (
+        <Badge variant={getStatusBadgeVariant(status)}>
+          {getAccountStatusLabel(status)}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "profileType",
+    accessorKey: "profileType",
+    header: "Type",
+    cell: ({ row }) => {
+      const type = row.original.profileType;
+      const variant = type === "EMPLOYER" ? "default" : "secondary";
+      return <Badge variant={variant}>{getProfileTypeLabel(type)}</Badge>;
+    },
+  },
+  {
+    id: "whatsappConnected",
+    accessorKey: "whatsappConnected",
+    header: "WhatsApp",
+    cell: ({ row }) => {
+      const connected = row.original.whatsappConnected;
+      return (
+        <Badge variant={connected ? "default" : "outline"}>
+          {connected ? "Connected" : "Disconnected"}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "verificationStatus",
+    accessorKey: "verificationStatus",
+    header: "Verification",
+    cell: ({ row }) => {
+      const status = String(row.original.verificationStatus ?? "");
+      return (
+        <Badge variant={getVerificationStatusBadgeVariant(status)}>
+          {getVerificationStatusLabel(status) || "—"}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "reliabilityScore",
+    accessorKey: "reliabilityScore",
+    header: "Reliability score",
     cell: ({ row }) => (
-      <span className="capitalize">{row.original.status}</span>
+      <span className="text-sm">{row.original.reliabilityScore ?? "—"}</span>
     ),
   },
   {
-    id: "priority",
-    accessorKey: "priority",
-    header: "Priority",
-    cell: ({ row }) => (
-      <span className="capitalize">{row.original.priority}</span>
-    ),
+    id: "createdAt",
+    accessorKey: "createdAt",
+    header: "Created at",
+    cell: ({ row }) => {
+      const v = row.original.createdAt;
+      if (!v) return "—";
+      try {
+        return new Date(v).toLocaleString(undefined, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      } catch {
+        return String(v);
+      }
+    },
+  },
+  {
+    id: "updatedAt",
+    accessorKey: "updatedAt",
+    header: "Updated at",
+    cell: ({ row }) => {
+      const v = row.original.updatedAt;
+      if (!v) return "—";
+      try {
+        return new Date(v).toLocaleString(undefined, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      } catch {
+        return String(v);
+      }
+    },
   },
 ];
 
 export const profileColumns = getCommonColumns<Profile>({
   additionalColumns: profileDataColumns,
-  columnsActions: ({ row }) => {
-    return (
-      <Button
-        size="icon"
-        variant="ghost"
-        onClick={() => {
-          alert(`View profile ${row.title}`);
-        }}
-      >
-        <EyeIcon className="size-4" aria-hidden />
-      </Button>
-    );
-  },
+  columnsActions: ({ row }) => <ProfileRowActions profile={row} />,
 });

@@ -1,14 +1,16 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
-  mockProfiles,
-  priorityOptions,
   profileColumns,
-  ProfileAction,
   statusOptions,
+  profileTypeOptions,
+  whatsappStatusOptions,
+  verificationStatusOptions,
   type Profile,
 } from "#/features/applications";
-import { whatsappStatusOptions } from "#/features/applications/components/profile-table";
+import { useProfilesList } from "#/hooks/use-profiles-list";
+
+const INITIAL_PAGE_SIZE = 10;
 
 function ProfilesTableHeader({
   table,
@@ -20,17 +22,24 @@ function ProfilesTableHeader({
         searchPlaceholder="Filter profiles..."
         filters={[
           { id: "status", label: "Status", options: statusOptions },
-          { id: "priority", label: "Priority", options: priorityOptions },
+          {
+            id: "profile_type",
+            label: "Profile type",
+            options: profileTypeOptions,
+          },
           {
             id: "whatsapp_connected",
-            label: "Whatsapp Status",
+            label: "WhatsApp",
             options: whatsappStatusOptions,
+          },
+          {
+            id: "verification_status",
+            label: "Verification",
+            options: verificationStatusOptions,
           },
         ]}
         table={table}
-      >
-        <ProfileAction />
-      </TableHeaderToolbar>
+      ></TableHeaderToolbar>
     </TableHeader>
   );
 }
@@ -40,13 +49,19 @@ function renderProfilesHeader(table: TableInstance<Profile>) {
 }
 
 export default function ProfilesPage() {
+  const { data, total, isLoading } = useProfilesList();
+
   return (
     <DataTable
       isPaginated
       enableRowSelection
-      data={[...mockProfiles]}
+      data={data}
       columns={profileColumns}
       header={renderProfilesHeader}
+      totalCount={total}
+      isLoading={isLoading}
+      initialPageSize={INITIAL_PAGE_SIZE}
+      getRowId={(row) => row.id}
     />
   );
 }
