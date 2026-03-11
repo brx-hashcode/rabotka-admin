@@ -1,7 +1,13 @@
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
-type TimeRange = "90d" | "30d" | "7d";
+export type TimeRange = "90d" | "30d" | "7d";
+
+export const TIME_RANGE_DAYS: Record<TimeRange, number> = {
+  "90d": 90,
+  "30d": 30,
+  "7d": 7,
+};
 
 const TIME_RANGE_OPTIONS: { label: string; value: TimeRange }[] = [
   {
@@ -18,12 +24,16 @@ const TIME_RANGE_OPTIONS: { label: string; value: TimeRange }[] = [
   },
 ];
 
+export const timeRangeParser = parseAsStringEnum<TimeRange>(
+  TIME_RANGE_OPTIONS.map((option) => option.value),
+).withDefault(TIME_RANGE_OPTIONS[0].value);
+
+export const TIME_RANGE_QUERY_KEY = "selected-time-range";
+
 export const ChartAreaFilter = () => {
   const [timeRange, setTimeRange] = useQueryState(
-    "selected-time-range",
-    parseAsStringEnum<TimeRange>(
-      TIME_RANGE_OPTIONS.map((option) => option.value),
-    ).withDefault(TIME_RANGE_OPTIONS[0].value),
+    TIME_RANGE_QUERY_KEY,
+    timeRangeParser,
   );
 
   return (

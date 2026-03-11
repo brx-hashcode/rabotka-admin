@@ -9,6 +9,9 @@ import {
   RecentActivitiesTabs,
   type RecentActivitiesTab,
 } from "./recent-activities-tabs";
+import { RecentProfilesTable } from "./recent-profiles-table";
+import { RecentJobsTable } from "./recent-jobs-table";
+import { RecentApplicationsTable } from "./recent-applications-table";
 
 export const RecentActivitiesContent = () => {
   const [activeTab, setActiveTab] = useQueryState(
@@ -34,19 +37,13 @@ export const RecentActivitiesContent = () => {
         <div className="flex items-center gap-2" />
       </div>
       <TabsContent value={DEFAULT_RECENT_ACTIVITIES_TAB}>
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed">
-          {/* Here will be the recent profiles table */}
-        </div>
+        <RecentProfilesTable />
       </TabsContent>
       <TabsContent value={ACTIVE_RECENT_ACTIVITIES_TABS[1]}>
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed">
-          {/* Here will be the recent jobs table */}
-        </div>
+        <RecentJobsTable />
       </TabsContent>
       <TabsContent value={ACTIVE_RECENT_ACTIVITIES_TABS[2]}>
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed">
-          {/* Here will be the recent applications table */}
-        </div>
+        <RecentApplicationsTable />
       </TabsContent>
     </Tabs>
   );

@@ -296,14 +296,18 @@ function ViewDropdown<TData>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 cursor-pointer gap-1.5"
+        >
           <LayoutListIcon className="size-4" aria-hidden />
           View
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-(--radix-dropdown-menu-trigger-width)"
+        className="min-w-[max(var(--radix-dropdown-menu-trigger-width),14rem)]"
       >
         {columns.map((column) => {
           const label =

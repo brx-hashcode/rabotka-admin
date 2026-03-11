@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_authenticated/applications/")({
   component: () => (
     <Layout
       title="Applications"
-      description="Coming soon."
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
         { label: "Applications" },

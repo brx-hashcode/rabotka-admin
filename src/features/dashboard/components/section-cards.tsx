@@ -1,50 +1,59 @@
+import { useQuery } from "@tanstack/react-query";
 import { formatXAF } from "#/lib/utils";
+import {
+  getMetrics,
+  type DashboardMetrics,
+} from "#/lib/api/dashboard-controller";
 import {
   DashboardMetricsCards,
   type DashboardMetricCard,
 } from "./dashboard-metrics-cards";
 
-const DASHBOARD_METRICS_DATA: DashboardMetricCard[] = [
-  {
-    id: "revenue",
-    title: "Revenue generated",
-    value: formatXAF(2_348_000),
-    trend: "up",
-    trendPercentage: 9.2,
-    descriptionLine1: "Total revenue accumulated",
-    descriptionLine2: "Income from paid job postings and penalties",
-  },
-  {
-    id: "profiles",
-    title: "Profiles created",
-    value: "2,146",
-    trend: "up",
-    trendPercentage: 6.4,
-    descriptionLine1: "Total number of user profiles ever registered",
-    descriptionLine2: "Includes all users, whether created organically",
-  },
-  {
-    id: "jobs",
-    title: "Jobs posted",
-    value: "312",
-    trend: "up",
-    trendPercentage: 11.8,
-    descriptionLine1: "Cumulative number of jobs posted",
-    descriptionLine2: "All job postings from all employers to date",
-  },
-  {
-    id: "applications",
-    title: "Applications received",
-    value: "1,987",
-    trend: "up",
-    trendPercentage: 7.1,
-    descriptionLine1: "Total number of job applications received",
-    descriptionLine2: "Sum of all job applications submitted by workers",
-  },
-];
+function buildCards(m: DashboardMetrics): DashboardMetricCard[] {
+  return [
+    {
+      id: "revenue",
+      title: "Revenue generated",
+      value: formatXAF(m.revenue),
+      trend: m.revenueTrend >= 0 ? "up" : "down",
+      trendPercentage: Math.abs(m.revenueTrend),
+      description: "Total revenue from paid job postings and penalties.",
+    },
+    {
+      id: "profiles",
+      title: "Profiles created",
+      value: m.profilesCount.toLocaleString(),
+      trend: m.profilesTrend >= 0 ? "up" : "down",
+      trendPercentage: Math.abs(m.profilesTrend),
+      description:
+        "Total number of user profiles registered on the platform.",
+    },
+    {
+      id: "jobs",
+      title: "Jobs posted",
+      value: m.jobsCount.toLocaleString(),
+      trend: m.jobsTrend >= 0 ? "up" : "down",
+      trendPercentage: Math.abs(m.jobsTrend),
+      description: "Cumulative job postings from all employers.",
+    },
+    {
+      id: "applications",
+      title: "Applications received",
+      value: m.applicationsCount.toLocaleString(),
+      trend: m.applicationsTrend >= 0 ? "up" : "down",
+      trendPercentage: Math.abs(m.applicationsTrend),
+      description: "Total job applications submitted by workers.",
+    },
+  ];
+}
 
 export function SectionCards() {
-  return (
-    <DashboardMetricsCards data={DASHBOARD_METRICS_DATA} isLoading={false} />
-  );
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "dashboard", "metrics"],
+    queryFn: getMetrics,
+  });
+
+  const cards = data ? buildCards(data) : [];
+
+  return <DashboardMetricsCards data={cards} isLoading={isLoading} />;
 }
