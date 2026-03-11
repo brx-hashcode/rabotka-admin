@@ -2,8 +2,7 @@ import * as React from "react";
 import {
   IconAlertTriangle,
   IconBriefcase,
-  IconCreditCard,
-  IconDatabase,
+IconDatabase,
   IconFileText,
   IconFileWord,
   IconHelp,
@@ -38,8 +37,7 @@ const navMain = [
   { title: "Jobs", url: "/jobs", icon: IconBriefcase },
   { title: "Applications", url: "/applications", icon: IconFileText },
   { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
-  { title: "Payments", url: "/payment-requests", icon: IconCreditCard },
-  { title: "Team", url: "/team", icon: IconUsers },
+{ title: "Team", url: "/team", icon: IconUsers },
 ];
 
 const navSecondary = [
