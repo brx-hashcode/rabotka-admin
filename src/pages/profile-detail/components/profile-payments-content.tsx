@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { IconCreditCard, IconFileText, IconCheck, IconX } from "@tabler/icons-react";
-import { Badge } from "#/components/ui/badge";
+import { IconCreditCard, IconFileText } from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import {
@@ -16,10 +15,14 @@ import {
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { RejectDialog } from "#/features/payment-requests/components/reject-dialog";
 import type { ViewerDocument } from "./document-viewer-drawer";
+import { Badge } from "#/components/ui/badge";
 
 const STATUS_BADGE: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
 > = {
   PENDING: { label: "Pending", variant: "secondary" },
   SUBMITTED: { label: "Submitted", variant: "outline" },
@@ -43,7 +46,10 @@ type Props = {
   onPreviewDoc: (doc: ViewerDocument) => void;
 };
 
-export function ProfilePaymentsContent({ profileId, onPreviewDoc }: Readonly<Props>) {
+export function ProfilePaymentsContent({
+  profileId,
+  onPreviewDoc,
+}: Readonly<Props>) {
   const queryClient = useQueryClient();
   const queryKey = ["admin", "profiles", profileId, "payment-requests"];
 
@@ -91,7 +97,9 @@ export function ProfilePaymentsContent({ profileId, onPreviewDoc }: Readonly<Pro
       <Card className="py-12">
         <CardContent className="flex flex-col items-center justify-center text-center">
           <IconCreditCard className="text-muted-foreground mb-2 size-10" />
-          <p className="text-muted-foreground text-sm">No payment requests yet.</p>
+          <p className="text-muted-foreground text-sm">
+            No payment requests yet.
+          </p>
         </CardContent>
       </Card>
     );
@@ -139,12 +147,12 @@ function PaymentRequestCard({
   onPreviewDoc,
   onApprove,
   onReject,
-}: {
+}: Readonly<{
   request: AdminProfilePaymentRequest;
   onPreviewDoc: (doc: ViewerDocument) => void;
   onApprove: () => void;
   onReject: () => void;
-}) {
+}>) {
   const cfg = STATUS_BADGE[request.status] ?? {
     label: request.status,
     variant: "secondary" as const,
@@ -153,32 +161,34 @@ function PaymentRequestCard({
 
   return (
     <Card className="overflow-hidden">
-      {/* Header bar */}
-      <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
+      <div className="flex flex-col gap-3 border-b px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <IconCreditCard className="text-muted-foreground size-4 shrink-0" />
-          <span className="text-sm font-semibold">Payment Request</span>
+          <span className="text-sm font-semibold uppercase">
+            Payment Request
+          </span>
+          <Badge
+            variant={cfg.variant}
+            className="px-2 py-0.5 text-[0.7rem] uppercase tracking-wide"
+          >
+            {cfg.label}
+          </Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+        <div className="flex flex-col items-start gap-2 text-xs sm:flex-row sm:items-center sm:gap-3">
           {canProcess && (
-            <>
+            <div className="flex gap-2">
               <Button size="sm" variant="default" onClick={onApprove}>
-                <IconCheck className="mr-1 size-3.5" />
                 Approve
               </Button>
-              <Button size="sm" variant="destructive" onClick={onReject}>
-                <IconX className="mr-1 size-3.5" />
+              <Button size="sm" variant="outline" onClick={onReject}>
                 Reject
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Two-column body */}
       <div className="grid grid-cols-1 divide-y lg:grid-cols-2 lg:divide-x lg:divide-y-0">
-        {/* Left — details */}
         <div className="space-y-4 p-5">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <InfoField label="Created" value={formatDate(request.createdAt)} />
@@ -197,7 +207,9 @@ function PaymentRequestCard({
               <p className="mb-1 text-xs font-medium uppercase tracking-wide text-destructive/70">
                 Rejection reason
               </p>
-              <p className="text-sm text-destructive">{request.rejectionNote}</p>
+              <p className="text-sm text-destructive">
+                {request.rejectionNote}
+              </p>
             </div>
           )}
 
@@ -208,7 +220,6 @@ function PaymentRequestCard({
           )}
         </div>
 
-        {/* Right — proof images */}
         <div className="p-5">
           {request.proofImages.length > 0 ? (
             <>
@@ -234,7 +245,9 @@ function PaymentRequestCard({
             </>
           ) : (
             <div className="flex h-full min-h-[100px] items-center justify-center">
-              <p className="text-muted-foreground text-sm">No images attached.</p>
+              <p className="text-muted-foreground text-sm">
+                No images attached.
+              </p>
             </div>
           )}
         </div>
@@ -247,11 +260,11 @@ function InfoField({
   label,
   value,
   mono = false,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   mono?: boolean;
-}) {
+}>) {
   return (
     <div>
       <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
@@ -268,30 +281,32 @@ function ProofImageCard({
   url,
   index,
   onPreview,
-}: {
+}: Readonly<{
   url: string;
   index: number;
   onPreview: () => void;
-}) {
+}>) {
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
-      <div
-        className="bg-muted relative flex h-32 cursor-pointer items-center justify-center overflow-hidden transition-opacity hover:opacity-90"
+      <button
+        type="button"
+        className="bg-muted relative flex h-32 w-full cursor-pointer items-center justify-center overflow-hidden border-0 p-0 text-left transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={onPreview}
+        aria-label={`Preview proof of payment ${index + 1}`}
       >
-        {!imgFailed ? (
+        {imgFailed ? (
+          <IconFileText className="text-muted-foreground size-10" />
+        ) : (
           <img
             src={url}
             alt={`Proof ${index + 1}`}
             className="h-full w-full object-cover"
             onError={() => setImgFailed(true)}
           />
-        ) : (
-          <IconFileText className="text-muted-foreground size-10" />
         )}
-      </div>
+      </button>
       <div className="p-2">
         <Button
           variant="outline"

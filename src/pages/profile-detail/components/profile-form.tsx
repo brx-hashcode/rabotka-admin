@@ -100,7 +100,9 @@ export function ProfileForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
+        <CardTitle className="text-sm font-semibold uppercase">
+          Profile Information
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="mb-6 flex items-center gap-4">

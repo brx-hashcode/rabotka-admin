@@ -2,7 +2,6 @@ import { IconFileText, IconShieldCheck } from "@tabler/icons-react";
 
 import type {
   AdminProfileDetailResponse,
-  AdminKycDocumentItem,
   AdminVerificationImageItem,
 } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
@@ -21,7 +20,7 @@ type Props = {
   onPreviewDoc: (doc: ViewerDocument) => void;
 };
 
-export function ProfileKycContent({ profile, onPreviewDoc }: Props) {
+export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
   return (
     <div className="space-y-6">
       {/* KYC Overview */}
@@ -81,7 +80,7 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Props) {
 
       {/* KYC Documents */}
       <div>
-        <h3 className="mb-4 text-sm font-semibold">Documents</h3>
+        <h3 className="mb-4 text-sm font-semibold uppercase">Documents</h3>
         {profile.kycDocuments.length === 0 ? (
           <Card className="py-8">
             <CardContent className="flex flex-col items-center justify-center text-center">
@@ -137,11 +136,11 @@ function VerificationImageCard({
   image,
   index,
   onPreview,
-}: {
+}: Readonly<{
   image: AdminVerificationImageItem;
   index: number;
   onPreview: () => void;
-}) {
+}>) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(image.imageUrl);
 
   return (
@@ -150,13 +149,16 @@ function VerificationImageCard({
         {isImage ? (
           <img
             src={image.imageUrl}
-            alt={`Verification image ${index + 1}`}
+            alt={`Verification ${index + 1}`}
             className="h-full w-full object-cover"
           />
         ) : (
           <IconFileText className="text-muted-foreground size-12" />
         )}
-        <Badge variant="outline" className="absolute top-2 right-2 bg-background/80">
+        <Badge
+          variant="outline"
+          className="absolute top-2 right-2 bg-background/80"
+        >
           <IconShieldCheck className="mr-1 size-3" />
           Verification
         </Badge>
