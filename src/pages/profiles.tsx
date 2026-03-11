@@ -2,7 +2,6 @@ import type { Table as TableInstance } from "@tanstack/react-table";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   profileColumns,
-  ProfileAction,
   statusOptions,
   profileTypeOptions,
   whatsappStatusOptions,
@@ -23,7 +22,11 @@ function ProfilesTableHeader({
         searchPlaceholder="Filter profiles..."
         filters={[
           { id: "status", label: "Status", options: statusOptions },
-          { id: "profile_type", label: "Profile type", options: profileTypeOptions },
+          {
+            id: "profile_type",
+            label: "Profile type",
+            options: profileTypeOptions,
+          },
           {
             id: "whatsapp_connected",
             label: "WhatsApp",
@@ -36,9 +39,7 @@ function ProfilesTableHeader({
           },
         ]}
         table={table}
-      >
-        <ProfileAction />
-      </TableHeaderToolbar>
+      ></TableHeaderToolbar>
     </TableHeader>
   );
 }
