@@ -14,7 +14,6 @@ import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Badge } from "#/components/ui/badge";
 
-// ── types ────────────────────────────────────────────────────────────────────
 
 type ContactTileProps = {
   icon: React.ElementType;
@@ -24,7 +23,6 @@ type ContactTileProps = {
   badge?: string;
 };
 
-// ── sub-components ────────────────────────────────────────────────────────────
 
 function ContactTile({
   icon: Icon,
@@ -88,8 +86,6 @@ function TileSkeleton() {
   );
 }
 
-// ── page ──────────────────────────────────────────────────────────────────────
-
 export default function HelpPage() {
   const { configs, isLoading } = useSystemConfigCategory("CONTACT");
 
@@ -105,7 +101,6 @@ export default function HelpPage() {
 
   return (
     <div className="space-y-8 pt-6">
-      {/* ── Hero banner ─────────────────────────────────────────────────────── */}
       <div className="from-primary/10 to-primary/5 relative overflow-hidden rounded-2xl border bg-linear-to-br p-8">
         <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-5">
@@ -113,9 +108,7 @@ export default function HelpPage() {
               <IconHeadset className="size-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                Need help?
-              </h2>
+              <h2 className="text-2xl font-bold tracking-tight">Need help?</h2>
               <p className="text-muted-foreground mt-1 max-w-lg text-sm">
                 Find all Super Admin contact details here. This information is
                 updated directly from the system settings.
@@ -124,12 +117,10 @@ export default function HelpPage() {
           </div>
         </div>
 
-        {/* Decorative circles */}
         <div className="bg-primary/5 absolute -right-10 -top-10 size-48 rounded-full" />
         <div className="bg-primary/5 absolute -bottom-8 right-24 size-32 rounded-full" />
       </div>
 
-      {/* ── Contact grid ────────────────────────────────────────────────────── */}
       <div>
         <h3 className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
           Super Admin Contact Details
@@ -137,7 +128,7 @@ export default function HelpPage() {
 
         {isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[...Array(5)].map((_, i) => (
+            {Array.from({ length: 5 }, (_, i) => (
               <TileSkeleton key={i} />
             ))}
           </div>
@@ -160,7 +151,9 @@ export default function HelpPage() {
               label="WhatsApp"
               value={phone}
               href={
-                phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : undefined
+                phone
+                  ? `https://wa.me/${phone.toString().replaceAll(/\D/g, "")}`
+                  : undefined
               }
               badge="Chat"
             />

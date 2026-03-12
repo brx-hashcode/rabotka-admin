@@ -6,10 +6,7 @@ export const Route = createFileRoute("/_authenticated/settings/")({
   component: () => (
     <Layout
       title="Settings"
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Settings" },
-      ]}
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Settings" }]}
     >
       <SettingsPage />
     </Layout>
