@@ -71,10 +71,10 @@ export function ContactCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Informations de contact
+              Contact Information
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Coordonnées publiques et numéros de paiement mobile
+              Public contact details and mobile payment numbers
             </p>
           </div>
         </div>
@@ -83,7 +83,7 @@ export function ContactCard() {
           onClick={handleSave}
           disabled={!isDirty || isSaving || isLoading}
         >
-          {isSaving ? "Enregistrement…" : "Enregistrer"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </CardHeader>
 
@@ -92,7 +92,7 @@ export function ContactCard() {
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <FieldLabel>Email de contact</FieldLabel>
+            <FieldLabel>Contact Email</FieldLabel>
             <Input
               type="email"
               value={form["contact.email"]}
@@ -102,7 +102,7 @@ export function ContactCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Téléphone</FieldLabel>
+            <FieldLabel>Phone</FieldLabel>
             <Input
               type="tel"
               value={form["contact.phone"]}
@@ -112,7 +112,7 @@ export function ContactCard() {
           </div>
 
           <div className="col-span-full space-y-1.5">
-            <FieldLabel>Adresse physique</FieldLabel>
+            <FieldLabel>Physical Address</FieldLabel>
             <Input
               value={form["contact.address"]}
               onChange={(e) => set("contact.address", e.target.value)}
@@ -121,7 +121,7 @@ export function ContactCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Numéro Orange Money</FieldLabel>
+            <FieldLabel>Orange Money Number</FieldLabel>
             <Input
               value={form["contact.orange_money_number"]}
               onChange={(e) => set("contact.orange_money_number", e.target.value)}
@@ -130,7 +130,7 @@ export function ContactCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Numéro Airtel Money</FieldLabel>
+            <FieldLabel>Airtel Money Number</FieldLabel>
             <Input
               value={form["contact.airtel_money_number"]}
               onChange={(e) => set("contact.airtel_money_number", e.target.value)}

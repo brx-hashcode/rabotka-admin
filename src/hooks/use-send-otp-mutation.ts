@@ -9,12 +9,12 @@ export function useSendOtpMutation() {
       return await sendOTP(email);
     },
     onSuccess: () => {
-      toast.success("Code OTP envoyé", {
-        description: "Vérifiez votre email pour le code.",
+      toast.success("OTP code sent", {
+        description: "Check your email for the code.",
       });
     },
     onError: (error) => {
-      toast.error("Échec de l'envoi", {
+      toast.error("Failed to send code", {
         description: error.message,
       });
     },

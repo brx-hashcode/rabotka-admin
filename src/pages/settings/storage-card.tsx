@@ -69,14 +69,14 @@ function SecretInput({
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder ?? "Laisser vide pour ne pas modifier"}
+        placeholder={placeholder ?? "Leave blank to keep unchanged"}
         className="pr-10"
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         className="text-muted-foreground hover:text-foreground absolute right-3 transition-colors"
-        aria-label={visible ? "Masquer" : "Afficher"}
+        aria-label={visible ? "Hide" : "Show"}
       >
         {visible ? (
           <IconEyeOff className="size-4" />
@@ -152,10 +152,10 @@ export function StorageCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Stockage de fichiers
+              File Storage
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Fournisseur actif et identifiants d'accès
+              Active provider and access credentials
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export function StorageCard() {
           onClick={handleSave}
           disabled={!isDirty || isSaving || isLoading}
         >
-          {isSaving ? "Enregistrement…" : "Enregistrer"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </CardHeader>
 
@@ -173,7 +173,7 @@ export function StorageCard() {
       <CardContent className="pt-6">
         {/* Provider selector */}
         <div className="mb-6 max-w-xs space-y-1.5">
-          <FieldLabel>Fournisseur</FieldLabel>
+          <FieldLabel>Provider</FieldLabel>
           <Select
             value={driver}
             onValueChange={(v) => setDriver(v as StorageDriver)}

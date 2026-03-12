@@ -18,6 +18,7 @@ import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
+import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
@@ -72,6 +73,11 @@ const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedApplicationsIndexRoute =
   AuthenticatedApplicationsIndexRouteImport.update({
     id: '/applications/',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/help/': typeof AuthenticatedHelpIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/help': typeof AuthenticatedHelpIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications/'
+    | '/help/'
     | '/jobs/'
     | '/payment-requests/'
     | '/penalties/'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications'
+    | '/help'
     | '/jobs'
     | '/payment-requests'
     | '/penalties'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/applications/'
+    | '/_authenticated/help/'
     | '/_authenticated/jobs/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/help/': {
+      id: '/_authenticated/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/applications/': {
       id: '/_authenticated/applications/'
       path: '/applications'
@@ -313,6 +332,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
@@ -329,6 +349,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,

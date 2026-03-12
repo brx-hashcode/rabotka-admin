@@ -40,10 +40,10 @@ export function MatchingCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Algorithme de matching
+              Matching Algorithm
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Activation de la similarité sémantique par embeddings
+              Enable semantic similarity matching via embeddings
             </p>
           </div>
         </div>
@@ -52,7 +52,7 @@ export function MatchingCard() {
           onClick={handleSave}
           disabled={!isDirty || isSaving || isLoading}
         >
-          {isSaving ? "Enregistrement…" : "Enregistrer"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </CardHeader>
 
@@ -67,13 +67,12 @@ export function MatchingCard() {
           />
           <div className="space-y-1">
             <Label htmlFor="use-embeddings" className="text-sm font-medium">
-              Activer les embeddings
+              Enable embeddings
             </Label>
             <p className="text-muted-foreground text-xs">
-              Lorsqu'activé, le système utilise la similarité sémantique
-              (embeddings vectoriels) pour suggérer les meilleures
-              correspondances entre offres et travailleurs. Désactivez si le
-              service d'embeddings n'est pas configuré.
+              When enabled, the system uses semantic similarity (vector
+              embeddings) to suggest the best matches between job offers and
+              workers. Disable if the embeddings service is not configured.
             </p>
           </div>
         </div>

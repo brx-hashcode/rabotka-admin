@@ -69,12 +69,12 @@ function LoginPage() {
               <img src={rabotkaLogo} alt="Rabotka" className="h-14 w-auto" />
             </div>
             <CardTitle className="text-xl">
-              {step === 1 ? "Connexion administrateur" : "Vérification"}
+              {step === 1 ? "Admin sign in" : "Verification"}
             </CardTitle>
             <CardDescription>
               {step === 1
-                ? "Entrez votre email pour recevoir un code OTP"
-                : "Entrez le code à 6 chiffres reçu par email"}
+                ? "Enter your email to receive an OTP code"
+                : "Enter the 6-digit code sent to your email"}
             </CardDescription>
           </CardHeader>
 

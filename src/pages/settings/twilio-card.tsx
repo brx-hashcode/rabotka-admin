@@ -44,14 +44,14 @@ function SecretInput({
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder ?? "Laisser vide pour ne pas modifier"}
+        placeholder={placeholder ?? "Leave blank to keep unchanged"}
         className="pr-10"
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         className="text-muted-foreground hover:text-foreground absolute right-3 transition-colors"
-        aria-label={visible ? "Masquer" : "Afficher"}
+        aria-label={visible ? "Hide" : "Show"}
       >
         {visible ? (
           <IconEyeOff className="size-4" />
@@ -117,7 +117,7 @@ export function TwilioCard() {
           <div>
             <CardTitle className="text-base font-semibold">Twilio</CardTitle>
             <p className="text-muted-foreground text-xs">
-              Identifiants et numéros expéditeurs WhatsApp / SMS
+              Credentials and sender numbers for WhatsApp / SMS
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export function TwilioCard() {
           onClick={handleSave}
           disabled={!isDirty || isSaving || isLoading}
         >
-          {isSaving ? "Enregistrement…" : "Enregistrer"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </CardHeader>
 
@@ -152,7 +152,7 @@ export function TwilioCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Numéro WhatsApp expéditeur</FieldLabel>
+            <FieldLabel>WhatsApp Sender Number</FieldLabel>
             <Input
               value={form["twilio.whatsapp_from"]}
               onChange={(e) => set("twilio.whatsapp_from", e.target.value)}
@@ -161,7 +161,7 @@ export function TwilioCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Numéro SMS expéditeur</FieldLabel>
+            <FieldLabel>SMS Sender Number</FieldLabel>
             <Input
               value={form["twilio.sms_from"]}
               onChange={(e) => set("twilio.sms_from", e.target.value)}

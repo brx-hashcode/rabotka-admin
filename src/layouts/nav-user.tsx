@@ -92,7 +92,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
                 <IconUserCircle />
-                Mon compte
+                My Account
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -106,7 +106,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
               }}
             >
               <IconLogout />
-              Se déconnecter
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

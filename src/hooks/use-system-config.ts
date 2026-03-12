@@ -56,7 +56,7 @@ export function useSystemConfigCategory(category: ConfigCategory) {
       pairs.map(([key, value]) => updateMutation.mutateAsync({ key, value })),
     );
 
-    toast.success("Paramètres enregistrés");
+    toast.success("Settings saved");
   }
 
   return {
