@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/penalties/")({
       title="Penalties"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Penalties" },
+        { label: "Violations & Penalties" },
       ]}
     >
       <PenaltiesPage />

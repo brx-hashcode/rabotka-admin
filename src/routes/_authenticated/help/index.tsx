@@ -5,10 +5,10 @@ import HelpPage from "#/pages/help-page";
 export const Route = createFileRoute("/_authenticated/help/")({
   component: () => (
     <Layout
-      title="Aide"
+      title="Support Center"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Aide" },
+        { label: "Support Center" },
       ]}
     >
       <HelpPage />

@@ -2,7 +2,7 @@ import * as React from "react";
 import {
   IconAlertTriangle,
   IconBriefcase,
-IconDatabase,
+  IconDatabase,
   IconFileText,
   IconFileWord,
   IconHelp,
@@ -32,23 +32,27 @@ import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
 
 const navMain = [
-  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
-  { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Jobs", url: "/jobs", icon: IconBriefcase },
-  { title: "Applications", url: "/applications", icon: IconFileText },
-  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
-{ title: "Team", url: "/team", icon: IconUsers },
+  { title: "Overview", url: "/", icon: IconLayoutGrid },
+  { title: "Candidate Profiles", url: "/profiles", icon: IconUser },
+  { title: "Job Listings", url: "/jobs", icon: IconBriefcase },
+  { title: "Applications Tracker", url: "/applications", icon: IconFileText },
+  {
+    title: "Violations & Penalties",
+    url: "/penalties",
+    icon: IconAlertTriangle,
+  },
+  { title: "Team Members", url: "/team", icon: IconUsers },
 ];
 
 const navSecondary = [
-  { title: "Settings", url: "/settings", icon: IconSettings },
-  { title: "Get Help", url: "/help", icon: IconHelp },
+  { title: "System Settings", url: "/settings", icon: IconSettings },
+  { title: "Support Center", url: "/help", icon: IconHelp },
 ];
 
 const documents = [
   { name: "Data Library", url: "#", icon: IconDatabase },
-  { name: "Reports", url: "#", icon: IconReport },
-  { name: "Word Assistant", url: "#", icon: IconFileWord },
+  { name: "Analytics Reports", url: "#", icon: IconReport },
+  { name: "AI Writing Assistant", url: "#", icon: IconFileWord },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

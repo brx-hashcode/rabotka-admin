@@ -219,7 +219,7 @@ export default function ProfileDetailPage({
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="cursor-pointer"
+                className="cursor-pointer uppercase text-sm"
               >
                 {tab.label}
               </TabsTrigger>

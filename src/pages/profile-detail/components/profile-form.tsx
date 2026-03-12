@@ -208,7 +208,9 @@ export function ProfileForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PENDING_ACTIVATION">En attente d'activation</SelectItem>
+                <SelectItem value="PENDING_ACTIVATION">
+                  En attente d'activation
+                </SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 <SelectItem value="BANNED">Banned</SelectItem>
@@ -238,7 +240,7 @@ export function ProfileForm({
             disabled={!isDirty || isSaving}
             className="shrink-0"
           >
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </CardContent>
