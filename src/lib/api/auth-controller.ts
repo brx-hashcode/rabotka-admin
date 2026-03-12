@@ -1,9 +1,12 @@
 import { AdminBaseController } from "./base-controller";
 
+export type AdminRole = "ADMIN" | "SUPER_ADMIN";
+
 export type Admin = {
   id: string;
   email: string;
   name: string;
+  role: AdminRole;
 };
 
 export type SendOTPResponse = {

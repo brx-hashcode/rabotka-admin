@@ -33,26 +33,26 @@ import { useAdminMe } from "#/hooks/use-admin-me";
 
 const navMain = [
   { title: "Overview", url: "/", icon: IconLayoutGrid },
-  { title: "Candidate Profiles", url: "/profiles", icon: IconUser },
-  { title: "Job Listings", url: "/jobs", icon: IconBriefcase },
-  { title: "Applications Tracker", url: "/applications", icon: IconFileText },
+  { title: "Candidate profiles", url: "/profiles", icon: IconUser },
+  { title: "Job listings", url: "/jobs", icon: IconBriefcase },
+  { title: "Applications tracker", url: "/applications", icon: IconFileText },
   {
-    title: "Violations & Penalties",
+    title: "Violations & penalties",
     url: "/penalties",
     icon: IconAlertTriangle,
   },
-  { title: "Team Members", url: "/team", icon: IconUsers },
+  { title: "Team members", url: "/team", icon: IconUsers },
 ];
 
 const navSecondary = [
-  { title: "System Settings", url: "/settings", icon: IconSettings },
-  { title: "Support Center", url: "/help", icon: IconHelp },
+  { title: "System settings", url: "/settings", icon: IconSettings },
+  { title: "Support center", url: "/help", icon: IconHelp },
 ];
 
 const documents = [
-  { name: "Data Library", url: "#", icon: IconDatabase },
-  { name: "Analytics Reports", url: "#", icon: IconReport },
-  { name: "AI Writing Assistant", url: "#", icon: IconFileWord },
+  { name: "Data library", url: "#", icon: IconDatabase },
+  { name: "Analytics reports", url: "#", icon: IconReport },
+  { name: "AI writing assistant", url: "#", icon: IconFileWord },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
