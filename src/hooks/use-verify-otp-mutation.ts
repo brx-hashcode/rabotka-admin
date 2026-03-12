@@ -17,10 +17,10 @@ export function useVerifyOtpMutation() {
       return await verifyOTP(email, otp);
     },
     onSuccess: () => {
-      toast.success("Authentification réussie");
+      toast.success("Authentication successful");
     },
     onError: (error) => {
-      toast.error("Code invalide", {
+      toast.error("Invalid code", {
         description: error.message,
       });
     },

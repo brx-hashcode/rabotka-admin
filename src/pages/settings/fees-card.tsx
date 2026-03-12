@@ -109,10 +109,10 @@ export function FeesCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Frais & pénalités
+              Fees & Penalties
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Montants, déductions de score et seuils de blocage
+              Amounts, score deductions and blocking thresholds
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export function FeesCard() {
           onClick={handleSave}
           disabled={!isDirty || isSaving || isLoading}
         >
-          {isSaving ? "Enregistrement…" : "Enregistrer"}
+          {isSaving ? "Saving…" : "Save"}
         </Button>
       </CardHeader>
 
@@ -129,11 +129,11 @@ export function FeesCard() {
 
       <CardContent className="pt-6">
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Annulation tardive (travailleur)
+          Late cancellation (worker)
         </p>
         <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <FieldLabel>Pénalité financière</FieldLabel>
+            <FieldLabel>Financial penalty</FieldLabel>
             <NumericInput
               value={form["fees.late_cancellation_penalty_fcfa"]}
               onChange={(v) => set("fees.late_cancellation_penalty_fcfa", v)}
@@ -141,7 +141,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Déduction score fiabilité</FieldLabel>
+            <FieldLabel>Reliability score deduction</FieldLabel>
             <NumericInput
               value={form["fees.late_cancellation_score_deduction"]}
               onChange={(v) => set("fees.late_cancellation_score_deduction", v)}
@@ -149,7 +149,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Délai sans pénalité</FieldLabel>
+            <FieldLabel>Penalty-free window</FieldLabel>
             <NumericInput
               value={form["fees.cancellation_threshold_hours"]}
               onChange={(v) => set("fees.cancellation_threshold_hours", v)}
@@ -161,11 +161,11 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Pénalités employeur
+          Employer penalties
         </p>
         <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <FieldLabel>Déduction (annulation travailleur accepté)</FieldLabel>
+            <FieldLabel>Deduction (accepted worker cancellation)</FieldLabel>
             <NumericInput
               value={form["fees.employer_cancel_score_deduction"]}
               onChange={(v) => set("fees.employer_cancel_score_deduction", v)}
@@ -173,7 +173,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Déduction (offre expirée ghostée)</FieldLabel>
+            <FieldLabel>Deduction (expired ghosted offer)</FieldLabel>
             <NumericInput
               value={form["fees.employer_ghost_score_deduction"]}
               onChange={(v) => set("fees.employer_ghost_score_deduction", v)}
@@ -185,11 +185,11 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Seuils & frais de plateforme
+          Platform thresholds & fees
         </p>
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <FieldLabel>Score fiabilité minimum</FieldLabel>
+            <FieldLabel>Minimum reliability score</FieldLabel>
             <NumericInput
               value={form["fees.reliability_score_min"]}
               onChange={(v) => set("fees.reliability_score_min", v)}
@@ -197,14 +197,14 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Pénalités impayées avant blocage</FieldLabel>
+            <FieldLabel>Unpaid penalties before block</FieldLabel>
             <NumericInput
               value={form["fees.billing_block_threshold"]}
               onChange={(v) => set("fees.billing_block_threshold", v)}
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Frais publication offre</FieldLabel>
+            <FieldLabel>Job posting fee</FieldLabel>
             <NumericInput
               value={form["fees.job_posting_fee_fcfa"]}
               onChange={(v) => set("fees.job_posting_fee_fcfa", v)}
@@ -212,7 +212,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Frais de candidature</FieldLabel>
+            <FieldLabel>Application fee</FieldLabel>
             <NumericInput
               value={form["fees.application_fee_fcfa"]}
               onChange={(v) => set("fees.application_fee_fcfa", v)}

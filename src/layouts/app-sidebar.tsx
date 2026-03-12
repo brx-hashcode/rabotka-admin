@@ -42,7 +42,7 @@ const navMain = [
 
 const navSecondary = [
   { title: "Settings", url: "/settings", icon: IconSettings },
-  { title: "Get Help", url: "#", icon: IconHelp },
+  { title: "Get Help", url: "/help", icon: IconHelp },
 ];
 
 const documents = [

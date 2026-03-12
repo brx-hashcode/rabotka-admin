@@ -5,10 +5,10 @@ import SettingsPage from "#/pages/settings-page";
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: () => (
     <Layout
-      title="Paramètres"
+      title="Settings"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Paramètres" },
+        { label: "Settings" },
       ]}
     >
       <SettingsPage />
