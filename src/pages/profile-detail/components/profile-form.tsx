@@ -208,7 +208,7 @@ export function ProfileForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PENDING_PAYMENT">Pending Payment</SelectItem>
+                <SelectItem value="PENDING_ACTIVATION">En attente d'activation</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 <SelectItem value="BANNED">Banned</SelectItem>

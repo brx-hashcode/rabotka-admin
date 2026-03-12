@@ -6,7 +6,7 @@ export function statusBadgeVariant(
     case "VERIFIED":
       return "default";
     case "PENDING":
-    case "PENDING_PAYMENT":
+    case "PENDING_ACTIVATION":
       return "secondary";
     case "SUSPENDED":
     case "REJECTED":
