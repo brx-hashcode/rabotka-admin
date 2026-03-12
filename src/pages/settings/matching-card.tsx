@@ -59,7 +59,7 @@ export function MatchingCard() {
       <Separator />
 
       <CardContent className="pt-6">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <Checkbox
             id="use-embeddings"
             checked={useEmbeddings}
