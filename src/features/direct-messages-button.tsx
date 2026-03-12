@@ -1,7 +1,7 @@
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 import { Send, ChevronsUpDown, Check } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +43,7 @@ export const DirectMessagesButton = ({
     useState<AdminProfileListItem | null>(null);
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
+  const messageId = useId();
 
   const { data: searchResults = [] } = useQuery({
     queryKey: ["admin", "profiles", "dm-search", search],
@@ -89,7 +90,7 @@ export const DirectMessagesButton = ({
         variant="default"
       >
         <Send className="size-4" />
-        <span>Quick messages</span>
+        <span>Quick message</span>
       </Button>
 
       <Dialog
@@ -106,13 +107,16 @@ export const DirectMessagesButton = ({
           <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
             {/* Profile combobox */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Recipient</label>
+              <span className="text-sm font-medium" id="dm-recipient-label">
+                Recipient
+              </span>
               <Popover open={comboOpen} onOpenChange={setComboOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={comboOpen}
+                    aria-labelledby="dm-recipient-label"
                     className="w-full justify-between font-normal"
                   >
                     {selectedProfile
@@ -177,8 +181,8 @@ export const DirectMessagesButton = ({
             </div>
 
             {/* Channel selector */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Channel</label>
+            <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0">
+              <legend className="text-sm font-medium">Channel</legend>
               <div className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-1 py-1 text-xs w-fit">
                 <div className="inline-flex rounded-full bg-background p-0.5">
                   <Button
@@ -201,18 +205,21 @@ export const DirectMessagesButton = ({
                   </Button>
                 </div>
               </div>
-            </div>
+            </fieldset>
 
             {/* Message textarea */}
             <div className="flex flex-col gap-1.5 flex-1">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Message</label>
+                <label htmlFor={messageId} className="text-sm font-medium">
+                  Message
+                </label>
                 <span className="text-[11px] text-muted-foreground hidden sm:block">
                   Ctrl+Enter to send
                 </span>
               </div>
               <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-1 flex-1 min-h-[120px]">
                 <Textarea
+                  id={messageId}
                   className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1 min-h-[100px] p-1"
                   placeholder="Write a message…"
                   value={text}
