@@ -102,12 +102,12 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   });
 
   const canSendVerifLink = !profile.whatsappConnected;
-  const canSendPaymentLink = profile.status === "PENDING_PAYMENT";
-  const canConfirmPayment = profile.status === "PENDING_PAYMENT";
+  const canSendPaymentLink = profile.status === "PENDING_ACTIVATION";
+  const canConfirmPayment = profile.status === "PENDING_ACTIVATION";
   const canActivate =
     profile.status !== "ACTIVE" &&
     profile.status !== "BANNED" &&
-    profile.status !== "PENDING_PAYMENT";
+    profile.status !== "PENDING_ACTIVATION";
   const canDeactivate = profile.status === "ACTIVE";
 
   return (

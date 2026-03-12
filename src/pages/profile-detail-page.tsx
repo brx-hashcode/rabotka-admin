@@ -155,8 +155,8 @@ export default function ProfileDetailPage({
     profile.status !== "ACTIVE" &&
     profile.status !== "BANNED";
   const canDeactivate = profile?.status === "ACTIVE";
-  const canConfirmPayment = profile?.status === "PENDING_PAYMENT";
-  const canSendPaymentLink = profile?.status === "PENDING_PAYMENT";
+  const canConfirmPayment = profile?.status === "PENDING_ACTIVATION";
+  const canSendPaymentLink = profile?.status === "PENDING_ACTIVATION";
   const canSendVerifLink = profile?.whatsappConnected === false;
 
   const tabValue = activeTab ?? "general";
