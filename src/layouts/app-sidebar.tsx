@@ -51,7 +51,7 @@ const navMain: NavItem[] = [
 
 const navSecondary: NavSecondaryItem[] = [
   {
-    title: "System settings",
+    title: "Settings",
     url: "/settings",
     icon: IconSettings,
     roles: ["SUPER_ADMIN"],
