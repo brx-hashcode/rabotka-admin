@@ -11,6 +11,7 @@ import {
   IconUser,
   IconUsers,
   IconLayoutGrid,
+  type Icon,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -30,8 +31,12 @@ import {
 } from "#/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
+import type { AdminRole } from "#/lib/api/auth-controller";
 
-const navMain = [
+type NavItem = { title: string; url: string; icon: Icon };
+type NavSecondaryItem = NavItem & { roles?: AdminRole[] };
+
+const navMain: NavItem[] = [
   { title: "Overview", url: "/", icon: IconLayoutGrid },
   { title: "Candidate profiles", url: "/profiles", icon: IconUser },
   { title: "Job listings", url: "/jobs", icon: IconBriefcase },
@@ -44,8 +49,13 @@ const navMain = [
   { title: "Team members", url: "/team", icon: IconUsers },
 ];
 
-const navSecondary = [
-  { title: "System settings", url: "/settings", icon: IconSettings },
+const navSecondary: NavSecondaryItem[] = [
+  {
+    title: "System settings",
+    url: "/settings",
+    icon: IconSettings,
+    roles: ["SUPER_ADMIN"],
+  },
   { title: "Support center", url: "/help", icon: IconHelp },
 ];
 
@@ -62,6 +72,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: admin?.name ?? "Admin",
     email: admin?.email ?? "",
   };
+
+  const role = admin?.role;
+
+  const filteredNavSecondary = navSecondary.filter(
+    (item) => !item.roles || (role && item.roles.includes(role)),
+  );
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -87,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navMain} />
         <NavDocuments items={documents} />
-        <NavSecondary items={navSecondary} className="mt-auto" />
+        <NavSecondary items={filteredNavSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
