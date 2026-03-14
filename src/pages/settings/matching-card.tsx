@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { IconBrain } from "@tabler/icons-react";
 import { useSystemConfigCategory } from "#/hooks/use-system-config";
-import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { Checkbox } from "#/components/ui/checkbox";
+import { Switch } from "#/components/ui/switch";
 import { Label } from "#/components/ui/label";
 
 export function MatchingCard() {
@@ -12,28 +11,23 @@ export function MatchingCard() {
     useSystemConfigCategory("MATCHING");
 
   const [useEmbeddings, setUseEmbeddings] = useState(false);
-  const [initial, setInitial] = useState(false);
 
   useEffect(() => {
     const item = configs.find((c) => c.key === "matching.use_embeddings");
     if (!item) return;
-    const val = item.value === "true";
-    setUseEmbeddings(val);
-    setInitial(val);
+    setUseEmbeddings(item.value === "true");
   }, [configs]);
 
-  const isDirty = useEmbeddings !== initial;
-
-  async function handleSave() {
+  async function handleToggle(checked: boolean) {
+    setUseEmbeddings(checked);
     await saveChanges({
-      "matching.use_embeddings": String(useEmbeddings),
+      "matching.use_embeddings": String(checked),
     });
-    setInitial(useEmbeddings);
   }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardHeader className="space-y-0 pb-4">
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
             <IconBrain className="size-5" />
@@ -47,24 +41,12 @@ export function MatchingCard() {
             </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={!isDirty || isSaving || isLoading}
-        >
-          {isSaving ? "Saving…" : "Save"}
-        </Button>
       </CardHeader>
 
       <Separator />
 
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="use-embeddings"
-            checked={useEmbeddings}
-            onCheckedChange={(checked) => setUseEmbeddings(checked === true)}
-          />
+      <CardContent>
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="use-embeddings" className="text-sm font-medium">
               Enable embeddings
@@ -75,6 +57,12 @@ export function MatchingCard() {
               workers. Disable if the embeddings service is not configured.
             </p>
           </div>
+          <Switch
+            id="use-embeddings"
+            checked={useEmbeddings}
+            onCheckedChange={handleToggle}
+            disabled={isLoading || isSaving}
+          />
         </div>
       </CardContent>
     </Card>
