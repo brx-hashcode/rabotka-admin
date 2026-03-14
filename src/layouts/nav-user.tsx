@@ -1,3 +1,4 @@
+
 import {
   IconDotsVertical,
   IconLogout,
@@ -21,7 +22,7 @@ import {
   useSidebar,
 } from "#/components/ui/sidebar";
 import { logout } from "#/lib/api/auth-controller";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 
 type NavUserProps = {
   user: {
@@ -42,6 +43,7 @@ function getInitials(name: string): string {
 export const NavUser = ({ user }: Readonly<NavUserProps>) => {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
+  const location = useLocation();
   const initials = getInitials(user.name);
 
   return (
@@ -102,7 +104,10 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
               onSelect={async (event) => {
                 event.preventDefault();
                 await logout().catch(() => null);
-                await navigate({ to: "/auth/login" });
+                await navigate({
+                  to: "/auth/login",
+                  search: { from: location.pathname + location.search },
+                });
               }}
             >
               <IconLogout />
