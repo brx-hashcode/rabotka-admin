@@ -27,7 +27,7 @@ function getStatusBadgeVariant(
   }
 }
 
-function getVerificationStatusBadgeVariant(
+export function getVerificationStatusBadgeVariant(
   status: string,
 ): "default" | "secondary" | "destructive" {
   switch (status) {

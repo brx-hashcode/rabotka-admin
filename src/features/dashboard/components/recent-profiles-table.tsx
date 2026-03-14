@@ -10,7 +10,12 @@ import {
 import {
   getAccountStatusLabel,
   getProfileTypeLabel,
+  getVerificationStatusLabel,
 } from "#/lib/status-labels";
+import { Link } from "@tanstack/react-router";
+import { buttonVariants } from "#/components/ui/button";
+import { EyeIcon } from "lucide-react";
+import { getVerificationStatusBadgeVariant } from "#/features/applications/components/profile-columns";
 
 function getStatusBadgeVariant(
   status: string,
@@ -88,6 +93,19 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     },
   },
   {
+    id: "verificationStatus",
+    accessorKey: "verificationStatus",
+    header: "Verification",
+    cell: ({ row }) => {
+      const status = String(row.original.verificationStatus);
+      return (
+        <Badge variant={getVerificationStatusBadgeVariant(status)}>
+          {getVerificationStatusLabel(status) || "—"}
+        </Badge>
+      );
+    },
+  },
+  {
     id: "createdAt",
     accessorKey: "createdAt",
     header: "Created at",
@@ -99,6 +117,20 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
         timeStyle: "short",
       });
     },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <Link
+          to={`/profiles/$profileId`}
+          params={{ profileId: row.original.id }}
+          className={buttonVariants({ variant: "ghost", size: "icon" })}
+        >
+          <EyeIcon className="size-4" aria-hidden />
+        </Link>
+      </div>
+    ),
   },
 ];
 

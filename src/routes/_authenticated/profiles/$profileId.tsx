@@ -15,7 +15,7 @@ function ProfilePage() {
       title="Profile"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Profiles", href: "/profiles" },
+        { label: "Profiles", back: true },
         { label: "Profile" },
       ]}
     >

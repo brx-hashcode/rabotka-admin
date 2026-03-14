@@ -52,7 +52,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Verification link sent via WhatsApp.");
       invalidate();
     },
-    onError: () => toast.error("Failed to send verification link."),
+    onError: (error) => toast.error(error.message),
   });
 
   const paymentLinkMutation = useMutation({
@@ -61,7 +61,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       setPaymentLinkOpen(false);
       toast.success("Payment link sent via WhatsApp.");
     },
-    onError: () => toast.error("Failed to send payment link."),
+    onError: (error) => toast.error(error.message),
   });
 
   const confirmPaymentMutation = useMutation({
@@ -78,7 +78,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       }
       invalidate();
     },
-    onError: () => toast.error("Failed to process payment decision."),
+    onError: (error) => toast.error(error.message),
   });
 
   const activateMutation = useMutation({
@@ -88,7 +88,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Profile activated.");
       invalidate();
     },
-    onError: () => toast.error("Failed to activate profile."),
+    onError: (error) => toast.error(error.message),
   });
 
   const suspendMutation = useMutation({
@@ -98,7 +98,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Profile suspended.");
       invalidate();
     },
-    onError: () => toast.error("Failed to suspend profile."),
+    onError: (error) => toast.error(error.message),
   });
 
   const canSendVerifLink = !profile.whatsappConnected;
@@ -125,7 +125,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
               navigate({
                 to: "/profiles/$profileId",
                 params: { profileId: profile.id },
-                replace: true,
               })
             }
           >
