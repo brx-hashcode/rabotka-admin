@@ -114,9 +114,9 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
       </>
     );
   } else if (isEdit) {
-    submitButtonContent = "Save Changes";
+    submitButtonContent = "Save";
   } else {
-    submitButtonContent = "Create User";
+    submitButtonContent = "Create user";
   }
 
   return (

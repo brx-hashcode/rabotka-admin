@@ -13,10 +13,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
+import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
@@ -42,6 +44,12 @@ const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
   path: '/team/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProfilesIndexRoute =
   AuthenticatedProfilesIndexRouteImport.update({
     id: '/profiles/',
@@ -63,6 +71,11 @@ const AuthenticatedPaymentRequestsIndexRoute =
 const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedApplicationsIndexRoute =
@@ -103,10 +116,12 @@ export interface FileRoutesByFullPath {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/help/': typeof AuthenticatedHelpIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profiles/': typeof AuthenticatedProfilesIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesByTo {
@@ -117,10 +132,12 @@ export interface FileRoutesByTo {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/help': typeof AuthenticatedHelpIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profiles': typeof AuthenticatedProfilesIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
   '/team': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesById {
@@ -133,10 +150,12 @@ export interface FileRoutesById {
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profiles/': typeof AuthenticatedProfilesIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRouteTypes {
@@ -149,10 +168,12 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications/'
+    | '/help/'
     | '/jobs/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profiles/'
+    | '/settings/'
     | '/team/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,10 +184,12 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications'
+    | '/help'
     | '/jobs'
     | '/payment-requests'
     | '/penalties'
     | '/profiles'
+    | '/settings'
     | '/team'
   id:
     | '__root__'
@@ -178,10 +201,12 @@ export interface FileRouteTypes {
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/applications/'
+    | '/_authenticated/help/'
     | '/_authenticated/jobs/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profiles/'
+    | '/_authenticated/settings/'
     | '/_authenticated/team/'
   fileRoutesById: FileRoutesById
 }
@@ -220,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profiles/': {
       id: '/_authenticated/profiles/'
       path: '/profiles'
@@ -246,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs/'
       preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/help/': {
+      id: '/_authenticated/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/applications/': {
@@ -293,10 +332,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfilesIndexRoute: typeof AuthenticatedProfilesIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
 }
 
@@ -308,11 +349,13 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
   AuthenticatedProfilesIndexRoute: AuthenticatedProfilesIndexRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
 }
 

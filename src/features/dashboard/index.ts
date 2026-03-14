@@ -7,4 +7,6 @@ export {
   NavUser,
   SectionCards,
   SiteHeader,
+  ChartJobStatusPie,
+  ChartAreaFilter,
 } from "./components";

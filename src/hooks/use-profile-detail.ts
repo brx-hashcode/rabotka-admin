@@ -46,8 +46,8 @@ export function useProfileDetail(profileId: string) {
       invalidateLogs();
       toast.success("Profile updated successfully");
     },
-    onError: () => {
-      toast.error("Failed to update profile");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -59,8 +59,8 @@ export function useProfileDetail(profileId: string) {
       invalidateLogs();
       toast.success("KYC verification submitted");
     },
-    onError: () => {
-      toast.error("Failed to submit KYC verification");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -72,8 +72,8 @@ export function useProfileDetail(profileId: string) {
       invalidateLogs();
       toast.success("Status updated successfully");
     },
-    onError: () => {
-      toast.error("Failed to update status");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -90,8 +90,8 @@ export function useProfileDetail(profileId: string) {
         toast.success("Payment rejected.");
       }
     },
-    onError: () => {
-      toast.error("Failed to process payment decision");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

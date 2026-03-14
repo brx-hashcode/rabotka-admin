@@ -11,6 +11,9 @@ import {
   getJobOfferStatusLabel,
   getPaymentFlowLabel,
 } from "#/lib/status-labels";
+import { Link } from "@tanstack/react-router";
+import { EyeIcon } from "lucide-react";
+import { buttonVariants } from "#/components/ui/button";
 
 function getStatusBadgeVariant(
   status: string,
@@ -116,6 +119,20 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
         timeStyle: "short",
       });
     },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <Link
+          to={`/jobs/$jobId`}
+          params={{ jobId: row.original.id }}
+          className={buttonVariants({ variant: "ghost", size: "icon" })}
+        >
+          <EyeIcon className="size-4" aria-hidden />
+        </Link>
+      </div>
+    ),
   },
 ];
 

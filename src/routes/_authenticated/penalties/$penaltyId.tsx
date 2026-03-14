@@ -15,7 +15,7 @@ function RouteComponent() {
       title="Penalty"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Penalties", href: "/penalties" },
+        { label: "Penalties", back: true },
         { label: "Penalty Details" },
       ]}
     >

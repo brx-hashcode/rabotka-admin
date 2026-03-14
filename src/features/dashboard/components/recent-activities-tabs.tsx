@@ -33,7 +33,11 @@ export function RecentActivitiesTabs() {
   return (
     <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
       {RECENT_ACTIVITIES_TABS.map((tab) => (
-        <TabsTrigger key={tab.value} value={tab.value}>
+        <TabsTrigger
+          key={tab.value}
+          value={tab.value}
+          className="cursor-pointer"
+        >
           {tab.label}
         </TabsTrigger>
       ))}

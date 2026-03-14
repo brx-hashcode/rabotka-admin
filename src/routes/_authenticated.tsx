@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated")({
     } catch {
       throw redirect({
         to: "/auth/login",
-        params: { from: pathname + search },
+        search: { from: pathname + search },
       });
     }
   },

@@ -17,7 +17,7 @@ function RouteComponent() {
       title="Application"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Applications", href: "/applications" },
+        { label: "Applications", back: true },
         { label: "Application Details" },
       ]}
     >

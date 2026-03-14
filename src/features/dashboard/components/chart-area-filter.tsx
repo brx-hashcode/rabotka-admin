@@ -42,10 +42,14 @@ export const ChartAreaFilter = () => {
       value={timeRange}
       onValueChange={(value) => setTimeRange(value as TimeRange)}
       variant="outline"
-      className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
+      className="flex *:data-[slot=toggle-group-item]:px-4!"
     >
       {TIME_RANGE_OPTIONS.map((option) => (
-        <ToggleGroupItem key={option.value} value={option.value}>
+        <ToggleGroupItem
+          key={option.value}
+          value={option.value}
+          className="cursor-pointer"
+        >
           {option.label}
         </ToggleGroupItem>
       ))}

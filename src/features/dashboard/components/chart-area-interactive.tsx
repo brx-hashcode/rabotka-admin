@@ -4,7 +4,6 @@ import { useQueryState } from "nuqs";
 
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -16,11 +15,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "#/components/ui/chart";
-import {
-  ChartAreaFilter,
-  TIME_RANGE_QUERY_KEY,
-  timeRangeParser,
-} from "./chart-area-filter";
+import { TIME_RANGE_QUERY_KEY, timeRangeParser } from "./chart-area-filter";
 import { getJobActivity } from "#/lib/api/dashboard-controller";
 
 const chartConfig = {
@@ -30,15 +25,9 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const DESCRIPTION_LABELS: Record<string, string> = {
-  "90d": "Jobs posted vs jobs filled over the last 3 months",
-  "30d": "Jobs posted vs jobs filled over the last 30 days",
-  "7d": "Jobs posted vs jobs filled over the last 7 days",
-};
-
-const SHORT_LABELS: Record<string, string> = {
-  "90d": "Last 3 months activity",
-  "30d": "Last 30 days activity",
-  "7d": "Last 7 days activity",
+  "90d": "Jobs posted vs filled — last 3 months",
+  "30d": "Jobs posted vs filled — last 30 days",
+  "7d": "Jobs posted vs filled — last 7 days",
 };
 
 export function ChartAreaInteractive() {
@@ -51,18 +40,10 @@ export function ChartAreaInteractive() {
   });
 
   return (
-    <Card className="@container/card">
+    <Card className="@container/card h-full">
       <CardHeader>
-        <CardTitle>Job Activity</CardTitle>
-        <CardDescription>
-          <span className="hidden @[540px]/card:block">
-            {DESCRIPTION_LABELS[range]}
-          </span>
-          <span className="@[540px]/card:hidden">{SHORT_LABELS[range]}</span>
-        </CardDescription>
-        <CardAction>
-          <ChartAreaFilter />
-        </CardAction>
+        <CardTitle>Jobs posted vs filled</CardTitle>
+        <CardDescription>{DESCRIPTION_LABELS[range]}</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 
 import {
   Breadcrumb,
@@ -12,7 +12,11 @@ import {
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { AppSidebar, SiteHeader } from "#/layouts";
 
-export type LayoutBreadcrumb = Readonly<{ label: string; href?: string }>;
+export type LayoutBreadcrumb = Readonly<{
+  label: string;
+  href?: string;
+  back?: true;
+}>;
 
 type LayoutProps = Readonly<{
   children: React.ReactNode;
@@ -32,6 +36,7 @@ export function Layout({
   description,
   breadcrumbs,
 }: LayoutProps) {
+  const router = useRouter();
   function renderPageHeader() {
     const hasBreadcrumbs = (breadcrumbs?.length ?? 0) > 0;
     if (hasBreadcrumbs && description != null) {
@@ -59,20 +64,38 @@ export function Layout({
           <div className="border-b px-4 py-2 lg:px-6">
             <Breadcrumb>
               <BreadcrumbList className="gap-2 text-foreground">
-                {breadcrumbs.map((item, i) => (
-                  <React.Fragment key={`${item.label}-${i}`}>
-                    <BreadcrumbItem className="inline-flex items-center gap-1.5">
-                      {i < breadcrumbs.length - 1 && item.href != null ? (
-                        <BreadcrumbLink asChild>
-                          <Link to={item.href}>{item.label}</Link>
-                        </BreadcrumbLink>
-                      ) : (
-                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                      )}
-                    </BreadcrumbItem>
-                    {i < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                  </React.Fragment>
-                ))}
+                {breadcrumbs.map((item, i) => {
+                  const isLast = i === breadcrumbs.length - 1;
+
+                  let crumb: React.ReactNode;
+                  if (isLast) {
+                    crumb = <BreadcrumbPage>{item.label}</BreadcrumbPage>;
+                  } else if (item.back) {
+                    crumb = (
+                      <BreadcrumbLink
+                        className="cursor-pointer"
+                        onClick={() => router.history.back()}
+                      >
+                        {item.label}
+                      </BreadcrumbLink>
+                    );
+                  } else {
+                    crumb = (
+                      <BreadcrumbLink asChild>
+                        <Link to={item.href ?? "/"}>{item.label}</Link>
+                      </BreadcrumbLink>
+                    );
+                  }
+
+                  return (
+                    <React.Fragment key={`${item.label}-${i}`}>
+                      <BreadcrumbItem className="inline-flex items-center gap-1.5">
+                        {crumb}
+                      </BreadcrumbItem>
+                      {!isLast && <BreadcrumbSeparator />}
+                    </React.Fragment>
+                  );
+                })}
               </BreadcrumbList>
             </Breadcrumb>
           </div>

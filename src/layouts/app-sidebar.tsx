@@ -2,7 +2,7 @@ import * as React from "react";
 import {
   IconAlertTriangle,
   IconBriefcase,
-IconDatabase,
+  IconDatabase,
   IconFileText,
   IconFileWord,
   IconHelp,
@@ -11,6 +11,7 @@ IconDatabase,
   IconUser,
   IconUsers,
   IconLayoutGrid,
+  type Icon,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -30,25 +31,38 @@ import {
 } from "#/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
+import type { AdminRole } from "#/lib/api/auth-controller";
 
-const navMain = [
-  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
-  { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Jobs", url: "/jobs", icon: IconBriefcase },
-  { title: "Applications", url: "/applications", icon: IconFileText },
-  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
-{ title: "Team", url: "/team", icon: IconUsers },
+type NavItem = { title: string; url: string; icon: Icon };
+type NavSecondaryItem = NavItem & { roles?: AdminRole[] };
+
+const navMain: NavItem[] = [
+  { title: "Overview", url: "/", icon: IconLayoutGrid },
+  { title: "Candidate profiles", url: "/profiles", icon: IconUser },
+  { title: "Job listings", url: "/jobs", icon: IconBriefcase },
+  { title: "Applications tracker", url: "/applications", icon: IconFileText },
+  {
+    title: "Violations & penalties",
+    url: "/penalties",
+    icon: IconAlertTriangle,
+  },
+  { title: "Team members", url: "/team", icon: IconUsers },
 ];
 
-const navSecondary = [
-  { title: "Settings", url: "#", icon: IconSettings },
-  { title: "Get Help", url: "#", icon: IconHelp },
+const navSecondary: NavSecondaryItem[] = [
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: IconSettings,
+    roles: ["SUPER_ADMIN"],
+  },
+  { title: "Support center", url: "/help", icon: IconHelp },
 ];
 
 const documents = [
-  { name: "Data Library", url: "#", icon: IconDatabase },
-  { name: "Reports", url: "#", icon: IconReport },
-  { name: "Word Assistant", url: "#", icon: IconFileWord },
+  { name: "Data library", url: "#", icon: IconDatabase },
+  { name: "Analytics reports", url: "#", icon: IconReport },
+  { name: "AI writing assistant", url: "#", icon: IconFileWord },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -58,6 +72,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: admin?.name ?? "Admin",
     email: admin?.email ?? "",
   };
+
+  const role = admin?.role;
+
+  const filteredNavSecondary = navSecondary.filter(
+    (item) => !item.roles || (role && item.roles.includes(role)),
+  );
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -83,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navMain} />
         <NavDocuments items={documents} />
-        <NavSecondary items={navSecondary} className="mt-auto" />
+        <NavSecondary items={filteredNavSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

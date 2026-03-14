@@ -155,8 +155,8 @@ export default function ProfileDetailPage({
     profile.status !== "ACTIVE" &&
     profile.status !== "BANNED";
   const canDeactivate = profile?.status === "ACTIVE";
-  const canConfirmPayment = profile?.status === "PENDING_PAYMENT";
-  const canSendPaymentLink = profile?.status === "PENDING_PAYMENT";
+  const canConfirmPayment = profile?.status === "PENDING_ACTIVATION";
+  const canSendPaymentLink = profile?.status === "PENDING_ACTIVATION";
   const canSendVerifLink = profile?.whatsappConnected === false;
 
   const tabValue = activeTab ?? "general";
@@ -219,7 +219,7 @@ export default function ProfileDetailPage({
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="cursor-pointer"
+                className="cursor-pointer uppercase text-sm"
               >
                 {tab.label}
               </TabsTrigger>
