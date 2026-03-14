@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   IconDots,
   IconEdit,
@@ -70,6 +71,9 @@ export function UserRowActions({ user }: Readonly<Props>) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       setDeleteOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

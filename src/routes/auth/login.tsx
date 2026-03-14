@@ -22,6 +22,9 @@ import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe } from "#/lib/api/auth-controller";
 
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : undefined,
+  }),
   beforeLoad: async () => {
     try {
       await getMe();
@@ -35,6 +38,7 @@ export const Route = createFileRoute("/auth/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { from } = Route.useSearch();
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
 
@@ -53,7 +57,7 @@ function LoginPage() {
 
   async function handleVerifyOtp(data: { otp: string }) {
     await verifyOtp.mutateAsync({ email, otp: data.otp });
-    await navigate({ to: "/" });
+    await navigate({ to: from ?? "/" });
   }
 
   async function handleResend() {
@@ -69,12 +73,12 @@ function LoginPage() {
               <img src={rabotkaLogo} alt="Rabotka" className="h-14 w-auto" />
             </div>
             <CardTitle className="text-xl">
-              {step === 1 ? "Connexion administrateur" : "Vérification"}
+              {step === 1 ? "Admin sign in" : "Verification"}
             </CardTitle>
             <CardDescription>
               {step === 1
-                ? "Entrez votre email pour recevoir un code OTP"
-                : "Entrez le code à 6 chiffres reçu par email"}
+                ? "Enter your email to receive an OTP code"
+                : "Enter the 6-digit code sent to your email"}
             </CardDescription>
           </CardHeader>
 

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/team/")({
   component: () => (
     <Layout
       title="Team"
-      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Team" }]}
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Team Members" }]}
     >
       <TeamPage />
     </Layout>

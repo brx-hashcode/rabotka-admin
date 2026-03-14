@@ -139,19 +139,19 @@ export function Step2OtpForm({
     resendButtonContent = (
       <>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Envoi...
+        Sending...
       </>
     );
   } else if (resendCooldown > 0) {
-    resendButtonContent = `Renvoyer dans (${formatTime(resendCooldown)})`;
+    resendButtonContent = `Resend in (${formatTime(resendCooldown)})`;
   } else {
-    resendButtonContent = "Renvoyer le code";
+    resendButtonContent = "Resend code";
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground text-center">
-        Code envoyé à <span className="font-medium text-foreground">{email}</span>
+        Code sent to <span className="font-medium text-foreground">{email}</span>
       </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -195,10 +195,10 @@ export function Step2OtpForm({
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Vérification...
+                  Verifying...
                 </>
               ) : (
-                "Vérifier le code"
+                "Verify code"
               )}
             </Button>
             <Button
@@ -217,7 +217,7 @@ export function Step2OtpForm({
               onClick={onBack}
               disabled={isVerifying || isResending}
             >
-              Modifier l'email
+              Change email
             </Button>
           </div>
         </form>

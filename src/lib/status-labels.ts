@@ -4,7 +4,7 @@
  */
 
 export const ACCOUNT_STATUS_LABELS: Record<string, string> = {
-  PENDING_PAYMENT: "Pending payment",
+  PENDING_ACTIVATION: "En attente d'activation",
   ACTIVE: "Active",
   SUSPENDED: "Suspended",
   BANNED: "Banned",

@@ -15,7 +15,7 @@ function RouteComponent() {
       title="Job Offer"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Jobs", href: "/jobs" },
+        { label: "Jobs", back: true },
         { label: "Job Details" },
       ]}
     >
