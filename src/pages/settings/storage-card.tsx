@@ -57,11 +57,11 @@ function SecretInput({
   value,
   onChange,
   placeholder,
-}: {
+}: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-}) {
+}>) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative flex items-center">
