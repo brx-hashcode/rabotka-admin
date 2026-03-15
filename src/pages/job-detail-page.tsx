@@ -1,7 +1,25 @@
+import { useState, useMemo } from "react";
+import {
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconCreditCard,
+  IconTrash,
+  IconChevronDown,
+} from "@tabler/icons-react";
+
 import { useJobDetail } from "#/hooks/use-job-detail";
 import type { AdminUpdateJobOfferParams } from "#/lib/api/jobs-controller";
 
+import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { JobForm } from "./job-detail/components/job-form";
 import { JobSummary } from "./job-detail/components/job-summary";
@@ -12,10 +30,44 @@ export default function JobDetailPage({
 }: Readonly<{
   jobId: string;
 }>) {
-  const { job, isLoading, isError, updateJob, isUpdating } =
-    useJobDetail(jobId);
+  const {
+    job,
+    isLoading,
+    isError,
+    updateJob,
+    isUpdating,
+    updateStatus,
+    isUpdatingStatus,
+    confirmPayment,
+    isConfirmingPayment,
+    deleteJob,
+    isDeleting,
+  } = useJobDetail(jobId);
+
+  const [activateOpen, setActivateOpen] = useState(false);
+  const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isEditable = job?.status === "ACTIVE";
+
+  const canActivate = useMemo(
+    () =>
+      job != null &&
+      job.status !== "ACTIVE" &&
+      job.status !== "PENDING_PAYMENT" &&
+      job.status !== "COMPLETED" &&
+      job.status !== "CANCELLED",
+    [job?.status],
+  );
+  const canDeactivate = useMemo(
+    () => job?.status === "ACTIVE" || job?.status === "PARTIALLY_FILLED",
+    [job?.status],
+  );
+  const canConfirmPayment = useMemo(
+    () => job?.status === "PENDING_PAYMENT",
+    [job?.status],
+  );
 
   const handleSave = async (data: AdminUpdateJobOfferParams) => {
     await updateJob(data);
@@ -61,6 +113,52 @@ export default function JobDetailPage({
 
   return (
     <div className="space-y-8 pt-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">{job.title}</h2>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Actions
+              <IconChevronDown className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem
+              disabled={!canConfirmPayment}
+              onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
+            >
+              <IconCreditCard className="size-4" />
+              Confirm payment
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              disabled={!canActivate}
+              onClick={() => canActivate && setActivateOpen(true)}
+            >
+              <IconPlayerPlay className="size-4" />
+              Activate
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!canDeactivate}
+              onClick={() => canDeactivate && setDeactivateOpen(true)}
+            >
+              <IconPlayerPause className="size-4" />
+              Deactivate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <IconTrash className="size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
           <JobForm
@@ -78,6 +176,56 @@ export default function JobDetailPage({
       <section>
         <JobApplicationsTable applications={job.applications} />
       </section>
+
+      <ConfirmDialog
+        open={confirmPaymentOpen}
+        onOpenChange={setConfirmPaymentOpen}
+        title="Confirm payment"
+        description="This will confirm the payment and activate the job offer, making it visible to workers."
+        actionLabel="Confirm & Activate"
+        onConfirm={() =>
+          confirmPayment().then(() => setConfirmPaymentOpen(false))
+        }
+        isPending={isConfirmingPayment}
+        variant="default"
+      />
+
+      <ConfirmDialog
+        open={activateOpen}
+        onOpenChange={setActivateOpen}
+        title="Activate job offer"
+        description="This will set the job offer status to Active, making it visible to workers."
+        actionLabel="Activate"
+        onConfirm={() =>
+          updateStatus("ACTIVE").then(() => setActivateOpen(false))
+        }
+        isPending={isUpdatingStatus}
+        variant="default"
+      />
+
+      <ConfirmDialog
+        open={deactivateOpen}
+        onOpenChange={setDeactivateOpen}
+        title="Deactivate job offer"
+        description="This will cancel the job offer. Workers will no longer be able to apply."
+        actionLabel="Deactivate"
+        onConfirm={() =>
+          updateStatus("CANCELLED").then(() => setDeactivateOpen(false))
+        }
+        isPending={isUpdatingStatus}
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete job offer"
+        description="This will permanently delete the job offer and all its applications. This action cannot be undone."
+        actionLabel="Delete"
+        onConfirm={() => deleteJob().then(() => setDeleteOpen(false))}
+        isPending={isDeleting}
+        variant="destructive"
+      />
     </div>
   );
 }

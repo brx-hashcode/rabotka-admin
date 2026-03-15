@@ -9,7 +9,7 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Separator } from "#/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Card, CardContent } from "#/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -107,9 +107,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Job Details</CardTitle>
-      </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-x-4 gap-y-5">
           <div className="col-span-2 space-y-1.5">
