@@ -43,7 +43,7 @@ export function JobSummary({ job }: Props) {
             </p>
             <Badge
               variant={statusBadgeVariant(job.status)}
-              className="mt-1"
+              className={job.status === "FILLED" ? "mt-1 bg-blue-600 text-white border-transparent" : "mt-1"}
             >
               {getJobOfferStatusLabel(job.status)}
             </Badge>
