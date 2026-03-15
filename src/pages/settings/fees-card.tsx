@@ -16,6 +16,7 @@ type FormState = {
   "fees.billing_block_threshold": string;
   "fees.job_posting_fee_fcfa": string;
   "fees.application_fee_fcfa": string;
+  "fees.max_concurrent_applications": string;
 };
 
 const EMPTY: FormState = {
@@ -28,6 +29,7 @@ const EMPTY: FormState = {
   "fees.billing_block_threshold": "",
   "fees.job_posting_fee_fcfa": "",
   "fees.application_fee_fcfa": "",
+  "fees.max_concurrent_applications": "",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -43,12 +45,12 @@ function NumericInput({
   onChange,
   placeholder,
   suffix,
-}: {
+}: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   suffix?: string;
-}) {
+}>) {
   return (
     <div className="relative flex items-center">
       <Input
@@ -129,9 +131,9 @@ export function FeesCard() {
 
       <CardContent className="pt-6">
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Late cancellation (worker)
+          worker
         </p>
-        <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
           <div className="space-y-1.5">
             <FieldLabel>Financial penalty</FieldLabel>
             <NumericInput
@@ -156,12 +158,19 @@ export function FeesCard() {
               suffix="h"
             />
           </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max concurrent applications (per worker)</FieldLabel>
+            <NumericInput
+              value={form["fees.max_concurrent_applications"]}
+              onChange={(v) => set("fees.max_concurrent_applications", v)}
+            />
+          </div>
         </div>
 
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Employer penalties
+          employer
         </p>
         <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -187,7 +196,7 @@ export function FeesCard() {
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
           Platform thresholds & fees
         </p>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
+        <div className="grid grid-cols-2  gap-x-6 gap-y-5 sm:grid-cols-4">
           <div className="space-y-1.5">
             <FieldLabel>Minimum reliability score</FieldLabel>
             <NumericInput
