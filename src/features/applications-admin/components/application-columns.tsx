@@ -57,7 +57,7 @@ const applicationDataColumns: ColumnDef<Application, unknown>[] = [
     header: "Job",
     cell: ({ row }) => (
       <div className="max-w-[200px]">
-        <span className="truncate font-medium text-sm">
+        <span className="font-medium text-sm wrap-break-word whitespace-normal">
           {row.original.jobTitle}
         </span>
       </div>

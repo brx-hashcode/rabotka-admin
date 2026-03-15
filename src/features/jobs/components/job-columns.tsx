@@ -47,7 +47,7 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     header: "Title",
     cell: ({ row }) => (
       <div className="max-w-[200px]">
-        <span className="truncate font-medium text-sm">
+        <span className="font-medium text-sm wrap-break-word whitespace-normal">
           {row.original.title}
         </span>
       </div>
@@ -60,7 +60,10 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge
+          variant={getStatusBadgeVariant(status)}
+          className={status === "FILLED" ? "bg-blue-600 text-white border-transparent" : undefined}
+        >
           {getJobOfferStatusLabel(status)}
         </Badge>
       );
