@@ -102,6 +102,25 @@ export class AdminJobOffersController extends AdminBaseController {
     return this.patch<AdminJobOfferDetailResponse>(url, data as Record<string, unknown>);
   }
 
+  async updateJobOfferStatus(
+    id: string,
+    status: string,
+  ): Promise<AdminJobOfferDetailResponse> {
+    const url = this.createURL(
+      `/admin/job-offers/${id}/status`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminJobOfferDetailResponse>(url, { status });
+  }
+
+  async confirmJobPayment(id: string): Promise<AdminJobOfferDetailResponse> {
+    const url = this.createURL(
+      `/admin/job-offers/${id}/confirm-payment`,
+      new URLSearchParams(),
+    );
+    return this.post<AdminJobOfferDetailResponse>(url, {});
+  }
+
   async deleteJobOffer(id: string): Promise<void> {
     const url = this.createURL(
       `/admin/job-offers/${id}`,
@@ -115,4 +134,6 @@ const controller = new AdminJobOffersController();
 export const getJobOffersList = controller.getList.bind(controller);
 export const getJobOfferById = controller.getById.bind(controller);
 export const updateJobOffer = controller.updateJobOffer.bind(controller);
+export const updateJobOfferStatus = controller.updateJobOfferStatus.bind(controller);
+export const confirmJobPayment = controller.confirmJobPayment.bind(controller);
 export const deleteJobOffer = controller.deleteJobOffer.bind(controller);
