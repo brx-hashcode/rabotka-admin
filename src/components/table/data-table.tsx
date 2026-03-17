@@ -33,7 +33,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   isPaginated = false,
   totalCount = 0,
-  initialPageSize = 10,
+  initialPageSize = 20,
   header,
   footer,
   emptyMessage = "No results.",

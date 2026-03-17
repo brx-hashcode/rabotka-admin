@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getPenaltiesList } from "#/lib/api/penalties-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const penaltiesParsers = {
   page: parseAsInteger.withDefault(1),

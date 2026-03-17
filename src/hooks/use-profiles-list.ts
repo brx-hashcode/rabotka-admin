@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getProfilesList } from "#/lib/api/profiles-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const profilesParsers = {
   page: parseAsInteger.withDefault(1),
