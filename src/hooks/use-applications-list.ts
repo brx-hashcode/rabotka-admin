@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getApplicationsList } from "#/lib/api/applications-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const applicationsParsers = {
   page: parseAsInteger.withDefault(1),

@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getJobOffersList } from "#/lib/api/jobs-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const jobsParsers = {
   page: parseAsInteger.withDefault(1),
