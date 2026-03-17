@@ -113,7 +113,7 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
 export function RecentApplicationsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-applications"],
-    queryFn: () => getApplicationsList({ page: 1, limit: 8 }),
+    queryFn: () => getApplicationsList({ page: 1, limit: 10 }),
   });
 
   return (
