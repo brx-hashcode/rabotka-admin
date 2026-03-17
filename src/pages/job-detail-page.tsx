@@ -24,12 +24,15 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { JobForm } from "./job-detail/components/job-form";
 import { JobSummary } from "./job-detail/components/job-summary";
 import { JobApplicationsTable } from "./job-detail/components/job-applications-table";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function JobDetailPage({
   jobId,
 }: Readonly<{
   jobId: string;
 }>) {
+  const navigate = useNavigate();
+
   const {
     job,
     isLoading,
@@ -222,7 +225,14 @@ export default function JobDetailPage({
         title="Delete job offer"
         description="This will permanently delete the job offer and all its applications. This action cannot be undone."
         actionLabel="Delete"
-        onConfirm={() => deleteJob().then(() => setDeleteOpen(false))}
+        onConfirm={() =>
+          deleteJob().then((res) => {
+            setDeleteOpen(false);
+            if (res.success) {
+              navigate({ to: "/jobs" });
+            }
+          })
+        }
         isPending={isDeleting}
         variant="destructive"
       />
