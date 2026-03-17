@@ -100,7 +100,13 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
             </div>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">
-                <Link to="/penalties" className="hover:underline">
+                <Link
+                  to="/penalties"
+                  search={{
+                    payment_status: [],
+                  }}
+                  className="hover:underline"
+                >
                   Penalties
                 </Link>
               </p>
@@ -111,7 +117,7 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 <Link
                   to="/penalties"
                   search={{
-                    payment_status: PENALTY_PAYMENT_STATUS_LABELS.unpaid,
+                    payment_status: [PENALTY_PAYMENT_STATUS_LABELS.unpaid],
                   }}
                   className="hover:underline"
                 >

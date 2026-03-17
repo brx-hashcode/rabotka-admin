@@ -6,8 +6,6 @@ import {
 import { usePaymentRequestsList } from "#/hooks/use-payment-requests-list";
 import type { Table as TableInstance } from "@tanstack/react-table";
 
-const INITIAL_PAGE_SIZE = 10;
-
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "SUBMITTED", label: "Submitted" },
@@ -52,7 +50,6 @@ export default function PaymentRequestsPage() {
       header={renderHeader}
       totalCount={total}
       isLoading={isLoading}
-      initialPageSize={INITIAL_PAGE_SIZE}
       getRowId={(row) => row.id}
     />
   );

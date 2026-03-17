@@ -7,8 +7,6 @@ import {
 } from "#/features/penalties";
 import { usePenaltiesList } from "#/hooks/use-penalties-list";
 
-const INITIAL_PAGE_SIZE = 10;
-
 function PenaltiesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Penalty> }>) {
@@ -46,7 +44,6 @@ export default function PenaltiesPage() {
       header={renderPenaltiesHeader}
       totalCount={total}
       isLoading={isLoading}
-      initialPageSize={INITIAL_PAGE_SIZE}
       getRowId={(row) => row.id}
     />
   );
