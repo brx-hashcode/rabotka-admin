@@ -2,18 +2,20 @@ import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 import {
   getAccountStatusLabel,
   getVerificationStatusLabel,
+  PENALTY_PAYMENT_STATUS_LABELS,
 } from "#/lib/status-labels";
 
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 
 import { statusBadgeVariant, formatDate } from "../helpers";
+import { Link } from "@tanstack/react-router";
 
 type Props = {
   profile: AdminProfileDetailResponse;
 };
 
-export function ProfileGeneralSummary({ profile }: Props) {
+export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
   return (
     <div className="space-y-6">
       {/* Summary cards */}
@@ -77,19 +79,49 @@ export function ProfileGeneralSummary({ profile }: Props) {
           <CardTitle className="text-sm">Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-y-3 text-sm">
-            <p className="text-muted-foreground">Job Offers</p>
-            <p className="text-right font-medium">{profile.jobOffersCount}</p>
-            <p className="text-muted-foreground">Applications</p>
-            <p className="text-right font-medium">
-              {profile.applicationsCount}
-            </p>
-            <p className="text-muted-foreground">Penalties</p>
-            <p className="text-right font-medium">{profile.penaltiesCount}</p>
-            <p className="text-muted-foreground">Unpaid Penalties</p>
-            <p className="text-right font-medium text-red-600">
-              {profile.unpaidPenaltiesCount}
-            </p>
+          <div className="text-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground">
+                <Link to="/jobs" className="hover:underline">
+                  Job Offers
+                </Link>
+              </p>
+              <p className="text-right font-medium">{profile.jobOffersCount}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground">
+                <Link to="/applications" className="hover:underline">
+                  Applications
+                </Link>
+              </p>
+              <p className="text-right font-medium">
+                {profile.applicationsCount}
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground">
+                <Link to="/penalties" className="hover:underline">
+                  Penalties
+                </Link>
+              </p>
+              <p className="text-right font-medium">{profile.penaltiesCount}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground">
+                <Link
+                  to="/penalties"
+                  search={{
+                    payment_status: PENALTY_PAYMENT_STATUS_LABELS.unpaid,
+                  }}
+                  className="hover:underline"
+                >
+                  Unpaid Penalties
+                </Link>
+              </p>
+              <p className="text-right font-medium text-red-600">
+                {profile.unpaidPenaltiesCount}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
