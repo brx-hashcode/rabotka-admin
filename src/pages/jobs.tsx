@@ -8,8 +8,6 @@ import {
 } from "#/features/jobs";
 import { useJobsList } from "#/hooks/use-jobs-list";
 
-const INITIAL_PAGE_SIZE = 10;
-
 function JobsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<JobOffer> }>) {
@@ -48,7 +46,6 @@ export default function JobsPage() {
       header={renderJobsHeader}
       totalCount={total}
       isLoading={isLoading}
-      initialPageSize={INITIAL_PAGE_SIZE}
       getRowId={(row) => row.id}
     />
   );

@@ -10,8 +10,6 @@ import {
 } from "#/features/applications";
 import { useProfilesList } from "#/hooks/use-profiles-list";
 
-const INITIAL_PAGE_SIZE = 10;
-
 function ProfilesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Profile> }>) {
@@ -60,7 +58,6 @@ export default function ProfilesPage() {
       header={renderProfilesHeader}
       totalCount={total}
       isLoading={isLoading}
-      initialPageSize={INITIAL_PAGE_SIZE}
       getRowId={(row) => row.id}
     />
   );

@@ -12,8 +12,6 @@ import {
   type AdminUser,
 } from "#/features/team";
 
-const INITIAL_PAGE_SIZE = 10;
-
 function UsersTableHeader({
   table,
   onCreateClick,
@@ -58,7 +56,6 @@ export default function TeamPage() {
         header={renderHeader}
         totalCount={total}
         isLoading={isLoading}
-        initialPageSize={INITIAL_PAGE_SIZE}
         getRowId={(row) => row.id}
       />
 
