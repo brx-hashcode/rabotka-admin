@@ -121,12 +121,12 @@ export class AdminJobOffersController extends AdminBaseController {
     return this.post<AdminJobOfferDetailResponse>(url, {});
   }
 
-  async deleteJobOffer(id: string): Promise<void> {
+  async deleteJobOffer(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/job-offers/${id}`,
       new URLSearchParams(),
     );
-    await this.delete<void>(url);
+    return this.delete<{ success: boolean }>(url);
   }
 }
 

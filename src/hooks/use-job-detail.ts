@@ -38,8 +38,8 @@ export function useJobDetail(jobId: string) {
       queryClient.invalidateQueries({ queryKey: ["admin", "job-offers"] });
       toast.success("Job offer deleted successfully");
     },
-    onError: () => {
-      toast.error("Failed to delete job offer");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

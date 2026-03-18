@@ -33,36 +33,36 @@ import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import type { AdminRole } from "#/lib/api/auth-controller";
 
-type NavItem = { title: string; url: string; icon: Icon };
-type NavSecondaryItem = NavItem & { roles?: AdminRole[] };
+type NavItem = { title: string; url: string; icon: Icon; roles?: AdminRole[] };
 
 const navMain: NavItem[] = [
-  { title: "Overview", url: "/", icon: IconLayoutGrid },
-  { title: "Candidate profiles", url: "/profiles", icon: IconUser },
-  { title: "Job listings", url: "/jobs", icon: IconBriefcase },
-  { title: "Applications tracker", url: "/applications", icon: IconFileText },
+  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
+  { title: "Candidates", url: "/profiles", icon: IconUser },
+  { title: "Jobs", url: "/jobs", icon: IconBriefcase },
+  { title: "Applications", url: "/applications", icon: IconFileText },
+  { title: "Compliance", url: "/penalties", icon: IconAlertTriangle },
   {
-    title: "Violations & penalties",
-    url: "/penalties",
-    icon: IconAlertTriangle,
+    title: "Team",
+    url: "/team",
+    icon: IconUsers,
+    roles: ["SUPER_ADMIN"],
   },
-  { title: "Team members", url: "/team", icon: IconUsers },
 ];
 
-const navSecondary: NavSecondaryItem[] = [
+const navSecondary: NavItem[] = [
   {
     title: "Settings",
     url: "/settings",
     icon: IconSettings,
     roles: ["SUPER_ADMIN"],
   },
-  { title: "Support center", url: "/help", icon: IconHelp },
+  { title: "Help", url: "/help", icon: IconHelp },
 ];
 
 const documents = [
-  { name: "Data library", url: "#", icon: IconDatabase },
-  { name: "Analytics reports", url: "#", icon: IconReport },
-  { name: "AI writing assistant", url: "#", icon: IconFileWord },
+  { name: "Data", url: "#", icon: IconDatabase },
+  { name: "Reports", url: "#", icon: IconReport },
+  { name: "AI Assistant", url: "#", icon: IconFileWord },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

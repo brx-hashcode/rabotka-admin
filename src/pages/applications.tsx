@@ -8,8 +8,6 @@ import {
 } from "#/features/applications-admin";
 import { useApplicationsList } from "#/hooks/use-applications-list";
 
-const INITIAL_PAGE_SIZE = 10;
-
 function ApplicationsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Application> }>) {
@@ -52,7 +50,6 @@ export default function ApplicationsPage() {
       header={renderApplicationsHeader}
       totalCount={total}
       isLoading={isLoading}
-      initialPageSize={INITIAL_PAGE_SIZE}
       getRowId={(row) => row.id}
     />
   );
