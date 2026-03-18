@@ -136,14 +136,15 @@ body {
 }
 
 a {
-  color: var(--lagoon-deep);
-  text-decoration-color: rgba(50, 143, 151, 0.4);
+  color: inherit;
+  text-decoration-color: oklch(from var(--foreground) l c h / 0.3);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 
 a:hover {
-  color: #246f76;
+  color: inherit;
+  text-decoration-color: oklch(from var(--foreground) l c h / 0.6);
 }
 
 img {

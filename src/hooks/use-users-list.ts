@@ -9,7 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getUsersList } from "#/lib/api/users-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const usersParsers = {
   page: parseAsInteger.withDefault(1),

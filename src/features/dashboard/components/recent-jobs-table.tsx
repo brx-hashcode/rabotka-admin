@@ -139,7 +139,7 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
 export function RecentJobsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-jobs"],
-    queryFn: () => getJobOffersList({ page: 1, limit: 8 }),
+    queryFn: () => getJobOffersList({ page: 1, limit: 10 }),
   });
 
   return (

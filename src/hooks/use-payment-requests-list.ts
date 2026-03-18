@@ -6,7 +6,7 @@ import {
   type PaymentRequestStatus,
 } from "#/lib/api/payment-requests-controller";
 
-const defaultLimit = 10;
+const defaultLimit = 20;
 
 const paymentRequestsParsers = {
   page: parseAsInteger.withDefault(1),
