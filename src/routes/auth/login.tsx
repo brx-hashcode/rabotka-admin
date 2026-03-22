@@ -22,13 +22,15 @@ import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe } from "#/lib/api/auth-controller";
 
 export const Route = createFileRoute("/auth/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    from: typeof search.from === "string" ? search.from : undefined,
-  }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     try {
       await getMe();
-      throw redirect({ to: "/" });
+      throw redirect({
+        to: "/",
+        search: {
+          redirect: location.href,
+        },
+      });
     } catch (error) {
       if (isRedirect(error)) throw error;
     }
@@ -38,7 +40,6 @@ export const Route = createFileRoute("/auth/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { from } = Route.useSearch();
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
 
@@ -57,7 +58,6 @@ function LoginPage() {
 
   async function handleVerifyOtp(data: { otp: string }) {
     await verifyOtp.mutateAsync({ email, otp: data.otp });
-    await navigate({ to: from ?? "/" });
   }
 
   async function handleResend() {
