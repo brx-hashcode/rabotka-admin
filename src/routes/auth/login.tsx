@@ -58,6 +58,8 @@ function LoginPage() {
 
   async function handleVerifyOtp(data: { otp: string }) {
     await verifyOtp.mutateAsync({ email, otp: data.otp });
+
+    navigate({ to: "/" });
   }
 
   async function handleResend() {
