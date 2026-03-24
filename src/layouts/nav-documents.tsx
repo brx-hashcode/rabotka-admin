@@ -42,7 +42,8 @@ export const NavDocuments = ({
   const visibleItems = items.filter((item) => isVisible(item.name));
 
   const handleShare = (url: string) => {
-    const full = `${window.location.origin}${url}`;
+    const full = `${globalThis.location.origin}${url}`;
+
     navigator.clipboard.writeText(full).catch(() => null);
     toast.success("Link copied to clipboard");
   };
@@ -84,7 +85,11 @@ export const NavDocuments = ({
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem onSelect={() => void navigate({ to: item.url })}>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    navigate({ to: item.url });
+                  }}
+                >
                   <IconFolder />
                   <span>Open</span>
                 </DropdownMenuItem>
