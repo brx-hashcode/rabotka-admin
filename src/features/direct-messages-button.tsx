@@ -1,6 +1,6 @@
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
-import { Send, ChevronsUpDown, Check } from "lucide-react";
+import { Send, ChevronsUpDown, Check, SearchIcon } from "lucide-react";
 import { useId, useState } from "react";
 import {
   Dialog,
@@ -9,18 +9,14 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "#/components/ui/command";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -105,13 +101,13 @@ export const DirectMessagesButton = ({
           </DialogHeader>
 
           <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
-            {/* Profile combobox */}
+            {/* Profile dropdown */}
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium" id="dm-recipient-label">
                 Recipient
               </span>
-              <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                <PopoverTrigger asChild>
+              <DropdownMenu open={comboOpen} onOpenChange={setComboOpen}>
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
@@ -124,60 +120,67 @@ export const DirectMessagesButton = ({
                       : "Search by name, email or phone…"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-(--radix-popover-trigger-width) p-0"
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
                   align="start"
+                  className="w-(--radix-dropdown-menu-trigger-width)"
                 >
-                  <Command shouldFilter={false}>
-                    <CommandInput
-                      placeholder="Search profiles…"
-                      value={search}
-                      onValueChange={setSearch}
-                    />
-                    <CommandList>
-                      {search.trim().length === 0 && (
-                        <CommandEmpty>Type to search profiles.</CommandEmpty>
-                      )}
-                      {search.trim().length > 0 &&
-                        searchResults.length === 0 && (
-                          <CommandEmpty>No profiles found.</CommandEmpty>
+                  <DropdownMenuLabel className="font-normal p-0">
+                    <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5">
+                      <SearchIcon
+                        className="text-muted-foreground size-4 shrink-0"
+                        aria-hidden
+                      />
+                      <Input
+                        placeholder="Search profiles…"
+                        className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {search.trim().length === 0 && (
+                    <p className="text-muted-foreground px-3 py-4 text-center text-sm">
+                      Type to search profiles.
+                    </p>
+                  )}
+                  {search.trim().length > 0 && searchResults.length === 0 && (
+                    <p className="text-muted-foreground px-3 py-4 text-center text-sm">
+                      No profiles found.
+                    </p>
+                  )}
+                  {searchResults.map((profile) => (
+                    <DropdownMenuItem
+                      key={profile.id}
+                      className="flex cursor-pointer items-center gap-2 py-1.5 pl-2 pr-2"
+                      onSelect={() => {
+                        setSelectedProfile(profile);
+                        setComboOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          selectedProfile?.id === profile.id
+                            ? "opacity-100"
+                            : "opacity-0",
                         )}
-                      {searchResults.length > 0 && (
-                        <CommandGroup>
-                          {searchResults.map((profile) => (
-                            <CommandItem
-                              key={profile.id}
-                              value={profile.id}
-                              onSelect={() => {
-                                setSelectedProfile(profile);
-                                setComboOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedProfile?.id === profile.id
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">
-                                  {profile.firstName} {profile.lastName}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {profile.email} · {profile.phone}
-                                </span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {profile.firstName} {profile.lastName}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {profile.email} · {profile.phone}
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Channel selector */}

@@ -9,7 +9,7 @@ export function useAdminProfile() {
   const query = useAdminMe();
 
   const updateMutation = useMutation({
-    mutationFn: (name: string) => updateMe({ name }),
+    mutationFn: (data: { firstName: string; lastName: string }) => updateMe(data),
     onSuccess: (data) => {
       queryClient.setQueryData<Admin>(["admin", "me"], data);
       toast.success("Profile updated successfully");

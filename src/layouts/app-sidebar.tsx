@@ -12,6 +12,8 @@ import {
   IconUsers,
   IconLayoutGrid,
   type Icon,
+  IconFile,
+  IconWallet,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -60,16 +62,20 @@ const navSecondary: NavItem[] = [
 ];
 
 const documents = [
-  { name: "Data", url: "#", icon: IconDatabase },
-  { name: "Reports", url: "#", icon: IconReport },
-  { name: "AI Assistant", url: "#", icon: IconFileWord },
+  { name: "Events", url: "/events", icon: IconDatabase },
+  { name: "Claim", url: "/claim", icon: IconReport },
+  { name: "Logs", url: "/logs", icon: IconFileWord },
+  { name: "Documents", url: "/documents", icon: IconFile },
+  { name: "Wallet", url: "/wallet", icon: IconWallet },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: admin } = useAdminMe();
 
   const user = {
-    name: admin?.name ?? "Admin",
+    name: admin
+      ? `${admin.firstName} ${admin.lastName}`.trim() || "Admin"
+      : "Admin",
     email: admin?.email ?? "",
   };
 
