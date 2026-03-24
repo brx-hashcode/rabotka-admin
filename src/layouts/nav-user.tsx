@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   IconDotsVertical,
   IconLogout,
@@ -5,6 +6,16 @@ import {
 } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "#/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,10 +54,9 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const initials = getInitials(user.name);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleLogout = async (event: Event) => {
-    event.preventDefault();
-
+  const handleLogout = async () => {
     await logout().catch(() => null);
     await navigate({ to: "/auth/login" });
   };
@@ -109,7 +119,10 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             <DropdownMenuItem
               className="cursor-pointer"
               variant="destructive"
-              onSelect={handleLogout}
+              onSelect={(e) => {
+                e.preventDefault();
+                setConfirmOpen(true);
+              }}
             >
               <IconLogout />
               Sign out
@@ -117,6 +130,23 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarMenu>
   );
 };

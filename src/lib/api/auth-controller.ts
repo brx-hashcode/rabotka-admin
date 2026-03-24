@@ -5,7 +5,8 @@ export type AdminRole = "ADMIN" | "SUPER_ADMIN";
 export type Admin = {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   role: AdminRole;
 };
 
@@ -47,7 +48,7 @@ export class AdminAuthController extends AdminBaseController {
     }
   }
 
-  async updateMe(data: { name: string }): Promise<Admin> {
+  async updateMe(data: { firstName: string; lastName: string }): Promise<Admin> {
     try {
       return await this.patch<Admin>("/auth/admin/me", data);
     } catch (error) {
