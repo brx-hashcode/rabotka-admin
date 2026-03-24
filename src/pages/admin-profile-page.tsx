@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
-import { IconUser, IconShield } from "@tabler/icons-react";
+import {
+  IconUser,
+  IconShield,
+  IconMoon,
+  IconSun,
+  IconBell,
+} from "@tabler/icons-react";
 
 import { useAdminProfile } from "#/hooks/use-admin-profile";
+import { useTheme } from "#/components/theme-provider";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { Separator } from "#/components/ui/separator";
+import { Switch } from "#/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 
@@ -17,105 +24,163 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 }
 
 export default function AdminProfilePage() {
   const { admin, isLoading, updateAdmin, isUpdating } = useAdminProfile();
+  const { resolvedTheme, setTheme } = useTheme();
 
-  const [name, setName] = useState("");
-  const [initialName, setInitialName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [initialFirstName, setInitialFirstName] = useState("");
+  const [initialLastName, setInitialLastName] = useState("");
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     if (admin) {
-      setName(admin.name ?? "");
-      setInitialName(admin.name ?? "");
+      setFirstName(admin.firstName ?? "");
+      setLastName(admin.lastName ?? "");
+      setInitialFirstName(admin.firstName ?? "");
+      setInitialLastName(admin.lastName ?? "");
     }
   }, [admin]);
 
-  const isDirty = name !== initialName;
+  const isDirty =
+    firstName !== initialFirstName || lastName !== initialLastName;
+  const isDarkMode = resolvedTheme === "dark";
 
   const handleSave = async () => {
-    await updateAdmin(name);
-    setInitialName(name);
+    await updateAdmin({ firstName, lastName });
+    setInitialFirstName(firstName);
+    setInitialLastName(lastName);
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground text-sm">Loading...</p>
+        <p className="text-muted-foreground text-sm">Loading…</p>
       </div>
     );
   }
 
   if (!admin) return null;
 
-  const initials = getInitials(admin.name || "A");
+  const initials = getInitials(admin.firstName || "A", admin.lastName || "");
+  const fullName = [admin.firstName, admin.lastName].filter(Boolean).join(" ");
 
   return (
-    <div className="max-w-xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold uppercase">
-            Account Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6 flex items-center gap-4">
-            <Avatar className="border-border size-20 border-4 shadow-md">
-              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-semibold">
+    <div className="grid grid-cols-1 gap-6 pt-6 lg:grid-cols-3">
+      <div className="lg:col-span-1">
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 pt-8 text-center">
+            <Avatar className="border-border size-24 border-4 shadow-md">
+              <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                 {initials || <IconUser className="size-8" />}
               </AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold">{admin.name}</p>
-              <p className="text-muted-foreground truncate text-sm">
-                {admin.email}
-              </p>
+            <div className="space-y-1">
+              <p className="text-lg font-semibold">{fullName}</p>
+              <p className="text-muted-foreground text-sm">{admin.email}</p>
               <Badge variant="secondary" className="mt-1 gap-1">
                 <IconShield className="size-3" />
                 {admin.role}
               </Badge>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <Separator className="mb-6" />
+      <div className="flex flex-col gap-6 lg:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold uppercase">
+              Account Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <FieldLabel>First Name</FieldLabel>
+                <Input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel>Last Name</FieldLabel>
+                <Input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last name"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel>Email</FieldLabel>
+                <Input value={admin.email} disabled />
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel>Role</FieldLabel>
+                <Input value={admin.role} disabled />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={!isDirty || isUpdating}>
+                {isUpdating ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 gap-y-5">
-            <div className="space-y-1.5">
-              <FieldLabel>Display Name</FieldLabel>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold uppercase">
+              Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isDarkMode ? (
+                  <IconMoon className="text-muted-foreground size-4" />
+                ) : (
+                  <IconSun className="text-muted-foreground size-4" />
+                )}
+                <div>
+                  <p className="text-sm font-medium">Appearance</p>
+                  <p className="text-muted-foreground text-xs">
+                    {isDarkMode ? "Dark mode" : "Light mode"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={(checked) =>
+                  setTheme(checked ? "dark" : "light")
+                }
               />
             </div>
-            <div className="space-y-1.5">
-              <FieldLabel>Email</FieldLabel>
-              <Input value={admin.email} disabled />
-            </div>
-            <div className="space-y-1.5">
-              <FieldLabel>Role</FieldLabel>
-              <Input value={admin.role} disabled />
-            </div>
-          </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button
-              onClick={handleSave}
-              disabled={!isDirty || isUpdating}
-            >
-              {isUpdating ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <IconBell className="text-muted-foreground size-4" />
+                <div>
+                  <p className="text-sm font-medium">Email Notifications</p>
+                  <p className="text-muted-foreground text-xs">
+                    Receive updates and alerts by email
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={notificationsEnabled}
+                onCheckedChange={setNotificationsEnabled}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

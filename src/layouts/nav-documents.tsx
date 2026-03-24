@@ -1,10 +1,13 @@
 import {
   IconDots,
   IconFolder,
+  IconRefresh,
   IconShare3,
   IconTrash,
   type Icon,
 } from "@tabler/icons-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -22,6 +25,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "#/components/ui/sidebar";
+import { useHiddenDocuments } from "#/hooks/use-hidden-documents";
 
 export const NavDocuments = ({
   items,
@@ -33,18 +37,39 @@ export const NavDocuments = ({
   }>;
 }>) => {
   const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+  const { isVisible, hide, reset, hasHidden } = useHiddenDocuments();
+
+  const visibleItems = items.filter((item) => isVisible(item.name));
+
+  const handleShare = (url: string) => {
+    const full = `${globalThis.location.origin}${url}`;
+
+    navigator.clipboard.writeText(full).catch(() => null);
+    toast.success("Link copied to clipboard");
+  };
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Data & Monitoring</SidebarGroupLabel>
+      <div className="flex items-center justify-between pr-2">
+        <SidebarGroupLabel>Data & Monitoring</SidebarGroupLabel>
+        {hasHidden && (
+          <button
+            onClick={reset}
+            className="cursor-pointer hover:text-foreground"
+          >
+            <IconRefresh className="size-4" />
+          </button>
+        )}
+      </div>
       <SidebarMenu>
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <a href={item.url}>
+              <Link to={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -61,16 +86,23 @@ export const NavDocuments = ({
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    navigate({ to: item.url });
+                  }}
+                >
                   <IconFolder />
                   <span>Open</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleShare(item.url)}>
                   <IconShare3 />
                   <span>Share</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => hide(item.name)}
+                >
                   <IconTrash />
                   <span>Delete</span>
                 </DropdownMenuItem>
