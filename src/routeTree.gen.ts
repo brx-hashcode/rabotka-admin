@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
 import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
@@ -43,6 +44,12 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWalletIndexRoute =
+  AuthenticatedWalletIndexRouteImport.update({
+    id: '/wallet/',
+    path: '/wallet/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
   id: '/team/',
   path: '/team/',
@@ -153,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/profiles/': typeof AuthenticatedProfilesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/team/': typeof AuthenticatedTeamIndexRoute
+  '/wallet/': typeof AuthenticatedWalletIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
@@ -173,6 +181,7 @@ export interface FileRoutesByTo {
   '/profiles': typeof AuthenticatedProfilesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/team': typeof AuthenticatedTeamIndexRoute
+  '/wallet': typeof AuthenticatedWalletIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -195,6 +204,7 @@ export interface FileRoutesById {
   '/_authenticated/profiles/': typeof AuthenticatedProfilesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
+  '/_authenticated/wallet/': typeof AuthenticatedWalletIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/profiles/'
     | '/settings/'
     | '/team/'
+    | '/wallet/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth/login'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/settings'
     | '/team'
+    | '/wallet'
   id:
     | '__root__'
     | '/_authenticated'
@@ -258,6 +270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles/'
     | '/_authenticated/settings/'
     | '/_authenticated/team/'
+    | '/_authenticated/wallet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wallet/': {
+      id: '/_authenticated/wallet/'
+      path: '/wallet'
+      fullPath: '/wallet/'
+      preLoaderRoute: typeof AuthenticatedWalletIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/team/': {
       id: '/_authenticated/team/'
@@ -421,6 +441,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfilesIndexRoute: typeof AuthenticatedProfilesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
+  AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -443,6 +464,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfilesIndexRoute: AuthenticatedProfilesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
+  AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
