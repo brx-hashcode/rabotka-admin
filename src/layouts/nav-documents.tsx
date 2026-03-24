@@ -1,6 +1,7 @@
 import {
   IconDots,
   IconFolder,
+  IconRefresh,
   IconShare3,
   IconTrash,
   type Icon,
@@ -55,9 +56,9 @@ export const NavDocuments = ({
         {hasHidden && (
           <button
             onClick={reset}
-            className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+            className="cursor-pointer hover:text-foreground"
           >
-            Reset
+            <IconRefresh className="size-4" />
           </button>
         )}
       </div>
