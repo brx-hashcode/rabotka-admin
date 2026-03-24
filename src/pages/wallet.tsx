@@ -53,6 +53,7 @@ function TransactionsTableHeader({
   return (
     <TableHeader>
       <TableHeaderToolbar
+        searchPlaceholder="Search transactions..."
         filters={[
           {
             id: "tx_type",
@@ -88,6 +89,7 @@ function PaymentsTableHeader({
   return (
     <TableHeader>
       <TableHeaderToolbar
+        searchPlaceholder="Search payments..."
         filters={[
           {
             id: "pay_type",
