@@ -8,13 +8,13 @@ export type JobActivityDataPoint = {
 
 export type DashboardMetrics = {
   revenue: number;
-  revenueTrend: number;
+  revenueTrend: number | null;
   profilesCount: number;
-  profilesTrend: number;
+  profilesTrend: number | null;
   jobsCount: number;
-  jobsTrend: number;
+  jobsTrend: number | null;
   applicationsCount: number;
-  applicationsTrend: number;
+  applicationsTrend: number | null;
 };
 
 export type JobActivityParams = {

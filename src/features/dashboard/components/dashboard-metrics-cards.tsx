@@ -16,8 +16,8 @@ export type DashboardMetricCard = {
   id: string;
   title: string;
   value: string;
-  trend: TrendDirection;
-  trendPercentage: number;
+  trend: TrendDirection | null;
+  trendPercentage: number | null;
   description: string;
 };
 
@@ -25,10 +25,10 @@ function formatTrendLabel(
   trend: TrendDirection,
   trendPercentage: number,
 ): string {
-  if (trend === "up") {
-    return `+${trendPercentage}%`;
-  }
-  return `-${Math.abs(trendPercentage)}%`;
+  if (trendPercentage > 999) return ">+999%";
+  return trend === "up"
+    ? `+${trendPercentage}%`
+    : `-${trendPercentage}%`;
 }
 
 const SKELETON_KEYS = [
@@ -71,10 +71,10 @@ export function DashboardMetricsCards({
         : data.map((metric) => {
             const TrendIcon =
               metric.trend === "up" ? IconTrendingUp : IconTrendingDown;
-            const trendLabel = formatTrendLabel(
-              metric.trend,
-              metric.trendPercentage,
-            );
+            const trendLabel =
+              metric.trend != null && metric.trendPercentage != null
+                ? formatTrendLabel(metric.trend, metric.trendPercentage)
+                : null;
 
             return (
               <Card key={metric.id} className="@container/card">
@@ -83,12 +83,14 @@ export function DashboardMetricsCards({
                   <CardTitle className="text-4xl font-bold tabular-nums @[250px]/card:text-4xl">
                     {metric.value}
                   </CardTitle>
-                  <CardAction>
-                    <Badge variant="outline">
-                      <TrendIcon />
-                      {trendLabel}
-                    </Badge>
-                  </CardAction>
+                  {metric.trend != null && metric.trendPercentage != null && (
+                    <CardAction>
+                      <Badge variant="outline">
+                        <TrendIcon />
+                        {trendLabel}
+                      </Badge>
+                    </CardAction>
+                  )}
                 </CardHeader>
                 <CardFooter className="text-sm">
                   <p className="text-muted-foreground line-clamp-2">
