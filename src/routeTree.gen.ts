@@ -18,8 +18,11 @@ import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
+import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
+import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
+import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
@@ -75,6 +78,11 @@ const AuthenticatedPaymentRequestsIndexRoute =
     path: '/payment-requests/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedLogsIndexRoute = AuthenticatedLogsIndexRouteImport.update({
+  id: '/logs/',
+  path: '/logs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
@@ -83,6 +91,17 @@ const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
 const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
   id: '/help/',
   path: '/help/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEventsIndexRoute =
+  AuthenticatedEventsIndexRouteImport.update({
+    id: '/events/',
+    path: '/events/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedClaimIndexRoute = AuthenticatedClaimIndexRouteImport.update({
+  id: '/claim/',
+  path: '/claim/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedApplicationsIndexRoute =
@@ -123,8 +142,11 @@ export interface FileRoutesByFullPath {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/claim/': typeof AuthenticatedClaimIndexRoute
+  '/events/': typeof AuthenticatedEventsIndexRoute
   '/help/': typeof AuthenticatedHelpIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/logs/': typeof AuthenticatedLogsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -140,8 +162,11 @@ export interface FileRoutesByTo {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/claim': typeof AuthenticatedClaimIndexRoute
+  '/events': typeof AuthenticatedEventsIndexRoute
   '/help': typeof AuthenticatedHelpIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
+  '/logs': typeof AuthenticatedLogsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -159,8 +184,11 @@ export interface FileRoutesById {
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
+  '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -178,8 +206,11 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications/'
+    | '/claim/'
+    | '/events/'
     | '/help/'
     | '/jobs/'
+    | '/logs/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -195,8 +226,11 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/applications'
+    | '/claim'
+    | '/events'
     | '/help'
     | '/jobs'
+    | '/logs'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -213,8 +247,11 @@ export interface FileRouteTypes {
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/applications/'
+    | '/_authenticated/claim/'
+    | '/_authenticated/events/'
     | '/_authenticated/help/'
     | '/_authenticated/jobs/'
+    | '/_authenticated/logs/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -293,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/logs/': {
+      id: '/_authenticated/logs/'
+      path: '/logs'
+      fullPath: '/logs/'
+      preLoaderRoute: typeof AuthenticatedLogsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/jobs/': {
       id: '/_authenticated/jobs/'
       path: '/jobs'
@@ -305,6 +349,20 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help/'
       preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/events/': {
+      id: '/_authenticated/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/claim/': {
+      id: '/_authenticated/claim/'
+      path: '/claim'
+      fullPath: '/claim/'
+      preLoaderRoute: typeof AuthenticatedClaimIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/applications/': {
@@ -352,8 +410,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
+  AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
+  AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -370,8 +431,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
+  AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
+  AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
