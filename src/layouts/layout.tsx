@@ -59,47 +59,49 @@ export function Layout({
     <SidebarProvider style={SIDEBAR_STYLE}>
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <SiteHeader />
-        {breadcrumbs?.length ? (
-          <div className="border-b px-4 py-2 lg:px-6">
-            <Breadcrumb>
-              <BreadcrumbList className="gap-2 text-foreground">
-                {breadcrumbs.map((item, i) => {
-                  const isLast = i === breadcrumbs.length - 1;
+        <div className="bg-background sticky top-0 z-20 rounded-t-xl">
+          <SiteHeader />
+          {breadcrumbs?.length ? (
+            <div className="border-b px-4 py-2 lg:px-6">
+              <Breadcrumb>
+                <BreadcrumbList className="gap-2 text-foreground">
+                  {breadcrumbs.map((item, i) => {
+                    const isLast = i === breadcrumbs.length - 1;
 
-                  let crumb: React.ReactNode;
-                  if (isLast) {
-                    crumb = <BreadcrumbPage>{item.label}</BreadcrumbPage>;
-                  } else if (item.back) {
-                    crumb = (
-                      <BreadcrumbLink
-                        className="cursor-pointer"
-                        onClick={() => router.history.back()}
-                      >
-                        {item.label}
-                      </BreadcrumbLink>
-                    );
-                  } else {
-                    crumb = (
-                      <BreadcrumbLink asChild>
-                        <Link to={item.href ?? "/"}>{item.label}</Link>
-                      </BreadcrumbLink>
-                    );
-                  }
+                    let crumb: React.ReactNode;
+                    if (isLast) {
+                      crumb = <BreadcrumbPage>{item.label}</BreadcrumbPage>;
+                    } else if (item.back) {
+                      crumb = (
+                        <BreadcrumbLink
+                          className="cursor-pointer"
+                          onClick={() => router.history.back()}
+                        >
+                          {item.label}
+                        </BreadcrumbLink>
+                      );
+                    } else {
+                      crumb = (
+                        <BreadcrumbLink asChild>
+                          <Link to={item.href ?? "/"}>{item.label}</Link>
+                        </BreadcrumbLink>
+                      );
+                    }
 
-                  return (
-                    <React.Fragment key={`${item.label}-${i}`}>
-                      <BreadcrumbItem className="inline-flex items-center gap-1.5">
-                        {crumb}
-                      </BreadcrumbItem>
-                      {!isLast && <BreadcrumbSeparator />}
-                    </React.Fragment>
-                  );
-                })}
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        ) : null}
+                    return (
+                      <React.Fragment key={`${item.label}-${i}`}>
+                        <BreadcrumbItem className="inline-flex items-center gap-1.5">
+                          {crumb}
+                        </BreadcrumbItem>
+                        {!isLast && <BreadcrumbSeparator />}
+                      </React.Fragment>
+                    );
+                  })}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          ) : null}
+        </div>
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2 px-4 lg:px-6">
             {renderPageHeader()}

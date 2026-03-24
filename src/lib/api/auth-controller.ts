@@ -47,6 +47,14 @@ export class AdminAuthController extends AdminBaseController {
     }
   }
 
+  async updateMe(data: { name: string }): Promise<Admin> {
+    try {
+      return await this.patch<Admin>("/auth/admin/me", data);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   async logout(): Promise<{ success: boolean }> {
     try {
       return await this.post<{ success: boolean }>("/auth/admin/logout", {});
@@ -58,4 +66,4 @@ export class AdminAuthController extends AdminBaseController {
 
 const controller = new AdminAuthController();
 
-export const { sendOTP, verifyOTP, getMe, logout } = controller;
+export const { sendOTP, verifyOTP, getMe, updateMe, logout } = controller;
