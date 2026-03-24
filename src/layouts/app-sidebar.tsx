@@ -66,7 +66,7 @@ const documents = [
   { name: "Claim", url: "/claim", icon: IconReport },
   { name: "Logs", url: "/logs", icon: IconFileWord },
   { name: "Documents", url: "/documents", icon: IconFile },
-  { name: "Wallets", url: "/wallets", icon: IconWallet },
+  { name: "Wallets", url: "/wallet", icon: IconWallet },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
