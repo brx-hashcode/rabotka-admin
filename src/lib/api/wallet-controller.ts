@@ -32,6 +32,7 @@ export type AdminPaymentItem = {
 export type AdminWalletTransactionsParams = {
   page?: number;
   limit?: number;
+  q?: string;
   type?: string[];
   created_from?: string;
   created_to?: string;
@@ -47,6 +48,7 @@ export type AdminWalletTransactionsResponse = {
 export type AdminPaymentsListParams = {
   page?: number;
   limit?: number;
+  q?: string;
   type?: string[];
   status?: string[];
   created_from?: string;
@@ -72,6 +74,7 @@ class AdminWalletController extends AdminBaseController {
     const searchParams: Record<string, unknown> = {};
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
+    if (params.q) searchParams.q = params.q;
     if (params.type?.length) searchParams.type = params.type;
     if (params.created_from) searchParams.created_from = params.created_from;
     if (params.created_to) searchParams.created_to = params.created_to;
@@ -87,6 +90,7 @@ class AdminWalletController extends AdminBaseController {
     const searchParams: Record<string, unknown> = {};
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
+    if (params.q) searchParams.q = params.q;
     if (params.type?.length) searchParams.type = params.type;
     if (params.status?.length) searchParams.status = params.status;
     if (params.created_from) searchParams.created_from = params.created_from;

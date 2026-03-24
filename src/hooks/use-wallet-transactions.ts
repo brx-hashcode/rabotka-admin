@@ -14,6 +14,7 @@ const defaultLimit = 20;
 const transactionsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(defaultLimit),
+  q: parseAsString.withDefault(""),
   tx_type: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   created_from: parseAsString.withDefault(""),
   created_to: parseAsString.withDefault(""),
@@ -24,7 +25,7 @@ export function useWalletTransactions() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { tx_type, created_from, created_to } = queryState;
+  const { q, tx_type, created_from, created_to } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -32,11 +33,12 @@ export function useWalletTransactions() {
       return;
     }
     setPage(1);
-  }, [tx_type, created_from, created_to, setPage]);
+  }, [q, tx_type, created_from, created_to, setPage]);
 
   const params = {
     page: queryState.page,
     limit: queryState.limit,
+    ...(queryState.q ? { q: queryState.q } : {}),
     ...(queryState.tx_type?.length ? { type: queryState.tx_type } : {}),
     ...(queryState.created_from ? { created_from: queryState.created_from } : {}),
     ...(queryState.created_to ? { created_to: queryState.created_to } : {}),
