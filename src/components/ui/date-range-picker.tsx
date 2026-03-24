@@ -1,6 +1,5 @@
 import * as React from "react";
-import { format, parseISO } from "date-fns";
-import type { DateRange } from "react-day-picker";
+import { format, parseISO, isValid } from "date-fns";
 import { IconCalendar, IconX } from "@tabler/icons-react";
 
 import { cn } from "#/lib/utils";
@@ -11,6 +10,78 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+
+type SingleDatePickerProps = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  disabled?: (date: Date) => boolean;
+  className?: string;
+};
+
+function SingleDatePicker({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  className,
+}: Readonly<SingleDatePickerProps>) {
+  const [open, setOpen] = React.useState(false);
+
+  const date = value && isValid(parseISO(value)) ? parseISO(value) : undefined;
+
+  const handleSelect = (selected: Date | undefined) => {
+    onChange(selected ? format(selected, "yyyy-MM-dd") : "");
+    setOpen(false);
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange("");
+  };
+
+  return (
+    <div className="flex items-center">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-8 justify-start gap-1.5 text-xs font-normal",
+            !date && "text-muted-foreground",
+            date ? "rounded-r-none border-r-0" : "",
+            className,
+          )}
+        >
+          <IconCalendar className="size-3.5 shrink-0" />
+          <span>{date ? format(date, "MMM d, yyyy") : placeholder}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={handleSelect}
+          disabled={disabled}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+    {date && (
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 w-7 px-0 rounded-l-none text-muted-foreground hover:text-foreground"
+        onClick={handleClear}
+        aria-label="Clear date"
+      >
+        <IconX className="size-3" />
+      </Button>
+    )}
+    </div>
+  );
+}
 
 type DateRangePickerProps = {
   from: string;
@@ -27,64 +98,29 @@ export function DateRangePicker({
   onToChange,
   className,
 }: Readonly<DateRangePickerProps>) {
-  const [open, setOpen] = React.useState(false);
+  const disableTo = from && isValid(parseISO(from))
+    ? (date: Date) => date < parseISO(from)
+    : undefined;
 
-  const range: DateRange = {
-    from: from ? parseISO(from) : undefined,
-    to: to ? parseISO(to) : undefined,
-  };
-
-  const handleSelect = (value: DateRange | undefined) => {
-    onFromChange(value?.from ? format(value.from, "yyyy-MM-dd") : "");
-    onToChange(value?.to ? format(value.to, "yyyy-MM-dd") : "");
-    if (value?.from && value.to) setOpen(false);
-  };
-
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFromChange("");
-    onToChange("");
-  };
-
-  const hasRange = Boolean(from || to);
-
-  const label = from && to
-    ? `${format(parseISO(from), "MMM d, yyyy")} – ${format(parseISO(to), "MMM d, yyyy")}`
-    : from
-      ? `From ${format(parseISO(from), "MMM d, yyyy")}`
-      : "Pick date range";
+  const disableFrom = to && isValid(parseISO(to))
+    ? (date: Date) => date > parseISO(to)
+    : undefined;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "h-8 gap-1.5 text-xs font-normal",
-            !hasRange && "text-muted-foreground",
-            className,
-          )}
-        >
-          <IconCalendar className="size-3.5" />
-          <span>{label}</span>
-          {hasRange && (
-            <IconX
-              className="size-3 ml-0.5 opacity-60 hover:opacity-100"
-              onClick={handleClear}
-            />
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="range"
-          selected={range}
-          onSelect={handleSelect}
-          numberOfMonths={2}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
+    <div className={cn("flex items-center gap-1.5", className)}>
+      <SingleDatePicker
+        value={from}
+        onChange={onFromChange}
+        placeholder="From"
+        disabled={disableFrom}
+      />
+      <span className="text-muted-foreground text-xs">–</span>
+      <SingleDatePicker
+        value={to}
+        onChange={onToChange}
+        placeholder="To"
+        disabled={disableTo}
+      />
+    </div>
   );
 }
