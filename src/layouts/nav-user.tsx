@@ -97,7 +97,10 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={() => navigate({ to: "/profile" })}
+              >
                 <IconUserCircle />
                 My Account
               </DropdownMenuItem>
