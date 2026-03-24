@@ -74,7 +74,7 @@ export function makeLogColumns(onView: (log: AdminLogItem) => void) {
   return getCommonColumns<AdminLogItem>({
     additionalColumns: logDataColumns,
     columnsActions: ({ row }) => (
-      <LogRowActions log={row.original} onView={onView} />
+      <LogRowActions log={row} onView={onView} />
     ),
   });
 }

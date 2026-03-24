@@ -28,7 +28,10 @@ function Field({
   );
 }
 
-export function LogDetailSheet({ log, onClose }: Readonly<LogDetailSheetProps>) {
+export function LogDetailSheet({
+  log,
+  onClose,
+}: Readonly<LogDetailSheetProps>) {
   const rawData = log
     ? JSON.stringify(
         {
@@ -51,39 +54,43 @@ export function LogDetailSheet({ log, onClose }: Readonly<LogDetailSheetProps>) 
     : "";
 
   return (
-    <Sheet open={Boolean(log)} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline">{log?.action}</Badge>
-            <span className="text-muted-foreground text-xs font-normal">
-              {log?.createdAt
-                ? format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")
-                : ""}
-            </span>
-          </SheetTitle>
-          <SheetDescription>Log entry details and raw payload</SheetDescription>
-        </SheetHeader>
+    <Sheet
+      open={Boolean(log)}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
+        <div className="shrink-0 pb-4 border-b">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline">{log?.action}</Badge>
+              <span className="text-muted-foreground text-xs font-normal">
+                {log?.createdAt
+                  ? format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")
+                  : ""}
+              </span>
+            </SheetTitle>
+            <SheetDescription>
+              Log entry details and raw payload
+            </SheetDescription>
+          </SheetHeader>
+        </div>
 
         {log && (
-          <div className="mt-6 flex flex-col gap-6 px-1">
-            {/* Summary */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-5 px-6 py-5 flex-1 overflow-y-auto min-h-0">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               <Field label="Entity Type" value={log.entityType} />
               <Field label="Entity ID" value={log.entityId} />
-              <Field
-                label="Actor (Admin)"
-                value={log.userName ?? "—"}
-              />
-              <Field
-                label="Actor (Profile)"
-                value={log.profileName ?? "—"}
-              />
+              <Field label="Actor (Admin)" value={log.userName ?? "—"} />
+              <Field label="Actor (Profile)" value={log.profileName ?? "—"} />
               <Field label="IP Address" value={log.ipAddress} />
-              <Field label="Created At" value={format(new Date(log.createdAt), "PPpp")} />
+              <Field
+                label="Created At"
+                value={format(new Date(log.createdAt), "PPpp")}
+              />
             </div>
 
-            {/* User Agent */}
             {log.userAgent && (
               <div className="space-y-0.5">
                 <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
@@ -95,12 +102,11 @@ export function LogDetailSheet({ log, onClose }: Readonly<LogDetailSheetProps>) 
               </div>
             )}
 
-            {/* Raw JSON */}
-            <div className="space-y-1.5">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+            <div className="flex flex-col flex-1 min-h-0 space-y-1.5">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide shrink-0">
                 Raw Data
               </p>
-              <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">
+              <pre className="bg-muted rounded-md p-3 text-xs leading-relaxed whitespace-pre-wrap break-all flex-1 overflow-y-auto min-h-0">
                 {rawData}
               </pre>
             </div>
