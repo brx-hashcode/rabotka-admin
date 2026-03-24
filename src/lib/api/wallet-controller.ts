@@ -3,6 +3,14 @@ import { AdminBaseController } from "./base-controller";
 export type AdminWalletInfo = {
   totalRevenue: number;
   balance: number;
+  completedCount: number;
+  pendingCount: number;
+  failedCount: number;
+  revenueByType: {
+    registration: number;
+    jobPosting: number;
+    penalty: number;
+  };
 };
 
 export type AdminWalletTransactionItem = {
