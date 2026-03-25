@@ -9,6 +9,7 @@ export interface IUser {
 export interface ICalendarProfile {
 	id: string;
 	name: string;
+	avatarUrl: string | null;
 }
 
 export interface IEvent {

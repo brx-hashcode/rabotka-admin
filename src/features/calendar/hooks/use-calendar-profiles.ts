@@ -12,6 +12,7 @@ export function useCalendarProfiles() {
       res.data.map((p) => ({
         id: p.id,
         name: `${p.firstName} ${p.lastName}`.trim(),
+        avatarUrl: p.avatarUrl ?? null,
       })),
   });
 }
