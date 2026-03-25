@@ -5,12 +5,11 @@ import {
   getPaymentRequestsList,
   type PaymentRequestStatus,
 } from "#/lib/api/payment-requests-controller";
-
-const defaultLimit = 20;
+import { appConfig } from "#/config";
 
 const paymentRequestsParsers = {
   page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
+  limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   status: parseAsString.withDefault(""),
 };
 
@@ -46,7 +45,7 @@ export function usePaymentRequestsList() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? appConfig.defaultPaginationLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

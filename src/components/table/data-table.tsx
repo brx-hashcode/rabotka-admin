@@ -12,6 +12,7 @@ import { Table } from "#/components/table/table";
 import { TableBottom } from "#/components/table/table-bottom";
 import { TableFooter } from "#/components/table/table-footer";
 import { TableHeader } from "#/components/table/table-header";
+import { appConfig } from "#/config";
 
 export type DataTableProps<TData, TValue> = Readonly<{
   data: TData[];
@@ -33,7 +34,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   isPaginated = false,
   totalCount = 0,
-  initialPageSize = 20,
+  initialPageSize = appConfig.defaultPaginationLimit,
   header,
   footer,
   emptyMessage = "No results.",

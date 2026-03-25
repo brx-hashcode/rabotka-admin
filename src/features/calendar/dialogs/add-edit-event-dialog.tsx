@@ -1,11 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addMinutes, format, set } from "date-fns";
-import { Check, Plus, SearchIcon, X } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -34,308 +31,27 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
-import { cn } from "#/lib/utils";
-import { getProfilesList } from "#/lib/api/profiles-controller";
-import { getUsersList } from "#/lib/api/users-controller";
 import { COLORS } from "#/features/calendar/constants";
 import { useDisclosure } from "#/features/calendar/hooks";
 import {
   useCreateEvent,
   useUpdateEvent,
 } from "#/features/calendar/hooks/use-calendar-events";
+import { useSelectedItems } from "#/features/calendar/hooks/use-selected-items";
+import { AvatarPicker } from "#/features/calendar/components/avatar-picker";
+import { ProfileSearchDialog } from "./profile-search-dialog";
+import { UserSearchDialog } from "./user-search-dialog";
 import type {
   IEvent,
   ICalendarProfile,
   IUser,
 } from "#/features/calendar/interfaces";
 import { eventSchema, type TEventFormData } from "#/features/calendar/schemas";
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
-function dateToInputValue(d: Date) {
-  return format(d, "yyyy-MM-dd");
-}
-
-function timeToInputValue(d: Date) {
-  return format(d, "HH:mm");
-}
-
-function mergeDateAndTime(dateStr: string, timeStr: string): Date {
-  const [y, mo, day] = dateStr.split("-").map(Number);
-  const [h, m] = timeStr.split(":").map(Number);
-  return new Date(y, mo - 1, day, h, m, 0);
-}
-
-type AvatarPickerProps<T extends { id: string; name: string }> = {
-  value: T[];
-  onRemove: (id: string) => void;
-  onAdd: () => void;
-  getImage?: (item: T) => string | null | undefined;
-  label: string;
-};
-
-function AvatarPicker<T extends { id: string; name: string }>({
-  value,
-  onRemove,
-  onAdd,
-  getImage,
-  label,
-}: Readonly<AvatarPickerProps<T>>) {
-  return (
-    <div className="flex items-center gap-2 flex-wrap min-h-9">
-      {value.length === 0 && <span />}
-      {value.map((item) => (
-        <div
-          key={item.id}
-          className="relative group/avatar-item"
-          title={item.name}
-        >
-          <Avatar className="size-8 ring-2 ring-background">
-            {getImage?.(item) && (
-              <AvatarImage src={getImage(item)!} alt={item.name} className="object-cover" />
-            )}
-            <AvatarFallback className="text-xs bg-muted">
-              {initials(item.name)}
-            </AvatarFallback>
-          </Avatar>
-          <button
-            type="button"
-            onClick={() => onRemove(item.id)}
-            className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-destructive-foreground items-center justify-center hidden group-hover/avatar-item:flex z-10"
-          >
-            <X className="size-2.5" />
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={onAdd}
-        className="size-8 rounded-full border-2 border-dashed border-muted-foreground/40 flex items-center justify-center text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
-        title={`Add ${label}`}
-      >
-        <Plus className="size-4" />
-      </button>
-    </div>
-  );
-}
-
-type ProfileSearchDialogProps = {
-  readonly open: boolean;
-  readonly onOpenChange: (v: boolean) => void;
-  readonly selected: ICalendarProfile[];
-  readonly onToggle: (item: ICalendarProfile) => void;
-};
-
-function ProfileSearchDialog({
-  open,
-  onOpenChange,
-  selected,
-  onToggle,
-}: Readonly<ProfileSearchDialogProps>) {
-  const [search, setSearch] = useState("");
-
-  const { data: results = [] } = useQuery({
-    queryKey: ["admin", "profiles", "event-search", search],
-    queryFn: () => getProfilesList({ q: search, limit: 8 }).then((r) => r.data),
-    enabled: search.trim().length >= 1,
-    staleTime: 10_000,
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Profile</DialogTitle>
-        </DialogHeader>
-        <div className="flex items-center gap-2 border rounded-md px-3 py-2">
-          <SearchIcon className="size-4 text-muted-foreground shrink-0" />
-          <Input
-            placeholder="Search profiles…"
-            className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {search.trim().length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-4">
-              Type to search profiles.
-            </p>
-          )}
-          {search.trim().length > 0 && results.length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-4">
-              No profiles found.
-            </p>
-          )}
-          {results.map((p) => {
-            const name = `${p.firstName} ${p.lastName}`.trim();
-            const item: ICalendarProfile = {
-              id: p.id,
-              name,
-              avatarUrl: p.avatarUrl ?? null,
-            };
-            const isSelected = selected.some((v) => v.id === p.id);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => onToggle(item)}
-                className={cn(
-                  "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent transition-colors",
-                  isSelected && "bg-accent",
-                )}
-              >
-                <Check
-                  className={cn(
-                    "size-4 shrink-0",
-                    isSelected ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                <Avatar className="size-8 shrink-0">
-                  {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt={name} className="object-cover" />}
-                  <AvatarFallback className="text-xs">
-                    {initials(name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium truncate">{name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {p.email} · {p.phone}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button size="sm" onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type UserSearchDialogProps = {
-  readonly open: boolean;
-  readonly onOpenChange: (v: boolean) => void;
-  readonly selected: IUser[];
-  readonly onToggle: (item: IUser) => void;
-};
-
-function UserSearchDialog({
-  open,
-  onOpenChange,
-  selected,
-  onToggle,
-}: Readonly<UserSearchDialogProps>) {
-  const [search, setSearch] = useState("");
-
-  const { data: results = [] } = useQuery({
-    queryKey: ["admin", "users", "event-search", search],
-    queryFn: () => getUsersList({ q: search, limit: 8 }).then((r) => r.data),
-    enabled: search.trim().length >= 1,
-    staleTime: 10_000,
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add User</DialogTitle>
-        </DialogHeader>
-        <div className="flex items-center gap-2 border rounded-md px-3 py-2">
-          <SearchIcon className="size-4 text-muted-foreground shrink-0" />
-          <Input
-            placeholder="Search users…"
-            className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {search.trim().length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-4">
-              Type to search users.
-            </p>
-          )}
-          {search.trim().length > 0 && results.length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-4">
-              No users found.
-            </p>
-          )}
-          {results.map((u) => {
-            const name = `${u.firstName} ${u.lastName}`.trim();
-            const item: IUser = {
-              id: u.id,
-              name,
-              picturePath: null,
-            };
-            const isSelected = selected.some((v) => v.id === u.id);
-            return (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => onToggle(item)}
-                className={cn(
-                  "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent transition-colors",
-                  isSelected && "bg-accent",
-                )}
-              >
-                <Check
-                  className={cn(
-                    "size-4 shrink-0",
-                    isSelected ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                <Avatar className="size-8 shrink-0">
-                  <AvatarFallback className="text-xs">
-                    {initials(name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium truncate">{name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {u.email}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button size="sm" onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import {
+  dateToInputValue,
+  timeToInputValue,
+  mergeDateAndTime,
+} from "../utils";
 
 type IProps = {
   readonly children: ReactNode;
@@ -356,8 +72,21 @@ export function AddEditEventDialog({
   const isEditing = !!event;
   const isPending = isCreating || isUpdating;
 
-  const [profileSearchOpen, setProfileSearchOpen] = useState(false);
-  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const {
+    items: selectedProfiles,
+    toggle: toggleProfile,
+    remove: removeProfile,
+    reset: resetProfiles,
+    getIds: getProfileIds,
+  } = useSelectedItems<ICalendarProfile>(event?.profiles ?? []);
+
+  const {
+    items: selectedUsers,
+    toggle: toggleUser,
+    remove: removeUser,
+    reset: resetUsers,
+    getIds: getUserIds,
+  } = useSelectedItems<IUser>(event?.assignedUsers ?? []);
 
   const initialDates = useMemo(() => {
     if (!isEditing && !event) {
@@ -390,17 +119,10 @@ export function AddEditEventDialog({
       endDate: initialDates.endDate,
       color: event?.color ?? "blue",
       location: event?.location ?? "",
-      profileIds: event?.profiles.map((p) => p.id) ?? [],
-      userIds: event?.assignedUsers.map((u) => u.id) ?? [],
+      profileIds: getProfileIds(),
+      userIds: getUserIds(),
     },
   });
-
-  const [selectedProfiles, setSelectedProfiles] = useState<ICalendarProfile[]>(
-    event?.profiles ?? [],
-  );
-  const [selectedUsers, setSelectedUsers] = useState<IUser[]>(
-    event?.assignedUsers ?? [],
-  );
 
   useEffect(() => {
     if (isOpen) {
@@ -411,13 +133,13 @@ export function AddEditEventDialog({
         endDate: initialDates.endDate,
         color: event?.color ?? "blue",
         location: event?.location ?? "",
-        profileIds: event?.profiles.map((p) => p.id) ?? [],
-        userIds: event?.assignedUsers.map((u) => u.id) ?? [],
+        profileIds: getProfileIds(),
+        userIds: getUserIds(),
       });
-      setSelectedProfiles(event?.profiles ?? []);
-      setSelectedUsers(event?.assignedUsers ?? []);
+      resetProfiles(event?.profiles ?? []);
+      resetUsers(event?.assignedUsers ?? []);
     }
-  }, [isOpen, event, initialDates, form]);
+  }, [isOpen, event, initialDates, form, resetProfiles, resetUsers, getProfileIds, getUserIds]);
 
   const onSubmit: SubmitHandler<TEventFormData> = (values) => {
     const payload = {
@@ -427,8 +149,8 @@ export function AddEditEventDialog({
       endDate: format(values.endDate, "yyyy-MM-dd'T'HH:mm:ss"),
       color: values.color,
       location: values.location || undefined,
-      profileIds: values.profileIds,
-      userIds: values.userIds,
+      profileIds: getProfileIds(),
+      userIds: getUserIds(),
     };
 
     if (isEditing) {
@@ -455,37 +177,42 @@ export function AddEditEventDialog({
     }
   };
 
+  const [profileSearchOpen, setProfileSearchOpen] = useState(false);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+
+  const handleProfileToggle = (item: ICalendarProfile) => {
+    toggleProfile(item);
+    form.setValue("profileIds", getProfileIds());
+  };
+
+  const handleUserToggle = (item: IUser) => {
+    toggleUser(item);
+    form.setValue("userIds", getUserIds());
+  };
+
+  const handleProfileRemove = (id: string) => {
+    removeProfile(id);
+    form.setValue("profileIds", getProfileIds());
+  };
+
+  const handleUserRemove = (id: string) => {
+    removeUser(id);
+    form.setValue("userIds", getUserIds());
+  };
+
   return (
     <>
       <ProfileSearchDialog
         open={profileSearchOpen}
         onOpenChange={setProfileSearchOpen}
         selected={selectedProfiles}
-        onToggle={(item) => {
-          const next = selectedProfiles.some((v) => v.id === item.id)
-            ? selectedProfiles.filter((v) => v.id !== item.id)
-            : [...selectedProfiles, item];
-          setSelectedProfiles(next);
-          form.setValue(
-            "profileIds",
-            next.map((p) => p.id),
-          );
-        }}
+        onToggle={handleProfileToggle}
       />
       <UserSearchDialog
         open={userSearchOpen}
         onOpenChange={setUserSearchOpen}
         selected={selectedUsers}
-        onToggle={(item) => {
-          const next = selectedUsers.some((v) => v.id === item.id)
-            ? selectedUsers.filter((v) => v.id !== item.id)
-            : [...selectedUsers, item];
-          setSelectedUsers(next);
-          form.setValue(
-            "userIds",
-            next.map((u) => u.id),
-          );
-        }}
+        onToggle={handleUserToggle}
       />
 
       <Dialog open={isOpen} onOpenChange={onToggle}>
@@ -681,16 +408,7 @@ export function AddEditEventDialog({
                       <FormControl>
                         <AvatarPicker
                           value={selectedProfiles}
-                          onRemove={(id) => {
-                            const next = selectedProfiles.filter(
-                              (p) => p.id !== id,
-                            );
-                            setSelectedProfiles(next);
-                            form.setValue(
-                              "profileIds",
-                              next.map((p) => p.id),
-                            );
-                          }}
+                          onRemove={handleProfileRemove}
                           onAdd={() => setProfileSearchOpen(true)}
                           getImage={(p) => p.avatarUrl}
                           label="profiles"
@@ -712,16 +430,7 @@ export function AddEditEventDialog({
                       <FormControl>
                         <AvatarPicker
                           value={selectedUsers}
-                          onRemove={(id) => {
-                            const next = selectedUsers.filter(
-                              (u) => u.id !== id,
-                            );
-                            setSelectedUsers(next);
-                            form.setValue(
-                              "userIds",
-                              next.map((u) => u.id),
-                            );
-                          }}
+                          onRemove={handleUserRemove}
                           onAdd={() => setUserSearchOpen(true)}
                           getImage={(u) => u.picturePath ?? undefined}
                           label="users"

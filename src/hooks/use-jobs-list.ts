@@ -9,11 +9,10 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getJobOffersList } from "#/lib/api/jobs-controller";
 
-const defaultLimit = 20;
-
+import { appConfig } from "#/config";
 const jobsParsers = {
   page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
+  limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   payment_flow: parseAsArrayOf(parseAsString).withDefault([] as string[]),
@@ -53,7 +52,7 @@ export function useJobsList() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? appConfig.defaultPaginationLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

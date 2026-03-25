@@ -9,11 +9,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getPenaltiesList } from "#/lib/api/penalties-controller";
 
-const defaultLimit = 20;
+import { appConfig } from "#/config";
 
 const penaltiesParsers = {
   page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
+  limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   payment_status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
@@ -51,7 +51,7 @@ export function usePenaltiesList() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? appConfig.defaultPaginationLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

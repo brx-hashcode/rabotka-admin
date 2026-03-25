@@ -9,11 +9,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getProfilesList } from "#/lib/api/profiles-controller";
 
-const defaultLimit = 20;
+import { appConfig } from "#/config";
 
 const profilesParsers = {
   page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
+  limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   profile_type: parseAsArrayOf(parseAsString).withDefault([] as string[]),
@@ -88,7 +88,7 @@ export function useProfilesList() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? appConfig.defaultPaginationLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
