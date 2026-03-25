@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   IconAlertTriangle,
   IconBriefcase,
-  IconDatabase,
   IconFileText,
   IconFileWord,
   IconHelp,
@@ -14,6 +13,7 @@ import {
   type Icon,
   IconFile,
   IconWallet,
+  IconCalendar,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -64,7 +64,7 @@ const navSecondary: NavItem[] = [
 const documents = [
   { name: "Wallet", url: "/wallet", icon: IconWallet },
   { name: "Claims", url: "/claim", icon: IconReport },
-  { name: "Events", url: "/events", icon: IconDatabase },
+  { name: "Events", url: "/events", icon: IconCalendar },
   { name: "Logs", url: "/logs", icon: IconFileWord },
   { name: "Documents", url: "/documents", icon: IconFile },
 ];
