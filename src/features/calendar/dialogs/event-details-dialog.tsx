@@ -19,12 +19,12 @@ import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-d
 import { formatTime } from "#/features/calendar/helpers";
 import type { IEvent } from "#/features/calendar/interfaces";
 
-interface IProps {
+type IProps = {
   event: IEvent;
   children: ReactNode;
-}
+};
 
-export function EventDetailsDialog({ event, children }: IProps) {
+export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
   const startDate = parseISO(event.startDate);
   const endDate = parseISO(event.endDate);
   const { use24HourFormat, removeEvent } = useCalendar();

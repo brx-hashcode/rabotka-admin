@@ -5,8 +5,9 @@ import type { IUser } from "#/features/calendar/interfaces";
 export function useCalendarUsers() {
   return useQuery({
     queryKey: ["admin", "users", "calendar"],
-    queryFn: () => getUsersList({ limit: 200 }),
+    queryFn: () => getUsersList({ limit: 100 }),
     staleTime: 60_000,
+    retry: false,
     select: (res): IUser[] =>
       res.data.map((u) => ({
         id: u.id,

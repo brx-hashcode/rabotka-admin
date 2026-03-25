@@ -14,11 +14,11 @@ import {
 import { Button } from "#/components/ui/button";
 import { useDeleteEvent } from "#/features/calendar/hooks/use-calendar-events";
 
-interface DeleteEventDialogProps {
-  eventId: number;
-}
+type DeleteEventDialogProps = {
+  readonly eventId: number;
+};
 
-export default function DeleteEventDialog({ eventId }: DeleteEventDialogProps) {
+export default function DeleteEventDialog({ eventId }: Readonly<DeleteEventDialogProps>) {
   const { mutate: remove, isPending } = useDeleteEvent();
 
   const deleteEvent = () => {

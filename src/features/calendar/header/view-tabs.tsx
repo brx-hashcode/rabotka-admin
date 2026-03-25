@@ -11,7 +11,7 @@ import {
   Grid3X3,
   Grid2X2,
 } from "lucide-react";
-import { TCalendarView } from "../types";
+import type { TCalendarView } from "../types";
 import { memo } from "react";
 
 const tabs = [
