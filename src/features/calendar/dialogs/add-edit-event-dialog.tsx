@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addMinutes, format, set } from "date-fns";
-import { Plus, SearchIcon, X } from "lucide-react";
+import { Check, Plus, SearchIcon, X } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
@@ -92,23 +92,23 @@ function AvatarPicker<T extends { id: string; name: string }>({
     <div className="flex items-center gap-2 flex-wrap min-h-9">
       {value.length === 0 && <span />}
       {value.map((item) => (
-        <div key={item.id} className="relative group/avatar-item">
+        <div
+          key={item.id}
+          className="relative group/avatar-item"
+          title={item.name}
+        >
           <Avatar className="size-8 ring-2 ring-background">
             {getImage?.(item) && (
-              <AvatarImage src={getImage(item)!} alt={item.name} />
+              <AvatarImage src={getImage(item)!} alt={item.name} className="object-cover" />
             )}
             <AvatarFallback className="text-xs bg-muted">
               {initials(item.name)}
             </AvatarFallback>
           </Avatar>
-          {/* tooltip */}
-          <span className="absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-popover border px-1.5 py-0.5 text-xs whitespace-nowrap opacity-0 group-hover/avatar-item:opacity-100 transition-opacity pointer-events-none z-50">
-            {item.name}
-          </span>
           <button
             type="button"
             onClick={() => onRemove(item.id)}
-            className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/avatar-item:opacity-100 transition-opacity"
+            className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-destructive-foreground items-center justify-center hidden group-hover/avatar-item:flex z-10"
           >
             <X className="size-2.5" />
           </button>
@@ -150,7 +150,7 @@ function ProfileSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add Profile</DialogTitle>
         </DialogHeader>
@@ -158,13 +158,13 @@ function ProfileSearchDialog({
           <SearchIcon className="size-4 text-muted-foreground shrink-0" />
           <Input
             placeholder="Search profiles…"
-            className="border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 h-auto"
+            className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
         </div>
-        <div className="max-h-60 overflow-y-auto space-y-1">
+        <div className="max-h-60 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {search.trim().length === 0 && (
             <p className="text-muted-foreground text-sm text-center py-4">
               Type to search profiles.
@@ -176,9 +176,11 @@ function ProfileSearchDialog({
             </p>
           )}
           {results.map((p) => {
+            const name = `${p.firstName} ${p.lastName}`.trim();
             const item: ICalendarProfile = {
               id: p.id,
-              name: `${p.firstName} ${p.lastName}`.trim(),
+              name,
+              avatarUrl: p.avatarUrl ?? null,
             };
             const isSelected = selected.some((v) => v.id === p.id);
             return (
@@ -187,57 +189,62 @@ function ProfileSearchDialog({
                 type="button"
                 onClick={() => onToggle(item)}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent transition-colors",
+                  "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent transition-colors",
                   isSelected && "bg-accent",
                 )}
               >
+                <Check
+                  className={cn(
+                    "size-4 shrink-0",
+                    isSelected ? "opacity-100" : "opacity-0",
+                  )}
+                />
                 <Avatar className="size-8 shrink-0">
+                  {p.avatarUrl && <AvatarImage src={p.avatarUrl} alt={name} className="object-cover" />}
                   <AvatarFallback className="text-xs">
-                    {initials(`${p.firstName} ${p.lastName}`)}
+                    {initials(name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium truncate">
-                    {p.firstName} {p.lastName}
-                  </span>
+                  <span className="text-sm font-medium truncate">{name}</span>
                   <span className="text-xs text-muted-foreground truncate">
-                    {p.email}
+                    {p.email} · {p.phone}
                   </span>
                 </div>
-                {isSelected && (
-                  <X className="size-4 text-muted-foreground ml-auto shrink-0" />
-                )}
               </button>
             );
           })}
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">
-              Done
-            </Button>
-          </DialogClose>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── User search modal ───────────────────────────────────────────────────────
-
-interface UserSearchDialogProps {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  selected: IUser[];
-  onToggle: (item: IUser) => void;
-}
+type UserSearchDialogProps = {
+  readonly open: boolean;
+  readonly onOpenChange: (v: boolean) => void;
+  readonly selected: IUser[];
+  readonly onToggle: (item: IUser) => void;
+};
 
 function UserSearchDialog({
   open,
   onOpenChange,
   selected,
   onToggle,
-}: UserSearchDialogProps) {
+}: Readonly<UserSearchDialogProps>) {
   const [search, setSearch] = useState("");
 
   const { data: results = [] } = useQuery({
@@ -249,7 +256,7 @@ function UserSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add User</DialogTitle>
         </DialogHeader>
@@ -257,13 +264,13 @@ function UserSearchDialog({
           <SearchIcon className="size-4 text-muted-foreground shrink-0" />
           <Input
             placeholder="Search users…"
-            className="border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 h-auto"
+            className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
         </div>
-        <div className="max-h-60 overflow-y-auto space-y-1">
+        <div className="max-h-60 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {search.trim().length === 0 && (
             <p className="text-muted-foreground text-sm text-center py-4">
               Type to search users.
@@ -275,9 +282,10 @@ function UserSearchDialog({
             </p>
           )}
           {results.map((u) => {
+            const name = `${u.firstName} ${u.lastName}`.trim();
             const item: IUser = {
               id: u.id,
-              name: `${u.firstName} ${u.lastName}`.trim(),
+              name,
               picturePath: null,
             };
             const isSelected = selected.some((v) => v.id === u.id);
@@ -287,50 +295,54 @@ function UserSearchDialog({
                 type="button"
                 onClick={() => onToggle(item)}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent transition-colors",
+                  "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent transition-colors",
                   isSelected && "bg-accent",
                 )}
               >
+                <Check
+                  className={cn(
+                    "size-4 shrink-0",
+                    isSelected ? "opacity-100" : "opacity-0",
+                  )}
+                />
                 <Avatar className="size-8 shrink-0">
                   <AvatarFallback className="text-xs">
-                    {initials(`${u.firstName} ${u.lastName}`)}
+                    {initials(name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium truncate">
-                    {u.firstName} {u.lastName}
-                  </span>
+                  <span className="text-sm font-medium truncate">{name}</span>
                   <span className="text-xs text-muted-foreground truncate">
                     {u.email}
                   </span>
                 </div>
-                {isSelected && (
-                  <X className="size-4 text-muted-foreground ml-auto shrink-0" />
-                )}
               </button>
             );
           })}
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">
-              Done
-            </Button>
-          </DialogClose>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── Main dialog ─────────────────────────────────────────────────────────────
-
-interface IProps {
+type IProps = {
   readonly children: ReactNode;
   readonly startDate?: Date;
   readonly startTime?: { hour: number; minute: number };
   readonly event?: IEvent;
-}
+};
 
 export function AddEditEventDialog({
   children,
@@ -485,8 +497,8 @@ export function AddEditEventDialog({
             </DialogTitle>
             <DialogDescription>
               {isEditing
-                ? "Modify your existing event."
-                : "Create a new event for your calendar."}
+                ? "Modify your existing event. Update details such as the title, participants, or timing as needed."
+                : "Create a new event for your calendar. Fill in the event details, add participants, and set the date and time."}
             </DialogDescription>
           </DialogHeader>
 
@@ -514,6 +526,62 @@ export function AddEditEventDialog({
                           placeholder="Enter a title"
                           {...field}
                           className={fieldState.invalid ? "border-red-500" : ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Color */}
+                <FormField
+                  // @ts-expect-error - form.control is not typed correctly
+                  control={form.control}
+                  name="color"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormLabel className="required">Variant</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            className={`w-full ${fieldState.invalid ? "border-red-500" : ""}`}
+                          >
+                            <SelectValue placeholder="Select a variant" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COLORS.map((color) => (
+                              <SelectItem value={color} key={color}>
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`}
+                                  />
+                                  {color}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Location */}
+                <FormField
+                  // @ts-expect-error - form.control is not typed correctly
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter a location (optional)"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -602,62 +670,6 @@ export function AddEditEventDialog({
                   />
                 </div>
 
-                {/* Color */}
-                <FormField
-                  // @ts-expect-error - form.control is not typed correctly
-                  control={form.control}
-                  name="color"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel className="required">Variant</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            className={`w-full ${fieldState.invalid ? "border-red-500" : ""}`}
-                          >
-                            <SelectValue placeholder="Select a variant" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {COLORS.map((color) => (
-                              <SelectItem value={color} key={color}>
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`}
-                                  />
-                                  {color}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Location */}
-                <FormField
-                  // @ts-expect-error - form.control is not typed correctly
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter a location (optional)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 {/* Profiles */}
                 <FormField
                   // @ts-expect-error - form.control is not typed correctly
@@ -680,6 +692,7 @@ export function AddEditEventDialog({
                             );
                           }}
                           onAdd={() => setProfileSearchOpen(true)}
+                          getImage={(p) => p.avatarUrl}
                           label="profiles"
                         />
                       </FormControl>

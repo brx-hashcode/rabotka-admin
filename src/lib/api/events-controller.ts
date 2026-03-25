@@ -10,6 +10,7 @@ export type AdminEventUser = {
 export type AdminEventProfile = {
   id: string;
   name: string;
+  avatarUrl: string | null;
 };
 
 export type AdminEvent = {
