@@ -4,14 +4,13 @@ import {
   IconPhone,
   IconExternalLink,
   IconBriefcase,
-  IconUser,
 } from "@tabler/icons-react";
 
 import type { AdminApplicationDetailResponse } from "#/lib/api/applications-controller";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import { buttonVariants } from "#/components/ui/button";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -70,27 +69,21 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
             </div>
             <div className="flex items-center gap-2.5">
               <IconPhone className="text-muted-foreground size-4 shrink-0" />
-              <span className="text-sm">
-                {application.workerPhone || "—"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <IconUser className="text-muted-foreground size-4 shrink-0" />
-              <span className="text-muted-foreground text-xs">
-                Worker account
-              </span>
+              <span className="text-sm">{application.workerPhone || "—"}</span>
             </div>
           </div>
 
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link
-              to="/profiles/$profileId"
-              params={{ profileId: application.workerId }}
-            >
-              <IconExternalLink className="size-3.5" />
-              View Profile
-            </Link>
-          </Button>
+          <Link
+            to="/profiles/$profileId"
+            params={{ profileId: application.workerId }}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
+          >
+            <IconExternalLink className="size-3.5" />
+            View Profile
+          </Link>
         </CardContent>
       </Card>
 
@@ -124,24 +117,28 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link
-                to="/profiles/$profileId"
-                params={{ profileId: application.employerId }}
-              >
-                <IconExternalLink className="size-3.5" />
-                View Profile
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link
-                to="/jobs/$jobId"
-                params={{ jobId: application.jobOfferId }}
-              >
-                <IconBriefcase className="size-3.5" />
-                View Job
-              </Link>
-            </Button>
+            <Link
+              to="/profiles/$profileId"
+              params={{ profileId: application.employerId }}
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
+            >
+              <IconExternalLink className="size-3.5" />
+              View Profile
+            </Link>
+            <Link
+              to="/jobs/$jobId"
+              params={{ jobId: application.jobOfferId }}
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
+            >
+              <IconBriefcase className="size-3.5" />
+              View Job
+            </Link>
           </div>
         </CardContent>
       </Card>
