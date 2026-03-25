@@ -100,8 +100,7 @@ export function ClaimDetailSheet({
   });
 
   const { mutate: unassign, isPending: isUnassigning } = useMutation({
-    mutationFn: () =>
-      updateClaim(claim!.id, { assigned_user_id: null }),
+    mutationFn: () => updateClaim(claim!.id, { assigned_user_id: null }),
     onSuccess: () => {
       toast.success("Claim unassigned");
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
@@ -136,7 +135,7 @@ export function ClaimDetailSheet({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="w-full sm:max-w-xl flex flex-col gap-0 p-0 max-h-[90vh]">
+      <DialogContent className="w-full sm:max-w-2xl flex flex-col gap-0 p-0 max-h-[90vh]">
         {claim && (
           <>
             {/* Header — title + status select */}
@@ -287,9 +286,13 @@ export function ClaimDetailSheet({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Unassign this claim?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Unassign this claim?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            {assignedUser.firstName} {assignedUser.lastName} will be notified by email and removed from this claim.
+                            {assignedUser.firstName} {assignedUser.lastName}{" "}
+                            will be notified by email and removed from this
+                            claim.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
