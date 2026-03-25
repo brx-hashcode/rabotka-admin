@@ -62,11 +62,11 @@ const navSecondary: NavItem[] = [
 ];
 
 const documents = [
+  { name: "Wallet", url: "/wallet", icon: IconWallet },
+  { name: "Claims", url: "/claim", icon: IconReport },
   { name: "Events", url: "/events", icon: IconDatabase },
-  { name: "Claim", url: "/claim", icon: IconReport },
   { name: "Logs", url: "/logs", icon: IconFileWord },
   { name: "Documents", url: "/documents", icon: IconFile },
-  { name: "Wallet", url: "/wallet", icon: IconWallet },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
