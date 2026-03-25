@@ -14,6 +14,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "#/components/ui/button";
+import { appConfig } from "#/config";
 
 function getStatusBadgeVariant(
   status: string,
@@ -139,7 +140,7 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
 export function RecentJobsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-jobs"],
-    queryFn: () => getJobOffersList({ page: 1, limit: 10 }),
+    queryFn: () => getJobOffersList({ page: 1, limit: appConfig.defaultRecentPageSize }),
   });
 
   return (

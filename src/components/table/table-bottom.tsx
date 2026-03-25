@@ -15,15 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { appConfig } from "#/config";
 
 type TableBottomProps = Readonly<{
   total: number;
   initialLimit?: number;
 }>;
 
-const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+const PAGE_SIZE_OPTIONS = [appConfig.defaultPaginationLimit, 20, 30, 40, 50];
 
-export function TableBottom({ total, initialLimit = 20 }: TableBottomProps) {
+export function TableBottom({
+  total,
+  initialLimit = appConfig.defaultPaginationLimit,
+}: TableBottomProps) {
   const {
     currentPage,
     totalPages,

@@ -11,6 +11,7 @@ import { getApplicationStatusLabel } from "#/lib/status-labels";
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "#/components/ui/button";
+import { appConfig } from "#/config";
 
 function getStatusBadgeVariant(
   status: string,
@@ -113,7 +114,8 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
 export function RecentApplicationsTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-applications"],
-    queryFn: () => getApplicationsList({ page: 1, limit: 10 }),
+    queryFn: () =>
+      getApplicationsList({ page: 1, limit: appConfig.defaultRecentPageSize }),
   });
 
   return (

@@ -16,6 +16,7 @@ import { Link } from "@tanstack/react-router";
 import { buttonVariants } from "#/components/ui/button";
 import { EyeIcon } from "lucide-react";
 import { getVerificationStatusBadgeVariant } from "#/features/applications/components/profile-columns";
+import { appConfig } from "#/config";
 
 function getStatusBadgeVariant(
   status: string,
@@ -137,7 +138,7 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
 export function RecentProfilesTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "recent-profiles"],
-    queryFn: () => getProfilesList({ page: 1, limit: 10 }),
+    queryFn: () => getProfilesList({ page: 1, limit: appConfig.defaultRecentPageSize }),
   });
 
   return (
