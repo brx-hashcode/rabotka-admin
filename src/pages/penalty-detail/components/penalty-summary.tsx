@@ -12,7 +12,7 @@ import type { AdminPenaltyDetailResponse } from "#/lib/api/penalties-controller"
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 
@@ -135,15 +135,17 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link
-              to="/profiles/$profileId"
-              params={{ profileId: penalty.workerId }}
-            >
-              <IconExternalLink className="size-3.5" />
-              View Profile
-            </Link>
-          </Button>
+          <Link
+            to="/profiles/$profileId"
+            params={{ profileId: penalty.workerId }}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
+          >
+            <IconExternalLink className="size-3.5" />
+            View Profile
+          </Link>
         </CardContent>
       </Card>
 
@@ -153,24 +155,28 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
           <CardTitle className="text-sm">Related</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link
-              to="/jobs/$jobId"
-              params={{ jobId: penalty.jobOfferId }}
-            >
-              <IconBriefcase className="size-3.5" />
-              View Job
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link
-              to="/applications/$applicationId"
-              params={{ applicationId: penalty.applicationId }}
-            >
-              <IconFileText className="size-3.5" />
-              View Application
-            </Link>
-          </Button>
+          <Link
+            to="/jobs/$jobId"
+            params={{ jobId: penalty.jobOfferId }}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
+          >
+            <IconBriefcase className="size-3.5" />
+            View Job
+          </Link>
+          <Link
+            to="/applications/$applicationId"
+            params={{ applicationId: penalty.applicationId }}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
+          >
+            <IconFileText className="size-3.5" />
+            View Application
+          </Link>
         </CardContent>
       </Card>
     </div>

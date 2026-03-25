@@ -104,6 +104,20 @@ export function ApplicationInfo({ application }: Readonly<Props>) {
           </>
         )}
 
+        {application.completionNote && (
+          <>
+            <Separator className="my-6" />
+            <div className="space-y-1.5">
+              <FieldLabel>Employer Note</FieldLabel>
+              <FieldValue>
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {application.completionNote}
+                </p>
+              </FieldValue>
+            </div>
+          </>
+        )}
+
         {application.penaltyApplied && (
           <>
             <Separator className="my-6" />
