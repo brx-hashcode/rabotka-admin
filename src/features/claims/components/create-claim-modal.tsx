@@ -1,0 +1,310 @@
+import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Check, ChevronsUpDown, SearchIcon } from "lucide-react";
+import { cn } from "#/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { Input } from "#/components/ui/input";
+import { Textarea } from "#/components/ui/textarea";
+import { Button } from "#/components/ui/button";
+import { ImageUploadZone } from "#/pages/profile-detail/components/image-upload-zone";
+import { createClaim } from "#/lib/api/claims-controller";
+import {
+  getProfilesList,
+  type AdminProfileListItem,
+} from "#/lib/api/profiles-controller";
+import { appConfig } from "#/config";
+import { getCsrfToken } from "#/lib/api/csrf-token";
+
+async function uploadFiles(files: File[]): Promise<string[]> {
+  if (files.length === 0) return [];
+  const formData = new FormData();
+  for (const file of files) formData.append("files", file);
+  const csrfToken = getCsrfToken();
+  const res = await fetch(
+    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
+    {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
+    },
+  );
+  if (!res.ok) throw new Error("File upload failed");
+  const json = (await res.json()) as { files: { file_url: string }[] };
+  return json.files.map((f) => f.file_url);
+}
+
+const schema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+type ProfilePickerProps = {
+  value: AdminProfileListItem | null;
+  onChange: (profile: AdminProfileListItem) => void;
+};
+
+function ProfilePicker({ value, onChange }: Readonly<ProfilePickerProps>) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const { data: results = [] } = useQuery({
+    queryKey: ["admin", "profiles", "claim-search", search],
+    queryFn: () => getProfilesList({ q: search, limit: 8 }).then((r) => r.data),
+    enabled: search.trim().length >= 1,
+    staleTime: 10_000,
+  });
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          {value
+            ? `${value.firstName} ${value.lastName}`
+            : "Search by name, email or phone…"}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="w-(--radix-dropdown-menu-trigger-width)"
+      >
+        <DropdownMenuLabel className="font-normal p-0">
+          <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5">
+            <SearchIcon
+              className="text-muted-foreground size-4 shrink-0"
+              aria-hidden
+            />
+            <Input
+              placeholder="Search profiles…"
+              className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {search.trim().length === 0 && (
+          <p className="text-muted-foreground px-3 py-4 text-center text-sm">
+            Type to search profiles.
+          </p>
+        )}
+        {search.trim().length > 0 && results.length === 0 && (
+          <p className="text-muted-foreground px-3 py-4 text-center text-sm">
+            No profiles found.
+          </p>
+        )}
+        {search.trim().length > 0 &&
+          results.map((profile) => (
+            <DropdownMenuItem
+              key={profile.id}
+              className="flex cursor-pointer items-center gap-2 py-1.5 pl-2 pr-2"
+              onSelect={() => {
+                onChange(profile);
+                setOpen(false);
+                setSearch("");
+              }}
+            >
+              <Check
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  value?.id === profile.id ? "opacity-100" : "opacity-0",
+                )}
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">
+                  {profile.firstName} {profile.lastName}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {profile.email} · {profile.phone}
+                </span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+type CreateClaimModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+export function CreateClaimModal({
+  open,
+  onOpenChange,
+}: Readonly<CreateClaimModalProps>) {
+  const queryClient = useQueryClient();
+  const [selectedProfile, setSelectedProfile] =
+    useState<AdminProfileListItem | null>(null);
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentPreviews, setAttachmentPreviews] = useState<string[]>([]);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: "", description: "" },
+  });
+
+  const handleAddFiles = useCallback((newFiles: File[]) => {
+    setAttachmentFiles((prev) => [...prev, ...newFiles]);
+    setAttachmentPreviews((prev) => [
+      ...prev,
+      ...newFiles.map((f) => URL.createObjectURL(f)),
+    ]);
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+    setAttachmentPreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (values: FormValues) => {
+      if (!selectedProfile) throw new Error("Please select a profile");
+      const attachment_urls = await uploadFiles(attachmentFiles);
+      return createClaim({
+        title: values.title,
+        description: values.description,
+        profile_id: selectedProfile.id,
+        attachment_urls,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Claim created successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
+      handleClose();
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create claim",
+      );
+    },
+  });
+
+  function handleClose() {
+    onOpenChange(false);
+    form.reset();
+    setSelectedProfile(null);
+    attachmentPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setAttachmentFiles([]);
+    setAttachmentPreviews([]);
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (v) onOpenChange(true);
+        else handleClose();
+      }}
+    >
+      <DialogContent className="w-full sm:max-w-xl flex flex-col gap-0 p-0 max-h-[90vh]">
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
+          <DialogTitle>Create Claim</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((v) => mutate(v))}>
+            <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">Profile</span>
+                <ProfilePicker
+                  value={selectedProfile}
+                  onChange={setSelectedProfile}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Claim title…" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe the claim…"
+                        rows={4}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <ImageUploadZone
+                label="Attachments"
+                files={attachmentFiles}
+                previews={attachmentPreviews}
+                onAdd={handleAddFiles}
+                onRemove={handleRemoveFile}
+                maxFiles={3}
+              />
+            </div>
+
+            <div className="px-6 py-4 border-t shrink-0 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending || !selectedProfile}>
+                {isPending ? "Creating…" : "Create claim"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
