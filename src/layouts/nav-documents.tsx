@@ -6,7 +6,8 @@ import {
   IconTrash,
   type Icon,
 } from "@tabler/icons-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
 import {
@@ -39,6 +40,13 @@ export const NavDocuments = ({
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const { isVisible, hide, reset, hasHidden } = useHiddenDocuments();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const isActiveLink = useCallback(
+    (url: string) =>
+      pathname === url || (url !== "/" && pathname.startsWith(url)),
+    [pathname],
+  );
 
   const visibleItems = items.filter((item) => isVisible(item.name));
 
@@ -65,7 +73,7 @@ export const NavDocuments = ({
       <SidebarMenu>
         {visibleItems.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={isActiveLink(item.url)}>
               <Link to={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
@@ -86,11 +94,7 @@ export const NavDocuments = ({
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem
-                  onSelect={() => {
-                    navigate({ to: item.url });
-                  }}
-                >
+                <DropdownMenuItem onSelect={() => navigate({ to: item.url })}>
                   <IconFolder />
                   <span>Open</span>
                 </DropdownMenuItem>

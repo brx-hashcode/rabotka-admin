@@ -99,6 +99,17 @@ export function ClaimDetailSheet({
     onError: () => toast.error("Failed to update claim"),
   });
 
+  const { mutate: unassign, isPending: isUnassigning } = useMutation({
+    mutationFn: () =>
+      updateClaim(claim!.id, { assigned_user_id: null }),
+    onSuccess: () => {
+      toast.success("Claim unassigned");
+      queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
+      onClose();
+    },
+    onError: () => toast.error("Failed to unassign claim"),
+  });
+
   const { mutate: remove, isPending: isDeleting } = useMutation({
     mutationFn: () => deleteClaim(claim!.id),
     onSuccess: () => {
@@ -157,7 +168,10 @@ export function ClaimDetailSheet({
             </DialogHeader>
 
             {/* Body */}
-            <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            <div
+              className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
+              style={{ scrollbarWidth: "none" }}
+            >
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Profile">
                   <ProfileCell
@@ -211,16 +225,32 @@ export function ClaimDetailSheet({
                           alt={url.split("/").pop()}
                           className="w-full h-full object-cover transition-opacity group-hover:opacity-80"
                           onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                            (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty("display", "flex");
+                            (
+                              e.currentTarget as HTMLImageElement
+                            ).style.display = "none";
+                            (
+                              e.currentTarget
+                                .nextElementSibling as HTMLElement | null
+                            )?.style.setProperty("display", "flex");
                           }}
                         />
                         <div
                           className="absolute inset-0 hidden items-center justify-center flex-col gap-1 p-2"
                           style={{ display: "none" }}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-6 h-6 text-muted-foreground"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                            />
                           </svg>
                           <span className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2 break-all">
                             {url.split("/").pop()}
@@ -245,14 +275,31 @@ export function ClaimDetailSheet({
                       email={assignedUser.email}
                       avatarUrl={null}
                     />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-muted-foreground shrink-0"
-                      onClick={() => setAssignedUserId("none")}
-                    >
-                      Unassign
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isUnassigning}
+                        >
+                          Unassign
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Unassign this claim?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {assignedUser.firstName} {assignedUser.lastName} will be notified by email and removed from this claim.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => unassign()}>
+                            Unassign
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ) : (
                   <Select
