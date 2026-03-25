@@ -40,6 +40,8 @@ export type TableHeaderToolbarProps<TData = unknown> = Readonly<{
   filters?: readonly TableHeaderToolbarFilter[];
   table?: TableInstance<TData>;
   children?: ReactNode;
+  extraFiltersActive?: boolean;
+  onResetExtras?: () => void;
 }>;
 
 export function TableHeaderToolbar<TData = unknown>({
@@ -48,6 +50,8 @@ export function TableHeaderToolbar<TData = unknown>({
   filters = [],
   table,
   children,
+  extraFiltersActive = false,
+  onResetExtras,
 }: TableHeaderToolbarProps<TData>) {
   const showSearch = searchPlaceholder != null;
   const showFilters = filters.length > 0;
@@ -76,6 +80,7 @@ export function TableHeaderToolbar<TData = unknown>({
 
   const search = (queryState[searchParamKey] as string) ?? "";
   const hasActiveFilters =
+    extraFiltersActive ||
     search !== "" ||
     filters.some(
       (f) => ((queryState[f.id] as string[] | undefined)?.length ?? 0) > 0,
@@ -86,6 +91,7 @@ export function TableHeaderToolbar<TData = unknown>({
       [searchParamKey]: "",
       ...Object.fromEntries(filters.map((f) => [f.id, [] as string[]])),
     });
+    onResetExtras?.();
   };
 
   const setSearch = (value: string | null) => {
