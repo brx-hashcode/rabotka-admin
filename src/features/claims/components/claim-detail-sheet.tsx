@@ -3,12 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "#/components/ui/sheet";
-import { Badge } from "#/components/ui/badge";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import {
@@ -30,9 +29,13 @@ import {
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
 import { updateClaim, deleteClaim } from "#/lib/api/claims-controller";
-import type { AdminClaimItem, AdminClaimStatus } from "#/lib/api/claims-controller";
+import type {
+  AdminClaimItem,
+  AdminClaimStatus,
+} from "#/lib/api/claims-controller";
 import { getUsersList } from "#/lib/api/users-controller";
-import { cn } from "#/lib/utils";
+import { ProfileCell } from "#/components/table";
+import { ClaimComments } from "./claim-comments";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "CREATED", label: "Created" },
@@ -41,28 +44,29 @@ const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "REJECTED", label: "Rejected" },
 ];
 
-const STATUS_COLORS: Record<AdminClaimStatus, string> = {
-  CREATED: "bg-blue-500/10 text-blue-600 border-blue-200",
-  IN_PROGRESS: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
-  COMPLETED: "bg-green-500/10 text-green-600 border-green-200",
-  REJECTED: "bg-red-500/10 text-red-600 border-red-200",
-};
-
-type ClaimDetailSheetProps = {
+type ClaimDetailDialogProps = {
   claim: AdminClaimItem | null;
   onClose: () => void;
 };
 
-function Field({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
+function Field({
+  label,
+  children,
+}: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
-    <div className="space-y-1">
-      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">{label}</p>
+    <div className="space-y-1.5">
+      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+        {label}
+      </p>
       <div className="text-sm">{children}</div>
     </div>
   );
 }
 
-export function ClaimDetailSheet({ claim, onClose }: Readonly<ClaimDetailSheetProps>) {
+export function ClaimDetailSheet({
+  claim,
+  onClose,
+}: Readonly<ClaimDetailDialogProps>) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
@@ -90,6 +94,7 @@ export function ClaimDetailSheet({ claim, onClose }: Readonly<ClaimDetailSheetPr
     onSuccess: () => {
       toast.success("Claim updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
+      onClose();
     },
     onError: () => toast.error("Failed to update claim"),
   });
@@ -105,37 +110,93 @@ export function ClaimDetailSheet({ claim, onClose }: Readonly<ClaimDetailSheetPr
   });
 
   const isDirty =
-    claim && (status !== claim.status || assignedUserId !== (claim.assignedUserId ?? "none"));
+    claim &&
+    (status !== claim.status ||
+      assignedUserId !== (claim.assignedUserId ?? "none"));
+
+  const assignedUser = claim?.assignedUserId
+    ? users.find((u) => u.id === claim.assignedUserId)
+    : null;
 
   return (
-    <Sheet open={Boolean(claim)} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+    <Dialog
+      open={Boolean(claim)}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="w-full sm:max-w-xl flex flex-col gap-0 p-0 max-h-[90vh]">
         {claim && (
           <>
-            <SheetHeader className="mb-4">
-              <div className="flex items-start gap-3">
-                <SheetTitle className="flex-1 text-base leading-snug">{claim.title}</SheetTitle>
-                <Badge variant="outline" className={cn("shrink-0 text-xs", STATUS_COLORS[claim.status])}>
-                  {STATUS_OPTIONS.find((s) => s.value === claim.status)?.label}
-                </Badge>
+            {/* Header — title + status select */}
+            <DialogHeader className="px-6 py-4 border-b shrink-0">
+              <div className="flex items-start gap-3 pr-6">
+                <DialogTitle className="flex-1 text-base leading-snug">
+                  {claim.title}
+                </DialogTitle>
+                <Select
+                  value={status}
+                  onValueChange={(v) => setStatus(v as AdminClaimStatus)}
+                >
+                  <SelectTrigger className="h-7 w-36 text-xs shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        className="text-xs"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </SheetHeader>
+            </DialogHeader>
 
-            <div className="space-y-5">
-              <Field label="Profile">
-                {claim.profileName ?? "—"}
-                {claim.profileEmail && (
-                  <span className="ml-1 text-muted-foreground">({claim.profileEmail})</span>
-                )}
-              </Field>
+            {/* Body */}
+            <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Profile">
+                  <ProfileCell
+                    name={claim.profileName ?? ""}
+                    email={claim.profileEmail ?? ""}
+                    avatarUrl={claim.profileAvatarUrl}
+                  />
+                </Field>
+
+                <Field label="Created by">
+                  <ProfileCell
+                    name={
+                      claim.createdByUserName ??
+                      claim.createdByProfileName ??
+                      ""
+                    }
+                    email={claim.createdByUserEmail ?? ""}
+                    avatarUrl={null}
+                  />
+                </Field>
+
+                <Field label="Created at">
+                  {format(new Date(claim.createdAt), "MMM d, yyyy · HH:mm")}
+                </Field>
+
+                <Field label="Last updated">
+                  {format(new Date(claim.updatedAt), "MMM d, yyyy · HH:mm")}
+                </Field>
+              </div>
 
               <Field label="Description">
-                <p className="whitespace-pre-wrap">{claim.description}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {claim.description}
+                </p>
               </Field>
 
               {claim.attachmentUrls.length > 0 && (
                 <Field label="Attachments">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-1">
                     {claim.attachmentUrls.map((url) => (
                       <a
                         key={url}
@@ -151,39 +212,39 @@ export function ClaimDetailSheet({ claim, onClose }: Readonly<ClaimDetailSheetPr
                 </Field>
               )}
 
-              <Field label="Created by">
-                {claim.createdByUserName ?? claim.createdByProfileName ?? "—"}
-              </Field>
-
-              <Field label="Created at">
-                {format(new Date(claim.createdAt), "MMM d, yyyy HH:mm")}
-              </Field>
-
-              {/* Editable fields */}
-              <div className="space-y-3 pt-2 border-t">
-                <div className="space-y-1.5">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={(v) => setStatus(v as AdminClaimStatus)}>
-                    <SelectTrigger>
-                      <SelectValue />
+              {/* Assigned to */}
+              <div className="pt-4 border-t">
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2 block">
+                  Assigned to
+                </Label>
+                {assignedUser ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <ProfileCell
+                      name={`${assignedUser.firstName} ${assignedUser.lastName}`}
+                      email={assignedUser.email}
+                      avatarUrl={null}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-muted-foreground shrink-0"
+                      onClick={() => setAssignedUserId("none")}
+                    >
+                      Unassign
+                    </Button>
+                  </div>
+                ) : (
+                  <Select
+                    value={assignedUserId}
+                    onValueChange={setAssignedUserId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder="Unassigned"
+                        className="w-full"
+                      />
                     </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>Assigned to</Label>
-                  <Select value={assignedUserId} onValueChange={setAssignedUserId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unassigned" />
-                    </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-full">
                       <SelectItem value="none">Unassigned</SelectItem>
                       {users.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
@@ -192,38 +253,50 @@ export function ClaimDetailSheet({ claim, onClose }: Readonly<ClaimDetailSheetPr
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" disabled={isDeleting}>
+              {/* Comments */}
+              <div className="pt-4 border-t">
+                <ClaimComments claimId={claim.id} />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t shrink-0 flex items-center justify-end gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isDeleting}>
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this claim?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove()}>
                       Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete claim?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove()}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
-                <Button size="sm" onClick={() => save()} disabled={!isDirty || isSaving}>
-                  {isSaving ? "Saving..." : "Save changes"}
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                onClick={() => save()}
+                disabled={!isDirty || isSaving}
+              >
+                {isSaving ? "Saving…" : "Save changes"}
+              </Button>
             </div>
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

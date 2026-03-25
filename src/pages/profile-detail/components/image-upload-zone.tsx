@@ -11,6 +11,7 @@ type ImageUploadZoneProps = {
   onRemove: (index: number) => void;
   label?: string;
   maxSize?: number;
+  maxFiles?: number;
 };
 
 export function ImageUploadZone({
@@ -20,13 +21,16 @@ export function ImageUploadZone({
   onRemove,
   label = "Supporting Images",
   maxSize = 5 * 1024 * 1024,
+  maxFiles,
 }: Readonly<ImageUploadZoneProps>) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const images = acceptedFiles.filter((f) => f.type.startsWith("image/"));
-      if (images.length > 0) onAdd(images);
+      const remaining = maxFiles ? maxFiles - previews.length : images.length;
+      const toAdd = images.slice(0, remaining);
+      if (toAdd.length > 0) onAdd(toAdd);
     },
-    [onAdd],
+    [onAdd, maxFiles, previews.length],
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -103,17 +107,19 @@ export function ImageUploadZone({
                 </div>
               ))}
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  open();
-                }}
-                className="hover:border-primary hover:bg-primary/5 flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed transition-colors"
-              >
-                <IconUpload className="text-muted-foreground size-5" />
-                <span className="text-muted-foreground text-xs">Add more</span>
-              </button>
+              {(!maxFiles || previews.length < maxFiles) && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="hover:border-primary hover:bg-primary/5 flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed transition-colors"
+                >
+                  <IconUpload className="text-muted-foreground size-5" />
+                  <span className="text-muted-foreground text-xs">Add more</span>
+                </button>
+              )}
             </div>
           </div>
         ) : (

@@ -9,7 +9,10 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { updateClaim } from "#/lib/api/claims-controller";
-import type { AdminClaimItem, AdminClaimStatus } from "#/lib/api/claims-controller";
+import type {
+  AdminClaimItem,
+  AdminClaimStatus,
+} from "#/lib/api/claims-controller";
 import { useClaimsBoard } from "#/hooks/use-claims-board";
 import { ClaimColumn } from "./claim-column";
 
@@ -20,7 +23,9 @@ type ClaimBoardProps = {
 export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   const { claimsByStatus, allStatuses, isLoading } = useClaimsBoard();
   const queryClient = useQueryClient();
-  const [localOverrides, setLocalOverrides] = useState<Record<string, AdminClaimStatus>>({});
+  const [localOverrides, setLocalOverrides] = useState<
+    Record<string, AdminClaimStatus>
+  >({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -32,7 +37,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "claims", "board"] });
     },
-    onError: (err, { id }) => {
+    onError: (_err, { id }) => {
       toast.error("Failed to update claim status");
       setLocalOverrides((prev) => {
         const next = { ...prev };
@@ -56,7 +61,6 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     changeStatus({ id: claimId, status: newStatus });
   }
 
-  // Merge server data with optimistic overrides
   const effectiveByStatus: Record<AdminClaimStatus, AdminClaimItem[]> = {
     CREATED: [],
     IN_PROGRESS: [],
@@ -68,7 +72,10 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     for (const claim of claimsByStatus[status]) {
       const override = localOverrides[claim.id];
       const effectiveStatus = override ?? claim.status;
-      effectiveByStatus[effectiveStatus].push({ ...claim, status: effectiveStatus });
+      effectiveByStatus[effectiveStatus].push({
+        ...claim,
+        status: effectiveStatus,
+      });
     }
   }
 
@@ -76,7 +83,10 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     return (
       <div className="flex gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="min-w-[260px] w-full h-48 rounded-lg bg-muted animate-pulse" />
+          <div
+            key={i}
+            className="min-w-[260px] w-full h-48 rounded-lg bg-muted animate-pulse"
+          />
         ))}
       </div>
     );

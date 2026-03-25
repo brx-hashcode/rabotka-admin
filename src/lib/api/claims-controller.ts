@@ -14,8 +14,10 @@ export type AdminClaimItem = {
   profileAvatarUrl: string | null;
   assignedUserId: string | null;
   assignedUserName: string | null;
+  assignedUserEmail: string | null;
   createdByUserId: string | null;
   createdByUserName: string | null;
+  createdByUserEmail: string | null;
   createdByProfileId: string | null;
   createdByProfileName: string | null;
   createdAt: string;
@@ -44,6 +46,15 @@ export type CreateClaimPayload = {
   profile_id: string;
   attachment_urls?: string[];
   assigned_user_id?: string;
+};
+
+export type AdminClaimCommentItem = {
+  id: string;
+  content: string;
+  userId: string | null;
+  userName: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type UpdateClaimPayload = {
@@ -88,6 +99,21 @@ class AdminClaimsController extends AdminBaseController {
     const url = this.createURL(`/admin/claims/${id}`, new URLSearchParams());
     return this.delete<void>(url);
   }
+
+  async listComments(claimId: string): Promise<AdminClaimCommentItem[]> {
+    const url = this.createURL(`/admin/claims/${claimId}/comments`, new URLSearchParams());
+    return this.get<AdminClaimCommentItem[]>(url);
+  }
+
+  async addComment(claimId: string, content: string): Promise<AdminClaimCommentItem> {
+    const url = this.createURL(`/admin/claims/${claimId}/comments`, new URLSearchParams());
+    return this.post<AdminClaimCommentItem>(url, { content });
+  }
+
+  async deleteComment(claimId: string, commentId: string): Promise<void> {
+    const url = this.createURL(`/admin/claims/${claimId}/comments/${commentId}`, new URLSearchParams());
+    return this.delete<void>(url);
+  }
 }
 
 const controller = new AdminClaimsController();
@@ -96,3 +122,6 @@ export const listClaims = controller.listClaims.bind(controller);
 export const getClaimById = controller.getClaimById.bind(controller);
 export const updateClaim = controller.updateClaim.bind(controller);
 export const deleteClaim = controller.deleteClaim.bind(controller);
+export const listClaimComments = controller.listComments.bind(controller);
+export const addClaimComment = controller.addComment.bind(controller);
+export const deleteClaimComment = controller.deleteComment.bind(controller);
