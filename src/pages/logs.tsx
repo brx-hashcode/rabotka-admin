@@ -27,6 +27,13 @@ function LogsTableHeader({
     parseAsString.withDefault(""),
   );
 
+  const extraFiltersActive = !!createdFrom || !!createdTo;
+
+  const handleResetExtras = () => {
+    void setCreatedFrom("");
+    void setCreatedTo("");
+  };
+
   return (
     <TableHeader>
       <div className="flex flex-wrap items-center gap-2">
@@ -35,6 +42,8 @@ function LogsTableHeader({
           searchPlaceholder="Search logs..."
           filters={[{ id: "entity_type", label: "Entity type", options: entityTypeOptions }]}
           table={table}
+          extraFiltersActive={extraFiltersActive}
+          onResetExtras={handleResetExtras}
         />
         <DateRangePicker
           from={createdFrom}
