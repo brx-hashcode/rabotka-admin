@@ -53,6 +53,9 @@ export type AdminClaimCommentItem = {
   content: string;
   userId: string | null;
   userName: string | null;
+  profileId: string | null;
+  profileName: string | null;
+  createdByType: 'user' | 'profile';
   createdAt: string;
   updatedAt: string;
 };
