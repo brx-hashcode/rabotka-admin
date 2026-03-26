@@ -74,7 +74,10 @@ export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
       </p>
 
       {/* List */}
-      <div className="flex flex-col gap-3 max-h-56 overflow-y-auto pr-1">
+      <div
+        className="flex flex-col gap-3 max-h-56 overflow-y-auto pr-1"
+        style={{ scrollbarWidth: "none" }}
+      >
         {isLoading && (
           <p className="text-sm text-muted-foreground text-center py-4">
             Loading…
@@ -126,20 +129,26 @@ function CommentItem({
   comment: AdminClaimCommentItem;
   onDelete: () => void;
 }>) {
-  const initials = comment.userName ? getInitials(comment.userName) : "?";
+  const isProfileComment = comment.createdByType === "profile";
+  const displayName = isProfileComment
+    ? (comment.profileName ?? "Unknown")
+    : (comment.userName ?? "Unknown");
+  const initials = displayName ? getInitials(displayName) : "?";
 
   return (
     <div className="group flex items-start gap-2.5">
       <Avatar className="size-7 shrink-0 mt-0.5">
-        <AvatarFallback className="text-[10px] font-semibold bg-primary text-primary-foreground">
+        <AvatarFallback
+          className={`text-[10px] font-semibold text-white ${
+            isProfileComment ? "bg-green-500" : "bg-blue-500"
+          }`}
+        >
           {initials}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
-          <span className="text-sm font-medium">
-            {comment.userName ?? "Unknown"}
-          </span>
+          <span className="text-sm font-medium">{displayName}</span>
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(comment.createdAt), {
               addSuffix: true,
