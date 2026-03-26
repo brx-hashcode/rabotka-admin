@@ -22,10 +22,12 @@ export default function ClaimsPage() {
       </div>
       <ClaimBoard onViewDetail={setSelectedClaim} />
       <CreateClaimModal open={createOpen} onOpenChange={setCreateOpen} />
-      <ClaimDetailSheet
-        claim={selectedClaim}
-        onClose={() => setSelectedClaim(null)}
-      />
+      {selectedClaim && (
+        <ClaimDetailSheet
+          claim={selectedClaim}
+          onClose={() => setSelectedClaim(null)}
+        />
+      )}
     </div>
   );
 }
