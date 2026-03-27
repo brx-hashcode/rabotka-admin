@@ -1,4 +1,4 @@
-import type { TEventColor } from "#/features/calendar/types";
+import type { TEventColor, TDeliveryChannel } from "#/features/calendar/types";
 
 export interface IUser {
 	id: string;
@@ -19,6 +19,7 @@ export interface IEvent {
 	title: string;
 	color: TEventColor;
 	description: string;
+	channel: TDeliveryChannel;
 	user: IUser;
 	location: string | null;
 	profiles: ICalendarProfile[];
