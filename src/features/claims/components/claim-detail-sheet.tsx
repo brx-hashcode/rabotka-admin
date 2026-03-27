@@ -7,9 +7,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
+import { X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -70,6 +72,7 @@ export function ClaimDetailSheet({
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (claim) {
@@ -96,7 +99,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: () => toast.error("Failed to update claim"),
+    onError: (error) => toast.error(error.message),
   });
 
   const { mutate: unassign, isPending: isUnassigning } = useMutation({
@@ -106,7 +109,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: () => toast.error("Failed to unassign claim"),
+    onError: (error) => toast.error(error.message),
   });
 
   const { mutate: remove, isPending: isDeleting } = useMutation({
@@ -116,7 +119,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: () => toast.error("Failed to delete claim"),
+    onError: (error) => toast.error(error.message),
   });
 
   const isDirty =
@@ -138,7 +141,6 @@ export function ClaimDetailSheet({
       <DialogContent className="w-full sm:max-w-2xl flex flex-col gap-0 p-0 max-h-[90vh]">
         {claim && (
           <>
-            {/* Header — title + status select */}
             <DialogHeader className="px-6 py-4 border-b shrink-0">
               <div className="flex items-start gap-3 pr-6">
                 <DialogTitle className="flex-1 text-base leading-snug">
@@ -166,7 +168,6 @@ export function ClaimDetailSheet({
               </div>
             </DialogHeader>
 
-            {/* Body */}
             <div
               className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
               style={{ scrollbarWidth: "none" }}
@@ -211,18 +212,16 @@ export function ClaimDetailSheet({
                 <Field label="Attachments">
                   <div className="flex flex-wrap gap-2 mt-1">
                     {claim.attachmentUrls.map((url) => (
-                      <a
+                      <button
                         key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative block w-16 h-16 rounded-md overflow-hidden border bg-muted shrink-0"
+                        onClick={() => setSelectedImageUrl(url)}
+                        className="group relative block w-16 h-16 rounded-md overflow-hidden border bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         title={url.split("/").pop()}
                       >
                         <img
                           src={url}
                           alt={url.split("/").pop()}
-                          className="w-full h-full object-cover transition-opacity group-hover:opacity-80"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             (
                               e.currentTarget as HTMLImageElement
@@ -256,13 +255,12 @@ export function ClaimDetailSheet({
                           </span>
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </Field>
               )}
 
-              {/* Assigned to */}
               <div className="pt-4 border-t">
                 <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2 block">
                   Assigned to
@@ -327,13 +325,11 @@ export function ClaimDetailSheet({
                 )}
               </div>
 
-              {/* Comments */}
               <div className="pt-4 border-t">
                 <ClaimComments claimId={claim.id} />
               </div>
             </div>
 
-            {/* Footer */}
             <div className="px-6 py-4 border-t shrink-0 flex items-center justify-end gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -368,6 +364,34 @@ export function ClaimDetailSheet({
           </>
         )}
       </DialogContent>
+
+      {/* Image Viewer Dialog */}
+      <Dialog open={Boolean(selectedImageUrl)} onOpenChange={(open) => {
+        if (!open) setSelectedImageUrl(null);
+      }}>
+        <DialogContent className="w-full max-w-4xl p-0 border-0 bg-black/90">
+          <DialogHeader className="px-4 py-3 border-b border-white/10 shrink-0">
+            <DialogTitle className="text-white text-sm">
+              {selectedImageUrl?.split("/").pop()}
+            </DialogTitle>
+            <DialogClose asChild>
+              <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <X className="h-4 w-4 text-white" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
+            {selectedImageUrl && (
+              <img
+                src={selectedImageUrl}
+                alt="Attachment"
+                className="max-w-full max-h-[70vh] object-contain rounded"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
