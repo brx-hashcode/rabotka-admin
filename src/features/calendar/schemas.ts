@@ -6,6 +6,7 @@ export const eventSchema = z.object({
 	startDate: z.date({ required_error: "Start date is required" }),
 	endDate: z.date({ required_error: "End date is required" }),
 	color: z.enum(["blue", "green", "red", "yellow", "purple", "orange"]),
+	channel: z.enum(["EMAIL", "WHATSAPP", "ALL"]),
 	location: z.string().optional(),
 	profileIds: z.array(z.string()).default([]),
 	userIds: z.array(z.string()).default([]),

@@ -3,6 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { Calendar, Clock, Text, User } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "#/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
 } from "#/components/ui/dialog";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
+import { useDeleteEvent } from "#/features/calendar/hooks/use-calendar-events";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
 import { formatTime } from "#/features/calendar/helpers";
 import type { IEvent } from "#/features/calendar/interfaces";
@@ -27,19 +29,22 @@ type IProps = {
 export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
   const startDate = parseISO(event.startDate);
   const endDate = parseISO(event.endDate);
-  const { use24HourFormat, removeEvent } = useCalendar();
+  const { use24HourFormat } = useCalendar();
+  const [open, setOpen] = useState(false);
+  const { mutate: remove, isPending } = useDeleteEvent();
 
   const deleteEvent = (eventId: number) => {
-    try {
-      removeEvent(eventId);
-      toast.success("Event deleted successfully.");
-    } catch {
-      toast.error("Error deleting event.");
-    }
+    remove(eventId, {
+      onSuccess: () => {
+        toast.success("Event deleted successfully.");
+        setOpen(false);
+      },
+      onError: () => toast.error("Error deleting event."),
+    });
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -95,15 +100,16 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
         </ScrollArea>
         <div className="flex justify-end gap-2">
           <AddEditEventDialog event={event}>
-            <Button variant="outline">Edit</Button>
+            <Button variant="outline" disabled={isPending}>Edit</Button>
           </AddEditEventDialog>
           <Button
             variant="destructive"
+            disabled={isPending}
             onClick={() => {
               deleteEvent(event.id);
             }}
           >
-            Delete
+            {isPending ? "Deleting..." : "Delete"}
           </Button>
         </div>
         <DialogClose />
