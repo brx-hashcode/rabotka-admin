@@ -47,11 +47,7 @@ import type {
   IUser,
 } from "#/features/calendar/interfaces";
 import { eventSchema, type TEventFormData } from "#/features/calendar/schemas";
-import {
-  dateToInputValue,
-  timeToInputValue,
-  mergeDateAndTime,
-} from "../utils";
+import { dateToInputValue, timeToInputValue, mergeDateAndTime } from "../utils";
 
 type IProps = {
   readonly children: ReactNode;
@@ -118,6 +114,7 @@ export function AddEditEventDialog({
       startDate: initialDates.startDate,
       endDate: initialDates.endDate,
       color: event?.color ?? "blue",
+      channel: event?.channel ?? "EMAIL",
       location: event?.location ?? "",
       profileIds: getProfileIds(),
       userIds: getUserIds(),
@@ -132,6 +129,7 @@ export function AddEditEventDialog({
         startDate: initialDates.startDate,
         endDate: initialDates.endDate,
         color: event?.color ?? "blue",
+        channel: event?.channel ?? "EMAIL",
         location: event?.location ?? "",
         profileIds: getProfileIds(),
         userIds: getUserIds(),
@@ -139,7 +137,7 @@ export function AddEditEventDialog({
       resetProfiles(event?.profiles ?? []);
       resetUsers(event?.assignedUsers ?? []);
     }
-  }, [isOpen, event, initialDates, form, resetProfiles, resetUsers, getProfileIds, getUserIds]);
+  }, [isOpen, event?.id]);
 
   const onSubmit: SubmitHandler<TEventFormData> = (values) => {
     const payload = {
@@ -148,6 +146,7 @@ export function AddEditEventDialog({
       startDate: format(values.startDate, "yyyy-MM-dd'T'HH:mm:ss"),
       endDate: format(values.endDate, "yyyy-MM-dd'T'HH:mm:ss"),
       color: values.color,
+      channel: values.channel,
       location: values.location || undefined,
       profileIds: getProfileIds(),
       userIds: getUserIds(),
@@ -260,42 +259,74 @@ export function AddEditEventDialog({
                   )}
                 />
 
-                {/* Color */}
-                <FormField
-                  // @ts-expect-error - form.control is not typed correctly
-                  control={form.control}
-                  name="color"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel className="required">Variant</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            className={`w-full ${fieldState.invalid ? "border-red-500" : ""}`}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="color"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="required">Variant</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
                           >
-                            <SelectValue placeholder="Select a variant" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {COLORS.map((color) => (
-                              <SelectItem value={color} key={color}>
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`}
-                                  />
-                                  {color}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                            <SelectTrigger
+                              className={`w-full ${fieldState.invalid ? "border-red-500" : ""}`}
+                            >
+                              <SelectValue placeholder="Select a variant" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COLORS.map((color) => (
+                                <SelectItem value={color} key={color}>
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`}
+                                    />
+                                    {color}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="channel"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel className="required">
+                          Delivery Channel
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger
+                              className={`w-full ${fieldState.invalid ? "border-red-500" : ""}`}
+                            >
+                              <SelectValue placeholder="Select a channel" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="EMAIL">EMAIL</SelectItem>
+                              <SelectItem value="WHATSAPP">WHATSAPP</SelectItem>
+                              <SelectItem value="ALL">ALL</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Location */}
                 <FormField
@@ -454,6 +485,7 @@ export function AddEditEventDialog({
                           {...field}
                           placeholder="Enter a description"
                           className={fieldState.invalid ? "border-red-500" : ""}
+                          style={{ scrollbarWidth: "none" }}
                         />
                       </FormControl>
                       <FormMessage />
