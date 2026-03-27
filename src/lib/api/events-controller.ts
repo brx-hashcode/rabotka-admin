@@ -1,5 +1,5 @@
 import { AdminBaseController } from "./base-controller";
-import type { TEventColor } from "#/features/calendar/types";
+import type { TEventColor, TDeliveryChannel } from "#/features/calendar/types";
 
 export type AdminEventUser = {
   id: string;
@@ -20,6 +20,7 @@ export type AdminEvent = {
   startDate: string;
   endDate: string;
   color: TEventColor;
+  channel: TDeliveryChannel;
   location: string | null;
   user: AdminEventUser;
   profiles: AdminEventProfile[];
@@ -34,6 +35,7 @@ export type CreateEventParams = {
   startDate: string;
   endDate: string;
   color: string;
+  channel: TDeliveryChannel;
   location?: string;
   profileIds?: string[];
   userIds?: string[];
