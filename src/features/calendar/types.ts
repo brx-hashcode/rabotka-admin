@@ -6,3 +6,4 @@ export type TEventColor =
 	| "yellow"
 	| "purple"
 	| "orange";
+export type TDeliveryChannel = "EMAIL" | "WHATSAPP" | "ALL";
