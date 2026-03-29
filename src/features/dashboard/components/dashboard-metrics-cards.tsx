@@ -25,10 +25,9 @@ function formatTrendLabel(
   trend: TrendDirection,
   trendPercentage: number,
 ): string {
-  if (trendPercentage > 999) return ">+999%";
-  return trend === "up"
-    ? `+${trendPercentage}%`
-    : `-${trendPercentage}%`;
+  const abs = Math.abs(trendPercentage);
+  const sign = trend === "up" ? "+" : "-";
+  return `${sign}${abs}%`;
 }
 
 const SKELETON_KEYS = [

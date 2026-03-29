@@ -58,7 +58,12 @@ function ReasonField({
   return (
     <div className="space-y-1.5">
       <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-        Reason {isRejected ? <span className="text-destructive">*</span> : "(optional)"}
+        Reason{" "}
+        {isRejected ? (
+          <span className="text-destructive">*</span>
+        ) : (
+          "(optional)"
+        )}
       </label>
       <Textarea
         placeholder={placeholder}
@@ -145,31 +150,35 @@ export function KycVerificationModal({
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <button
               type="button"
-              variant={decision === "VERIFIED" ? "default" : "outline"}
-              className={
+              className={cn(
+                "flex h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 text-sm font-medium transition-all",
                 decision === "VERIFIED"
-                  ? "h-auto flex-col gap-1.5 border-green-600 bg-green-600 py-4 text-white hover:bg-green-700"
-                  : "h-auto flex-col gap-1.5 py-4"
-              }
+                  ? "border-green-500 bg-green-500/15 text-green-500"
+                  : "border-border hover:border-green-500/50 hover:text-green-500",
+              )}
               onClick={() => {
                 setDecision("VERIFIED");
                 setReasonError(false);
               }}
             >
-              <IconCheck className="size-5" />
+              <IconCheck className="size-6" />
               <span>Approve</span>
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant={decision === "REJECTED" ? "destructive" : "outline"}
-              className="h-auto flex-col gap-1.5 py-4"
+              className={cn(
+                "flex h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 text-sm font-medium transition-all",
+                decision === "REJECTED"
+                  ? "border-red-500 bg-red-500/15 text-red-500"
+                  : "border-border hover:border-red-500/50 hover:text-red-500",
+              )}
               onClick={() => setDecision("REJECTED")}
             >
-              <IconX className="size-5" />
+              <IconX className="size-6" />
               <span>Reject</span>
-            </Button>
+            </button>
           </div>
 
           <ImageUploadZone
