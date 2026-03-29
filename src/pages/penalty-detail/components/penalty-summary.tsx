@@ -1,4 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   IconMail,
   IconPhone,
@@ -6,15 +9,22 @@ import {
   IconBriefcase,
   IconFileText,
   IconUser,
+  IconCreditCard,
+  IconTrash,
 } from "@tabler/icons-react";
 
 import type { AdminPenaltyDetailResponse } from "#/lib/api/penalties-controller";
+import {
+  confirmPenaltyPayment,
+  deletePenalty,
+} from "#/lib/api/penalties-controller";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
-import { buttonVariants } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate, formatAmount } from "../helpers";
 
@@ -31,7 +41,37 @@ type Props = {
 };
 
 export function PenaltySummary({ penalty }: Readonly<Props>) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isPaid = penalty.paidAt != null;
+
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "penalties"] });
+  };
+
+  const confirmPaymentMutation = useMutation({
+    mutationFn: () => confirmPenaltyPayment(penalty.id),
+    onSuccess: () => {
+      setConfirmPaymentOpen(false);
+      toast.success("Payment confirmed — penalty marked as paid.");
+      invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deletePenalty(penalty.id),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      toast.success("Penalty deleted.");
+      invalidate();
+      navigate({ to: "/penalties" });
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   return (
     <div className="space-y-6">
@@ -84,6 +124,31 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Actions */}
+      <Card>
+        <CardHeader className="pb-0">
+          <CardTitle className="text-sm">Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button
+            className="w-full"
+            disabled={isPaid}
+            onClick={() => setConfirmPaymentOpen(true)}
+          >
+            <IconCreditCard className="size-3.5" />
+            Confirm payment
+          </Button>
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <IconTrash className="size-3.5" />
+            Delete penalty
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Worker card */}
       <Card>
@@ -179,6 +244,27 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
           </Link>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmPaymentOpen}
+        onOpenChange={setConfirmPaymentOpen}
+        title="Confirm penalty payment"
+        description="This will mark the penalty as paid and credit the system wallet. This action cannot be undone."
+        actionLabel="Confirm payment"
+        onConfirm={() => confirmPaymentMutation.mutate()}
+        isPending={confirmPaymentMutation.isPending}
+        variant="default"
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete penalty"
+        description="This will permanently delete this penalty. The worker's billing status will be updated automatically."
+        actionLabel="Delete"
+        onConfirm={() => deleteMutation.mutate()}
+        isPending={deleteMutation.isPending}
+        variant="destructive"
+      />
     </div>
   );
 }

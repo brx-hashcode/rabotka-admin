@@ -64,8 +64,26 @@ export class AdminPenaltiesController extends AdminBaseController {
     );
     return this.get<AdminPenaltyDetailResponse>(url);
   }
+
+  async confirmPayment(id: string): Promise<AdminPenaltyDetailResponse> {
+    const url = this.createURL(
+      `/admin/penalties/${id}/confirm-payment`,
+      new URLSearchParams(),
+    );
+    return this.post<AdminPenaltyDetailResponse>(url, {});
+  }
+
+  async deletePenalty(id: string): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/penalties/${id}`,
+      new URLSearchParams(),
+    );
+    return this.delete<{ success: boolean }>(url);
+  }
 }
 
 const controller = new AdminPenaltiesController();
 export const getPenaltiesList = controller.getList.bind(controller);
 export const getPenaltyById = controller.getById.bind(controller);
+export const confirmPenaltyPayment = controller.confirmPayment.bind(controller);
+export const deletePenalty = controller.deletePenalty.bind(controller);
