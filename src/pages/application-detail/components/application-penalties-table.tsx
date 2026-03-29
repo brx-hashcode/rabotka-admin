@@ -8,6 +8,9 @@ import { getCommonColumns } from "#/components/table/data-table-column";
 import { Badge } from "#/components/ui/badge";
 
 import { formatDateTime, formatAmount } from "../helpers";
+import { Eye } from "lucide-react";
+import { cn } from "#/lib/utils";
+import { buttonVariants } from "#/components/ui/button";
 
 const dataColumns: ColumnDef<AdminApplicationPenaltyItem>[] = [
   {
@@ -68,9 +71,14 @@ const PenaltyRowActions = ({ row }: { row: AdminApplicationPenaltyItem }) => (
   <Link
     to="/penalties/$penaltyId"
     params={{ penaltyId: row.id }}
-    className="text-primary text-xs hover:underline"
+    className={cn(
+      buttonVariants({
+        variant: "ghost",
+        size: "icon",
+      }),
+    )}
   >
-    View
+    <Eye />
   </Link>
 );
 

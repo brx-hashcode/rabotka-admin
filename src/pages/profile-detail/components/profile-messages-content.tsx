@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconMessageCircle, IconSend } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   type AdminProfileMessage,
 } from "#/lib/api/profiles-controller";
 import { useAdminMe } from "#/hooks/use-admin-me";
+import { ChatDoodleBg } from "./chat-doodle-bg";
 
 type Channel = "WHATSAPP" | "EMAIL";
 
@@ -37,7 +38,7 @@ export function ProfileMessagesContent({
 }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const { data: adminMe } = useAdminMe();
-  const adminName = adminMe?.name ?? "Admin";
+  const adminName = `${adminMe?.firstName} ${adminMe?.lastName}`;
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -63,6 +64,10 @@ export function ProfileMessagesContent({
       toast.error("Failed to send message.");
     },
   });
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [messages]);
 
   const canSend = text.trim().length > 0 && !isPending;
 
@@ -158,12 +163,20 @@ export function ProfileMessagesContent({
       </div>
 
       {/* Chat area */}
-      <CardContent className="flex flex-col gap-4 p-5 overflow-y-auto flex-1 min-h-0 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} profileName={profileName} adminName={adminName} />
-        ))}
-        <div ref={bottomRef} />
-      </CardContent>
+      <div className="relative flex-1 min-h-0 overflow-hidden">
+        <ChatDoodleBg />
+        <CardContent className="absolute inset-0 flex flex-col gap-4 p-5 overflow-y-auto scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {messages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              profileName={profileName}
+              adminName={adminName}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </CardContent>
+      </div>
 
       {/* Input */}
       {inputArea}

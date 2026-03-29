@@ -10,6 +10,9 @@ import { getCommonColumns } from "#/components/table/data-table-column";
 import { Badge } from "#/components/ui/badge";
 
 import { statusBadgeVariant, formatDate, formatAmount } from "../helpers";
+import { cn } from "#/lib/utils";
+import { buttonVariants } from "#/components/ui/button";
+import { Eye } from "lucide-react";
 
 const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
   {
@@ -74,6 +77,22 @@ const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
 
 const columns = getCommonColumns<AdminJobApplicationItem>({
   additionalColumns: dataColumns,
+  columnsActions: ({ row }) => {
+    return (
+      <Link
+        to="/applications/$applicationId"
+        params={{ applicationId: row.id }}
+        className={cn(
+          buttonVariants({
+            variant: "ghost",
+            size: "icon",
+          }),
+        )}
+      >
+        <Eye />
+      </Link>
+    );
+  },
 });
 
 type Props = {
