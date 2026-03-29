@@ -1,4 +1,4 @@
-import { EyeIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "#/components/ui/button";
 import type { AdminLogItem } from "#/lib/api/logs-controller";
 
@@ -10,7 +10,7 @@ type LogRowActionsProps = {
 export function LogRowActions({ log, onView }: Readonly<LogRowActionsProps>) {
   return (
     <Button variant="ghost" size="icon" onClick={() => onView(log)}>
-      <EyeIcon className="size-4" aria-hidden />
+      <ArrowRight className="size-4" aria-hidden />
     </Button>
   );
 }

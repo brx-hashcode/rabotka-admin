@@ -20,6 +20,11 @@ const config = defineConfig(({mode}) => {
           target: env.VITE_BACKEND_URL,
           changeOrigin: true,
         },
+        "/socket.io": {
+          target: env.VITE_BACKEND_URL,
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
   plugins: [

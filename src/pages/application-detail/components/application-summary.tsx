@@ -116,7 +116,7 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="space-y-2">
             <Link
               to="/profiles/$profileId"
               params={{ profileId: application.employerId }}
