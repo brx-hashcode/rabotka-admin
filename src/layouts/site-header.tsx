@@ -1,4 +1,6 @@
 import { DirectMessagesButton } from "#/features/direct-messages-button";
+import { NetworkStatusIndicator } from "#/features/network-status-indicator";
+import { NotificationBell } from "#/features/notification-bell";
 import { Separator } from "#/components/ui/separator";
 import { ThemeToggle } from "#/components/theme-toggle";
 import { SidebarTrigger } from "#/components/ui/sidebar";
@@ -16,7 +18,9 @@ export function SiteHeader() {
           Because everyone deserves a job ⛑️
         </h1>
         <div className="ml-auto flex items-center gap-2">
+          <NetworkStatusIndicator />
           <DirectMessagesButton />
+          <NotificationBell />
           <ThemeToggle />
         </div>
       </div>

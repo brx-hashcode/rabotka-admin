@@ -11,6 +11,7 @@ import {
 } from "#/components/ui/breadcrumb";
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { AppSidebar, SiteHeader } from "#/layouts";
+import { useAdminNotifications } from "#/hooks/use-admin-notifications";
 
 export type LayoutBreadcrumb = Readonly<{
   label: string;
@@ -37,6 +38,8 @@ export function Layout({
   breadcrumbs,
 }: LayoutProps) {
   const router = useRouter();
+  useAdminNotifications();
+
   function renderPageHeader() {
     const hasBreadcrumbs = (breadcrumbs?.length ?? 0) > 0;
     if (hasBreadcrumbs && description != null) {
