@@ -5,10 +5,34 @@ import {
   getPaymentFlowLabel,
 } from "#/lib/status-labels";
 
+import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 
 import { formatDateTime, formatAmount } from "../helpers";
+
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
+function getJobStatusVariant(status: string): BadgeVariant {
+  switch (status) {
+    case "ACTIVE": return "default";
+    case "FILLED":
+    case "COMPLETED": return "secondary";
+    case "CANCELLED":
+    case "EXPIRED": return "destructive";
+    default: return "outline";
+  }
+}
+
+function getApplicationStatusVariant(status: string): BadgeVariant {
+  switch (status) {
+    case "ACCEPTED": return "default";
+    case "PENDING": return "secondary";
+    case "REJECTED":
+    case "CANCELLED": return "destructive";
+    default: return "outline";
+  }
+}
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -41,9 +65,11 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
 
           <div className="space-y-1.5">
             <FieldLabel>Payment Status</FieldLabel>
-            <FieldValue>
-              {penalty.paidAt ? "Paid" : "Unpaid"}
-            </FieldValue>
+            <div className="mt-0.5">
+              <Badge variant={penalty.paidAt ? "default" : "destructive"}>
+                {penalty.paidAt ? "Paid" : "Unpaid"}
+              </Badge>
+            </div>
           </div>
 
           <div className="col-span-2 space-y-1.5">
@@ -81,16 +107,20 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
 
           <div className="space-y-1.5">
             <FieldLabel>Job Status</FieldLabel>
-            <FieldValue>
-              {getJobOfferStatusLabel(penalty.jobStatus)}
-            </FieldValue>
+            <div className="mt-0.5">
+              <Badge variant={getJobStatusVariant(penalty.jobStatus)}>
+                {getJobOfferStatusLabel(penalty.jobStatus)}
+              </Badge>
+            </div>
           </div>
 
           <div className="space-y-1.5">
             <FieldLabel>Application Status</FieldLabel>
-            <FieldValue>
-              {getApplicationStatusLabel(penalty.applicationStatus)}
-            </FieldValue>
+            <div className="mt-0.5">
+              <Badge variant={getApplicationStatusVariant(penalty.applicationStatus)}>
+                {getApplicationStatusLabel(penalty.applicationStatus)}
+              </Badge>
+            </div>
           </div>
 
           <div className="space-y-1.5">
