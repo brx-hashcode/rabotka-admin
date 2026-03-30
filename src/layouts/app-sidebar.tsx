@@ -38,13 +38,13 @@ import type { AdminRole } from "#/lib/api/auth-controller";
 type NavItem = { title: string; url: string; icon: Icon; roles?: AdminRole[] };
 
 const navMain: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
-  { title: "Candidates", url: "/profiles", icon: IconUser },
-  { title: "Jobs", url: "/jobs", icon: IconBriefcase },
+  { title: "Overview", url: "/", icon: IconLayoutGrid },
+  { title: "Profiles", url: "/profiles", icon: IconUser },
+  { title: "Job Openings", url: "/jobs", icon: IconBriefcase },
   { title: "Applications", url: "/applications", icon: IconFileText },
   { title: "Compliance", url: "/penalties", icon: IconAlertTriangle },
   {
-    title: "Team",
+    title: "Team Members",
     url: "/team",
     icon: IconUsers,
     roles: ["SUPER_ADMIN"],
@@ -58,14 +58,14 @@ const navSecondary: NavItem[] = [
     icon: IconSettings,
     roles: ["SUPER_ADMIN"],
   },
-  { title: "Help", url: "/help", icon: IconHelp },
+  { title: "Support", url: "/help", icon: IconHelp },
 ];
 
 const documents = [
-  { name: "Wallet", url: "/wallet", icon: IconWallet },
-  { name: "Claims", url: "/claim", icon: IconReport },
-  { name: "Events", url: "/events", icon: IconCalendar },
-  { name: "Logs", url: "/logs", icon: IconFileWord },
+  { name: "Payroll & Wallet", url: "/wallet", icon: IconWallet },
+  { name: "Expense Claims", url: "/claim", icon: IconReport },
+  { name: "HR Events", url: "/events", icon: IconCalendar },
+  { name: "Activity Logs", url: "/logs", icon: IconFileWord },
   { name: "Documents", url: "/documents", icon: IconFile },
 ];
 
