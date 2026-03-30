@@ -2,7 +2,6 @@ import type { AdminPenaltyDetailResponse } from "#/lib/api/penalties-controller"
 import {
   getApplicationStatusLabel,
   getJobOfferStatusLabel,
-  getPaymentFlowLabel,
 } from "#/lib/status-labels";
 
 import { Badge } from "#/components/ui/badge";
@@ -143,7 +142,7 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
           <div className="space-y-1.5">
             <FieldLabel>Payment Flow</FieldLabel>
             <FieldValue>
-              {getPaymentFlowLabel(penalty.jobPaymentFlow)}
+              {penalty.jobPaymentFlow}
             </FieldValue>
           </div>
         </div>
