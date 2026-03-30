@@ -270,10 +270,7 @@ export default function ProfileDetailPage({
         </TabsContent>
 
         <TabsContent value="payments">
-          <ProfilePaymentsContent
-            profileId={profileId}
-            onPreviewDoc={handlePreviewDoc}
-          />
+          <ProfilePaymentsContent profileId={profileId} />
         </TabsContent>
 
         <TabsContent value="messages">

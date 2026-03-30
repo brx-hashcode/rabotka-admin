@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { EyeIcon, MoreHorizontal } from "lucide-react";
 import {
-  IconCreditCard,
   IconPlayerPlay,
   IconPlayerPause,
   IconTrash,
@@ -21,7 +20,6 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import type { AdminJobOfferListItem } from "#/lib/api/jobs-controller";
 import {
   updateJobOfferStatus,
-  confirmJobPayment,
   deleteJobOffer,
 } from "#/lib/api/jobs-controller";
 
@@ -33,23 +31,12 @@ export function JobRowActions({ job }: JobRowActionsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [activateOpen, setActivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "job-offers"] });
-
-  const confirmPaymentMutation = useMutation({
-    mutationFn: () => confirmJobPayment(job.id),
-    onSuccess: () => {
-      setConfirmPaymentOpen(false);
-      toast.success("Payment confirmed — job offer is now active.");
-      invalidate();
-    },
-    onError: (error) => toast.error(error.message),
-  });
 
   const activateMutation = useMutation({
     mutationFn: () => updateJobOfferStatus(job.id, "ACTIVE"),
@@ -81,10 +68,8 @@ export function JobRowActions({ job }: JobRowActionsProps) {
     onError: (error) => toast.error(error.message),
   });
 
-  const canConfirmPayment = job.status === "PENDING_PAYMENT";
   const canActivate =
     job.status !== "ACTIVE" &&
-    job.status !== "PENDING_PAYMENT" &&
     job.status !== "COMPLETED" &&
     job.status !== "CANCELLED";
   const canDeactivate =
@@ -107,16 +92,6 @@ export function JobRowActions({ job }: JobRowActionsProps) {
           >
             <EyeIcon className="size-4" />
             View
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            disabled={!canConfirmPayment}
-            onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
-          >
-            <IconCreditCard className="size-4" />
-            Confirm payment
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
@@ -148,16 +123,6 @@ export function JobRowActions({ job }: JobRowActionsProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ConfirmDialog
-        open={confirmPaymentOpen}
-        onOpenChange={setConfirmPaymentOpen}
-        title="Confirm payment"
-        description="This will confirm the payment and activate the job offer, making it visible to workers."
-        actionLabel="Confirm & Activate"
-        onConfirm={() => confirmPaymentMutation.mutate()}
-        isPending={confirmPaymentMutation.isPending}
-        variant="default"
-      />
       <ConfirmDialog
         open={activateOpen}
         onOpenChange={setActivateOpen}

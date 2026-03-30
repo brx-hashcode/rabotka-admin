@@ -4,10 +4,7 @@ import { getCommonColumns, ProfileCell } from "#/components/table";
 import { Badge } from "#/components/ui/badge";
 import type { AdminJobOfferListItem } from "#/lib/api/jobs-controller";
 import { JobRowActions } from "./job-row-actions";
-import {
-  getJobOfferStatusLabel,
-  getPaymentFlowLabel,
-} from "#/lib/status-labels";
+import { getJobOfferStatusLabel } from "#/lib/status-labels";
 
 export type JobOffer = AdminJobOfferListItem;
 
@@ -74,9 +71,7 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     accessorKey: "paymentFlow",
     header: "Payment",
     cell: ({ row }) => (
-      <Badge variant="outline">
-        {getPaymentFlowLabel(row.original.paymentFlow)}
-      </Badge>
+      <Badge variant="outline">{row.original.paymentFlow}</Badge>
     ),
   },
   {

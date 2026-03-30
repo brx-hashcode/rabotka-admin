@@ -83,6 +83,21 @@ export type AdminProfilePaymentRequest = {
   updatedAt: string;
 };
 
+export type AdminProfileWalletTransaction = {
+  id: string;
+  walletId: string;
+  type: string;
+  amount: number;
+  referenceType: string | null;
+  referenceId: string | null;
+  createdAt: string;
+};
+
+export type AdminProfileWallet = {
+  balance: number;
+  transactions: AdminProfileWalletTransaction[];
+};
+
 export type AdminProfileMessage = {
   id: string;
   direction: "INBOUND" | "OUTBOUND";
@@ -190,18 +205,6 @@ export class AdminProfilesController extends AdminBaseController {
     return this.patch<AdminProfileDetailResponse>(url, data);
   }
 
-  async confirmPayment(
-    id: string,
-    decision: "ACCEPTED" | "REJECTED",
-    reason?: string,
-  ): Promise<AdminProfileDetailResponse> {
-    const url = this.createURL(
-      `/admin/profiles/${id}/confirm-payment`,
-      new URLSearchParams(),
-    );
-    return this.patch<AdminProfileDetailResponse>(url, { decision, reason });
-  }
-
   async getLogs(id: string): Promise<AdminLogEntry[]> {
     const url = this.createURL(
       `/admin/profiles/${id}/logs`,
@@ -216,6 +219,14 @@ export class AdminProfilesController extends AdminBaseController {
       new URLSearchParams(),
     );
     return this.get<AdminProfilePaymentRequest[]>(url);
+  }
+
+  async getWallet(id: string): Promise<AdminProfileWallet> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/wallet`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminProfileWallet>(url);
   }
 
   async getMessages(id: string): Promise<AdminProfileMessage[]> {
@@ -254,9 +265,9 @@ export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
 export const updateProfileStatus =
   controller.updateProfileStatus.bind(controller);
-export const confirmPayment = controller.confirmPayment.bind(controller);
 export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const getProfileWallet = controller.getWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);

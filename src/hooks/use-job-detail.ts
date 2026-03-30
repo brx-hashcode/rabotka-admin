@@ -4,7 +4,6 @@ import {
   getJobOfferById,
   updateJobOffer,
   updateJobOfferStatus,
-  confirmJobPayment,
   deleteJobOffer,
   type AdminJobOfferDetailResponse,
   type AdminUpdateJobOfferParams,
@@ -54,17 +53,6 @@ export function useJobDetail(jobId: string) {
     },
   });
 
-  const confirmPaymentMutation = useMutation({
-    mutationFn: () => confirmJobPayment(jobId),
-    onSuccess: (data) => {
-      queryClient.setQueryData<AdminJobOfferDetailResponse>(queryKey, data);
-      toast.success("Payment confirmed — job offer is now active");
-    },
-    onError: () => {
-      toast.error("Failed to confirm payment");
-    },
-  });
-
   return {
     job: query.data ?? null,
     isLoading: query.isLoading,
@@ -75,8 +63,6 @@ export function useJobDetail(jobId: string) {
     isUpdating: updateMutation.isPending,
     updateStatus: updateStatusMutation.mutateAsync,
     isUpdatingStatus: updateStatusMutation.isPending,
-    confirmPayment: confirmPaymentMutation.mutateAsync,
-    isConfirmingPayment: confirmPaymentMutation.isPending,
     deleteJob: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
   };
