@@ -3,9 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { EyeIcon, MoreHorizontal } from "lucide-react";
 import {
-  IconSend,
   IconBrandWhatsapp,
-  IconCreditCard,
   IconPlayerPlay,
   IconPlayerPause,
 } from "@tabler/icons-react";
@@ -19,14 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
-import { PaymentVerificationModal } from "#/pages/profile-detail/components/payment-verification-modal";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
 import {
   sendVerificationLink,
   updateProfileStatus,
-  confirmPayment,
 } from "#/lib/api/profiles-controller";
-import { createPaymentLink } from "#/lib/api/payment-requests-controller";
 
 type ProfileRowActionsProps = Readonly<{
   profile: AdminProfileListItem;
@@ -37,8 +32,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   const queryClient = useQueryClient();
 
   const [verifLinkOpen, setVerifLinkOpen] = useState(false);
-  const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
-  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [activateOpen, setActivateOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
 
@@ -50,32 +43,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
     onSuccess: () => {
       setVerifLinkOpen(false);
       toast.success("Verification link sent via WhatsApp.");
-      invalidate();
-    },
-    onError: (error) => toast.error(error.message),
-  });
-
-  const paymentLinkMutation = useMutation({
-    mutationFn: () => createPaymentLink(profile.id),
-    onSuccess: () => {
-      setPaymentLinkOpen(false);
-      toast.success("Payment link sent via WhatsApp.");
-    },
-    onError: (error) => toast.error(error.message),
-  });
-
-  const confirmPaymentMutation = useMutation({
-    mutationFn: (data: {
-      decision: "ACCEPTED" | "REJECTED";
-      reason?: string;
-    }) => confirmPayment(profile.id, data.decision, data.reason),
-    onSuccess: (_, variables) => {
-      setConfirmPaymentOpen(false);
-      if (variables.decision === "ACCEPTED") {
-        toast.success("Payment confirmed. Profile is now active.");
-      } else {
-        toast.success("Payment rejected.");
-      }
       invalidate();
     },
     onError: (error) => toast.error(error.message),
@@ -102,12 +69,8 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   });
 
   const canSendVerifLink = !profile.whatsappConnected;
-  const canSendPaymentLink = profile.status === "PENDING_ACTIVATION";
-  const canConfirmPayment = profile.status === "PENDING_ACTIVATION";
   const canActivate =
-    profile.status !== "ACTIVE" &&
-    profile.status !== "BANNED" &&
-    profile.status !== "PENDING_ACTIVATION";
+    profile.status !== "ACTIVE" && profile.status !== "BANNED";
   const canDeactivate = profile.status === "ACTIVE";
 
   return (
@@ -132,28 +95,12 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
             View
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
-
           <DropdownMenuItem
             disabled={!canSendVerifLink}
             onClick={() => canSendVerifLink && setVerifLinkOpen(true)}
           >
             <IconBrandWhatsapp className="size-4" />
             Send verification link
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canSendPaymentLink}
-            onClick={() => canSendPaymentLink && setPaymentLinkOpen(true)}
-          >
-            <IconSend className="size-4" />
-            Send payment link
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canConfirmPayment}
-            onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
-          >
-            <IconCreditCard className="size-4" />
-            Confirm payment
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
@@ -184,24 +131,6 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
         onConfirm={() => verifLinkMutation.mutate()}
         isPending={verifLinkMutation.isPending}
         variant="default"
-      />
-      <ConfirmDialog
-        open={paymentLinkOpen}
-        onOpenChange={setPaymentLinkOpen}
-        title="Send payment link"
-        description="This will generate a payment link and send it to the profile via WhatsApp."
-        actionLabel="Send via WhatsApp"
-        onConfirm={() => paymentLinkMutation.mutate()}
-        isPending={paymentLinkMutation.isPending}
-        variant="default"
-      />
-      <PaymentVerificationModal
-        open={confirmPaymentOpen}
-        onOpenChange={setConfirmPaymentOpen}
-        onSubmit={(decision, reason) =>
-          confirmPaymentMutation.mutate({ decision, reason })
-        }
-        isPending={confirmPaymentMutation.isPending}
       />
       <ConfirmDialog
         open={activateOpen}

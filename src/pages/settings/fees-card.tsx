@@ -14,9 +14,12 @@ type FormState = {
   "fees.employer_cancel_score_deduction": string;
   "fees.employer_ghost_score_deduction": string;
   "fees.billing_block_threshold": string;
-  "fees.job_posting_fee_fcfa": string;
-  "fees.application_fee_fcfa": string;
   "fees.max_concurrent_applications": string;
+  "fees.contact_unlock_fee_employer": string;
+  "fees.contact_unlock_fee_worker": string;
+  "fees.contact_unlock_expiry_hours": string;
+  "fees.welcome_credit_worker": string;
+  "fees.welcome_credit_employer": string;
 };
 
 const EMPTY: FormState = {
@@ -27,9 +30,12 @@ const EMPTY: FormState = {
   "fees.employer_cancel_score_deduction": "",
   "fees.employer_ghost_score_deduction": "",
   "fees.billing_block_threshold": "",
-  "fees.job_posting_fee_fcfa": "",
-  "fees.application_fee_fcfa": "",
   "fees.max_concurrent_applications": "",
+  "fees.contact_unlock_fee_employer": "",
+  "fees.contact_unlock_fee_worker": "",
+  "fees.contact_unlock_expiry_hours": "",
+  "fees.welcome_credit_worker": "",
+  "fees.welcome_credit_employer": "",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -129,8 +135,8 @@ export function FeesCard() {
 
       <Separator />
 
-      <CardContent className="pt-6">
-        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+      <CardContent>
+        <p className="pt-6 text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
           worker
         </p>
         <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
@@ -194,9 +200,65 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Platform thresholds & fees
+          Contact unlock
         </p>
-        <div className="grid grid-cols-2  gap-x-6 gap-y-5 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <FieldLabel>Unlock fee – Employer</FieldLabel>
+            <NumericInput
+              value={form["fees.contact_unlock_fee_employer"]}
+              onChange={(v) => set("fees.contact_unlock_fee_employer", v)}
+              suffix="FCFA"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Unlock fee – Worker</FieldLabel>
+            <NumericInput
+              value={form["fees.contact_unlock_fee_worker"]}
+              onChange={(v) => set("fees.contact_unlock_fee_worker", v)}
+              suffix="FCFA"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Unlock expiry</FieldLabel>
+            <NumericInput
+              value={form["fees.contact_unlock_expiry_hours"]}
+              onChange={(v) => set("fees.contact_unlock_expiry_hours", v)}
+              suffix="h"
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Welcome credit
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <FieldLabel>Welcome credit – Worker</FieldLabel>
+            <NumericInput
+              value={form["fees.welcome_credit_worker"]}
+              onChange={(v) => set("fees.welcome_credit_worker", v)}
+              suffix="FCFA"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Welcome credit – Employer</FieldLabel>
+            <NumericInput
+              value={form["fees.welcome_credit_employer"]}
+              onChange={(v) => set("fees.welcome_credit_employer", v)}
+              suffix="FCFA"
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Platform thresholds
+        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
             <FieldLabel>Minimum reliability score</FieldLabel>
             <NumericInput
@@ -210,22 +272,6 @@ export function FeesCard() {
             <NumericInput
               value={form["fees.billing_block_threshold"]}
               onChange={(v) => set("fees.billing_block_threshold", v)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <FieldLabel>Job posting fee</FieldLabel>
-            <NumericInput
-              value={form["fees.job_posting_fee_fcfa"]}
-              onChange={(v) => set("fees.job_posting_fee_fcfa", v)}
-              suffix="FCFA"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <FieldLabel>Application fee</FieldLabel>
-            <NumericInput
-              value={form["fees.application_fee_fcfa"]}
-              onChange={(v) => set("fees.application_fee_fcfa", v)}
-              suffix="FCFA"
             />
           </div>
         </div>
