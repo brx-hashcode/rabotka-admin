@@ -46,7 +46,7 @@ export function MatchingCard() {
       <Separator />
 
       <CardContent>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 pt-6">
           <div className="space-y-1">
             <Label htmlFor="use-embeddings" className="text-sm font-medium">
               Enable embeddings

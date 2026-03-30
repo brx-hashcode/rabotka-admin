@@ -22,7 +22,6 @@ const DRIVER_LABELS: Record<StorageDriver, string> = {
   VERCEL_BLOB: "Vercel Blob",
 };
 
-// All keys that belong to each driver (excluding the storage.driver key itself)
 const DRIVER_KEYS: Record<StorageDriver, string[]> = {
   S3: [
     "storage.s3.bucket",
@@ -92,7 +91,6 @@ export function StorageCard() {
   const { configs, isLoading, saveChanges, isSaving } =
     useSystemConfigCategory("STORAGE");
 
-  // form holds key → value for every storage key
   const [form, setForm] = useState<Record<string, string>>({});
   const [initial, setInitial] = useState<Record<string, string>>({});
   const [driver, setDriver] = useState<StorageDriver>("S3");
@@ -103,7 +101,6 @@ export function StorageCard() {
     const data: Record<string, string> = {};
     for (const item of configs) {
       if (item.key === "storage.driver") continue;
-      // Secret fields come as '***' — show empty so user types new value
       data[item.key] = item.isSecret ? "" : item.value;
     }
     setForm(data);
@@ -131,7 +128,6 @@ export function StorageCard() {
     for (const key of DRIVER_KEYS[driver]) {
       const value = form[key] ?? "";
       const cfg = configs.find((c) => c.key === key);
-      // Skip blank secret inputs (means "don't change")
       if (cfg?.isSecret && value === "") continue;
       payload[key] = value;
     }
@@ -170,9 +166,8 @@ export function StorageCard() {
 
       <Separator />
 
-      <CardContent className="pt-6">
-        {/* Provider selector */}
-        <div className="mb-6 max-w-xs space-y-1.5">
+      <CardContent>
+        <div className="mb-6 max-w-xs space-y-1.5 pt-6">
           <FieldLabel>Provider</FieldLabel>
           <Select
             value={driver}
