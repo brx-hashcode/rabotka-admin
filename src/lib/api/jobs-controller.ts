@@ -52,6 +52,7 @@ export type AdminUpdateJobOfferParams = {
   description?: string;
   scheduledAt?: string;
   amount?: number;
+  paymentFlow?: string;
   address?: string;
   note?: string;
   quantity?: number;

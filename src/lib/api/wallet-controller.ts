@@ -7,9 +7,8 @@ export type AdminWalletInfo = {
   pendingCount: number;
   failedCount: number;
   revenueByType: {
-    registration: number;
-    jobPosting: number;
     penalty: number;
+    contactUnlock: number;
   };
 };
 

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   IconWallet,
-  IconBriefcase,
   IconGavel,
   IconLock,
 } from "@tabler/icons-react";
@@ -122,24 +121,18 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
   const balance = data?.balance ?? 0;
   const transactions = data?.transactions ?? [];
 
-  const jobSpend = sumByType(transactions, "JOB_POSTING_DEBIT");
   const penaltySpend = sumByType(transactions, "PENALTY_DEBIT");
   const unlockSpend = sumByType(transactions, "CONTACT_UNLOCK_DEBIT");
 
   return (
     <div className="space-y-6">
       {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard
           icon={IconWallet}
           label="Wallet balance"
           value={formatAmount(balance)}
           highlight
-        />
-        <StatCard
-          icon={IconBriefcase}
-          label="Job posting spend"
-          value={formatAmount(jobSpend)}
         />
         <StatCard
           icon={IconGavel}
