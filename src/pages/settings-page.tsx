@@ -3,6 +3,7 @@ import { FeesCard } from "./settings/fees-card";
 import { MatchingCard } from "./settings/matching-card";
 import { TwilioCard } from "./settings/twilio-card";
 import { StorageCard } from "./settings/storage-card";
+import { MonetbilCard } from "./settings/monetbil-card";
 
 export default function SettingsPage() {
   return (
@@ -12,6 +13,7 @@ export default function SettingsPage() {
       <MatchingCard />
       <TwilioCard />
       <StorageCard />
+      <MonetbilCard />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 import {
@@ -27,6 +28,19 @@ const ENTITY_COLORS: Record<string, string> = {
   penalty: "bg-red-500",
 };
 
+function getNotificationHref(entityType: string, entityId: string): string | null {
+  switch (entityType) {
+    case "profile":     return `/profiles/${entityId}`;
+    case "job-offer":   return `/jobs/${entityId}`;
+    case "application": return `/applications/${entityId}`;
+    case "penalty":     return `/penalties/${entityId}`;
+    case "claim":       return "/claim";
+    case "event":       return "/events";
+    case "payment":     return "/wallet";
+    default:            return null;
+  }
+}
+
 function timeAgo(timestamp: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(timestamp).getTime()) / 1000,
@@ -46,6 +60,7 @@ export function NotificationBell() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { notifications, unreadCount, markAllRead, clearNotifications } =
     useSocketStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -118,6 +133,11 @@ export function NotificationBell() {
                   <NotificationItem
                     key={`${notif.timestamp}-${i}`}
                     notification={notif}
+                    onClick={() => {
+                      const href = getNotificationHref(notif.entityType, notif.entityId);
+                      if (href) navigate({ to: href });
+                      setIsOpen(false);
+                    }}
                   />
                 ))}
               </div>
@@ -131,13 +151,21 @@ export function NotificationBell() {
 
 function NotificationItem({
   notification,
-}: Readonly<{ notification: AdminNotificationPayload }>) {
+  onClick,
+}: Readonly<{ notification: AdminNotificationPayload; onClick?: () => void }>) {
   const label =
     ENTITY_LABELS[notification.entityType] ?? notification.entityType;
   const dotColor = ENTITY_COLORS[notification.entityType] ?? "bg-gray-500";
 
   return (
-    <div className="flex gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
+    <button
+      type="button"
+      className={cn(
+        "flex w-full gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
+        onClick ? "cursor-pointer" : "cursor-default",
+      )}
+      onClick={onClick}
+    >
       <div className="mt-1 shrink-0">
         <span className={cn("block h-2.5 w-2.5 rounded-full", dotColor)} />
       </div>
@@ -155,6 +183,6 @@ function NotificationItem({
           </span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
