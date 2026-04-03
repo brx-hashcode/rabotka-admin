@@ -6,6 +6,7 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 const config = defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd());
@@ -33,6 +34,7 @@ const config = defineConfig(({mode}) => {
     tailwindcss(),
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     viteReact(),
+    ViteImageOptimizer(),
   ].filter(Boolean),
 }
 });
