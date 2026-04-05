@@ -89,8 +89,8 @@ export function ContactCard() {
 
       <Separator />
 
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+      <CardContent>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 pt-6">
           <div className="space-y-1.5">
             <FieldLabel>Contact Email</FieldLabel>
             <Input
@@ -121,11 +121,13 @@ export function ContactCard() {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Orange Money Number</FieldLabel>
+            <FieldLabel>MTN Money Number</FieldLabel>
             <Input
               value={form["contact.orange_money_number"]}
-              onChange={(e) => set("contact.orange_money_number", e.target.value)}
-              placeholder="06 000 0000"
+              onChange={(e) =>
+                set("contact.orange_money_number", e.target.value)
+              }
+              placeholder="+242 06 000 0000"
             />
           </div>
 
@@ -133,8 +135,10 @@ export function ContactCard() {
             <FieldLabel>Airtel Money Number</FieldLabel>
             <Input
               value={form["contact.airtel_money_number"]}
-              onChange={(e) => set("contact.airtel_money_number", e.target.value)}
-              placeholder="07 000 0000"
+              onChange={(e) =>
+                set("contact.airtel_money_number", e.target.value)
+              }
+              placeholder="+242 05 000 0000"
             />
           </div>
         </div>

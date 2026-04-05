@@ -1,5 +1,5 @@
 import type { AdminApplicationDetailResponse } from "#/lib/api/applications-controller";
-import { getApplicationStatusLabel, getPaymentFlowLabel } from "#/lib/status-labels";
+import { getApplicationStatusLabel } from "#/lib/status-labels";
 
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
@@ -67,7 +67,7 @@ export function ApplicationInfo({ application }: Readonly<Props>) {
           <div className="space-y-1.5">
             <FieldLabel>Payment Flow</FieldLabel>
             <FieldValue>
-              {getPaymentFlowLabel(application.jobPaymentFlow)}
+              {application.jobPaymentFlow}
             </FieldValue>
           </div>
 

@@ -35,12 +35,6 @@ export const APPLICATION_STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Cancelled",
 } as const;
 
-export const PAYMENT_FLOW_LABELS: Record<string, string> = {
-  HOURLY: "Hourly",
-  DAILY: "Daily",
-  MONTHLY: "Monthly",
-} as const;
-
 export const PENALTY_PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Paid",
   unpaid: "Unpaid",
@@ -69,8 +63,4 @@ export function getJobOfferStatusLabel(status: string): string {
 
 export function getApplicationStatusLabel(status: string): string {
   return APPLICATION_STATUS_LABELS[status] ?? status;
-}
-
-export function getPaymentFlowLabel(paymentFlow: string): string {
-  return PAYMENT_FLOW_LABELS[paymentFlow] ?? paymentFlow;
 }

@@ -63,7 +63,6 @@ export type AdminJobOffersListParams = {
   limit?: number;
   q?: string;
   status?: string[];
-  payment_flow?: string[];
 };
 
 export class AdminJobOffersController extends AdminBaseController {
@@ -75,8 +74,6 @@ export class AdminJobOffersController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.q) searchParams.q = params.q;
     if (params.status?.length) searchParams.status = params.status;
-    if (params.payment_flow?.length)
-      searchParams.payment_flow = params.payment_flow;
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/job-offers", query);
@@ -113,14 +110,6 @@ export class AdminJobOffersController extends AdminBaseController {
     return this.patch<AdminJobOfferDetailResponse>(url, { status });
   }
 
-  async confirmJobPayment(id: string): Promise<AdminJobOfferDetailResponse> {
-    const url = this.createURL(
-      `/admin/job-offers/${id}/confirm-payment`,
-      new URLSearchParams(),
-    );
-    return this.post<AdminJobOfferDetailResponse>(url, {});
-  }
-
   async deleteJobOffer(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/job-offers/${id}`,
@@ -135,5 +124,4 @@ export const getJobOffersList = controller.getList.bind(controller);
 export const getJobOfferById = controller.getById.bind(controller);
 export const updateJobOffer = controller.updateJobOffer.bind(controller);
 export const updateJobOfferStatus = controller.updateJobOfferStatus.bind(controller);
-export const confirmJobPayment = controller.confirmJobPayment.bind(controller);
 export const deleteJobOffer = controller.deleteJobOffer.bind(controller);

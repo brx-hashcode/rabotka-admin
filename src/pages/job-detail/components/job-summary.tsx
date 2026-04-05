@@ -7,10 +7,7 @@ import {
 } from "@tabler/icons-react";
 
 import type { AdminJobOfferDetailResponse } from "#/lib/api/jobs-controller";
-import {
-  getJobOfferStatusLabel,
-  getPaymentFlowLabel,
-} from "#/lib/status-labels";
+import { getJobOfferStatusLabel } from "#/lib/status-labels";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
@@ -57,10 +54,10 @@ export function JobSummary({ job }: Readonly<Props>) {
         <Card className="gap-2 py-4">
           <CardContent className="px-4">
             <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Payment Flow
+              Pay type
             </p>
             <Badge variant="outline" className="mt-1">
-              {getPaymentFlowLabel(job.paymentFlow)}
+              {job.paymentFlow}
             </Badge>
           </CardContent>
         </Card>

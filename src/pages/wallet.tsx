@@ -23,12 +23,13 @@ const TX_TYPE_OPTIONS = [
   { value: "CREDIT_REGISTRATION", label: "Registration" },
   { value: "CREDIT_JOB_POSTING", label: "Job Posting" },
   { value: "CREDIT_COMMISSION", label: "Commission" },
+  { value: "CONTACT_UNLOCK_PAYMENT", label: "Contact Unlock" },
+  { value: "WELCOME_CREDIT", label: "Welcome Credit" },
 ];
 
 const PAYMENT_TYPE_OPTIONS = [
-  { value: "REGISTRATION", label: "Registration" },
-  { value: "JOB_POSTING", label: "Job Posting" },
   { value: "PENALTY", label: "Penalty" },
+  { value: "CONTACT_UNLOCK", label: "Contact Unlock" },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [

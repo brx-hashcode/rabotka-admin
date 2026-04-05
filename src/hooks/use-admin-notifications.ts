@@ -19,12 +19,32 @@ const ENTITY_QUERY_KEYS: Record<string, string[][]> = {
   penalty: [["admin", "penalties"]],
 };
 
+function requestNotificationPermission() {
+  if (typeof Notification !== "undefined" && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
+function sendBrowserNotification(payload: AdminNotificationPayload) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  try {
+    new Notification(payload.title, {
+      body: payload.message,
+      icon: "/favicon.ico",
+      tag: `${payload.entityType}-${payload.entityId}`,
+    });
+  } catch {
+    // Notification API not supported or blocked
+  }
+}
+
 export function useAdminNotifications() {
   const queryClient = useQueryClient();
   const { socket, connect } = useSocketStore();
 
   useEffect(() => {
     connect();
+    requestNotificationPermission();
   }, [connect]);
 
   useEffect(() => {
@@ -32,6 +52,7 @@ export function useAdminNotifications() {
 
     const handleNotification = (payload: AdminNotificationPayload) => {
       toast(payload.title, { description: payload.message });
+      sendBrowserNotification(payload);
 
       const keys = ENTITY_QUERY_KEYS[payload.entityType] ?? [];
       for (const key of keys) {

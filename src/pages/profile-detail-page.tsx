@@ -3,8 +3,6 @@ import {
   IconShieldCheck,
   IconPlayerPlay,
   IconPlayerPause,
-  IconCreditCard,
-  IconSend,
   IconBrandWhatsapp,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -34,10 +32,8 @@ import { ProfileMessagesContent } from "./profile-detail/components/profile-mess
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
-import { PaymentVerificationModal } from "./profile-detail/components/payment-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
-import { createPaymentLink } from "#/lib/api/payment-requests-controller";
 import { sendVerificationLink } from "#/lib/api/profiles-controller";
 
 type ProfileTab = "general" | "kyc" | "payments" | "messages";
@@ -70,14 +66,10 @@ export default function ProfileDetailPage({
     isVerifying,
     updateStatus: submitStatus,
     isUpdatingStatus,
-    confirmPayment: submitConfirmPayment,
-    isConfirmingPayment,
     logs,
     isLoadingLogs,
   } = useProfileDetail(profileId);
 
-  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
-  const [sendPaymentLinkOpen, setSendPaymentLinkOpen] = useState(false);
   const [sendVerifLinkOpen, setSendVerifLinkOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -86,17 +78,6 @@ export default function ProfileDetailPage({
   >("ACTIVE");
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const { mutate: sendPaymentLink, isPending: isSendingLink } = useMutation({
-    mutationFn: () => createPaymentLink(profileId),
-    onSuccess: () => {
-      setSendPaymentLinkOpen(false);
-      toast.success("Payment link sent via WhatsApp.");
-    },
-    onError: () => {
-      toast.error("Failed to send payment link.");
-    },
-  });
 
   const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
     mutationFn: () => sendVerificationLink(profileId),
@@ -135,14 +116,6 @@ export default function ProfileDetailPage({
     setStatusModalOpen(false);
   };
 
-  const handleConfirmPayment = async (
-    decision: "ACCEPTED" | "REJECTED",
-    reason?: string,
-  ) => {
-    await submitConfirmPayment({ decision, reason });
-    setConfirmPaymentOpen(false);
-  };
-
   const handlePreviewDoc = (doc: ViewerDocument) => {
     setDrawerDoc(doc);
     setDrawerOpen(true);
@@ -155,8 +128,6 @@ export default function ProfileDetailPage({
     profile.status !== "ACTIVE" &&
     profile.status !== "BANNED";
   const canDeactivate = profile?.status === "ACTIVE";
-  const canConfirmPayment = profile?.status === "PENDING_ACTIVATION";
-  const canSendPaymentLink = profile?.status === "PENDING_ACTIVATION";
   const canSendVerifLink = profile?.whatsappConnected === false;
 
   const tabValue = activeTab ?? "general";
@@ -242,22 +213,6 @@ export default function ProfileDetailPage({
                 Send verification link
               </DropdownMenuItem>
               <DropdownMenuItem
-                disabled={!canSendPaymentLink}
-                onClick={() =>
-                  canSendPaymentLink && setSendPaymentLinkOpen(true)
-                }
-              >
-                <IconSend className="size-4" />
-                Send payment link
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canConfirmPayment}
-                onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
-              >
-                <IconCreditCard className="size-4" />
-                Confirm payment
-              </DropdownMenuItem>
-              <DropdownMenuItem
                 disabled={!canVerifyKyc}
                 onClick={() => canVerifyKyc && setKycModalOpen(true)}
               >
@@ -266,9 +221,9 @@ export default function ProfileDetailPage({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                disabled={!canActivate || canConfirmPayment}
+                disabled={!canActivate}
                 onClick={() => {
-                  if (!canActivate || canConfirmPayment) return;
+                  if (!canActivate) return;
                   setStatusModalTarget("ACTIVE");
                   setStatusModalOpen(true);
                 }}
@@ -315,10 +270,7 @@ export default function ProfileDetailPage({
         </TabsContent>
 
         <TabsContent value="payments">
-          <ProfilePaymentsContent
-            profileId={profileId}
-            onPreviewDoc={handlePreviewDoc}
-          />
+          <ProfilePaymentsContent profileId={profileId} />
         </TabsContent>
 
         <TabsContent value="messages">
@@ -338,24 +290,6 @@ export default function ProfileDetailPage({
         onConfirm={() => sendVerifLink()}
         isPending={isSendingVerifLink}
         variant="default"
-      />
-
-      <ConfirmDialog
-        open={sendPaymentLinkOpen}
-        onOpenChange={setSendPaymentLinkOpen}
-        title="Send payment link"
-        description="This will generate a payment link and send it to the profile via WhatsApp. The previous link (if any) will still be valid."
-        actionLabel="Send via WhatsApp"
-        onConfirm={() => sendPaymentLink()}
-        isPending={isSendingLink}
-        variant="default"
-      />
-
-      <PaymentVerificationModal
-        open={confirmPaymentOpen}
-        onOpenChange={setConfirmPaymentOpen}
-        onSubmit={handleConfirmPayment}
-        isPending={isConfirmingPayment}
       />
 
       {canVerifyKyc && (

@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import {
   IconPlayerPlay,
   IconPlayerPause,
-  IconCreditCard,
   IconTrash,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -41,15 +40,12 @@ export default function JobDetailPage({
     isUpdating,
     updateStatus,
     isUpdatingStatus,
-    confirmPayment,
-    isConfirmingPayment,
     deleteJob,
     isDeleting,
   } = useJobDetail(jobId);
 
   const [activateOpen, setActivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isEditable = job?.status === "ACTIVE";
@@ -58,17 +54,12 @@ export default function JobDetailPage({
     () =>
       job != null &&
       job.status !== "ACTIVE" &&
-      job.status !== "PENDING_PAYMENT" &&
       job.status !== "COMPLETED" &&
       job.status !== "CANCELLED",
     [job?.status],
   );
   const canDeactivate = useMemo(
     () => job?.status === "ACTIVE" || job?.status === "PARTIALLY_FILLED",
-    [job?.status],
-  );
-  const canConfirmPayment = useMemo(
-    () => job?.status === "PENDING_PAYMENT",
     [job?.status],
   );
 
@@ -129,14 +120,6 @@ export default function JobDetailPage({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem
-              disabled={!canConfirmPayment}
-              onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
-            >
-              <IconCreditCard className="size-4" />
-              Confirm payment
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
               disabled={!canActivate}
               onClick={() => canActivate && setActivateOpen(true)}
             >
@@ -179,19 +162,6 @@ export default function JobDetailPage({
       <section>
         <JobApplicationsTable applications={job.applications} />
       </section>
-
-      <ConfirmDialog
-        open={confirmPaymentOpen}
-        onOpenChange={setConfirmPaymentOpen}
-        title="Confirm payment"
-        description="This will confirm the payment and activate the job offer, making it visible to workers."
-        actionLabel="Confirm & Activate"
-        onConfirm={() =>
-          confirmPayment().then(() => setConfirmPaymentOpen(false))
-        }
-        isPending={isConfirmingPayment}
-        variant="default"
-      />
 
       <ConfirmDialog
         open={activateOpen}

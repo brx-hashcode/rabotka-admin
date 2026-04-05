@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { formatXAF } from "#/lib/utils";
 import {
   getMetrics,
   type DashboardMetrics,
@@ -12,12 +11,12 @@ import {
 function buildCards(m: DashboardMetrics): DashboardMetricCard[] {
   return [
     {
-      id: "revenue",
-      title: "Revenue generated",
-      value: formatXAF(m.revenue),
-      trend: m.revenueTrend != null ? (m.revenueTrend >= 0 ? "up" : "down") : null,
-      trendPercentage: m.revenueTrend != null ? Math.abs(m.revenueTrend) : null,
-      description: "Total revenue from paid job postings and penalties.",
+      id: "assignments",
+      title: "Assignments made",
+      value: m.assignmentsCount.toLocaleString(),
+      trend: m.assignmentsTrend != null ? (m.assignmentsTrend >= 0 ? "up" : "down") : null,
+      trendPercentage: m.assignmentsTrend != null ? Math.abs(m.assignmentsTrend) : null,
+      description: "Total employer-worker placements confirmed on the platform.",
     },
     {
       id: "profiles",

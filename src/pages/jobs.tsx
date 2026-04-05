@@ -3,7 +3,6 @@ import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   jobColumns,
   jobStatusOptions,
-  paymentFlowOptions,
   type JobOffer,
 } from "#/features/jobs";
 import { useJobsList } from "#/hooks/use-jobs-list";
@@ -18,11 +17,6 @@ function JobsTableHeader({
         searchPlaceholder="Filter jobs..."
         filters={[
           { id: "status", label: "Status", options: jobStatusOptions },
-          {
-            id: "payment_flow",
-            label: "Payment flow",
-            options: paymentFlowOptions,
-          },
         ]}
         table={table}
       />

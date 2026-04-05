@@ -7,10 +7,7 @@ import {
   getJobOffersList,
   type AdminJobOfferListItem,
 } from "#/lib/api/jobs-controller";
-import {
-  getJobOfferStatusLabel,
-  getPaymentFlowLabel,
-} from "#/lib/status-labels";
+import { getJobOfferStatusLabel } from "#/lib/status-labels";
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "#/components/ui/button";
@@ -97,16 +94,6 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
         </span>
       );
     },
-  },
-  {
-    id: "paymentFlow",
-    accessorKey: "paymentFlow",
-    header: "Payment",
-    cell: ({ row }) => (
-      <Badge variant="outline">
-        {getPaymentFlowLabel(row.original.paymentFlow)}
-      </Badge>
-    ),
   },
   {
     id: "createdAt",

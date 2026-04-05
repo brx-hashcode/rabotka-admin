@@ -124,7 +124,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-20 resize-none"
-              rows={4}
+              rows={16}
               disabled={disabled}
             />
           </div>

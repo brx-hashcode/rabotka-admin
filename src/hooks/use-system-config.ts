@@ -24,7 +24,7 @@ export function useSystemConfigCategory(category: ConfigCategory) {
     mutationFn: ({ key, value }: { key: string; value: string }) =>
       updateSystemConfig(key, value),
     onSuccess: (_data, variables) => {
-      // Optimistically update the cached item so UI reflects immediately
+      
       queryClient.setQueryData<SystemConfigItem[]>(queryKey, (prev) =>
         prev?.map((item) =>
           item.key === variables.key
@@ -33,16 +33,8 @@ export function useSystemConfigCategory(category: ConfigCategory) {
         ),
       );
     },
-    onError: (error) => {
-      toast.error(error.message);
-    },
   });
 
-  /**
-   * Save a batch of key→value pairs in parallel.
-   * Skips keys whose value hasn't changed from the fetched data.
-   * Shows a single success toast when all patches succeed.
-   */
   async function saveChanges(changes: Record<string, string>) {
     const current = query.data ?? [];
     const pairs = Object.entries(changes).filter(([key, value]) => {
@@ -52,11 +44,15 @@ export function useSystemConfigCategory(category: ConfigCategory) {
 
     if (pairs.length === 0) return;
 
-    await Promise.all(
-      pairs.map(([key, value]) => updateMutation.mutateAsync({ key, value })),
-    );
-
-    toast.success("Settings saved");
+    try {
+      await Promise.all(
+        pairs.map(([key, value]) => updateMutation.mutateAsync({ key, value })),
+      );
+      toast.success("Settings saved");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save settings";
+      toast.error(message);
+    }
   }
 
   return {
