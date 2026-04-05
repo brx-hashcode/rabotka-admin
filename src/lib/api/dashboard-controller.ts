@@ -7,8 +7,8 @@ export type JobActivityDataPoint = {
 };
 
 export type DashboardMetrics = {
-  revenue: number;
-  revenueTrend: number | null;
+  assignmentsCount: number;
+  assignmentsTrend: number | null;
   profilesCount: number;
   profilesTrend: number | null;
   jobsCount: number;

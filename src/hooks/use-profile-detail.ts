@@ -5,7 +5,6 @@ import {
   updateProfile,
   verifyProfile,
   updateProfileStatus,
-  confirmPayment,
   getProfileLogs,
   type AdminProfileDetailResponse,
   type AdminUpdateProfileParams,
@@ -30,13 +29,8 @@ export function useProfileDetail(profileId: string) {
     enabled: !!profileId,
   });
 
-  const paymentsQueryKey = ["admin", "profiles", profileId, "payment-requests"];
-
   const invalidateLogs = () =>
     queryClient.invalidateQueries({ queryKey: logsQueryKey });
-
-  const invalidatePayments = () =>
-    queryClient.invalidateQueries({ queryKey: paymentsQueryKey });
 
   const updateMutation = useMutation({
     mutationFn: (data: AdminUpdateProfileParams) =>
@@ -77,24 +71,6 @@ export function useProfileDetail(profileId: string) {
     },
   });
 
-  const confirmPaymentMutation = useMutation({
-    mutationFn: (data: { decision: "ACCEPTED" | "REJECTED"; reason?: string }) =>
-      confirmPayment(profileId, data.decision, data.reason),
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
-      invalidateLogs();
-      invalidatePayments();
-      if (variables.decision === "ACCEPTED") {
-        toast.success("Payment confirmed. Profile is now active.");
-      } else {
-        toast.success("Payment rejected.");
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
   return {
     profile: query.data ?? null,
     isLoading: query.isLoading,
@@ -107,8 +83,6 @@ export function useProfileDetail(profileId: string) {
     isVerifying: verifyMutation.isPending,
     updateStatus: statusMutation.mutateAsync,
     isUpdatingStatus: statusMutation.isPending,
-    confirmPayment: confirmPaymentMutation.mutateAsync,
-    isConfirmingPayment: confirmPaymentMutation.isPending,
     logs: logsQuery.data ?? [],
     isLoadingLogs: logsQuery.isLoading,
   };

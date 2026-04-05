@@ -3,7 +3,6 @@ import {
   IconWallet,
   IconCircleCheck,
   IconClock,
-  IconChartBar,
 } from "@tabler/icons-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -64,33 +63,28 @@ export function WalletInfoCard() {
       </StatCard>
 
       <StatCard
-        title="Job Posting Revenue"
-        icon={IconChartBar}
-        isLoading={isLoading}
-      >
-        <p className="text-2xl font-bold">
-          {(data?.revenueByType.jobPosting ?? 0).toLocaleString()} FCFA
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          From job posting fees
-        </p>
-      </StatCard>
-
-      <StatCard
-        title="Penalty & Registration"
+        title="Penalty Revenue"
         icon={IconClock}
         isLoading={isLoading}
       >
         <p className="text-2xl font-bold">
-          {(
-            (data?.revenueByType.penalty ?? 0) +
-            (data?.revenueByType.registration ?? 0)
-          ).toLocaleString()}{" "}
-          FCFA
+          {(data?.revenueByType.penalty ?? 0).toLocaleString()} FCFA
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          {(data?.revenueByType.penalty ?? 0).toLocaleString()} penalty ·{" "}
-          {(data?.revenueByType.registration ?? 0).toLocaleString()} registration
+          From late cancellation penalties
+        </p>
+      </StatCard>
+
+      <StatCard
+        title="Contact Unlock Revenue"
+        icon={IconWallet}
+        isLoading={isLoading}
+      >
+        <p className="text-2xl font-bold">
+          {(data?.revenueByType.contactUnlock ?? 0).toLocaleString()} FCFA
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Via wallet credit &amp; mobile money
         </p>
       </StatCard>
     </div>

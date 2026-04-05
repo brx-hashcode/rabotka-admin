@@ -31,7 +31,7 @@ function formatTrendLabel(
 }
 
 const SKELETON_KEYS = [
-  "skeleton-revenue",
+  "skeleton-assignments",
   "skeleton-profiles",
   "skeleton-jobs",
   "skeleton-applications",

@@ -32,11 +32,11 @@ function SecretInput({
   value,
   onChange,
   placeholder,
-}: {
+}: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-}) {
+}>) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative flex items-center">
@@ -75,7 +75,6 @@ export function TwilioCard() {
     const data = { ...EMPTY };
     for (const item of configs) {
       if (item.key in data) {
-        // Secret fields come back as '***' — show empty so user types new value
         (data as Record<string, string>)[item.key] = item.isSecret
           ? ""
           : item.value;
@@ -94,13 +93,10 @@ export function TwilioCard() {
   }
 
   async function handleSave() {
-    // Only send keys that the user actually typed (skip blank secret fields)
     const payload: Record<string, string> = {};
     for (const [key, value] of Object.entries(form)) {
       const cfg = configs.find((c) => c.key === key);
-      // For secret fields: only send if user typed something
       if (cfg?.isSecret && value === "") continue;
-      // For non-secret fields: send regardless
       payload[key] = value;
     }
     await saveChanges(payload);
@@ -132,8 +128,8 @@ export function TwilioCard() {
 
       <Separator />
 
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+      <CardContent>
+        <div className="grid grid-cols-1 pt-6 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
             <FieldLabel>Account SID</FieldLabel>
             <Input
