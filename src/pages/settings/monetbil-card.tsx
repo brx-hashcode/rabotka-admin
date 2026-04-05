@@ -5,6 +5,13 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 
 type FormState = {
   "monetbil.mode": "PRODUCTION" | "SANDBOX";
@@ -132,37 +139,30 @@ export function MonetbilCard() {
       <Separator />
 
       <CardContent>
-        <div className="pt-6 space-y-5">
-          <div className="space-y-1.5">
-            <FieldLabel>Mode</FieldLabel>
-            <div className="flex gap-2">
-              {(["SANDBOX", "PRODUCTION"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => set("monetbil.mode", mode)}
-                  className={[
-                    "flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-                    form["monetbil.mode"] === mode
-                      ? mode === "PRODUCTION"
-                        ? "border-green-600 bg-green-600/10 text-green-600"
-                        : "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-muted-foreground/40",
-                  ].join(" ")}
-                >
-                  {mode === "PRODUCTION" ? "🟢 Production" : "🧪 Sandbox"}
-                </button>
-              ))}
+        <div className="pt-6">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-5">
+            <div className="space-y-1.5 sm:col-span-1">
+              <FieldLabel>Mode</FieldLabel>
+              <Select
+                value={form["monetbil.mode"]}
+                onValueChange={(v) => set("monetbil.mode", v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue className="uppercase" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SANDBOX">SANDBOX</SelectItem>
+                  <SelectItem value="PRODUCTION">PRODUCTION</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {form["monetbil.mode"] === "PRODUCTION"
+                  ? "Live payments — real money will be charged."
+                  : "Sandbox mode — no real charges. Use test credentials."}
+              </p>
             </div>
-            <p className="text-muted-foreground text-xs">
-              {form["monetbil.mode"] === "PRODUCTION"
-                ? "Live payments — real money will be charged."
-                : "Sandbox mode — no real charges. Use test credentials."}
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <FieldLabel>Service Key</FieldLabel>
               <Input
                 value={form["monetbil.service_key"]}
@@ -171,7 +171,7 @@ export function MonetbilCard() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <FieldLabel>Service Secret</FieldLabel>
               <SecretInput
                 value={form["monetbil.service_secret"]}
