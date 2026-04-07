@@ -44,6 +44,7 @@
     "react-dom": "^19.2.0",
     "react-dropzone": "^15.0.0",
     "react-hook-form": "^7.71.2",
+    "react-markdown": "^10.1.0",
     "react-pdf": "^10.4.1",
     "recharts": "2.15.4",
     "socket.io-client": "^4.8.3",

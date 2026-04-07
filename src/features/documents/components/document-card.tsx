@@ -36,7 +36,7 @@ import {
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import { RenameDocumentModal } from "./rename-document-modal";
 
-function DocIcon({ mimeType }: { mimeType: string }) {
+function DocIcon({ mimeType }: Readonly<{ mimeType: string }>) {
   if (mimeType === "application/pdf")
     return <IconFileTypePdf className="text-red-500 size-10" />;
   if (mimeType.includes("wordprocessingml"))
@@ -48,6 +48,11 @@ function mimeToFileType(mimeType: string): string {
   if (mimeType === "application/pdf") return "pdf";
   if (mimeType.includes("wordprocessingml") || mimeType.includes("msword"))
     return "docx";
+  if (mimeType === "text/markdown" || mimeType === "text/x-markdown") return "md";
+  if (mimeType.startsWith("image/")) {
+    const sub = mimeType.split("/")[1]?.split("+")[0] ?? "";
+    return sub || "image";
+  }
   return "";
 }
 
@@ -97,7 +102,6 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
   return (
     <>
       <div className="bg-card border rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-        {/* Card body */}
         <div className="flex-1 p-4 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <DocIcon mimeType={document.mimeType} />

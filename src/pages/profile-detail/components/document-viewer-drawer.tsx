@@ -1,5 +1,6 @@
-import { Component, useState, useCallback, useMemo } from "react";
+import { Component, useState, useCallback, useMemo, useEffect } from "react";
 import type { ReactNode } from "react";
+import Markdown from "react-markdown";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
   Download,
@@ -7,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Image as ImageIcon,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -28,6 +30,9 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 import { docCategoryLabel, docTypeLabel, formatDate } from "../helpers";
 import { appConfig } from "#/config";
+import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+
+export { isLikelyImageAsset };
 
 function pdfDocumentUrl(fileUrl: string): string {
   const trimmed = fileUrl.trim();
@@ -118,10 +123,12 @@ export type ViewerDocument = {
 };
 
 export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
+  const inferred = isLikelyImageAsset(doc.documentUrl) ? "image" : undefined;
   return {
     url: doc.documentUrl,
     title: docCategoryLabel(doc.documentCategory),
     description: `${docTypeLabel(doc.documentType)} — Uploaded ${formatDate(doc.createdAt)}`,
+    fileType: inferred,
   };
 }
 
@@ -319,7 +326,107 @@ function PdfViewer({ url }: Readonly<{ url: string }>) {
   );
 }
 
-function DocxViewer({ url }: Readonly<{ url: string }>) {
+function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
+  const [zoom, setZoom] = useState(1);
+  const [failed, setFailed] = useState(false);
+  const src = useMemo(() => pdfDocumentUrl(url), [url]);
+
+  if (failed) {
+    return (
+      <DocFallback
+        url={url}
+        reason="Could not load this image. It may be inaccessible or use an unsupported format."
+      />
+    );
+  }
+
+  return (
+    <div
+      className="flex h-full min-h-0 flex-col"
+      style={{ minHeight: "calc(100vh - 160px)" }}
+    >
+      <div className="mb-4 flex shrink-0 flex-col gap-3 rounded-xl border bg-muted/30 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+          <div className="inline-flex items-center rounded-lg border bg-background p-0.5 shadow-xs">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              disabled={zoom <= ZOOM_MIN}
+              onClick={() =>
+                setZoom((z) =>
+                  Math.max(ZOOM_MIN, Math.round((z - ZOOM_STEP) * 100) / 100),
+                )
+              }
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="size-4" />
+            </Button>
+            <span className="min-w-13 px-1 text-center text-xs font-medium tabular-nums text-muted-foreground">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              disabled={zoom >= ZOOM_MAX}
+              onClick={() =>
+                setZoom((z) =>
+                  Math.min(ZOOM_MAX, Math.round((z + ZOOM_STEP) * 100) / 100),
+                )
+              }
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="size-4" />
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() =>
+              globalThis.open(url, "_blank", "noopener,noreferrer")
+            }
+          >
+            <ExternalLink className="size-3.5" />
+            Open
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() =>
+              downloadViaProxy(url, url.split("/").pop() ?? "image")
+            }
+          >
+            <Download className="size-3.5" />
+            Download
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 justify-center overflow-auto rounded-lg border bg-muted/15 p-3 sm:p-4">
+        <div
+          className="inline-block origin-top transition-transform duration-150"
+          style={{ transform: `scale(${zoom})` }}
+        >
+          <img
+            src={src}
+            alt={title}
+            className="max-h-[calc(100vh-280px)] max-w-full rounded-md border bg-background object-contain shadow-md"
+            onError={() => setFailed(true)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   const [failed, setFailed] = useState(false);
   const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
 
@@ -333,14 +440,102 @@ function DocxViewer({ url }: Readonly<{ url: string }>) {
   }
 
   return (
-    <iframe
-      src={officeUrl}
-      title="Document preview"
-      className="w-full"
-      style={{ height: "calc(100vh - 140px)" }}
-      sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
-      onError={() => setFailed(true)}
-    />
+    <div className="flex flex-col h-full min-h-0" style={{ minHeight: "calc(100vh - 160px)" }}>
+      <div className="mb-4 flex shrink-0 flex-col gap-3 rounded-xl border bg-muted/30 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => globalThis.open(url, "_blank", "noopener,noreferrer")}
+          >
+            <ExternalLink className="size-3.5" />
+            Open
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => downloadViaProxy(url, title || (url.split("/").pop() ?? "document"))}
+          >
+            <Download className="size-3.5" />
+            Download
+          </Button>
+        </div>
+      </div>
+      <iframe
+        src={officeUrl}
+        title="Document preview"
+        className="w-full flex-1"
+        style={{ minHeight: "calc(100vh - 260px)" }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
+function MarkdownViewer({ url, title }: Readonly<{ url: string; title: string }>) {
+  const [content, setContent] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setContent(null);
+    setError(false);
+    const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(url)}`;
+    fetch(proxyUrl, { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error("fetch failed");
+        return r.text();
+      })
+      .then(setContent)
+      .catch(() => setError(true));
+  }, [url]);
+
+  if (error) {
+    return <DocFallback url={url} reason="Could not load markdown file." />;
+  }
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 rounded-xl border bg-muted/30 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => globalThis.open(url, "_blank", "noopener,noreferrer")}
+          >
+            <ExternalLink className="size-3.5" />
+            Open
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => downloadViaProxy(url, title || (url.split("/").pop() ?? "document"))}
+          >
+            <Download className="size-3.5" />
+            Download
+          </Button>
+        </div>
+      </div>
+      {content === null ? (
+        <div className="space-y-3 p-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/6" />
+        </div>
+      ) : (
+        <div className="prose prose-sm max-w-none overflow-y-auto dark:prose-invert">
+          <Markdown>{content}</Markdown>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -358,6 +553,8 @@ export function DocumentViewerDrawer({
     fileType === "doc" ||
     document.url.includes(".docx") ||
     document.url.includes(".doc");
+  const isMd = fileType === "md" || document.url.endsWith(".md");
+  const isImage = isLikelyImageAsset(document.url, fileType);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -368,7 +565,11 @@ export function DocumentViewerDrawer({
         <SheetHeader className="shrink-0 space-y-0 border-b bg-muted/15 px-5 py-4 sm:px-6">
           <div className="flex gap-3 sm:gap-4">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
-              <FileText className="size-5" aria-hidden />
+              {isImage ? (
+                <ImageIcon className="size-5" aria-hidden />
+              ) : (
+                <FileText className="size-5" aria-hidden />
+              )}
             </div>
             <div className="min-w-0 flex-1 space-y-1 pr-8 text-left">
               <SheetTitle className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight">
@@ -382,8 +583,14 @@ export function DocumentViewerDrawer({
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-auto p-4 pt-5">
           {open && isPdf && <PdfViewer url={document.url} />}
-          {open && isDocx && <DocxViewer url={document.url} />}
-          {open && !isPdf && !isDocx && (
+          {open && isDocx && <DocxViewer url={document.url} title={document.title} />}
+          {open && isMd && !isPdf && !isDocx && (
+            <MarkdownViewer url={document.url} title={document.title} />
+          )}
+          {open && isImage && !isPdf && !isDocx && !isMd && (
+            <ImageViewer url={document.url} title={document.title} />
+          )}
+          {open && !isPdf && !isDocx && !isMd && !isImage && (
             <DocFallback
               url={document.url}
               reason="This file format cannot be previewed in the browser."

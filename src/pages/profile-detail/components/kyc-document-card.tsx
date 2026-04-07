@@ -8,6 +8,7 @@ import { Badge } from "#/components/ui/badge";
 import { Card } from "#/components/ui/card";
 
 import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
+import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 
 type Props = {
   doc: AdminKycDocumentItem;
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export function KycDocumentCard({ doc, onPreview }: Props) {
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.documentUrl);
+  const isImage = isLikelyImageAsset(doc.documentUrl);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">

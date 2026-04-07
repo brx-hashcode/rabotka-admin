@@ -14,6 +14,7 @@ import { statusBadgeVariant, formatDate } from "../helpers";
 import { KycDocumentCard } from "./kyc-document-card";
 import type { ViewerDocument } from "./document-viewer-drawer";
 import { toKycViewerDoc } from "./document-viewer-drawer";
+import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 
 type Props = {
   profile: AdminProfileDetailResponse;
@@ -117,6 +118,7 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
                     url: img.imageUrl,
                     title: `Verification Image ${index + 1}`,
                     description: `Uploaded by ${img.uploadedBy ?? "Admin"} — ${formatDate(img.createdAt)}`,
+                    fileType: "image",
                   })
                 }
               />
@@ -137,7 +139,7 @@ function VerificationImageCard({
   index: number;
   onPreview: () => void;
 }>) {
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(image.imageUrl);
+  const isImage = isLikelyImageAsset(image.imageUrl);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">

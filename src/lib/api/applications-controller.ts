@@ -48,6 +48,7 @@ export type AdminApplicationDetailResponse = AdminApplicationListItem & {
   employerPhone: string;
   penalties: AdminApplicationPenaltyItem[];
   completionNote: string | null;
+  contractId: string | null;
 };
 
 export type AdminApplicationsListParams = {

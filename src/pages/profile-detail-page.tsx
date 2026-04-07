@@ -28,6 +28,7 @@ import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
+import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
@@ -36,12 +37,13 @@ import { DocumentViewerDrawer } from "./profile-detail/components/document-viewe
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { sendVerificationLink } from "#/lib/api/profiles-controller";
 
-type ProfileTab = "general" | "kyc" | "payments" | "messages";
+type ProfileTab = "general" | "kyc" | "payments" | "invoices" | "messages";
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
   { label: "KYC Information", value: "kyc" },
   { label: "Payments", value: "payments" },
+  { label: "Invoices", value: "invoices" },
   { label: "Messages", value: "messages" },
 ];
 
@@ -271,6 +273,10 @@ export default function ProfileDetailPage({
 
         <TabsContent value="payments">
           <ProfilePaymentsContent profileId={profileId} />
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <ProfileInvoicesContent profileId={profileId} />
         </TabsContent>
 
         <TabsContent value="messages">
