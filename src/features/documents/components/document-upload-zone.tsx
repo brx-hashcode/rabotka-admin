@@ -5,6 +5,7 @@ import {
   IconX,
   IconFileTypePdf,
   IconFileTypeDocx,
+  IconMarkdown,
   IconFile,
 } from "@tabler/icons-react";
 import { cn } from "#/lib/utils";
@@ -18,11 +19,13 @@ type DocumentUploadZoneProps = {
   maxSize?: number;
 };
 
-function FileIcon({ mimeType }: { mimeType: string }) {
+function FileIcon({ mimeType, name }: Readonly<{ mimeType: string; name: string }>) {
   if (mimeType === "application/pdf")
     return <IconFileTypePdf className="text-red-500 size-8" />;
   if (mimeType.includes("wordprocessingml"))
     return <IconFileTypeDocx className="text-blue-500 size-8" />;
+  if (mimeType === "text/markdown" || mimeType === "text/x-markdown" || name.endsWith(".md"))
+    return <IconMarkdown className="text-gray-500 size-8" />;
   return <IconFile className="text-muted-foreground size-8" />;
 }
 
@@ -43,9 +46,9 @@ export function DocumentUploadZone({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "application/pdf": [],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
+      "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "text/plain": [".md"],
     },
     maxSize,
     multiple: false,
@@ -79,7 +82,7 @@ export function DocumentUploadZone({
 
         {hasFile ? (
           <div className="flex items-center gap-3 p-4">
-            <FileIcon mimeType={file.type} />
+            <FileIcon mimeType={file.type} name={file.name} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{file.name}</p>
               <p className="text-muted-foreground text-xs">
@@ -109,7 +112,7 @@ export function DocumentUploadZone({
                 {isDragActive ? "Drop file here" : "Click or drag file here"}
               </p>
               <p className="text-muted-foreground text-xs">
-                PDF or DOCX — Max 20MB
+                PDF, DOCX or Markdown — Max 20MB
               </p>
             </div>
             <Button variant="outline" size="sm" type="button" className="mt-1">

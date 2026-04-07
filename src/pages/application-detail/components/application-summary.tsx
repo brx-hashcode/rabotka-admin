@@ -1,16 +1,21 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   IconMail,
   IconPhone,
   IconExternalLink,
   IconBriefcase,
+  IconFileTypePdf,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import type { AdminApplicationDetailResponse } from "#/lib/api/applications-controller";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { buttonVariants } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
+import { appConfig } from "#/config";
+import { getCsrfToken } from "#/lib/api/csrf-token";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -24,7 +29,38 @@ type Props = {
   application: AdminApplicationDetailResponse;
 };
 
+async function downloadAdminPdf(path: string, filename: string) {
+  const token = getCsrfToken();
+  const headers: Record<string, string> = token ? { "x-csrf-token": token } : {};
+  const res = await fetch(`${appConfig.apiUrl}${path}`, { credentials: "include", headers });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = globalThis.document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export function ApplicationSummary({ application }: Readonly<Props>) {
+  const [isDownloadingContract, setIsDownloadingContract] = useState(false);
+
+  async function handleDownloadContract() {
+    if (!application.contractId) return;
+    setIsDownloadingContract(true);
+    try {
+      await downloadAdminPdf(
+        `/admin/contracts/${application.contractId}/download`,
+        `contrat_${application.workerName.replace(/\s+/g, "_")}.pdf`,
+      );
+    } catch {
+      toast.error("Failed to download contract");
+    } finally {
+      setIsDownloadingContract(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Worker card */}
@@ -142,6 +178,18 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
           </div>
         </CardContent>
       </Card>
+
+      {application.contractId && (
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={isDownloadingContract}
+          onClick={handleDownloadContract}
+        >
+          <IconFileTypePdf className="size-4 text-red-500" />
+          {isDownloadingContract ? "Downloading…" : "Download Contract PDF"}
+        </Button>
+      )}
     </div>
   );
 }

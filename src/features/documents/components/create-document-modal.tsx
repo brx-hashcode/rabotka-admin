@@ -178,7 +178,7 @@ export function CreateDocumentModal({
               />
 
               <DocumentUploadZone
-                label="File (PDF or DOCX)"
+                label="File (PDF, DOCX or Markdown)"
                 file={selectedFile}
                 onAdd={handleAddFile}
                 onRemove={handleRemoveFile}
