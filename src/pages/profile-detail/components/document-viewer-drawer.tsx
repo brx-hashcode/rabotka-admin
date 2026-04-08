@@ -120,6 +120,7 @@ export type ViewerDocument = {
   title: string;
   description: string;
   fileType?: string;
+  onDownload?: () => void;
 };
 
 export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
@@ -142,7 +143,7 @@ const ZOOM_MIN = 0.75;
 const ZOOM_MAX = 2.25;
 const ZOOM_STEP = 0.25;
 
-function PdfViewer({ url }: Readonly<{ url: string }>) {
+function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () => void }>) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [width, setWidth] = useState(600);
@@ -278,7 +279,9 @@ function PdfViewer({ url }: Readonly<{ url: string }>) {
                 size="sm"
                 className="h-8 gap-1.5"
                 onClick={() =>
-                  downloadViaProxy(url, url.split("/").pop() ?? "document")
+                  onDownload
+                    ? onDownload()
+                    : downloadViaProxy(url, url.split("/").pop() ?? "document")
                 }
               >
                 <Download className="size-3.5" />
@@ -646,7 +649,7 @@ export function DocumentViewerDrawer({
             {open && isGoogleDocs && (
               <GoogleDocsViewer url={document.url} title={document.title} />
             )}
-            {open && isPdf && <PdfViewer url={document.url} />}
+            {open && isPdf && <PdfViewer url={document.url} onDownload={document.onDownload} />}
             {open && isDocx && (
               <DocxViewer url={document.url} title={document.title} />
             )}

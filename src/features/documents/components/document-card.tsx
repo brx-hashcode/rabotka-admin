@@ -78,6 +78,10 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
 
   async function handleDownload() {
     try {
+      if (document.fileUrl.startsWith("blob:")) {
+        toast.error("This document was not properly saved. Please delete and re-upload it.");
+        return;
+      }
       const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(document.fileUrl)}`;
       const res = await fetch(proxyUrl, { credentials: "include" });
       if (!res.ok) throw new Error("Download failed");

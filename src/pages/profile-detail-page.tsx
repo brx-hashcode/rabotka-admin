@@ -138,6 +138,12 @@ export default function ProfileDetailPage({
         title: "Accord Plateforme",
         description: `Agreement — ${profile?.firstName} ${profile?.lastName}`,
         fileType: "pdf",
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = `accord_${profile?.firstName ?? ""}_${profile?.lastName ?? ""}.pdf`;
+          a.click();
+        },
       });
     } catch {
       toast.error("Failed to load agreement document");
