@@ -46,9 +46,10 @@ export function DocumentUploadZone({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "text/plain": [".md"],
+      "application/pdf": [".pdf"],
+      "text/markdown": [".md"],
+      "text/x-markdown": [".md"],
     },
     maxSize,
     multiple: false,
@@ -112,7 +113,7 @@ export function DocumentUploadZone({
                 {isDragActive ? "Drop file here" : "Click or drag file here"}
               </p>
               <p className="text-muted-foreground text-xs">
-                PDF, DOCX or Markdown — Max 20MB
+                DOCX, PDF, MD — Max 20MB
               </p>
             </div>
             <Button variant="outline" size="sm" type="button" className="mt-1">

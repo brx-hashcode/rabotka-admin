@@ -440,7 +440,10 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0" style={{ minHeight: "calc(100vh - 160px)" }}>
+    <div
+      className="flex flex-col h-full min-h-0"
+      style={{ minHeight: "calc(100vh - 160px)" }}
+    >
       <div className="mb-4 flex shrink-0 flex-col gap-3 rounded-xl border bg-muted/30 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-end sm:gap-4">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           <Button
@@ -448,7 +451,9 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             variant="outline"
             size="sm"
             className="h-8 gap-1.5"
-            onClick={() => globalThis.open(url, "_blank", "noopener,noreferrer")}
+            onClick={() =>
+              globalThis.open(url, "_blank", "noopener,noreferrer")
+            }
           >
             <ExternalLink className="size-3.5" />
             Open
@@ -458,7 +463,12 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             variant="default"
             size="sm"
             className="h-8 gap-1.5"
-            onClick={() => downloadViaProxy(url, title || (url.split("/").pop() ?? "document"))}
+            onClick={() =>
+              downloadViaProxy(
+                url,
+                title || (url.split("/").pop() ?? "document"),
+              )
+            }
           >
             <Download className="size-3.5" />
             Download
@@ -477,7 +487,43 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   );
 }
 
-function MarkdownViewer({ url, title }: Readonly<{ url: string; title: string }>) {
+function GoogleDocsViewer({
+  url,
+  title,
+}: Readonly<{ url: string; title: string }>) {
+  return (
+    <div
+      className="flex flex-col h-full min-h-0"
+      style={{ minHeight: "calc(100vh - 160px)" }}
+    >
+      <div className="mb-4 flex shrink-0 justify-end rounded-xl border bg-muted/30 p-3 shadow-sm">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={() => globalThis.open(url, "_blank", "noopener,noreferrer")}
+        >
+          <ExternalLink className="size-3.5" />
+          Open in Google Docs
+        </Button>
+      </div>
+      <iframe
+        src={url}
+        title={title}
+        className="w-full flex-1"
+        style={{ minHeight: "calc(100vh - 260px)" }}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  );
+}
+
+function MarkdownViewer({
+  url,
+  title,
+}: Readonly<{ url: string; title: string }>) {
   const [content, setContent] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -507,7 +553,9 @@ function MarkdownViewer({ url, title }: Readonly<{ url: string; title: string }>
             variant="outline"
             size="sm"
             className="h-8 gap-1.5"
-            onClick={() => globalThis.open(url, "_blank", "noopener,noreferrer")}
+            onClick={() =>
+              globalThis.open(url, "_blank", "noopener,noreferrer")
+            }
           >
             <ExternalLink className="size-3.5" />
             Open
@@ -517,7 +565,12 @@ function MarkdownViewer({ url, title }: Readonly<{ url: string; title: string }>
             variant="default"
             size="sm"
             className="h-8 gap-1.5"
-            onClick={() => downloadViaProxy(url, title || (url.split("/").pop() ?? "document"))}
+            onClick={() =>
+              downloadViaProxy(
+                url,
+                title || (url.split("/").pop() ?? "document"),
+              )
+            }
           >
             <Download className="size-3.5" />
             Download
@@ -547,20 +600,27 @@ export function DocumentViewerDrawer({
   if (!document) return null;
 
   const fileType = document.fileType ?? "";
-  const isPdf = fileType === "pdf" || document.url.includes(".pdf");
+  const isGoogleDocs =
+    fileType === "google-docs" ||
+    document.url.includes("docs.google.com/document") ||
+    document.url.includes("docs.google.com/gview");
+  const isPdf =
+    !isGoogleDocs && (fileType === "pdf" || document.url.includes(".pdf"));
   const isDocx =
-    fileType === "docx" ||
-    fileType === "doc" ||
-    document.url.includes(".docx") ||
-    document.url.includes(".doc");
-  const isMd = fileType === "md" || document.url.endsWith(".md");
-  const isImage = isLikelyImageAsset(document.url, fileType);
+    !isGoogleDocs &&
+    (fileType === "docx" ||
+      fileType === "doc" ||
+      document.url.includes(".docx") ||
+      document.url.includes(".doc"));
+  const isMd =
+    !isGoogleDocs && (fileType === "md" || document.url.endsWith(".md"));
+  const isImage = !isGoogleDocs && isLikelyImageAsset(document.url, fileType);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-[55vw] flex flex-col gap-0 p-0"
+        className="w-full sm:max-w-[50vw] flex flex-col gap-0 p-0"
       >
         <SheetHeader className="shrink-0 space-y-0 border-b bg-muted/15 px-5 py-4 sm:px-6">
           <div className="flex gap-3 sm:gap-4">
@@ -581,21 +641,28 @@ export function DocumentViewerDrawer({
             </div>
           </div>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-auto p-4 pt-5">
-          {open && isPdf && <PdfViewer url={document.url} />}
-          {open && isDocx && <DocxViewer url={document.url} title={document.title} />}
-          {open && isMd && !isPdf && !isDocx && (
-            <MarkdownViewer url={document.url} title={document.title} />
-          )}
-          {open && isImage && !isPdf && !isDocx && !isMd && (
-            <ImageViewer url={document.url} title={document.title} />
-          )}
-          {open && !isPdf && !isDocx && !isMd && !isImage && (
-            <DocFallback
-              url={document.url}
-              reason="This file format cannot be previewed in the browser."
-            />
-          )}
+        <div className="min-h-0 flex-1 overflow-hidden p-4 pt-5 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
+            {open && isGoogleDocs && (
+              <GoogleDocsViewer url={document.url} title={document.title} />
+            )}
+            {open && isPdf && <PdfViewer url={document.url} />}
+            {open && isDocx && (
+              <DocxViewer url={document.url} title={document.title} />
+            )}
+            {open && isMd && (
+              <MarkdownViewer url={document.url} title={document.title} />
+            )}
+            {open && isImage && (
+              <ImageViewer url={document.url} title={document.title} />
+            )}
+            {open && !isGoogleDocs && !isPdf && !isDocx && !isMd && !isImage && (
+              <DocFallback
+                url={document.url}
+                reason="This file format cannot be previewed in the browser."
+              />
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

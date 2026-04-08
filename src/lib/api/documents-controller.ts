@@ -8,6 +8,8 @@ export type DocumentCategory =
   | "REPORT"
   | "OTHER";
 
+export type DocumentSourceMode = "UPLOAD" | "GOOGLE_DOCS";
+
 export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
   AGREEMENT: "AGREEMENT",
   CONTRACT: "CONTRACT",
@@ -26,6 +28,11 @@ export type AdminDocumentItem = {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  sourceMode: DocumentSourceMode;
+  googleDocsUrl: string | null;
+  googleDocsId: string | null;
+  previewUrl: string | null;
+  variables: string[];
 };
 
 export type AdminDocumentsListParams = {
@@ -41,7 +48,13 @@ export type AdminDocumentsListResponse = {
   limit: number;
 };
 
-export type CreateDocumentPayload = {
+export type CreateDocumentFromUrlPayload = {
+  title: string;
+  category: DocumentCategory;
+  google_docs_url: string;
+};
+
+export type CreateDocumentFromUploadPayload = {
   title: string;
   category: DocumentCategory;
   file_url: string;
@@ -54,12 +67,35 @@ export type UpdateDocumentPayload = {
 };
 
 class AdminDocumentsController extends AdminBaseController {
-  async createDocument(payload: CreateDocumentPayload): Promise<AdminDocumentItem> {
-    const url = this.createURL("/admin/documents", new URLSearchParams());
-    return this.post<AdminDocumentItem>(url, payload as Record<string, unknown>);
+  async createFromUrl(
+    payload: CreateDocumentFromUrlPayload,
+  ): Promise<AdminDocumentItem> {
+    const url = this.createURL(
+      "/admin/documents/from-url",
+      new URLSearchParams(),
+    );
+    return this.post<AdminDocumentItem>(
+      url,
+      payload as Record<string, unknown>,
+    );
   }
 
-  async listDocuments(params: AdminDocumentsListParams): Promise<AdminDocumentsListResponse> {
+  async createFromUpload(
+    payload: CreateDocumentFromUploadPayload,
+  ): Promise<AdminDocumentItem> {
+    const url = this.createURL(
+      "/admin/documents/from-upload",
+      new URLSearchParams(),
+    );
+    return this.post<AdminDocumentItem>(
+      url,
+      payload as Record<string, unknown>,
+    );
+  }
+
+  async listDocuments(
+    params: AdminDocumentsListParams,
+  ): Promise<AdminDocumentsListResponse> {
     const searchParams: Record<string, unknown> = {};
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
@@ -70,9 +106,15 @@ class AdminDocumentsController extends AdminBaseController {
     return this.get<AdminDocumentsListResponse>(url);
   }
 
-  async updateDocument(id: string, payload: UpdateDocumentPayload): Promise<AdminDocumentItem> {
+  async updateDocument(
+    id: string,
+    payload: UpdateDocumentPayload,
+  ): Promise<AdminDocumentItem> {
     const url = this.createURL(`/admin/documents/${id}`, new URLSearchParams());
-    return this.patch<AdminDocumentItem>(url, payload as Record<string, unknown>);
+    return this.patch<AdminDocumentItem>(
+      url,
+      payload as Record<string, unknown>,
+    );
   }
 
   async deleteDocument(id: string): Promise<void> {
@@ -83,6 +125,8 @@ class AdminDocumentsController extends AdminBaseController {
 
 const controller = new AdminDocumentsController();
 export const listDocuments = controller.listDocuments.bind(controller);
-export const createDocument = controller.createDocument.bind(controller);
+export const createDocumentFromUrl = controller.createFromUrl.bind(controller);
+export const createDocumentFromUpload =
+  controller.createFromUpload.bind(controller);
 export const updateDocument = controller.updateDocument.bind(controller);
 export const deleteDocument = controller.deleteDocument.bind(controller);
