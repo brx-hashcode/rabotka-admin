@@ -27,6 +27,7 @@ function requestNotificationPermission() {
 
 function sendBrowserNotification(payload: AdminNotificationPayload) {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  if (localStorage.getItem("browserNotificationsEnabled") === "false") return;
   try {
     new Notification(payload.title, {
       body: payload.message,

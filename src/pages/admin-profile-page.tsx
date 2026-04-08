@@ -7,6 +7,7 @@ import {
   IconBell,
 } from "@tabler/icons-react";
 
+import { toast } from "sonner";
 import { useAdminProfile } from "#/hooks/use-admin-profile";
 import { useTheme } from "#/components/theme-provider";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
@@ -36,7 +37,15 @@ export default function AdminProfilePage() {
   const [lastName, setLastName] = useState("");
   const [initialFirstName, setInitialFirstName] = useState("");
   const [initialLastName, setInitialLastName] = useState("");
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    // If the user has previously opted out, respect that; otherwise follow browser permission
+    const stored = localStorage.getItem("browserNotificationsEnabled");
+    if (stored !== null) return stored === "true";
+    return (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    );
+  });
 
   useEffect(() => {
     if (admin) {
@@ -46,6 +55,51 @@ export default function AdminProfilePage() {
       setInitialLastName(admin.lastName ?? "");
     }
   }, [admin]);
+
+  // Re-sync toggle if browser permission was revoked externally (e.g. from browser settings)
+  useEffect(() => {
+    function syncPermission() {
+      if (
+        typeof Notification !== "undefined" &&
+        Notification.permission === "denied"
+      ) {
+        setNotificationsEnabled(false);
+        localStorage.setItem("browserNotificationsEnabled", "false");
+      }
+    }
+    document.addEventListener("visibilitychange", syncPermission);
+    return () => document.removeEventListener("visibilitychange", syncPermission);
+  }, []);
+
+  async function handleNotificationToggle(enabled: boolean) {
+    if (enabled) {
+      if (typeof Notification === "undefined") {
+        toast.error("Browser notifications are not supported.");
+        return;
+      }
+      if (Notification.permission === "denied") {
+        toast.error(
+          "Notifications are blocked by your browser. Click the lock icon in the address bar and allow notifications, then try again.",
+          { duration: 6000 },
+        );
+        return; // don't flip the toggle
+      }
+      // "default" → ask, "granted" → already allowed
+      const permission =
+        Notification.permission === "granted"
+          ? "granted"
+          : await Notification.requestPermission();
+      const granted = permission === "granted";
+      setNotificationsEnabled(granted);
+      localStorage.setItem("browserNotificationsEnabled", String(granted));
+      if (!granted) {
+        toast.error("Notification permission was not granted.");
+      }
+    } else {
+      localStorage.setItem("browserNotificationsEnabled", "false");
+      setNotificationsEnabled(false);
+    }
+  }
 
   const isDirty =
     firstName !== initialFirstName || lastName !== initialLastName;
@@ -175,7 +229,7 @@ export default function AdminProfilePage() {
               </div>
               <Switch
                 checked={notificationsEnabled}
-                onCheckedChange={setNotificationsEnabled}
+                onCheckedChange={handleNotificationToggle}
               />
             </div>
           </CardContent>
