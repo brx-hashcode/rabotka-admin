@@ -1,4 +1,6 @@
 import { AdminBaseController } from "./base-controller";
+import { appConfig } from "#/config";
+import { getCsrfToken } from "./csrf-token";
 
 export type AdminProfileListItem = {
   id: string;
@@ -256,6 +258,19 @@ export class AdminProfilesController extends AdminBaseController {
     );
     return this.post<{ success: boolean }>(url, { channel, message });
   }
+
+  async downloadProfileAgreement(profileId: string): Promise<Blob> {
+    const token = getCsrfToken();
+    const response = await fetch(
+      `${appConfig.apiUrl}/admin/profiles/${profileId}/agreement/download`,
+      {
+        credentials: "include",
+        headers: token ? { "x-csrf-token": token } : {},
+      },
+    );
+    if (!response.ok) throw new Error("Download failed");
+    return response.blob();
+  }
 }
 
 const controller = new AdminProfilesController();
@@ -271,3 +286,4 @@ export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
+export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);

@@ -48,7 +48,8 @@ function mimeToFileType(mimeType: string): string {
   if (mimeType === "application/pdf") return "pdf";
   if (mimeType.includes("wordprocessingml") || mimeType.includes("msword"))
     return "docx";
-  if (mimeType === "text/markdown" || mimeType === "text/x-markdown") return "md";
+  if (mimeType === "text/markdown" || mimeType === "text/x-markdown")
+    return "md";
   if (mimeType.startsWith("image/")) {
     const sub = mimeType.split("/")[1]?.split("+")[0] ?? "";
     return sub || "image";
@@ -84,7 +85,15 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
       const objectUrl = URL.createObjectURL(blob);
       const a = globalThis.document.createElement("a");
       a.href = objectUrl;
-      a.download = document.title;
+      const extMap: Record<string, string> = {
+        "application/pdf": ".pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "text/markdown": ".md",
+        "text/x-markdown": ".md",
+      };
+      const ext = extMap[document.mimeType] ?? "";
+      const filename = document.title.includes(".") ? document.title : `${document.title}${ext}`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(objectUrl);
     } catch {
@@ -92,16 +101,24 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
     }
   }
 
-  const viewerDoc = {
-    url: document.fileUrl,
-    fileType: mimeToFileType(document.mimeType),
-    title: document.title,
-    description: `${DOCUMENT_CATEGORY_LABELS[document.category]} — ${format(new Date(document.createdAt), "dd/MM/yyyy")}`,
-  };
+  const viewerDoc =
+    document.sourceMode === "GOOGLE_DOCS" && document.previewUrl
+      ? {
+          url: document.previewUrl,
+          fileType: "google-docs",
+          title: document.title,
+          description: `${DOCUMENT_CATEGORY_LABELS[document.category]} — ${format(new Date(document.createdAt), "dd/MM/yyyy")}`,
+        }
+      : {
+          url: document.fileUrl,
+          fileType: mimeToFileType(document.mimeType),
+          title: document.title,
+          description: `${DOCUMENT_CATEGORY_LABELS[document.category]} — ${format(new Date(document.createdAt), "dd/MM/yyyy")}`,
+        };
 
   return (
     <>
-      <div className="bg-card border rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+      <div className="bg-card border rounded-2xl overflow-hidden flex flex-col">
         <div className="flex-1 p-4 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <DocIcon mimeType={document.mimeType} />
@@ -141,13 +158,25 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
             </DropdownMenu>
           </div>
 
-          <div className="space-y-1 min-w-0">
+          <div className="space-y-1.5 min-w-0">
             <p className="font-medium text-sm leading-snug line-clamp-2">
               {document.title}
             </p>
-            <Badge variant="secondary" className="text-xs capitalize">
+            <Badge variant="secondary" className="text-xs uppercase">
               {DOCUMENT_CATEGORY_LABELS[document.category]}
             </Badge>
+            {document.variables.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {document.variables.map((v) => (
+                  <span
+                    key={v}
+                    className="inline-block bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                  >
+                    [{v}]
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

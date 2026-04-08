@@ -5,6 +5,7 @@ import {
   IconPlayerPause,
   IconBrandWhatsapp,
   IconChevronDown,
+  IconFileText,
 } from "@tabler/icons-react";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { useMutation } from "@tanstack/react-query";
@@ -35,7 +36,10 @@ import { KycVerificationModal } from "./profile-detail/components/kyc-verificati
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
 import { DocumentViewerDrawer } from "./profile-detail/components/document-viewer-drawer";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
-import { sendVerificationLink } from "#/lib/api/profiles-controller";
+import {
+  sendVerificationLink,
+  downloadAdminProfileAgreement,
+} from "#/lib/api/profiles-controller";
 
 type ProfileTab = "general" | "kyc" | "payments" | "invoices" | "messages";
 
@@ -80,6 +84,7 @@ export default function ProfileDetailPage({
   >("ACTIVE");
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isLoadingAgreement, setIsLoadingAgreement] = useState(false);
 
   const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
     mutationFn: () => sendVerificationLink(profileId),
@@ -122,6 +127,24 @@ export default function ProfileDetailPage({
     setDrawerDoc(doc);
     setDrawerOpen(true);
   };
+
+  async function handleViewAgreement() {
+    setIsLoadingAgreement(true);
+    try {
+      const blob = await downloadAdminProfileAgreement(profileId);
+      const objectUrl = URL.createObjectURL(blob);
+      handlePreviewDoc({
+        url: objectUrl,
+        title: "Accord Plateforme",
+        description: `Agreement — ${profile?.firstName} ${profile?.lastName}`,
+        fileType: "pdf",
+      });
+    } catch {
+      toast.error("Failed to load agreement document");
+    } finally {
+      setIsLoadingAgreement(false);
+    }
+  }
 
   const canVerifyKyc =
     profile != null && profile.verificationStatus !== "VERIFIED";
@@ -199,53 +222,60 @@ export default function ProfileDetailPage({
             ))}
           </TabsList>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Actions
-                <IconChevronDown className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem
-                disabled={!canSendVerifLink}
-                onClick={() => canSendVerifLink && setSendVerifLinkOpen(true)}
-              >
-                <IconBrandWhatsapp className="size-4" />
-                Send verification link
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canVerifyKyc}
-                onClick={() => canVerifyKyc && setKycModalOpen(true)}
-              >
-                <IconShieldCheck className="size-4" />
-                KYC Verification
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!canActivate}
-                onClick={() => {
-                  if (!canActivate) return;
-                  setStatusModalTarget("ACTIVE");
-                  setStatusModalOpen(true);
-                }}
-              >
-                <IconPlayerPlay className="size-4" />
-                Activate
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canDeactivate}
-                onClick={() => {
-                  if (!canDeactivate) return;
-                  setStatusModalTarget("SUSPENDED");
-                  setStatusModalOpen(true);
-                }}
-              >
-                <IconPlayerPause className="size-4" />
-                Suspend
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleViewAgreement} disabled={isLoadingAgreement}>
+              <IconFileText className="size-4" />
+              {isLoadingAgreement ? "Loading..." : "View Agreement"}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Actions
+                  <IconChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  disabled={!canSendVerifLink}
+                  onClick={() => canSendVerifLink && setSendVerifLinkOpen(true)}
+                >
+                  <IconBrandWhatsapp className="size-4" />
+                  Send verification link
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!canVerifyKyc}
+                  onClick={() => canVerifyKyc && setKycModalOpen(true)}
+                >
+                  <IconShieldCheck className="size-4" />
+                  KYC Verification
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={!canActivate}
+                  onClick={() => {
+                    if (!canActivate) return;
+                    setStatusModalTarget("ACTIVE");
+                    setStatusModalOpen(true);
+                  }}
+                >
+                  <IconPlayerPlay className="size-4" />
+                  Activate
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!canDeactivate}
+                  onClick={() => {
+                    if (!canDeactivate) return;
+                    setStatusModalTarget("SUSPENDED");
+                    setStatusModalOpen(true);
+                  }}
+                >
+                  <IconPlayerPause className="size-4" />
+                  Suspend
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <TabsContent value="general">
