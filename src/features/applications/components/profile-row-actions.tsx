@@ -69,9 +69,12 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   });
 
   const canSendVerifLink = !profile.whatsappConnected;
+
   const canActivate =
     profile.status !== "ACTIVE" && profile.status !== "BANNED";
   const canDeactivate = profile.status === "ACTIVE";
+
+  const isWhatsappConnected = profile.whatsappConnected;
 
   return (
     <>
@@ -96,7 +99,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            disabled={!canSendVerifLink}
+            disabled={isWhatsappConnected}
             onClick={() => canSendVerifLink && setVerifLinkOpen(true)}
           >
             <IconBrandWhatsapp className="size-4" />
