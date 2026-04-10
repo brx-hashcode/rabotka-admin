@@ -1,6 +1,6 @@
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
-import { Send, ChevronsUpDown, Check, SearchIcon } from "lucide-react";
+import { Send, ChevronsUpDown, Check, SearchIcon, Paperclip, X } from "lucide-react";
 import { useId, useState } from "react";
 import {
   Dialog,
@@ -39,6 +39,7 @@ export const DirectMessagesButton = ({
     useState<AdminProfileListItem | null>(null);
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const messageId = useId();
 
   const { data: searchResults = [] } = useQuery({
@@ -51,7 +52,12 @@ export const DirectMessagesButton = ({
   const { mutate: send, isPending } = useMutation({
     mutationFn: () => {
       if (!selectedProfile) throw new Error("No profile selected");
-      return sendProfileMessage(selectedProfile.id, channel, text.trim());
+      return sendProfileMessage(
+        selectedProfile.id,
+        channel,
+        text.trim(),
+        channel === "EMAIL" ? attachments : undefined,
+      );
     },
     onSuccess: () => {
       toast.success("Message sent successfully.");
@@ -75,6 +81,7 @@ export const DirectMessagesButton = ({
     setText("");
     setChannel("EMAIL");
     setComboOpen(false);
+    setAttachments([]);
   };
 
   return (
@@ -232,6 +239,66 @@ export const DirectMessagesButton = ({
                 />
               </div>
             </div>
+
+            {/* Attachments — email only */}
+            {channel === "EMAIL" && (
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">
+                  Attachments{" "}
+                  <span className="text-muted-foreground text-xs">
+                    (optional, max 5)
+                  </span>
+                </span>
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground hover:border-primary hover:text-foreground transition-colors">
+                  <Paperclip className="size-4 shrink-0" />
+                  <span>Attach files</span>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    disabled={isPending}
+                    onChange={(e) => {
+                      const picked = Array.from(e.target.files ?? []);
+                      if (attachments.length + picked.length > 5) {
+                        toast.error("Maximum 5 attachments allowed");
+                        return;
+                      }
+                      setAttachments((prev) => [...prev, ...picked]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {attachments.length > 0 && (
+                  <ul className="flex flex-col gap-1">
+                    {attachments.map((f, i) => (
+                      <li
+                        key={i}
+                        className="flex items-center justify-between rounded-md border px-3 py-1.5 text-xs"
+                      >
+                        <span className="truncate min-w-0">
+                          {f.name}{" "}
+                          <span className="text-muted-foreground">
+                            ({(f.size / 1024).toFixed(0)} KB)
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAttachments((prev) =>
+                              prev.filter((_, j) => j !== i),
+                            )
+                          }
+                          className="ml-2 shrink-0 text-muted-foreground hover:text-destructive"
+                          aria-label={`Remove ${f.name}`}
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Send button */}

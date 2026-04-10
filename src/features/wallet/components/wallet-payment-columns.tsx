@@ -1,7 +1,15 @@
+import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
+import { IconFileTypePdf } from "@tabler/icons-react";
+import { toast } from "sonner";
 import { getCommonColumns, ProfileCell } from "#/components/table";
 import type { AdminPaymentItem } from "#/lib/api/wallet-controller";
+import { fetchAdminInvoiceBlob } from "#/lib/api/wallet-controller";
+import { getProfileInvoices } from "#/lib/api/profiles-controller";
+import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
+import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
 const STATUS_BADGE: Record<
   string,
@@ -38,6 +46,73 @@ function formatDate(v: string | null | undefined) {
   } catch {
     return String(v);
   }
+}
+
+function InvoicePreviewCell({ payment }: Readonly<{ payment: AdminPaymentItem }>) {
+  const [loading, setLoading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<ViewerDocument | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  if (payment.status !== "COMPLETED") return null;
+
+  async function handlePreview() {
+    setLoading(true);
+    try {
+      const invoices = await getProfileInvoices(payment.profileId);
+      const match = invoices.find((inv) => Number(inv.amount) === payment.amount);
+      if (!match) {
+        toast.error("No invoice found for this payment");
+        return;
+      }
+      const blob = await fetchAdminInvoiceBlob(match.id);
+      const objectUrl = URL.createObjectURL(blob);
+      const filename = `facture_${match.id.slice(0, 8)}.pdf`;
+      setPreviewDoc({
+        url: objectUrl,
+        title: "Invoice",
+        description: filename,
+        fileType: "pdf",
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = filename;
+          a.click();
+        },
+      });
+      setDrawerOpen(true);
+    } catch {
+      toast.error("Failed to load invoice");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleOpenChange(open: boolean) {
+    setDrawerOpen(open);
+    if (!open && previewDoc) {
+      URL.revokeObjectURL(previewDoc.url);
+      setPreviewDoc(null);
+    }
+  }
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={loading}
+        onClick={handlePreview}
+        title="Preview invoice PDF"
+      >
+        <IconFileTypePdf className="size-4 text-red-500" />
+      </Button>
+      <DocumentViewerDrawer
+        open={drawerOpen}
+        onOpenChange={handleOpenChange}
+        document={previewDoc}
+      />
+    </>
+  );
 }
 
 const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
@@ -119,6 +194,11 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     cell: ({ row }) => (
       <span className="text-sm text-nowrap">{formatDate(row.original.createdAt)}</span>
     ),
+  },
+  {
+    id: "invoice",
+    header: "Invoice",
+    cell: ({ row }) => <InvoicePreviewCell payment={row.original} />,
   },
 ];
 

@@ -2,6 +2,18 @@ import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
 import { getCsrfToken } from "./csrf-token";
 
+export type AdminInvoiceItem = {
+  id: string;
+  profileId: string;
+  paymentRequestId: string;
+  amount: string;
+  reason: string;
+  relatedEntityType: string | null;
+  relatedEntityId: string | null;
+  status: string;
+  createdAt: string;
+};
+
 export type AdminProfileListItem = {
   id: string;
   firstName: string;
@@ -251,12 +263,28 @@ export class AdminProfilesController extends AdminBaseController {
     id: string,
     channel: "WHATSAPP" | "EMAIL",
     message: string,
+    files?: File[],
   ): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/profiles/${id}/messages`,
       new URLSearchParams(),
     );
+    if (files?.length && channel === "EMAIL") {
+      const form = new FormData();
+      form.append("channel", channel);
+      form.append("message", message);
+      for (const f of files) form.append("attachments", f);
+      return this.post<{ success: boolean }>(url, form);
+    }
     return this.post<{ success: boolean }>(url, { channel, message });
+  }
+
+  async getInvoices(profileId: string): Promise<AdminInvoiceItem[]> {
+    const url = this.createURL(
+      `/admin/profiles/${profileId}/invoices`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminInvoiceItem[]>(url);
   }
 
   async downloadProfileAgreement(profileId: string): Promise<Blob> {
@@ -287,3 +315,4 @@ export const getProfileMessages = controller.getMessages.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
+export const getProfileInvoices = controller.getInvoices.bind(controller);
