@@ -14,6 +14,7 @@ import {
   IconFile,
   IconWallet,
   IconCalendar,
+  IconTag,
 } from "@tabler/icons-react";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -92,6 +93,12 @@ const documents: NavItem[] = [
     url: "/documents",
     icon: IconFile,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "Job Categories",
+    url: "/job-categories",
+    icon: IconTag,
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
 ];
 
