@@ -96,18 +96,18 @@ const columns = getCommonColumns<AdminJobApplicationItem>({
 });
 
 type Props = {
-  applications: AdminJobApplicationItem[];
+  applications?: AdminJobApplicationItem[];
 };
 
 export function JobApplicationsTable({ applications }: Readonly<Props>) {
   return (
     <DataTable
-      data={applications}
+      data={applications ?? []}
       columns={columns}
       enableRowSelection
       header={
         <h3 className="text-base font-semibold">
-          Applications ({applications.length})
+          Applications ({applications?.length ?? 0})
         </h3>
       }
       emptyMessage="No applications yet."

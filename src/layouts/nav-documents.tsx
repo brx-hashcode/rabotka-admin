@@ -4,7 +4,6 @@ import {
   IconRefresh,
   IconShare3,
   IconTrash,
-  type Icon,
 } from "@tabler/icons-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback } from "react";
@@ -27,15 +26,12 @@ import {
   useSidebar,
 } from "#/components/ui/sidebar";
 import { useHiddenDocuments } from "#/hooks/use-hidden-documents";
+import type { NavItem } from "./app-sidebar";
 
 export const NavDocuments = ({
   items,
 }: Readonly<{
-  items: ReadonlyArray<{
-    name: string;
-    url: string;
-    icon: Icon;
-  }>;
+  items: ReadonlyArray<NavItem>;
 }>) => {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
@@ -48,7 +44,7 @@ export const NavDocuments = ({
     [pathname],
   );
 
-  const visibleItems = items.filter((item) => isVisible(item.name));
+  const visibleItems = items.filter((item) => isVisible(item.title));
 
   const handleShare = (url: string) => {
     const full = `${globalThis.location.origin}${url}`;
@@ -72,11 +68,11 @@ export const NavDocuments = ({
       </div>
       <SidebarMenu>
         {visibleItems.map((item) => (
-          <SidebarMenuItem key={item.name}>
+          <SidebarMenuItem key={item.title}>
             <SidebarMenuButton asChild isActive={isActiveLink(item.url)}>
               <Link to={item.url}>
                 <item.icon />
-                <span>{item.name}</span>
+                <span>{item.title}</span>
               </Link>
             </SidebarMenuButton>
             <DropdownMenu>
@@ -105,7 +101,7 @@ export const NavDocuments = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
-                  onSelect={() => hide(item.name)}
+                  onSelect={() => hide(item.title)}
                 >
                   <IconTrash />
                   <span>Delete</span>

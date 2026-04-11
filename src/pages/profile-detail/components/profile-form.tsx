@@ -49,12 +49,14 @@ type ProfileFormProps = {
     phone: string;
   }) => Promise<void>;
   isSaving: boolean;
+  readOnly?: boolean;
 };
 
 export function ProfileForm({
   profile,
   onSave,
   isSaving,
+  readOnly = false,
 }: Readonly<ProfileFormProps>) {
   const [form, setForm] = useState<FormData>({
     firstName: "",
@@ -235,13 +237,15 @@ export function ProfileForm({
         </div>
 
         <div className="mt-6 flex min-w-0 justify-end gap-2">
-          <Button
-            onClick={handleSave}
-            disabled={!isDirty || isSaving}
-            className="shrink-0"
-          >
-            {isSaving ? "Saving..." : "Save"}
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={handleSave}
+              disabled={!isDirty || isSaving}
+              className="shrink-0"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

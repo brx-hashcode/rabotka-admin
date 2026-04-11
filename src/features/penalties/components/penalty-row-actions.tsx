@@ -18,6 +18,7 @@ import {
   confirmPenaltyPayment,
   deletePenalty,
 } from "#/lib/api/penalties-controller";
+import { useRole } from "#/hooks/use-role";
 
 type PenaltyRowActionsProps = Readonly<{
   penalty: AdminPenaltyListItem;
@@ -26,6 +27,7 @@ type PenaltyRowActionsProps = Readonly<{
 export function PenaltyRowActions({ penalty }: PenaltyRowActionsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
 
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -77,25 +79,29 @@ export function PenaltyRowActions({ penalty }: PenaltyRowActionsProps) {
             View
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+          {canManageContent && (
+            <>
+              <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            disabled={!canConfirmPayment}
-            onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
-          >
-            <IconCreditCard className="size-4" />
-            Confirm payment
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canConfirmPayment}
+                onClick={() => canConfirmPayment && setConfirmPaymentOpen(true)}
+              >
+                <IconCreditCard className="size-4" />
+                Confirm payment
+              </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => setDeleteOpen(true)}
-          >
-            <IconTrash className="size-4" />
-            Delete
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <IconTrash className="size-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

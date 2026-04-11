@@ -24,6 +24,7 @@ import {
 import { ConfirmDialog } from "./confirm-dialog";
 import { UserModal } from "./user-modal";
 import { useToggleUserStatus } from "../hooks/use-toggle-user-status";
+import { useRole } from "#/hooks/use-role";
 
 const STATUS_ACTIONS = {
   active: {
@@ -57,6 +58,7 @@ type Props = {
 
 export function UserRowActions({ user }: Readonly<Props>) {
   const queryClient = useQueryClient();
+  const { canManageTeam, canDeleteTeam } = useRole();
   const [editOpen, setEditOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     keyof typeof STATUS_ACTIONS | null
@@ -83,6 +85,8 @@ export function UserRowActions({ user }: Readonly<Props>) {
     });
   };
 
+  if (!canManageTeam && !canDeleteTeam) return null;
+
   return (
     <>
       <DropdownMenu>
@@ -93,32 +97,42 @@ export function UserRowActions({ user }: Readonly<Props>) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditOpen(true)}>
-            <IconEdit className="mr-2 size-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!user.isActive || toggleStatus.isPending}
-            onClick={() => setPendingAction("active")}
-          >
-            <IconUserOff className="mr-2 size-4" />
-            Deactivate
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={user.isActive || toggleStatus.isPending}
-            onClick={() => setPendingAction("inactive")}
-          >
-            <IconUserCheck className="mr-2 size-4" />
-            Activate
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => setDeleteOpen(true)}
-          >
-            <IconTrash className="mr-2 size-4" />
-            Delete
-          </DropdownMenuItem>
+          {canManageTeam && (
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+              <IconEdit className="mr-2 size-4" />
+              Edit
+            </DropdownMenuItem>
+          )}
+          {canManageTeam && (
+            <DropdownMenuItem
+              disabled={!user.isActive || toggleStatus.isPending}
+              onClick={() => setPendingAction("active")}
+            >
+              <IconUserOff className="mr-2 size-4" />
+              Deactivate
+            </DropdownMenuItem>
+          )}
+          {canManageTeam && (
+            <DropdownMenuItem
+              disabled={user.isActive || toggleStatus.isPending}
+              onClick={() => setPendingAction("inactive")}
+            >
+              <IconUserCheck className="mr-2 size-4" />
+              Activate
+            </DropdownMenuItem>
+          )}
+          {canDeleteTeam && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <IconTrash className="mr-2 size-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

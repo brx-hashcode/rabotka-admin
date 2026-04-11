@@ -12,6 +12,7 @@ import {
   type AdminProfileMessage,
 } from "#/lib/api/profiles-controller";
 import { useAdminMe } from "#/hooks/use-admin-me";
+import { useRole } from "#/hooks/use-role";
 import { ChatDoodleBg } from "./chat-doodle-bg";
 
 type Channel = "WHATSAPP" | "EMAIL";
@@ -38,6 +39,7 @@ export function ProfileMessagesContent({
 }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const { data: adminMe } = useAdminMe();
+  const { canManageContent } = useRole();
   const adminName = `${adminMe?.firstName} ${adminMe?.lastName}`;
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
@@ -60,8 +62,8 @@ export function ProfileMessagesContent({
         100,
       );
     },
-    onError: () => {
-      toast.error("Failed to send message.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -107,24 +109,26 @@ export function ProfileMessagesContent({
           Ctrl+Enter to send
         </span>
       </div>
-      <div className="mt-1 flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
-        <Textarea
-          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[72px]"
-          placeholder="Write a message…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isPending}
-        />
-        <Button
-          size="icon"
-          className="shrink-0 h-9 w-9 rounded-full"
-          onClick={() => send()}
-          disabled={!canSend}
-        >
-          <IconSend className="size-4" />
-        </Button>
-      </div>
+      {canManageContent && (
+        <div className="mt-1 flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+          <Textarea
+            className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[72px]"
+            placeholder="Write a message…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isPending}
+          />
+          <Button
+            size="icon"
+            className="shrink-0 h-9 w-9 rounded-full"
+            onClick={() => send()}
+            disabled={!canSend}
+          >
+            <IconSend className="size-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 

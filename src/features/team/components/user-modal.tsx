@@ -47,6 +47,25 @@ const userFormSchema = z.object({
   role: z.string().min(1, "Required"),
 });
 
+const ADMIN_ROLES = [
+  {
+    value: "ADMIN",
+    label: "ADMINISTRATOR",
+  },
+  {
+    value: "SUPER_ADMIN",
+    label: "SUPER ADMINISTRATOR",
+  },
+  {
+    value: "MANAGER",
+    label: "MANAGER",
+  },
+  {
+    value: "MODERATOR",
+    label: "MODERATOR",
+  },
+] as const;
+
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 type Props = {
@@ -194,10 +213,7 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {[
-                        { value: "ADMIN", label: "Admin" },
-                        { value: "SUPER_ADMIN", label: "Super Admin" },
-                      ].map((role) => (
+                      {ADMIN_ROLES.map((role) => (
                         <SelectItem
                           key={role.value}
                           value={role.value}

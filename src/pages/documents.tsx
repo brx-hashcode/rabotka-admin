@@ -6,9 +6,11 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { DocumentCard } from "#/features/documents/components/document-card";
 import { CreateDocumentModal } from "#/features/documents/components/create-document-modal";
 import { listDocuments } from "#/lib/api/documents-controller";
+import { useRole } from "#/hooks/use-role";
 
 export default function DocumentsPage() {
   const [createOpen, setCreateOpen] = useState(false);
+  const { canManageContent } = useRole();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "documents"],
@@ -40,10 +42,12 @@ export default function DocumentsPage() {
           Upload agreements, contracts, policies and other platform documents
           here.
         </p>
-        <Button className="mt-2" onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
-          Add document
-        </Button>
+        {canManageContent && (
+          <Button className="mt-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Add document
+          </Button>
+        )}
       </div>
     );
   } else {
@@ -65,10 +69,12 @@ export default function DocumentsPage() {
             Platform agreements, contracts, policies and more.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
-          Add document
-        </Button>
+        {canManageContent && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Add document
+          </Button>
+        )}
       </div>
 
       {listSection}

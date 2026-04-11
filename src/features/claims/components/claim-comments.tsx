@@ -12,6 +12,7 @@ import {
   deleteClaimComment,
   type AdminClaimCommentItem,
 } from "#/lib/api/claims-controller";
+import { useRole } from "#/hooks/use-role";
 
 function getInitials(name: string): string {
   return (
@@ -30,6 +31,7 @@ type ClaimCommentsProps = {
 
 export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -93,31 +95,34 @@ export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
             key={comment.id}
             comment={comment}
             onDelete={() => remove(comment.id)}
+            canDelete={canManageContent}
           />
         ))}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
-        <Textarea
-          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1 min-h-[60px] p-0 text-sm"
-          placeholder="Add a comment… (Ctrl+Enter to send)"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isSending}
-        />
-        <Button
-          size="sm"
-          className="shrink-0 gap-1.5"
-          onClick={() => submit()}
-          disabled={!text.trim() || isSending}
-        >
-          <Send className="size-3.5" />
-          Send
-        </Button>
-      </div>
+      {canManageContent && (
+        <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+          <Textarea
+            className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1 min-h-[60px] p-0 text-sm"
+            placeholder="Add a comment… (Ctrl+Enter to send)"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isSending}
+          />
+          <Button
+            size="sm"
+            className="shrink-0 gap-1.5"
+            onClick={() => submit()}
+            disabled={!text.trim() || isSending}
+          >
+            <Send className="size-3.5" />
+            Send
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -125,9 +130,11 @@ export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
 function CommentItem({
   comment,
   onDelete,
+  canDelete,
 }: Readonly<{
   comment: AdminClaimCommentItem;
   onDelete: () => void;
+  canDelete: boolean;
 }>) {
   const isProfileComment = comment.createdByType === "profile";
   const displayName = isProfileComment
@@ -159,14 +166,16 @@ function CommentItem({
           {comment.content}
         </p>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-muted-foreground hover:text-destructive"
-        onClick={onDelete}
-      >
-        <Trash2 className="size-3.5" />
-      </Button>
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      )}
     </div>
   );
 }

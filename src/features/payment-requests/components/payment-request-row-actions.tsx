@@ -18,6 +18,7 @@ import {
   rejectPaymentRequest,
   type AdminPaymentRequestListItem,
 } from "#/lib/api/payment-requests-controller";
+import { useRole } from "#/hooks/use-role";
 
 type PaymentRequestRowActionsProps = Readonly<{
   request: AdminPaymentRequestListItem;
@@ -28,6 +29,7 @@ export function PaymentRequestRowActions({
 }: PaymentRequestRowActionsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
   const [modalOpen, setModalOpen] = useState(false);
 
   const invalidate = () =>
@@ -89,14 +91,18 @@ export function PaymentRequestRowActions({
             <EyeIcon className="size-4" />
             View profile
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={!canProcess}
-            onClick={() => canProcess && setModalOpen(true)}
-          >
-            <IconCreditCard className="size-4" />
-            Process payment
-          </DropdownMenuItem>
+          {canManageContent && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!canProcess}
+                onClick={() => canProcess && setModalOpen(true)}
+              >
+                <IconCreditCard className="size-4" />
+                Process payment
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

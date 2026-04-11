@@ -9,6 +9,7 @@ import {
 } from "#/features/calendar/animations";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
+import { useRole } from "#/hooks/use-role";
 import { DateNavigator } from "#/features/calendar/header/date-navigator";
 import FilterEvents from "#/features/calendar/header/filter";
 import { TodayButton } from "#/features/calendar/header/today-button";
@@ -16,6 +17,7 @@ import Views from "./view-tabs";
 
 export function CalendarHeader() {
   const { view, events } = useCalendar();
+  const { canManageContent } = useRole();
 
   return (
     <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
@@ -42,12 +44,14 @@ export function CalendarHeader() {
           <Views />
         </div>
 
-        <AddEditEventDialog>
-          <Button>
-            <Plus className="h-4 w-4" />
-            Add Event
-          </Button>
-        </AddEditEventDialog>
+        {canManageContent && (
+          <AddEditEventDialog>
+            <Button>
+              <Plus className="h-4 w-4" />
+              Add Event
+            </Button>
+          </AddEditEventDialog>
+        )}
       </motion.div>
     </div>
   );

@@ -18,6 +18,7 @@ import { ScrollArea } from "#/components/ui/scroll-area";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { useDeleteEvent } from "#/features/calendar/hooks/use-calendar-events";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
+import { useRole } from "#/hooks/use-role";
 import { formatTime } from "#/features/calendar/helpers";
 import type { IEvent } from "#/features/calendar/interfaces";
 
@@ -30,6 +31,7 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
   const startDate = parseISO(event.startDate);
   const endDate = parseISO(event.endDate);
   const { use24HourFormat } = useCalendar();
+  const { canManageContent } = useRole();
   const [open, setOpen] = useState(false);
   const { mutate: remove, isPending } = useDeleteEvent();
 
@@ -98,20 +100,22 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
             </div>
           </div>
         </ScrollArea>
-        <div className="flex justify-end gap-2">
-          <AddEditEventDialog event={event}>
-            <Button variant="outline" disabled={isPending}>Edit</Button>
-          </AddEditEventDialog>
-          <Button
-            variant="destructive"
-            disabled={isPending}
-            onClick={() => {
-              deleteEvent(event.id);
-            }}
-          >
-            {isPending ? "Deleting..." : "Delete"}
-          </Button>
-        </div>
+        {canManageContent && (
+          <div className="flex justify-end gap-2">
+            <AddEditEventDialog event={event}>
+              <Button variant="outline" disabled={isPending}>Edit</Button>
+            </AddEditEventDialog>
+            <Button
+              variant="destructive"
+              disabled={isPending}
+              onClick={() => {
+                deleteEvent(event.id);
+              }}
+            >
+              {isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        )}
         <DialogClose />
       </DialogContent>
     </Dialog>

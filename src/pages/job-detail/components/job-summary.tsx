@@ -17,8 +17,8 @@ import { Separator } from "#/components/ui/separator";
 
 import { statusBadgeVariant, formatDate } from "../helpers";
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
+function getInitials(name: string | null | undefined): string {
+  const parts = (name ?? "").trim().split(/\s+/);
   return (
     ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase().slice(0, 2) ||
     "?"
@@ -93,7 +93,7 @@ export function JobSummary({ job }: Readonly<Props>) {
               {job.employerAvatarUrl ? (
                 <AvatarImage
                   src={job.employerAvatarUrl}
-                  alt={job.employerName}
+                  alt={job.employerName ?? ""}
                   className="object-cover"
                 />
               ) : null}
@@ -106,7 +106,7 @@ export function JobSummary({ job }: Readonly<Props>) {
                 {job.employerName || "—"}
               </p>
               <p className="text-muted-foreground truncate text-xs">
-                ID: {job.employerId.slice(0, 8)}...
+                ID: {job.employerId?.slice(0, 8) ?? "—"}
               </p>
             </div>
           </div>
@@ -132,17 +132,19 @@ export function JobSummary({ job }: Readonly<Props>) {
             </div>
           </div>
 
-          <Link
-            to="/profiles/$profileId"
-            params={{ profileId: job.employerId }}
-            className={buttonVariants({
-              variant: "outline",
-              className: "w-full",
-            })}
-          >
-            <IconExternalLink className="size-3.5" />
-            View Profile
-          </Link>
+          {job.employerId ? (
+            <Link
+              to="/profiles/$profileId"
+              params={{ profileId: job.employerId }}
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
+            >
+              <IconExternalLink className="size-3.5" />
+              View Profile
+            </Link>
+          ) : null}
         </CardContent>
       </Card>
     </div>
