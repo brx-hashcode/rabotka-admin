@@ -22,10 +22,14 @@ export const VERIFICATION_STATUS_LABELS: Record<string, string> = {
 } as const;
 
 export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
   ACTIVE: "Active",
+  PARTIALLY_FILLED: "Partially Filled",
   FILLED: "Filled",
-  CANCELLED: "Cancelled",
+  IN_PROGRESS: "In Progress",
   COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+  EXPIRED: "Expired",
 } as const;
 
 export const APPLICATION_STATUS_LABELS: Record<string, string> = {

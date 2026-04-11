@@ -4,6 +4,8 @@ import { endOfDay, isSameDay, parseISO, startOfDay } from "date-fns";
 import { cn } from "#/lib/utils";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
+import { EventDetailsDialog } from "#/features/calendar/dialogs/event-details-dialog";
+import { useRole } from "#/hooks/use-role";
 import { DraggableEvent } from "#/features/calendar/dnd/draggable-event";
 import { formatTime } from "#/features/calendar/helpers";
 import type { IEvent } from "#/features/calendar/interfaces";
@@ -55,6 +57,7 @@ export function MonthEventBadge({
   position: propPosition,
 }: IProps) {
   const { use24HourFormat } = useCalendar();
+  const { canManageContent } = useRole();
 
   const itemStart = startOfDay(parseISO(event.startDate));
   const itemEnd = endOfDay(parseISO(event.endDate));
@@ -93,32 +96,38 @@ export function MonthEventBadge({
     none: "mx-1",
   }[position || "none"];
 
-  return (
-    <DraggableEvent event={event} className={marginClass}>
-      <AddEditEventDialog event={event}>
-        <button type="button" className={eventBadgeClasses}>
-          <div className="flex items-center gap-1.5 truncate">
-            {renderBadgeText && (
-              <p className="flex-1 truncate font-semibold">
-                {eventCurrentDay && (
-                  <span className="text-xs">
-                    Day {eventCurrentDay} of {eventTotalDays} •{" "}
-                  </span>
-                )}
-                {event.title}
-              </p>
-            )}
-          </div>
-
-          <div className="hidden sm:block">
-            {renderBadgeTime && (
-              <span>
-                {formatTime(new Date(event.startDate), use24HourFormat)}
+  const badgeButton = (
+    <button type="button" className={eventBadgeClasses}>
+      <div className="flex items-center gap-1.5 truncate">
+        {renderBadgeText && (
+          <p className="flex-1 truncate font-semibold">
+            {eventCurrentDay && (
+              <span className="text-xs">
+                Day {eventCurrentDay} of {eventTotalDays} •{" "}
               </span>
             )}
-          </div>
-        </button>
-      </AddEditEventDialog>
+            {event.title}
+          </p>
+        )}
+      </div>
+
+      <div className="hidden sm:block">
+        {renderBadgeTime && (
+          <span>
+            {formatTime(new Date(event.startDate), use24HourFormat)}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+
+  return (
+    <DraggableEvent event={event} className={marginClass}>
+      {canManageContent ? (
+        <AddEditEventDialog event={event}>{badgeButton}</AddEditEventDialog>
+      ) : (
+        <EventDetailsDialog event={event}>{badgeButton}</EventDetailsDialog>
+      )}
     </DraggableEvent>
   );
 }

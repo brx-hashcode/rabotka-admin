@@ -5,6 +5,7 @@ import { EyeIcon, MoreHorizontal } from "lucide-react";
 import {
   IconPlayerPlay,
   IconPlayerPause,
+  IconBan,
   IconTrash,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -22,6 +23,7 @@ import {
   updateJobOfferStatus,
   deleteJobOffer,
 } from "#/lib/api/jobs-controller";
+import { useRole } from "#/hooks/use-role";
 
 type JobRowActionsProps = Readonly<{
   job: AdminJobOfferListItem;
@@ -30,9 +32,11 @@ type JobRowActionsProps = Readonly<{
 export function JobRowActions({ job }: JobRowActionsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
 
   const [activateOpen, setActivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const invalidate = () =>
@@ -49,10 +53,20 @@ export function JobRowActions({ job }: JobRowActionsProps) {
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: () => updateJobOfferStatus(job.id, "CANCELLED"),
+    mutationFn: () => updateJobOfferStatus(job.id, "DRAFT"),
     onSuccess: () => {
       setDeactivateOpen(false);
       toast.success("Job offer deactivated.");
+      invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => updateJobOfferStatus(job.id, "CANCELLED"),
+    onSuccess: () => {
+      setCancelOpen(false);
+      toast.success("Job offer cancelled.");
       invalidate();
     },
     onError: (error) => toast.error(error.message),
@@ -69,11 +83,17 @@ export function JobRowActions({ job }: JobRowActionsProps) {
   });
 
   const canActivate =
-    job.status !== "ACTIVE" &&
-    job.status !== "COMPLETED" &&
-    job.status !== "CANCELLED";
+    job.status === "DRAFT" ||
+    job.status === "PARTIALLY_FILLED" ||
+    job.status === "FILLED";
   const canDeactivate =
-    job.status === "ACTIVE" || job.status === "PARTIALLY_FILLED";
+    job.status === "ACTIVE" ||
+    job.status === "PARTIALLY_FILLED" ||
+    job.status === "FILLED";
+  const canCancel =
+    job.status !== "CANCELLED" &&
+    job.status !== "COMPLETED" &&
+    job.status !== "EXPIRED";
 
   return (
     <>
@@ -94,32 +114,43 @@ export function JobRowActions({ job }: JobRowActionsProps) {
             View
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+          {canManageContent && (
+            <>
+              <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            disabled={!canActivate}
-            onClick={() => canActivate && setActivateOpen(true)}
-          >
-            <IconPlayerPlay className="size-4" />
-            Activate
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canDeactivate}
-            onClick={() => canDeactivate && setDeactivateOpen(true)}
-          >
-            <IconPlayerPause className="size-4" />
-            Deactivate
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canActivate}
+                onClick={() => canActivate && setActivateOpen(true)}
+              >
+                <IconPlayerPlay className="size-4" />
+                Activate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canDeactivate}
+                onClick={() => canDeactivate && setDeactivateOpen(true)}
+              >
+                <IconPlayerPause className="size-4" />
+                Deactivate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canCancel}
+                onClick={() => canCancel && setCancelOpen(true)}
+              >
+                <IconBan className="size-4" />
+                Cancel
+              </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => setDeleteOpen(true)}
-          >
-            <IconTrash className="size-4" />
-            Delete
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <IconTrash className="size-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -137,10 +168,20 @@ export function JobRowActions({ job }: JobRowActionsProps) {
         open={deactivateOpen}
         onOpenChange={setDeactivateOpen}
         title="Deactivate job offer"
-        description="This will cancel the job offer. Workers will no longer be able to apply."
+        description="This will pause the job offer. It can be re-activated later."
         actionLabel="Deactivate"
         onConfirm={() => deactivateMutation.mutate()}
         isPending={deactivateMutation.isPending}
+        variant="destructive"
+      />
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Cancel job offer"
+        description="This will permanently cancel the job offer. Workers will no longer be able to apply and this cannot be undone."
+        actionLabel="Cancel"
+        onConfirm={() => cancelMutation.mutate()}
+        isPending={cancelMutation.isPending}
         variant="destructive"
       />
       <ConfirmDialog

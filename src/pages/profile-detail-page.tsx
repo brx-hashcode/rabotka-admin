@@ -40,6 +40,7 @@ import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
 } from "#/lib/api/profiles-controller";
+import { useRole } from "#/hooks/use-role";
 
 type ProfileTab = "general" | "kyc" | "payments" | "invoices" | "messages";
 
@@ -152,6 +153,8 @@ export default function ProfileDetailPage({
     }
   }
 
+  const { canManageContent } = useRole();
+
   const canVerifyKyc =
     profile != null && profile.verificationStatus !== "VERIFIED";
   const canActivate =
@@ -234,53 +237,55 @@ export default function ProfileDetailPage({
               {isLoadingAgreement ? "Loading..." : "View Agreement"}
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  Actions
-                  <IconChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem
-                  disabled={!canSendVerifLink}
-                  onClick={() => canSendVerifLink && setSendVerifLinkOpen(true)}
-                >
-                  <IconBrandWhatsapp className="size-4" />
-                  Send verification link
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={!canVerifyKyc}
-                  onClick={() => canVerifyKyc && setKycModalOpen(true)}
-                >
-                  <IconShieldCheck className="size-4" />
-                  KYC Verification
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  disabled={!canActivate}
-                  onClick={() => {
-                    if (!canActivate) return;
-                    setStatusModalTarget("ACTIVE");
-                    setStatusModalOpen(true);
-                  }}
-                >
-                  <IconPlayerPlay className="size-4" />
-                  Activate
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  disabled={!canDeactivate}
-                  onClick={() => {
-                    if (!canDeactivate) return;
-                    setStatusModalTarget("SUSPENDED");
-                    setStatusModalOpen(true);
-                  }}
-                >
-                  <IconPlayerPause className="size-4" />
-                  Suspend
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {canManageContent && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Actions
+                    <IconChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    disabled={!canSendVerifLink}
+                    onClick={() => canSendVerifLink && setSendVerifLinkOpen(true)}
+                  >
+                    <IconBrandWhatsapp className="size-4" />
+                    Send verification link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!canVerifyKyc}
+                    onClick={() => canVerifyKyc && setKycModalOpen(true)}
+                  >
+                    <IconShieldCheck className="size-4" />
+                    KYC Verification
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={!canActivate}
+                    onClick={() => {
+                      if (!canActivate) return;
+                      setStatusModalTarget("ACTIVE");
+                      setStatusModalOpen(true);
+                    }}
+                  >
+                    <IconPlayerPlay className="size-4" />
+                    Activate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!canDeactivate}
+                    onClick={() => {
+                      if (!canDeactivate) return;
+                      setStatusModalTarget("SUSPENDED");
+                      setStatusModalOpen(true);
+                    }}
+                  >
+                    <IconPlayerPause className="size-4" />
+                    Suspend
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
@@ -291,6 +296,7 @@ export default function ProfileDetailPage({
                 profile={profile}
                 onSave={handleSave}
                 isSaving={isUpdating}
+                readOnly={!canManageContent}
               />
             </div>
             <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">

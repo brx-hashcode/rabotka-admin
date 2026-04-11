@@ -5,6 +5,7 @@ import { IconPlus } from "@tabler/icons-react";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Button } from "#/components/ui/button";
 import { useUsersList } from "#/hooks/use-users-list";
+import { useRole } from "#/hooks/use-role";
 import {
   userColumns,
   userRoleOptions,
@@ -15,7 +16,12 @@ import {
 function UsersTableHeader({
   table,
   onCreateClick,
-}: Readonly<{ table: TableInstance<AdminUser>; onCreateClick: () => void }>) {
+  canManageTeam,
+}: Readonly<{
+  table: TableInstance<AdminUser>;
+  onCreateClick: () => void;
+  canManageTeam: boolean;
+}>) {
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -24,10 +30,12 @@ function UsersTableHeader({
         filters={[{ id: "role", label: "Role", options: userRoleOptions }]}
         table={table}
       >
-        <Button size="sm" onClick={onCreateClick}>
-          <IconPlus className="mr-1.5 size-4" />
-          New User
-        </Button>
+        {canManageTeam && (
+          <Button size="sm" onClick={onCreateClick}>
+            <IconPlus className="mr-1.5 size-4" />
+            New User
+          </Button>
+        )}
       </TableHeaderToolbar>
     </TableHeader>
   );
@@ -35,6 +43,7 @@ function UsersTableHeader({
 
 export default function TeamPage() {
   const { data, total, isLoading } = useUsersList();
+  const { canManageTeam } = useRole();
   const [createOpen, setCreateOpen] = useState(false);
 
   function renderHeader(table: TableInstance<AdminUser>) {
@@ -42,6 +51,7 @@ export default function TeamPage() {
       <UsersTableHeader
         table={table}
         onCreateClick={() => setCreateOpen(true)}
+        canManageTeam={canManageTeam}
       />
     );
   }

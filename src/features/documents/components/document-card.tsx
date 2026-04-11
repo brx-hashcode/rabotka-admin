@@ -35,6 +35,7 @@ import {
 } from "#/lib/api/documents-controller";
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import { RenameDocumentModal } from "./rename-document-modal";
+import { useRole } from "#/hooks/use-role";
 
 function DocIcon({ mimeType }: Readonly<{ mimeType: string }>) {
   if (mimeType === "application/pdf")
@@ -63,6 +64,7 @@ type DocumentCardProps = {
 
 export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -142,22 +144,28 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
                   <Eye className="size-4" />
                   View
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRenameOpen(true)}>
-                  <Pencil className="size-4" />
-                  Rename
-                </DropdownMenuItem>
+                {canManageContent && (
+                  <DropdownMenuItem onClick={() => setRenameOpen(true)}>
+                    <Pencil className="size-4" />
+                    Rename
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleDownload()}>
                   <Download className="size-4" />
                   Download
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 className="size-4" />
-                  Delete
-                </DropdownMenuItem>
+                {canManageContent && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

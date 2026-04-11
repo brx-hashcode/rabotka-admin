@@ -1,5 +1,5 @@
 export const appConfig = {
-  appName: "Rabotka Admin",
+  appName: "Rabotka",
   apiUrl: "/api/v1",
   defaultPaginationLimit: 12,
   defaultRecentPageSize: 8,

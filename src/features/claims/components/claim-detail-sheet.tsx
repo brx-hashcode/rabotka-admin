@@ -38,6 +38,7 @@ import type {
 import { getUsersList } from "#/lib/api/users-controller";
 import { ProfileCell } from "#/components/table";
 import { ClaimComments } from "./claim-comments";
+import { useRole } from "#/hooks/use-role";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "CREATED", label: "Created" },
@@ -70,6 +71,7 @@ export function ClaimDetailSheet({
   onClose,
 }: Readonly<ClaimDetailDialogProps>) {
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -146,25 +148,27 @@ export function ClaimDetailSheet({
                 <DialogTitle className="flex-1 text-base leading-snug">
                   {claim.title}
                 </DialogTitle>
-                <Select
-                  value={status}
-                  onValueChange={(v) => setStatus(v as AdminClaimStatus)}
-                >
-                  <SelectTrigger className="h-7 w-36 text-xs shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <SelectItem
-                        key={opt.value}
-                        value={opt.value}
-                        className="text-xs"
-                      >
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {canManageContent && (
+                  <Select
+                    value={status}
+                    onValueChange={(v) => setStatus(v as AdminClaimStatus)}
+                  >
+                    <SelectTrigger className="h-7 w-36 text-xs shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((opt) => (
+                        <SelectItem
+                          key={opt.value}
+                          value={opt.value}
+                          className="text-xs"
+                        >
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </DialogHeader>
 
@@ -272,37 +276,39 @@ export function ClaimDetailSheet({
                       email={assignedUser.email}
                       avatarUrl={null}
                     />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isUnassigning}
-                        >
-                          Unassign
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Unassign this claim?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {assignedUser.firstName} {assignedUser.lastName}{" "}
-                            will be notified by email and removed from this
-                            claim.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => unassign()}>
+                    {canManageContent && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isUnassigning}
+                          >
                             Unassign
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Unassign this claim?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {assignedUser.firstName} {assignedUser.lastName}{" "}
+                              will be notified by email and removed from this
+                              claim.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => unassign()}>
+                              Unassign
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
-                ) : (
+                ) : canManageContent ? (
                   <Select
                     value={assignedUserId}
                     onValueChange={setAssignedUserId}
@@ -322,6 +328,8 @@ export function ClaimDetailSheet({
                       ))}
                     </SelectContent>
                   </Select>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Unassigned</p>
                 )}
               </div>
 
@@ -330,37 +338,39 @@ export function ClaimDetailSheet({
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t shrink-0 flex items-center justify-end gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm" disabled={isDeleting}>
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this claim?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => remove()}>
+            {canManageContent && (
+              <div className="px-6 py-4 border-t shrink-0 flex items-center justify-end gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={isDeleting}>
                       Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this claim?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => remove()}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-              <Button
-                size="sm"
-                onClick={() => save()}
-                disabled={!isDirty || isSaving}
-              >
-                {isSaving ? "Saving…" : "Save changes"}
-              </Button>
-            </div>
+                <Button
+                  size="sm"
+                  onClick={() => save()}
+                  disabled={!isDirty || isSaving}
+                >
+                  {isSaving ? "Saving…" : "Save changes"}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </DialogContent>

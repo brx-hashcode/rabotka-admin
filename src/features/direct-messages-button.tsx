@@ -26,12 +26,14 @@ import {
   type AdminProfileListItem,
 } from "#/lib/api/profiles-controller";
 import { IconSend } from "@tabler/icons-react";
+import { useRole } from "#/hooks/use-role";
 
 type Channel = "WHATSAPP" | "EMAIL";
 
 export const DirectMessagesButton = ({
   className,
 }: Readonly<{ className?: string }>) => {
+  const { canManageContent } = useRole();
   const [isOpen, setIsOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -83,6 +85,8 @@ export const DirectMessagesButton = ({
     setComboOpen(false);
     setAttachments([]);
   };
+
+  if (!canManageContent) return null;
 
   return (
     <>

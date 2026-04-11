@@ -34,8 +34,14 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import type { AdminRole } from "#/lib/api/auth-controller";
+import { appConfig } from "#/config";
 
-type NavItem = { title: string; url: string; icon: Icon; roles?: AdminRole[] };
+export type NavItem = {
+  title: string;
+  url: string;
+  icon: Icon;
+  roles?: AdminRole[];
+};
 
 const navMain: NavItem[] = [
   { title: "Overview", url: "/", icon: IconLayoutGrid },
@@ -47,7 +53,7 @@ const navMain: NavItem[] = [
     title: "Team Members",
     url: "/team",
     icon: IconUsers,
-    roles: ["SUPER_ADMIN"],
+    roles: ["ADMIN", "SUPER_ADMIN"],
   },
 ];
 
@@ -61,12 +67,32 @@ const navSecondary: NavItem[] = [
   { title: "Support", url: "/help", icon: IconHelp },
 ];
 
-const documents = [
-  { name: "Payroll & Wallet", url: "/wallet", icon: IconWallet },
-  { name: "Expense Claims", url: "/claim", icon: IconReport },
-  { name: "HR Events", url: "/events", icon: IconCalendar },
-  { name: "Activity Logs", url: "/logs", icon: IconFileWord },
-  { name: "Documents", url: "/documents", icon: IconFile },
+const documents: NavItem[] = [
+  {
+    title: "Payroll & Wallet",
+    url: "/wallet",
+    icon: IconWallet,
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
+  { title: "Expense Claims", url: "/claim", icon: IconReport },
+  {
+    title: "HR Events",
+    url: "/events",
+    icon: IconCalendar,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "Activity Logs",
+    url: "/logs",
+    icon: IconFileWord,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "Documents",
+    url: "/documents",
+    icon: IconFile,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -74,12 +100,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const user = {
     name: admin
-      ? `${admin.firstName} ${admin.lastName}`.trim() || "Admin"
-      : "Admin",
+      ? `${admin.firstName} ${admin.lastName}`.trim() || "Rabotka Admin"
+      : "Rabotka Admin",
     email: admin?.email ?? "",
   };
 
   const role = admin?.role;
+
+  const filteredNavMain = navMain.filter(
+    (item) => !item.roles || (role && item.roles.includes(role)),
+  );
+
+  const filteredDocuments = documents.filter(
+    (item) => !item.roles || (role && item.roles.includes(role)),
+  );
 
   const filteredNavSecondary = navSecondary.filter(
     (item) => !item.roles || (role && item.roles.includes(role)),
@@ -100,15 +134,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   alt="Rabotka"
                   className="size-5 rounded-sm"
                 />
-                <span className="text-base font-semibold">Rabotka</span>
+                <span className="text-base font-semibold">
+                  {appConfig.appName}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
-        <NavDocuments items={documents} />
+        <NavMain items={filteredNavMain} />
+        <NavDocuments items={filteredDocuments} />
         <NavSecondary items={filteredNavSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

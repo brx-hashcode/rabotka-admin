@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import {
   IconPlayerPlay,
   IconPlayerPause,
+  IconBan,
   IconTrash,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -24,6 +25,7 @@ import { JobForm } from "./job-detail/components/job-form";
 import { JobSummary } from "./job-detail/components/job-summary";
 import { JobApplicationsTable } from "./job-detail/components/job-applications-table";
 import { useNavigate } from "@tanstack/react-router";
+import { useRole } from "#/hooks/use-role";
 
 export default function JobDetailPage({
   jobId,
@@ -31,6 +33,7 @@ export default function JobDetailPage({
   jobId: string;
 }>) {
   const navigate = useNavigate();
+  const { canManageContent } = useRole();
 
   const {
     job,
@@ -46,6 +49,7 @@ export default function JobDetailPage({
 
   const [activateOpen, setActivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isEditable = job?.status === "ACTIVE";
@@ -53,13 +57,24 @@ export default function JobDetailPage({
   const canActivate = useMemo(
     () =>
       job != null &&
-      job.status !== "ACTIVE" &&
-      job.status !== "COMPLETED" &&
-      job.status !== "CANCELLED",
+      (job.status === "DRAFT" ||
+        job.status === "PARTIALLY_FILLED" ||
+        job.status === "FILLED"),
     [job?.status],
   );
   const canDeactivate = useMemo(
-    () => job?.status === "ACTIVE" || job?.status === "PARTIALLY_FILLED",
+    () =>
+      job?.status === "ACTIVE" ||
+      job?.status === "PARTIALLY_FILLED" ||
+      job?.status === "FILLED",
+    [job?.status],
+  );
+  const canCancel = useMemo(
+    () =>
+      job != null &&
+      job.status !== "CANCELLED" &&
+      job.status !== "COMPLETED" &&
+      job.status !== "EXPIRED",
     [job?.status],
   );
 
@@ -111,38 +126,47 @@ export default function JobDetailPage({
         <div>
           <h2 className="text-2xl font-bold">{job.title}</h2>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Actions
-              <IconChevronDown className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem
-              disabled={!canActivate}
-              onClick={() => canActivate && setActivateOpen(true)}
-            >
-              <IconPlayerPlay className="size-4" />
-              Activate
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={!canDeactivate}
-              onClick={() => canDeactivate && setDeactivateOpen(true)}
-            >
-              <IconPlayerPause className="size-4" />
-              Deactivate
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <IconTrash className="size-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canManageContent && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Actions
+                <IconChevronDown className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                disabled={!canActivate}
+                onClick={() => canActivate && setActivateOpen(true)}
+              >
+                <IconPlayerPlay className="size-4" />
+                Activate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canDeactivate}
+                onClick={() => canDeactivate && setDeactivateOpen(true)}
+              >
+                <IconPlayerPause className="size-4" />
+                Deactivate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canCancel}
+                onClick={() => canCancel && setCancelOpen(true)}
+              >
+                <IconBan className="size-4" />
+                Cancel
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <IconTrash className="size-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -151,7 +175,7 @@ export default function JobDetailPage({
             job={job}
             onSave={handleSave}
             isSaving={isUpdating}
-            disabled={!isEditable}
+            disabled={!isEditable || !canManageContent}
           />
         </div>
         <div className="min-w-0">
@@ -180,10 +204,23 @@ export default function JobDetailPage({
         open={deactivateOpen}
         onOpenChange={setDeactivateOpen}
         title="Deactivate job offer"
-        description="This will cancel the job offer. Workers will no longer be able to apply."
+        description="This will pause the job offer. It can be re-activated later."
         actionLabel="Deactivate"
         onConfirm={() =>
-          updateStatus("CANCELLED").then(() => setDeactivateOpen(false))
+          updateStatus("DRAFT").then(() => setDeactivateOpen(false))
+        }
+        isPending={isUpdatingStatus}
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Cancel job offer"
+        description="This will permanently cancel the job offer. Workers will no longer be able to apply and this cannot be undone."
+        actionLabel="Cancel"
+        onConfirm={() =>
+          updateStatus("CANCELLED").then(() => setCancelOpen(false))
         }
         isPending={isUpdatingStatus}
         variant="destructive"

@@ -22,6 +22,7 @@ import {
   sendVerificationLink,
   updateProfileStatus,
 } from "#/lib/api/profiles-controller";
+import { useRole } from "#/hooks/use-role";
 
 type ProfileRowActionsProps = Readonly<{
   profile: AdminProfileListItem;
@@ -30,6 +31,7 @@ type ProfileRowActionsProps = Readonly<{
 export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canManageContent } = useRole();
 
   const [verifLinkOpen, setVerifLinkOpen] = useState(false);
   const [activateOpen, setActivateOpen] = useState(false);
@@ -98,30 +100,34 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
             View
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            disabled={isWhatsappConnected}
-            onClick={() => canSendVerifLink && setVerifLinkOpen(true)}
-          >
-            <IconBrandWhatsapp className="size-4" />
-            Send verification link
-          </DropdownMenuItem>
+          {canManageContent && (
+            <>
+              <DropdownMenuItem
+                disabled={isWhatsappConnected}
+                onClick={() => canSendVerifLink && setVerifLinkOpen(true)}
+              >
+                <IconBrandWhatsapp className="size-4" />
+                Send verification link
+              </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            disabled={!canActivate}
-            onClick={() => canActivate && setActivateOpen(true)}
-          >
-            <IconPlayerPlay className="size-4" />
-            Activate
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canDeactivate}
-            onClick={() => canDeactivate && setSuspendOpen(true)}
-          >
-            <IconPlayerPause className="size-4" />
-            Suspend
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canActivate}
+                onClick={() => canActivate && setActivateOpen(true)}
+              >
+                <IconPlayerPlay className="size-4" />
+                Activate
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canDeactivate}
+                onClick={() => canDeactivate && setSuspendOpen(true)}
+              >
+                <IconPlayerPause className="size-4" />
+                Suspend
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
