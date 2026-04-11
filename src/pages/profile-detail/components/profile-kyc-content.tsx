@@ -64,7 +64,26 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
         )}
       </div>
 
-      {profile.rejectionReason && (
+      {profile.kycVerificationNote && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Verification decision note</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p
+              className={
+                profile.verificationStatus === "REJECTED"
+                  ? "bg-destructive/10 text-destructive rounded p-3 text-sm"
+                  : "bg-muted rounded p-3 text-sm"
+              }
+            >
+              {profile.kycVerificationNote}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!profile.kycVerificationNote && profile.rejectionReason && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Rejection Reason</CardTitle>

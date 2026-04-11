@@ -26,56 +26,44 @@ type KycVerificationModalProps = {
   profile: AdminProfileDetailResponse;
   onSubmit: (
     decision: "VERIFIED" | "REJECTED",
-    reason?: string,
+    reason: string,
     files?: File[],
   ) => void;
   isPending: boolean;
 };
 
-const MIN_FILES_REQUIRED = 2;
+const REASON_PLACEHOLDER =
+  "Enter the reason for your decision (required for approve and reject)…";
 
-const REASON_PLACEHOLDER = {
-  REJECTED: "Provide a reason for rejection...",
-  VERIFIED: "Add a comment...",
-} as const;
+const KYC_REASON_FIELD_ID = "kyc-verification-reason";
 
 function ReasonField({
-  decision,
   reason,
   reasonError,
   onReasonChange,
 }: Readonly<{
-  decision: "VERIFIED" | "REJECTED" | null;
   reason: string;
   reasonError: boolean;
   onReasonChange: (value: string) => void;
 }>) {
-  const isRejected = decision === "REJECTED";
-  const placeholder = isRejected
-    ? REASON_PLACEHOLDER.REJECTED
-    : REASON_PLACEHOLDER.VERIFIED;
-
   return (
     <div className="space-y-1.5">
-      <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-        Reason{" "}
-        {isRejected ? (
-          <span className="text-destructive">*</span>
-        ) : (
-          "(optional)"
-        )}
+      <label
+        htmlFor={KYC_REASON_FIELD_ID}
+        className="text-muted-foreground text-xs font-medium uppercase tracking-wide"
+      >
+        Reason <span className="text-destructive">*</span>
       </label>
       <Textarea
-        placeholder={placeholder}
+        id={KYC_REASON_FIELD_ID}
+        placeholder={REASON_PLACEHOLDER}
         value={reason}
         rows={3}
         onChange={(e) => onReasonChange(e.target.value)}
         className={cn("resize-none", reasonError && "border-destructive")}
       />
       {reasonError && (
-        <p className="text-destructive text-xs">
-          A reason is required when rejecting.
-        </p>
+        <p className="text-destructive text-xs">A reason is required.</p>
       )}
     </div>
   );
@@ -115,10 +103,7 @@ export function KycVerificationModal({
   }, [open]);
 
   const canSubmit =
-    decision != null &&
-    (decision !== "REJECTED" || reason.trim().length > 0) &&
-    !reasonError &&
-    files.length >= MIN_FILES_REQUIRED;
+    decision != null && reason.trim().length > 0 && !reasonError;
 
   const addFiles = (newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -129,12 +114,11 @@ export function KycVerificationModal({
   };
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
-    if (decision === "REJECTED" && !reason.trim()) {
+    if (!decision || !reason.trim()) {
       setReasonError(true);
       return;
     }
-    onSubmit(decision, reason.trim() || undefined, files);
+    onSubmit(decision, reason.trim(), files.length > 0 ? files : undefined);
   };
 
   return (
@@ -143,8 +127,8 @@ export function KycVerificationModal({
         <DialogHeader>
           <DialogTitle>KYC Verification</DialogTitle>
           <DialogDescription>
-            Review the uploaded documents and approve or reject this profile's
-            KYC verification.
+            Approve or reject this profile&apos;s KYC. Supporting uploads are
+            optional; a reason is required and is stored on the profile.
           </DialogDescription>
         </DialogHeader>
 
@@ -186,15 +170,9 @@ export function KycVerificationModal({
             previews={previews}
             onAdd={addFiles}
             onRemove={removeFile}
-            label="KYC supporting documents"
+            label="KYC supporting documents (optional)"
             maxSize={5 * 1024 * 1024}
           />
-          {files.length > 0 && files.length < MIN_FILES_REQUIRED && (
-            <p className="text-destructive text-xs">
-              At least {MIN_FILES_REQUIRED} documents are required to submit.
-              Please add {MIN_FILES_REQUIRED - files.length} more.
-            </p>
-          )}
 
           {profile.kycDocuments.length > 0 && (
             <div className="space-y-2">
@@ -223,7 +201,6 @@ export function KycVerificationModal({
           )}
 
           <ReasonField
-            decision={decision}
             reason={reason}
             reasonError={reasonError}
             onReasonChange={(value) => {

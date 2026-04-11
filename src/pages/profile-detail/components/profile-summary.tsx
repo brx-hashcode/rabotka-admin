@@ -102,7 +102,9 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
       </Card>
 
       {/* Verification details */}
-      {(profile.verifiedAt || profile.rejectionReason) && (
+      {(profile.verifiedAt ||
+        profile.kycVerificationNote ||
+        profile.rejectionReason) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Verification Details</CardTitle>
@@ -123,7 +125,23 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
                   <span className="font-medium">{profile.verifiedBy}</span>
                 </div>
               )}
-              {profile.rejectionReason && (
+              {profile.kycVerificationNote && (
+                <div className="pt-1">
+                  <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                    Decision note
+                  </p>
+                  <p
+                    className={
+                      profile.verificationStatus === "REJECTED"
+                        ? "bg-destructive/10 text-destructive mt-1 rounded p-2 text-xs"
+                        : "bg-muted mt-1 rounded p-2 text-xs"
+                    }
+                  >
+                    {profile.kycVerificationNote}
+                  </p>
+                </div>
+              )}
+              {!profile.kycVerificationNote && profile.rejectionReason && (
                 <div className="pt-1">
                   <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                     Rejection Reason
