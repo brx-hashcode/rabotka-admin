@@ -13,10 +13,10 @@ export const Route = createFileRoute("/_authenticated/penalties/")({
   }),
   component: () => (
     <Layout
-      title="Penalties"
+      title="Compliance"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Violations & Penalties" },
+        { label: "Compliance" },
       ]}
     >
       <PenaltiesPage />

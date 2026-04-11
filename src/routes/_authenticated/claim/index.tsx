@@ -5,10 +5,10 @@ import ClaimsPage from "#/pages/claims";
 export const Route = createFileRoute("/_authenticated/claim/")({
   component: () => (
     <Layout
-      title="Claims"
+      title="Expense Claims"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Claims" },
+        { label: "Expense Claims" },
       ]}
     >
       <ClaimsPage />

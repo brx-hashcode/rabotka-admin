@@ -1,4 +1,5 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   profileColumns,
@@ -50,15 +51,21 @@ export default function ProfilesPage() {
   const { data, total, isLoading } = useProfilesList();
 
   return (
-    <DataTable
-      isPaginated
-      enableRowSelection
-      data={data}
-      columns={profileColumns}
-      header={renderProfilesHeader}
-      totalCount={total}
-      isLoading={isLoading}
-      getRowId={(row) => row.id}
-    />
+    <div className="pt-6">
+      <PageListHeader
+        title="Profiles"
+        description="Search and manage candidate profiles, verification and account status."
+      />
+      <DataTable
+        isPaginated
+        enableRowSelection
+        data={data}
+        columns={profileColumns}
+        header={renderProfilesHeader}
+        totalCount={total}
+        isLoading={isLoading}
+        getRowId={(row) => row.id}
+      />
+    </div>
   );
 }

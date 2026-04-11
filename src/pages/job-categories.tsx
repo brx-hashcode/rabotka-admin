@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Tag } from "lucide-react";
+import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { CategoryCard } from "#/features/job-categories/components/category-card";
@@ -53,18 +54,16 @@ export default function JobCategoriesPage() {
 
   return (
     <div className="pt-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Job Categories</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Manage mission categories for workers and job offers.
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" />
-          Add category
-        </Button>
-      </div>
+      <PageListHeader
+        title="Job Categories"
+        description="Manage mission categories for workers and job offers."
+        actions={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Add category
+          </Button>
+        }
+      />
 
       {listSection}
 

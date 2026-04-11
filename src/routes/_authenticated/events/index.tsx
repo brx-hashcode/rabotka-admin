@@ -5,10 +5,10 @@ import EventsPage from "#/pages/events";
 export const Route = createFileRoute("/_authenticated/events/")({
   component: () => (
     <Layout
-      title="Events"
+      title="HR Events"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Events" },
+        { label: "HR Events" },
       ]}
     >
       <EventsPage />

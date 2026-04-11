@@ -1,4 +1,5 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   applicationColumns,
@@ -42,15 +43,21 @@ export default function ApplicationsPage() {
   const { data, total, isLoading } = useApplicationsList();
 
   return (
-    <DataTable
-      isPaginated
-      enableRowSelection
-      data={data}
-      columns={applicationColumns}
-      header={renderApplicationsHeader}
-      totalCount={total}
-      isLoading={isLoading}
-      getRowId={(row) => row.id}
-    />
+    <div className="pt-6">
+      <PageListHeader
+        title="Applications"
+        description="Track job applications, penalties and application status."
+      />
+      <DataTable
+        isPaginated
+        enableRowSelection
+        data={data}
+        columns={applicationColumns}
+        header={renderApplicationsHeader}
+        totalCount={total}
+        isLoading={isLoading}
+        getRowId={(row) => row.id}
+      />
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, FileText } from "lucide-react";
+import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { DocumentCard } from "#/features/documents/components/document-card";
@@ -62,20 +63,18 @@ export default function DocumentsPage() {
 
   return (
     <div className="pt-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Documents</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Platform agreements, contracts, policies and more.
-          </p>
-        </div>
-        {canManageContent && (
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Add document
-          </Button>
-        )}
-      </div>
+      <PageListHeader
+        title="Documents"
+        description="Platform agreements, contracts, policies and more."
+        actions={
+          canManageContent ? (
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              Add document
+            </Button>
+          ) : null
+        }
+      />
 
       {listSection}
 
