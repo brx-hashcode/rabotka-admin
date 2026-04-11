@@ -4,7 +4,6 @@ import {
   useCallback,
   useMemo,
   useEffect,
-  useRef,
 } from "react";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
@@ -553,17 +552,14 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
 
 function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   const [failed, setFailed] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
 
+  /** Office Online embed is cross-origin; `iframe.contentWindow.print()` throws SecurityError. */
   function handlePrintDocx() {
-    const win = iframeRef.current?.contentWindow;
-    if (win) {
-      win.focus();
-      win.print();
-    } else {
-      globalThis.open(officeUrl, "_blank", "noopener,noreferrer");
-    }
+    globalThis.open(officeUrl, "_blank", "noopener,noreferrer");
+    toast.info("Print from Office viewer", {
+      description: "Use Ctrl+P or ⌘P in the tab that opened.",
+    });
   }
 
   if (failed) {
@@ -616,6 +612,7 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             className="h-8 gap-1.5"
             onClick={handlePrintDocx}
             aria-label="Print"
+            title="Opens the Office Online viewer in a new tab — use Ctrl+P or ⌘P there to print"
           >
             <Printer className="size-3.5" />
             Print
@@ -623,7 +620,6 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
         </div>
       </div>
       <iframe
-        ref={iframeRef}
         src={officeUrl}
         title="Document preview"
         className="w-full flex-1"
