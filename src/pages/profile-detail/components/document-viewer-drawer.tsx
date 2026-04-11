@@ -1,6 +1,14 @@
-import { Component, useState, useCallback, useMemo, useEffect } from "react";
+import {
+  Component,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
+import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
   Download,
@@ -11,6 +19,7 @@ import {
   Image as ImageIcon,
   ZoomIn,
   ZoomOut,
+  Printer,
 } from "lucide-react";
 
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
@@ -58,6 +67,97 @@ async function downloadViaProxy(fileUrl: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(objectUrl);
+}
+
+function removePrintIframeLater(iframe: HTMLIFrameElement) {
+  const win = iframe.contentWindow;
+  let timed: ReturnType<typeof globalThis.setTimeout>;
+  const cleanup = () => {
+    globalThis.clearTimeout(timed);
+    win?.removeEventListener("afterprint", cleanup);
+    iframe.remove();
+  };
+  win?.addEventListener("afterprint", cleanup);
+  timed = globalThis.setTimeout(cleanup, 120_000);
+}
+
+function printPdfFromUrl(fileUrl: string) {
+  if (globalThis.window === undefined) return;
+  const absolute = pdfDocumentUrl(fileUrl);
+  const iframe = globalThis.document.createElement("iframe");
+  iframe.setAttribute(
+    "style",
+    "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden",
+  );
+  iframe.src = absolute;
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } finally {
+      removePrintIframeLater(iframe);
+    }
+  };
+  globalThis.document.body.appendChild(iframe);
+}
+
+function escapeHtmlForPrint(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function printImageUrl(imageUrl: string, documentTitle: string) {
+  if (globalThis.window === undefined) return;
+  const absolute = pdfDocumentUrl(imageUrl);
+  const w = globalThis.window.open(
+    "",
+    "_blank",
+    "noopener,noreferrer,width=960,height=720",
+  );
+  if (!w) return;
+  const titleEsc = escapeHtmlForPrint(documentTitle);
+  const srcEsc = escapeHtmlForPrint(absolute);
+  w.document.write(
+    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titleEsc}</title><style>body{margin:0;display:flex;justify-content:center;align-items:flex-start;}img{max-width:100%;height:auto;}</style></head><body><img src="${srcEsc}" alt="${titleEsc}" /></body></html>`,
+  );
+  w.document.close();
+  const img = w.document.querySelector("img");
+  const doPrint = () => {
+    w.focus();
+    w.print();
+    globalThis.setTimeout(() => w.close(), 500);
+  };
+  img?.addEventListener(
+    "error",
+    () => {
+      w.close();
+    },
+    { once: true },
+  );
+  if (img?.complete && img.naturalHeight > 0) doPrint();
+  else img?.addEventListener("load", doPrint, { once: true });
+}
+
+function printPlainTextDocument(text: string, documentTitle: string) {
+  if (globalThis.window === undefined) return;
+  const w = globalThis.window.open(
+    "",
+    "_blank",
+    "noopener,noreferrer,width=800,height=600",
+  );
+  if (!w) return;
+  const titleEsc = escapeHtmlForPrint(documentTitle);
+  w.document.write(
+    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titleEsc}</title><style>body{font-family:system-ui,sans-serif;margin:0;padding:1rem;white-space:pre-wrap;word-break:break-word;}</style></head><body><pre>${escapeHtmlForPrint(text)}</pre></body></html>`,
+  );
+  w.document.close();
+  w.focus();
+  w.print();
+  globalThis.setTimeout(() => w.close(), 500);
 }
 
 function DocFallback({
@@ -287,6 +387,17 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
                 <Download className="size-3.5" />
                 Download
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => printPdfFromUrl(url)}
+                aria-label="Print"
+              >
+                <Printer className="size-3.5" />
+                Print
+              </Button>
             </div>
           </div>
         )}
@@ -409,6 +520,17 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             <Download className="size-3.5" />
             Download
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => printImageUrl(url, title)}
+            aria-label="Print"
+          >
+            <Printer className="size-3.5" />
+            Print
+          </Button>
         </div>
       </div>
 
@@ -431,7 +553,18 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
 
 function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   const [failed, setFailed] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+
+  function handlePrintDocx() {
+    const win = iframeRef.current?.contentWindow;
+    if (win) {
+      win.focus();
+      win.print();
+    } else {
+      globalThis.open(officeUrl, "_blank", "noopener,noreferrer");
+    }
+  }
 
   if (failed) {
     return (
@@ -476,9 +609,21 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             <Download className="size-3.5" />
             Download
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={handlePrintDocx}
+            aria-label="Print"
+          >
+            <Printer className="size-3.5" />
+            Print
+          </Button>
         </div>
       </div>
       <iframe
+        ref={iframeRef}
         src={officeUrl}
         title="Document preview"
         className="w-full flex-1"
@@ -494,12 +639,32 @@ function GoogleDocsViewer({
   url,
   title,
 }: Readonly<{ url: string; title: string }>) {
+  /** Embedded Google Docs are cross-origin; `iframe.contentWindow.print()` throws SecurityError. */
+  function handlePrintGoogleDoc() {
+    globalThis.open(url, "_blank", "noopener,noreferrer");
+    toast.info("Print from Google Docs", {
+      description: "Use Ctrl+P or ⌘P in the tab that opened.",
+    });
+  }
+
   return (
     <div
       className="flex flex-col h-full min-h-0"
       style={{ minHeight: "calc(100vh - 160px)" }}
     >
-      <div className="mb-4 flex shrink-0 justify-end rounded-xl border bg-muted/30 p-3 shadow-sm">
+      <div className="mb-4 flex shrink-0 flex-wrap justify-end gap-2 rounded-xl border bg-muted/30 p-3 shadow-sm">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={handlePrintGoogleDoc}
+          aria-label="Print"
+          title="Opens Google Docs in a new tab — use Ctrl+P or ⌘P there to print"
+        >
+          <Printer className="size-3.5" />
+          Print
+        </Button>
         <Button
           type="button"
           variant="outline"
@@ -577,6 +742,18 @@ function MarkdownViewer({
           >
             <Download className="size-3.5" />
             Download
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            disabled={content === null}
+            onClick={() => content != null && printPlainTextDocument(content, title)}
+            aria-label="Print"
+          >
+            <Printer className="size-3.5" />
+            Print
           </Button>
         </div>
       </div>
