@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { IconPlus } from "@tabler/icons-react";
 
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Button } from "#/components/ui/button";
 import { useUsersList } from "#/hooks/use-users-list";
@@ -58,6 +59,10 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-8 pt-6">
+      <PageListHeader
+        title="Team Members"
+        description="Manage admin users, roles and access to the back office."
+      />
       <DataTable
         isPaginated
         enableRowSelection

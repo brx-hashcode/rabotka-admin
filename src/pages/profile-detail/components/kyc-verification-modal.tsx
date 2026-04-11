@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck, IconFileText, IconX } from "@tabler/icons-react";
+import { X } from "lucide-react";
 
 import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
+import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import { Textarea } from "#/components/ui/textarea";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -83,6 +86,9 @@ export function KycVerificationModal({
   const [reasonError, setReasonError] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -99,6 +105,7 @@ export function KycVerificationModal({
       setReasonError(false);
       setFiles([]);
       setPreviews([]);
+      setDocumentPreviewUrl(null);
     }
   }, [open]);
 
@@ -181,6 +188,42 @@ export function KycVerificationModal({
                   key={doc.id}
                   className="bg-muted/50 flex items-center gap-3 rounded-md border p-2.5"
                 >
+                  <button
+                    type="button"
+                    title="Preview document"
+                    onClick={() => setDocumentPreviewUrl(doc.documentUrl)}
+                    className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90"
+                  >
+                    {isLikelyImageAsset(doc.documentUrl) ? (
+                      <>
+                        <img
+                          src={doc.documentUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (
+                              e.currentTarget as HTMLImageElement
+                            ).style.display = "none";
+                            (
+                              e.currentTarget
+                                .nextElementSibling as HTMLElement | null
+                            )?.style.setProperty("display", "flex");
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 hidden items-center justify-center"
+                          style={{ display: "none" }}
+                        >
+                          <IconFileText className="text-muted-foreground size-7" />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <IconFileText className="text-muted-foreground size-7" />
+                      </div>
+                    )}
+                    <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {docCategoryLabel(doc.documentCategory)}
@@ -223,6 +266,51 @@ export function KycVerificationModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Nested viewer: same pattern as claim detail — keeps KYC dialog open underneath */}
+      <Dialog
+        open={documentPreviewUrl != null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDocumentPreviewUrl(null);
+        }}
+      >
+        <DialogContent
+          className="w-full max-w-4xl border-0 bg-black/90 p-0"
+          showClose={false}
+        >
+          <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3">
+            <DialogTitle className="text-sm text-white">
+              {documentPreviewUrl?.split("/").pop()}
+            </DialogTitle>
+            <DialogClose asChild>
+              <button
+                type="button"
+                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
+              >
+                <X className="h-4 w-4 text-white" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="flex min-h-96 items-center justify-center bg-black/50 p-4">
+            {documentPreviewUrl != null &&
+              isLikelyImageAsset(documentPreviewUrl) && (
+                <img
+                  src={documentPreviewUrl}
+                  alt="KYC document"
+                  className="max-h-[70vh] max-w-full rounded object-contain"
+                />
+              )}
+            {documentPreviewUrl != null &&
+              !isLikelyImageAsset(documentPreviewUrl) && (
+                <p className="text-muted-foreground text-sm">
+                  Preview is only available for image URLs. Open the document from
+                  the KYC tab for full viewer.
+                </p>
+              )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

@@ -1,5 +1,6 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Tabs, TabsContent } from "#/components/ui/tabs";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
@@ -169,6 +170,10 @@ export default function WalletPage() {
 
   return (
     <div className="flex flex-col gap-6 pt-6">
+      <PageListHeader
+        title="Payroll & Wallet"
+        description="Wallet balance, transactions and payment history."
+      />
       <WalletInfoCard />
       <Tabs
         value={activeTab ?? DEFAULT_WALLET_TAB}

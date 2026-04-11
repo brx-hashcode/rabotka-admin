@@ -1,4 +1,5 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   penaltyColumns,
@@ -36,15 +37,21 @@ export default function PenaltiesPage() {
   const { data, total, isLoading } = usePenaltiesList();
 
   return (
-    <DataTable
-      isPaginated
-      enableRowSelection
-      data={data}
-      columns={penaltyColumns}
-      header={renderPenaltiesHeader}
-      totalCount={total}
-      isLoading={isLoading}
-      getRowId={(row) => row.id}
-    />
+    <div className="pt-6">
+      <PageListHeader
+        title="Compliance"
+        description="Violations, penalties and payment follow-up across profiles."
+      />
+      <DataTable
+        isPaginated
+        enableRowSelection
+        data={data}
+        columns={penaltyColumns}
+        header={renderPenaltiesHeader}
+        totalCount={total}
+        isLoading={isLoading}
+        getRowId={(row) => row.id}
+      />
+    </div>
   );
 }

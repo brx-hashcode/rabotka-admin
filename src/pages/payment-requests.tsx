@@ -1,3 +1,4 @@
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   paymentRequestColumns,
@@ -42,15 +43,21 @@ export default function PaymentRequestsPage() {
   const { data, total, isLoading } = usePaymentRequestsList();
 
   return (
-    <DataTable
-      isPaginated
-      enableRowSelection
-      data={data}
-      columns={paymentRequestColumns}
-      header={renderHeader}
-      totalCount={total}
-      isLoading={isLoading}
-      getRowId={(row) => row.id}
-    />
+    <div className="pt-6">
+      <PageListHeader
+        title="Payment Requests"
+        description="Review proof submissions and approve or reject payout requests."
+      />
+      <DataTable
+        isPaginated
+        enableRowSelection
+        data={data}
+        columns={paymentRequestColumns}
+        header={renderHeader}
+        totalCount={total}
+        isLoading={isLoading}
+        getRowId={(row) => row.id}
+      />
+    </div>
   );
 }

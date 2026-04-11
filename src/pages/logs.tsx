@@ -5,6 +5,7 @@ import {
   useQueryState,
 } from "nuqs";
 
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
 import {
@@ -72,15 +73,21 @@ export default function LogsPage() {
 
   return (
     <>
-      <DataTable
-        isPaginated
-        data={data}
-        columns={columns}
-        header={renderLogsTableHeader}
-        totalCount={total}
-        isLoading={isLoading}
-        getRowId={(row) => row.id}
-      />
+      <div className="pt-6">
+        <PageListHeader
+          title="Activity Logs"
+          description="Audit trail of admin actions and system events across entities."
+        />
+        <DataTable
+          isPaginated
+          data={data}
+          columns={columns}
+          header={renderLogsTableHeader}
+          totalCount={total}
+          isLoading={isLoading}
+          getRowId={(row) => row.id}
+        />
+      </div>
       <LogDetailSheet
         log={selectedLog}
         onClose={() => setSelectedLog(null)}

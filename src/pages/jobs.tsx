@@ -1,4 +1,5 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   jobColumns,
@@ -32,15 +33,21 @@ export default function JobsPage() {
   const { data, total, isLoading } = useJobsList();
 
   return (
-    <DataTable
-      isPaginated
-      enableRowSelection
-      data={data}
-      columns={jobColumns}
-      header={renderJobsHeader}
-      totalCount={total}
-      isLoading={isLoading}
-      getRowId={(row) => row.id}
-    />
+    <div className="pt-6">
+      <PageListHeader
+        title="Job Openings"
+        description="Browse and filter published job offers and their status."
+      />
+      <DataTable
+        isPaginated
+        enableRowSelection
+        data={data}
+        columns={jobColumns}
+        header={renderJobsHeader}
+        totalCount={total}
+        isLoading={isLoading}
+        getRowId={(row) => row.id}
+      />
+    </div>
   );
 }

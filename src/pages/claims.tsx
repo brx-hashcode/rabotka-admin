@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import {
   ClaimBoard,
@@ -16,14 +17,18 @@ export default function ClaimsPage() {
   const { canManageContent } = useRole();
 
   return (
-    <div className="flex flex-col gap-4 h-full pt-6">
-      <div className="flex items-center justify-end">
-        {canManageContent && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            Add a Claim
-          </Button>
-        )}
-      </div>
+    <div className="flex h-full flex-col gap-4 pt-6">
+      <PageListHeader
+        title="Expense Claims"
+        description="Review and manage worker and employer claims from the board."
+        actions={
+          canManageContent ? (
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              Add a Claim
+            </Button>
+          ) : null
+        }
+      />
       <ClaimBoard onViewDetail={setSelectedClaim} />
       <CreateClaimModal open={createOpen} onOpenChange={setCreateOpen} />
       {selectedClaim && (

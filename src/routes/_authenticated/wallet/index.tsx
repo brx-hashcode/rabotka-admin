@@ -5,8 +5,11 @@ import WalletPage from "#/pages/wallet";
 export const Route = createFileRoute("/_authenticated/wallet/")({
   component: () => (
     <Layout
-      title="Wallet"
-      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Wallet" }]}
+      title="Payroll & Wallet"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Payroll & Wallet" },
+      ]}
     >
       <WalletPage />
     </Layout>

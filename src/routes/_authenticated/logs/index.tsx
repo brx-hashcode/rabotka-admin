@@ -5,10 +5,10 @@ import LogsPage from "#/pages/logs";
 export const Route = createFileRoute("/_authenticated/logs/")({
   component: () => (
     <Layout
-      title="Logs"
+      title="Activity Logs"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Logs" },
+        { label: "Activity Logs" },
       ]}
     >
       <LogsPage />
