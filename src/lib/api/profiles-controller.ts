@@ -29,6 +29,8 @@ export type AdminProfileListItem = {
   verifiedBy: string | null;
   verifiedAt: string | null;
   rejectionReason: string | null;
+  /** Admin note from the latest KYC decision (approve or reject). */
+  kycVerificationNote: string | null;
   reliabilityScore: number | null;
   avatarUrl: string | null;
   createdAt: string;
@@ -72,7 +74,7 @@ export type AdminUpdateProfileParams = {
 
 export type AdminVerifyProfileParams = {
   decision: "VERIFIED" | "REJECTED";
-  reason?: string;
+  reason: string;
   files?: File[];
 };
 
@@ -197,9 +199,7 @@ export class AdminProfilesController extends AdminBaseController {
     );
     const formData = new FormData();
     formData.append("decision", data.decision);
-    if (data.reason) {
-      formData.append("reason", data.reason);
-    }
+    formData.append("reason", data.reason);
     if (data.files) {
       for (const file of data.files) {
         formData.append("files", file);

@@ -109,7 +109,7 @@ export default function ProfileDetailPage({
 
   const handleKycSubmit = async (
     decision: "VERIFIED" | "REJECTED",
-    reason?: string,
+    reason: string,
     files?: File[],
   ) => {
     await submitVerify({ decision, reason, files });
