@@ -141,3 +141,41 @@ export const getWalletTransactions = controller.getTransactions.bind(controller)
 export const getWalletPayments = controller.getPayments.bind(controller);
 export const downloadAdminInvoice = controller.downloadInvoice.bind(controller);
 export const fetchAdminInvoiceBlob = controller.fetchInvoiceBlob.bind(controller);
+
+const EXPORT_PAGE_SIZE = 100;
+
+export async function fetchAllWalletPayments(
+  filters: Omit<AdminPaymentsListParams, "page" | "limit">,
+): Promise<AdminPaymentItem[]> {
+  const all: AdminPaymentItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getWalletPayments({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}
+
+export async function fetchAllWalletTransactions(
+  filters: Omit<AdminWalletTransactionsParams, "page" | "limit">,
+): Promise<AdminWalletTransactionItem[]> {
+  const all: AdminWalletTransactionItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getWalletTransactions({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}

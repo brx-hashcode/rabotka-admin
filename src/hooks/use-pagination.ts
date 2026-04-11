@@ -21,17 +21,20 @@ export const usePagination = (
   total: number,
   initialLimit: number = 20,
 ): UsePaginationReturn => {
-  const [currentPage, setCurrentPage] = useQueryState(
+  const [pageFromUrl, setCurrentPage] = useQueryState(
     "page",
     parseAsInteger.withDefault(1),
   );
-  const [limit, setLimit] = useQueryState(
+  const [limitFromUrl, setLimit] = useQueryState(
     "limit",
     parseAsInteger.withDefault(initialLimit),
   );
 
+  const currentPage = pageFromUrl ?? 1;
+  const limit = limitFromUrl ?? initialLimit;
+
   const totalPages = useMemo(
-    () => Math.ceil(total / limit) || 1,
+    () => (limit > 0 ? Math.ceil(total / limit) || 1 : 1),
     [total, limit],
   );
 
@@ -44,16 +47,18 @@ export const usePagination = (
   }, [totalPages, setCurrentPage]);
 
   const goToPrevious = useCallback((): void => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    const p = pageFromUrl ?? 1;
+    if (p > 1) {
+      setCurrentPage(p - 1);
     }
-  }, [currentPage, setCurrentPage]);
+  }, [pageFromUrl, setCurrentPage]);
 
   const goToNext = useCallback((): void => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    const p = pageFromUrl ?? 1;
+    if (p < totalPages) {
+      setCurrentPage(p + 1);
     }
-  }, [currentPage, totalPages, setCurrentPage]);
+  }, [pageFromUrl, totalPages, setCurrentPage]);
 
   const setPageLimit = useCallback(
     (newLimit: number): void => {
