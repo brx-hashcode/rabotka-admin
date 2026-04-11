@@ -1,3 +1,5 @@
+import { IconArrowRight } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Label } from "#/components/ui/label";
@@ -12,6 +14,12 @@ import {
 import { RecentProfilesTable } from "./recent-profiles-table";
 import { RecentJobsTable } from "./recent-jobs-table";
 import { RecentApplicationsTable } from "./recent-applications-table";
+
+const SEE_MORE_HREF_BY_TAB: Record<RecentActivitiesTab, string> = {
+  "recent-profiles": "/profiles",
+  "recent-jobs": "/jobs",
+  "recent-applications": "/applications",
+};
 
 export const RecentActivitiesContent = () => {
   const [activeTab, setActiveTab] = useQueryState(
@@ -34,7 +42,15 @@ export const RecentActivitiesContent = () => {
           View
         </Label>
         <RecentActivitiesTabs />
-        <div className="flex items-center gap-2" />
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            to={SEE_MORE_HREF_BY_TAB[tabValue]}
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm font-medium transition-colors"
+          >
+            See more
+            <IconArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
       </div>
       <TabsContent value={DEFAULT_RECENT_ACTIVITIES_TAB}>
         <RecentProfilesTable />

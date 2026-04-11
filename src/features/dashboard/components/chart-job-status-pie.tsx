@@ -1,4 +1,5 @@
-import { Pie, PieChart } from "recharts";
+import { useId, useMemo } from "react";
+import { Cell, Pie, PieChart } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryState } from "nuqs";
 
@@ -49,9 +50,19 @@ const chartConfig = {
   ),
 } satisfies ChartConfig;
 
+function defaultStatusColor(status: string): string {
+  return STATUS_CONFIG[status]?.color ?? "hsl(215 20% 65%)";
+}
+
+/** Safe fragment for SVG gradient ids (XML Name + URL fragment rules). */
+function gradientKeyForStatus(status: string): string {
+  return status.replaceAll(/[^a-zA-Z0-9_-]/g, "_");
+}
+
 export function ChartJobStatusPie() {
   const [timeRange] = useQueryState(TIME_RANGE_QUERY_KEY, timeRangeParser);
   const range = timeRange ?? "90d";
+  const gradBaseId = `pieg${useId().replaceAll(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const { data = [] } = useQuery({
     queryKey: ["admin", "dashboard", "job-status-distribution", range],
@@ -63,8 +74,21 @@ export function ChartJobStatusPie() {
     .map((d) => ({
       status: d.status,
       count: d.count,
-      fill: STATUS_CONFIG[d.status]?.color ?? "hsl(215 20% 65%)",
+      fill: defaultStatusColor(d.status),
     }));
+
+  const gradientSlices = useMemo(() => {
+    const map = new Map<string, { status: string; color: string }>();
+    for (const row of chartData) {
+      if (!map.has(row.status)) {
+        map.set(row.status, {
+          status: row.status,
+          color: defaultStatusColor(row.status),
+        });
+      }
+    }
+    return [...map.values()];
+  }, [chartData]);
 
   return (
     <Card className="flex flex-col h-full">
@@ -78,6 +102,22 @@ export function ChartJobStatusPie() {
           className="mx-auto aspect-square max-h-[320px]"
         >
           <PieChart>
+            {/* Recharts drops non-SVG custom children; defs must be intrinsic <defs>. */}
+            <defs>
+              {gradientSlices.map(({ status, color }) => (
+                <radialGradient
+                  key={status}
+                  id={`${gradBaseId}-pie-${gradientKeyForStatus(status)}`}
+                  cx="50%"
+                  cy="50%"
+                  r="78%"
+                >
+                  <stop offset="0%" stopColor={color} stopOpacity={0.58} />
+                  <stop offset="50%" stopColor={color} stopOpacity={1} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.52} />
+                </radialGradient>
+              ))}
+            </defs>
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent nameKey="status" hideLabel />}
@@ -86,11 +126,20 @@ export function ChartJobStatusPie() {
               data={chartData}
               dataKey="count"
               nameKey="status"
+              stroke="var(--background)"
+              strokeWidth={2}
               isAnimationActive
               animationBegin={100}
               animationDuration={600}
               animationEasing="ease-out"
-            />
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`${entry.status}-${index}`}
+                  fill={`url(#${gradBaseId}-pie-${gradientKeyForStatus(entry.status)})`}
+                />
+              ))}
+            </Pie>
           </PieChart>
         </ChartContainer>
       </CardContent>

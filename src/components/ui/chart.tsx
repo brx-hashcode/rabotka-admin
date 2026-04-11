@@ -182,7 +182,11 @@ function ChartTooltipContent({
           .map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || item.payload.fill || item.color
+            const indicatorColor = resolveTooltipIndicatorColor(
+              color,
+              item,
+              itemConfig
+            )
 
             return (
               <div
@@ -304,6 +308,46 @@ function ChartLegendContent({
         })}
     </div>
   )
+}
+
+/** Pie sectors often use `fill: url(#id)`; that is not a valid CSS color for the swatch. */
+function resolveTooltipIndicatorColor(
+  explicit: string | undefined,
+  item: {
+    payload?: { fill?: unknown; payload?: unknown }
+    color?: string
+  },
+  itemConfig: ChartConfig[string] | undefined
+): string | undefined {
+  if (explicit) return explicit
+
+  const fill = item.payload?.fill
+  const fillStr = typeof fill === "string" ? fill : undefined
+  const isGradientRef =
+    fillStr !== undefined && fillStr.trim().startsWith("url(")
+
+  if (isGradientRef) {
+    const nested = item.payload?.payload
+    if (
+      nested &&
+      typeof nested === "object" &&
+      nested !== null &&
+      "fill" in nested
+    ) {
+      const n = (nested as { fill?: unknown }).fill
+      if (typeof n === "string" && !n.trim().startsWith("url(")) return n
+    }
+    if (
+      itemConfig &&
+      "color" in itemConfig &&
+      typeof itemConfig.color === "string"
+    ) {
+      return itemConfig.color
+    }
+    return item.color ?? fillStr
+  }
+
+  return fillStr ?? item.color
 }
 
 // Helper to extract item config from a payload.

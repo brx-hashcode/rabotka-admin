@@ -21,6 +21,7 @@ import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
 import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
+import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
 import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
@@ -96,6 +97,12 @@ const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedJobCategoriesIndexRoute =
+  AuthenticatedJobCategoriesIndexRouteImport.update({
+    id: '/job-categories/',
+    path: '/job-categories/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
   id: '/help/',
   path: '/help/',
@@ -160,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/help/': typeof AuthenticatedHelpIndexRoute
+  '/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/logs/': typeof AuthenticatedLogsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/help': typeof AuthenticatedHelpIndexRoute
+  '/job-categories': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/logs': typeof AuthenticatedLogsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
@@ -206,6 +215,7 @@ export interface FileRoutesById {
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
+  '/_authenticated/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/documents/'
     | '/events/'
     | '/help/'
+    | '/job-categories/'
     | '/jobs/'
     | '/logs/'
     | '/payment-requests/'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/events'
     | '/help'
+    | '/job-categories'
     | '/jobs'
     | '/logs'
     | '/payment-requests'
@@ -275,6 +287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents/'
     | '/_authenticated/events/'
     | '/_authenticated/help/'
+    | '/_authenticated/job-categories/'
     | '/_authenticated/jobs/'
     | '/_authenticated/logs/'
     | '/_authenticated/payment-requests/'
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/job-categories/': {
+      id: '/_authenticated/job-categories/'
+      path: '/job-categories'
+      fullPath: '/job-categories/'
+      preLoaderRoute: typeof AuthenticatedJobCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/help/': {
       id: '/_authenticated/help/'
       path: '/help'
@@ -454,6 +474,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
+  AuthenticatedJobCategoriesIndexRoute: typeof AuthenticatedJobCategoriesIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
@@ -477,6 +498,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
+  AuthenticatedJobCategoriesIndexRoute: AuthenticatedJobCategoriesIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
