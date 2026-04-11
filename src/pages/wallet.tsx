@@ -6,6 +6,7 @@ import { DateRangePicker } from "#/components/ui/date-range-picker";
 import {
   WalletInfoCard,
   WalletTabsList,
+  WalletExportMenu,
   DEFAULT_WALLET_TAB,
   walletTransactionColumns,
   walletPaymentColumns,
@@ -174,8 +175,11 @@ export default function WalletPage() {
         onValueChange={(v) => setActiveTab(v as WalletTab)}
         className="w-full flex-col justify-start gap-6"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <WalletTabsList />
+          <WalletExportMenu
+            activeTab={(activeTab ?? DEFAULT_WALLET_TAB) as WalletTab}
+          />
         </div>
         <TabsContent value="transactions">
           <WalletTransactionsTable />

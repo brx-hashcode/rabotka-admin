@@ -1,27 +1,14 @@
 import { useEffect, useRef } from "react";
-import {
-  parseAsInteger,
-  parseAsString,
-  parseAsArrayOf,
-  useQueryState,
-  useQueryStates,
-} from "nuqs";
+import { parseAsInteger, useQueryState, useQueryStates } from "nuqs";
 import { useQuery } from "@tanstack/react-query";
 import { getWalletTransactions } from "#/lib/api/wallet-controller";
-
-const defaultLimit = 20;
-
-const transactionsParsers = {
-  page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
-  q: parseAsString.withDefault(""),
-  tx_type: parseAsArrayOf(parseAsString).withDefault([] as string[]),
-  created_from: parseAsString.withDefault(""),
-  created_to: parseAsString.withDefault(""),
-};
+import {
+  defaultWalletTableLimit,
+  walletTransactionsParsers,
+} from "#/hooks/wallet-query-parsers";
 
 export function useWalletTransactions() {
-  const [queryState] = useQueryStates(transactionsParsers);
+  const [queryState] = useQueryStates(walletTransactionsParsers);
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
@@ -53,7 +40,7 @@ export function useWalletTransactions() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? defaultWalletTableLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
