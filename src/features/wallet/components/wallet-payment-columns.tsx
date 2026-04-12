@@ -28,11 +28,13 @@ const TYPE_LABELS: Record<string, string> = {
   REGISTRATION: "Registration",
   JOB_POSTING: "Job Posting",
   PENALTY: "Penalty",
+  CONTACT_UNLOCK: "Contact Unlock",
 };
 
 const METHOD_LABELS: Record<string, string> = {
   MOBILE_MONEY: "Mobile Money",
   CARD: "Card",
+  WALLET: "Wallet",
   OTHER: "Other",
 };
 

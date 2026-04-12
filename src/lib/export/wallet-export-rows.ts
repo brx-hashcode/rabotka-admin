@@ -13,6 +13,7 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   MOBILE_MONEY: "Mobile Money",
   CARD: "Card",
+  WALLET: "Wallet",
   OTHER: "Other",
 };
 

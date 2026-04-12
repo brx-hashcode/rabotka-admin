@@ -18,6 +18,7 @@ type FormState = {
   "fees.contact_unlock_fee_employer": string;
   "fees.contact_unlock_fee_worker": string;
   "fees.contact_unlock_expiry_hours": string;
+  "fees.contact_recommendation_fee_employer": string;
   "fees.welcome_credit_worker": string;
   "fees.welcome_credit_employer": string;
 };
@@ -34,6 +35,7 @@ const EMPTY: FormState = {
   "fees.contact_unlock_fee_employer": "",
   "fees.contact_unlock_fee_worker": "",
   "fees.contact_unlock_expiry_hours": "",
+  "fees.contact_recommendation_fee_employer": "",
   "fees.welcome_credit_worker": "",
   "fees.welcome_credit_employer": "",
 };
@@ -202,7 +204,7 @@ export function FeesCard() {
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
           Contact unlock
         </p>
-        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
           <div className="space-y-1.5">
             <FieldLabel>Unlock fee – Employer</FieldLabel>
             <NumericInput
@@ -225,6 +227,14 @@ export function FeesCard() {
               value={form["fees.contact_unlock_expiry_hours"]}
               onChange={(v) => set("fees.contact_unlock_expiry_hours", v)}
               suffix="h"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Recommendation contact fee – Employer</FieldLabel>
+            <NumericInput
+              value={form["fees.contact_recommendation_fee_employer"]}
+              onChange={(v) => set("fees.contact_recommendation_fee_employer", v)}
+              suffix="FCFA"
             />
           </div>
         </div>
