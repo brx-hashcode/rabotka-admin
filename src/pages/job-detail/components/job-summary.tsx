@@ -15,7 +15,8 @@ import { buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 
-import { statusBadgeVariant, formatDate } from "../helpers";
+import { formatDate } from "../helpers";
+import { getStatusBadgeClass } from "#/features/jobs/components/job-columns";
 
 function getInitials(name: string | null | undefined): string {
   const parts = (name ?? "").trim().split(/\s+/);
@@ -39,12 +40,7 @@ export function JobSummary({ job }: Readonly<Props>) {
               Status
             </p>
             <Badge
-              variant={statusBadgeVariant(job.status)}
-              className={
-                job.status === "FILLED"
-                  ? "mt-1 bg-blue-600 text-white border-transparent"
-                  : "mt-1"
-              }
+              className={`mt-1 ${getStatusBadgeClass(job.status)}`}
             >
               {getJobOfferStatusLabel(job.status)}
             </Badge>

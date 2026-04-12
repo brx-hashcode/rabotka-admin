@@ -7,7 +7,8 @@ import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import { Card } from "#/components/ui/card";
 
-import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
+import { docCategoryLabel, docTypeLabel } from "../helpers";
+import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 
 type Props = {
@@ -31,8 +32,7 @@ export function KycDocumentCard({ doc, onPreview }: Props) {
           <IconFileText className="text-muted-foreground size-12" />
         )}
         <Badge
-          variant={statusBadgeVariant(doc.verificationStatus)}
-          className="absolute top-2 right-2"
+          className={`absolute top-2 right-2 ${getVerificationStatusBadgeClass(doc.verificationStatus)}`}
         >
           {getVerificationStatusLabel(doc.verificationStatus)}
         </Badge>

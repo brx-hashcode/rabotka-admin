@@ -193,8 +193,7 @@ function TransactionRow({
       </div>
       <div className="ml-4 shrink-0 text-right">
         <Badge
-          variant={credit ? "default" : "destructive"}
-          className="font-mono text-xs"
+          className={`font-mono text-xs ${credit ? "bg-emerald-500 text-white border-transparent" : "bg-rose-600 text-white border-transparent"}`}
         >
           {credit ? "+" : "−"}
           {formatAmount(tx.amount)}

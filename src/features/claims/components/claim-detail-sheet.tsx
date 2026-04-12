@@ -41,10 +41,10 @@ import { ClaimComments } from "./claim-comments";
 import { useRole } from "#/hooks/use-role";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
-  { value: "CREATED", label: "Created" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "REJECTED", label: "Rejected" },
+  { value: "CREATED", label: "CREATED" },
+  { value: "IN_PROGRESS", label: "IN PROGRESS" },
+  { value: "COMPLETED", label: "COMPLETED" },
+  { value: "REJECTED", label: "REJECTED" },
 ];
 
 type ClaimDetailDialogProps = {

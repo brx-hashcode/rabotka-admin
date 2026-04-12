@@ -12,7 +12,7 @@ import {
 
 export type Profile = AdminProfileListItem;
 
-function getStatusBadgeClass(status: string): string {
+export function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "ACTIVE":
       return "bg-emerald-500 text-white border-transparent";
@@ -21,7 +21,7 @@ function getStatusBadgeClass(status: string): string {
     case "BANNED":
       return "bg-rose-600 text-white border-transparent";
     case "PENDING_ACTIVATION":
-      return "bg-sky-500/15 text-sky-700 border-sky-200 dark:text-sky-300 dark:border-sky-800";
+      return "bg-sky-500 text-white border-transparent";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
@@ -34,13 +34,13 @@ export function getVerificationStatusBadgeClass(status: string): string {
     case "REJECTED":
       return "bg-rose-600 text-white border-transparent";
     case "PENDING":
-      return "bg-amber-500/15 text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800";
+      return "bg-amber-500 text-white border-transparent";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
 }
 
-function getProfileTypeBadgeClass(type: string): string {
+export function getProfileTypeBadgeClass(type: string): string {
   switch (type) {
     case "EMPLOYER":
       return "bg-violet-600 text-white border-transparent";
@@ -99,7 +99,7 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
       const type = row.original.profileType;
       return (
         <Badge className={getProfileTypeBadgeClass(type)}>
-          {getProfileTypeLabel(type)}
+          {type}
         </Badge>
       );
     },
@@ -130,7 +130,7 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     cell: ({ row }) => {
       const status = String(row.original.verificationStatus ?? "");
       return (
-        <Badge variant={getVerificationStatusBadgeVariant(status)}>
+        <Badge className={getVerificationStatusBadgeClass(status)}>
           {getVerificationStatusLabel(status) || "—"}
         </Badge>
       );

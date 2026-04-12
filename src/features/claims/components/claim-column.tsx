@@ -4,11 +4,11 @@ import { Badge } from "#/components/ui/badge";
 import { ClaimCard } from "./claim-card";
 import type { AdminClaimItem, AdminClaimStatus } from "#/lib/api/claims-controller";
 
-const STATUS_CONFIG: Record<AdminClaimStatus, { label: string; color: string }> = {
-  CREATED: { label: "Created", color: "bg-blue-500/10 text-blue-600 border-blue-200" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-yellow-500/10 text-yellow-600 border-yellow-200" },
-  COMPLETED: { label: "Completed", color: "bg-green-500/10 text-green-600 border-green-200" },
-  REJECTED: { label: "Rejected", color: "bg-red-500/10 text-red-600 border-red-200" },
+const STATUS_CONFIG: Record<AdminClaimStatus, { label: string; color: string; bg: string; bgOver: string }> = {
+  CREATED: { label: "CREATED", color: "bg-sky-500 text-white border-transparent", bg: "bg-sky-500/10", bgOver: "bg-sky-500/20" },
+  IN_PROGRESS: { label: "IN PROGRESS", color: "bg-amber-500 text-white border-transparent", bg: "bg-amber-500/10", bgOver: "bg-amber-500/20" },
+  COMPLETED: { label: "COMPLETED", color: "bg-violet-600 text-white border-transparent", bg: "bg-violet-600/10", bgOver: "bg-violet-600/20" },
+  REJECTED: { label: "REJECTED", color: "bg-rose-600 text-white border-transparent", bg: "bg-rose-600/10", bgOver: "bg-rose-600/20" },
 };
 
 type ClaimColumnProps = {
@@ -34,7 +34,7 @@ export function ClaimColumn({ status, claims, onViewDetail }: Readonly<ClaimColu
         ref={setNodeRef}
         className={cn(
           "flex flex-col gap-2 min-h-[120px] rounded-lg p-2 transition-colors",
-          isOver ? "bg-muted/60" : "bg-muted/20",
+          isOver ? config.bgOver : config.bg,
         )}
       >
         {claims.map((claim) => (

@@ -10,7 +10,8 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 
-import { statusBadgeVariant, formatDate } from "../helpers";
+import { formatDate } from "../helpers";
+import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { KycDocumentCard } from "./kyc-document-card";
 import type { ViewerDocument } from "./document-viewer-drawer";
 import { toKycViewerDoc } from "./document-viewer-drawer";
@@ -31,8 +32,7 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
               Verification Status
             </p>
             <Badge
-              variant={statusBadgeVariant(profile.verificationStatus)}
-              className="mt-2"
+              className={`mt-2 ${getVerificationStatusBadgeClass(profile.verificationStatus)}`}
             >
               {getVerificationStatusLabel(profile.verificationStatus)}
             </Badge>

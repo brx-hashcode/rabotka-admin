@@ -12,7 +12,11 @@ import {
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 
-import { statusBadgeVariant, formatDate } from "../helpers";
+import { formatDate } from "../helpers";
+import {
+  getStatusBadgeClass,
+  getVerificationStatusBadgeClass,
+} from "#/features/applications/components/profile-columns";
 import { KycDocumentCard } from "./kyc-document-card";
 
 type Props = {
@@ -31,8 +35,7 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
               Account Status
             </p>
             <Badge
-              variant={statusBadgeVariant(profile.status)}
-              className="mt-1"
+              className={`mt-1 ${getStatusBadgeClass(profile.status)}`}
             >
               {getAccountStatusLabel(profile.status)}
             </Badge>
@@ -45,8 +48,7 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
               KYC Status
             </p>
             <Badge
-              variant={statusBadgeVariant(profile.verificationStatus)}
-              className="mt-1"
+              className={`mt-1 ${getVerificationStatusBadgeClass(profile.verificationStatus)}`}
             >
               {getVerificationStatusLabel(profile.verificationStatus)}
             </Badge>

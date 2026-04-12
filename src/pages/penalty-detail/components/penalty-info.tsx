@@ -9,29 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 
 import { formatDateTime, formatAmount } from "../helpers";
-
-type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
-
-function getJobStatusVariant(status: string): BadgeVariant {
-  switch (status) {
-    case "ACTIVE": return "default";
-    case "FILLED":
-    case "COMPLETED": return "secondary";
-    case "CANCELLED":
-    case "EXPIRED": return "destructive";
-    default: return "outline";
-  }
-}
-
-function getApplicationStatusVariant(status: string): BadgeVariant {
-  switch (status) {
-    case "ACCEPTED": return "default";
-    case "PENDING": return "secondary";
-    case "REJECTED":
-    case "CANCELLED": return "destructive";
-    default: return "outline";
-  }
-}
+import { getStatusBadgeClass as getJobStatusBadgeClass } from "#/features/jobs/components/job-columns";
+import { getAppStatusBadgeClass } from "#/features/applications-admin/components/application-columns";
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -65,7 +44,7 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
           <div className="space-y-1.5">
             <FieldLabel>Payment Status</FieldLabel>
             <div className="mt-0.5">
-              <Badge variant={penalty.paidAt ? "default" : "destructive"}>
+              <Badge className={penalty.paidAt ? "bg-emerald-500 text-white border-transparent" : "bg-rose-600 text-white border-transparent"}>
                 {penalty.paidAt ? "Paid" : "Unpaid"}
               </Badge>
             </div>
@@ -107,7 +86,7 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
           <div className="space-y-1.5">
             <FieldLabel>Job Status</FieldLabel>
             <div className="mt-0.5">
-              <Badge variant={getJobStatusVariant(penalty.jobStatus)}>
+              <Badge className={getJobStatusBadgeClass(penalty.jobStatus)}>
                 {getJobOfferStatusLabel(penalty.jobStatus)}
               </Badge>
             </div>
@@ -116,7 +95,7 @@ export function PenaltyInfo({ penalty }: Readonly<Props>) {
           <div className="space-y-1.5">
             <FieldLabel>Application Status</FieldLabel>
             <div className="mt-0.5">
-              <Badge variant={getApplicationStatusVariant(penalty.applicationStatus)}>
+              <Badge className={getAppStatusBadgeClass(penalty.applicationStatus)}>
                 {getApplicationStatusLabel(penalty.applicationStatus)}
               </Badge>
             </div>

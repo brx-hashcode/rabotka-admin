@@ -8,7 +8,7 @@ import { getJobOfferStatusLabel } from "#/lib/status-labels";
 
 export type JobOffer = AdminJobOfferListItem;
 
-function getStatusBadgeClass(status: string): string {
+export function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "ACTIVE":
       return "bg-emerald-500 text-white border-transparent";
@@ -34,13 +34,13 @@ function getStatusBadgeClass(status: string): string {
 function getPaymentFlowBadgeClass(flow: string): string {
   switch (flow) {
     case "HOURLY":
-      return "bg-sky-500/15 text-sky-700 border-sky-200 dark:text-sky-300 dark:border-sky-800";
+      return "bg-sky-500 text-white border-transparent";
     case "DAILY":
-      return "bg-amber-500/15 text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800";
+      return "bg-amber-500 text-white border-transparent";
     case "FIXED":
-      return "bg-purple-500/15 text-purple-700 border-purple-200 dark:text-purple-300 dark:border-purple-800";
+      return "bg-purple-600 text-white border-transparent";
     case "MONTHLY":
-      return "bg-teal-500/15 text-teal-700 border-teal-200 dark:text-teal-300 dark:border-teal-800";
+      return "bg-teal-600 text-white border-transparent";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
