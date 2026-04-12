@@ -12,23 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "#/components/ui/button";
 import { appConfig } from "#/config";
-
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "ACCEPTED":
-      return "default";
-    case "REJECTED":
-      return "destructive";
-    case "CANCELLED":
-      return "secondary";
-    case "PENDING":
-      return "outline";
-    default:
-      return "outline";
-  }
-}
+import { getAppStatusBadgeClass } from "#/features/applications-admin/components/application-columns";
 
 const columns: ColumnDef<AdminApplicationListItem>[] = [
   {
@@ -76,7 +60,7 @@ const columns: ColumnDef<AdminApplicationListItem>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge className={getAppStatusBadgeClass(status)}>
           {getApplicationStatusLabel(status)}
         </Badge>
       );

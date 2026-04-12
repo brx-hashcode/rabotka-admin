@@ -19,7 +19,8 @@ import {
   DialogDescription,
 } from "#/components/ui/dialog";
 
-import { statusBadgeVariant, docCategoryLabel, docTypeLabel } from "../helpers";
+import { docCategoryLabel, docTypeLabel } from "../helpers";
+import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { ImageUploadZone } from "./image-upload-zone";
 import { cn } from "#/lib/utils";
 
@@ -233,8 +234,7 @@ export function KycVerificationModal({
                     </p>
                   </div>
                   <Badge
-                    variant={statusBadgeVariant(doc.verificationStatus)}
-                    className="shrink-0"
+                    className={`shrink-0 ${getVerificationStatusBadgeClass(doc.verificationStatus)}`}
                   >
                     {getVerificationStatusLabel(doc.verificationStatus)}
                   </Badge>

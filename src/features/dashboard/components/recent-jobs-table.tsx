@@ -11,24 +11,8 @@ import { getJobOfferStatusLabel } from "#/lib/status-labels";
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { buttonVariants } from "#/components/ui/button";
+import { getStatusBadgeClass } from "#/features/jobs/components/job-columns";
 import { appConfig } from "#/config";
-
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "ACTIVE":
-      return "default";
-    case "COMPLETED":
-      return "secondary";
-    case "FILLED":
-      return "outline";
-    case "CANCELLED":
-      return "destructive";
-    default:
-      return "outline";
-  }
-}
 
 const columns: ColumnDef<AdminJobOfferListItem>[] = [
   {
@@ -62,7 +46,7 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge className={getStatusBadgeClass(status)}>
           {getJobOfferStatusLabel(status)}
         </Badge>
       );

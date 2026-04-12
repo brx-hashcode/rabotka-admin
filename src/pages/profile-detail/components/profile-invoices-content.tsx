@@ -89,7 +89,7 @@ function InvoiceRow({ invoice }: Readonly<{ invoice: AdminInvoiceItem }>) {
         </p>
       </div>
       <div className="ml-4 flex shrink-0 items-center gap-3">
-        <Badge variant={invoice.status === "DOWNLOADED" ? "secondary" : "outline"} className="text-xs">
+        <Badge className={`text-xs ${invoice.status === "DOWNLOADED" ? "bg-emerald-500 text-white border-transparent" : "bg-muted text-muted-foreground border-border"}`}>
           {invoice.status}
         </Badge>
         <Button

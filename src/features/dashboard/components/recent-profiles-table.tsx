@@ -9,29 +9,17 @@ import {
 } from "#/lib/api/profiles-controller";
 import {
   getAccountStatusLabel,
-  getProfileTypeLabel,
   getVerificationStatusLabel,
 } from "#/lib/status-labels";
 import { Link } from "@tanstack/react-router";
 import { buttonVariants } from "#/components/ui/button";
 import { EyeIcon } from "lucide-react";
-import { getVerificationStatusBadgeVariant } from "#/features/applications/components/profile-columns";
+import {
+  getVerificationStatusBadgeClass,
+  getStatusBadgeClass,
+  getProfileTypeBadgeClass,
+} from "#/features/applications/components/profile-columns";
 import { appConfig } from "#/config";
-
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "ACTIVE":
-      return "default";
-    case "BANNED":
-      return "destructive";
-    case "SUSPENDED":
-      return "secondary";
-    default:
-      return "outline";
-  }
-}
 
 const columns: ColumnDef<AdminProfileListItem>[] = [
   {
@@ -76,8 +64,9 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     header: "Type",
     cell: ({ row }) => {
       const type = row.original.profileType;
-      const variant = type === "EMPLOYER" ? "default" : "secondary";
-      return <Badge variant={variant}>{getProfileTypeLabel(type)}</Badge>;
+      return (
+        <Badge className={getProfileTypeBadgeClass(type)}>{type}</Badge>
+      );
     },
   },
   {
@@ -87,7 +76,7 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge className={getStatusBadgeClass(status)}>
           {getAccountStatusLabel(status)}
         </Badge>
       );
@@ -100,7 +89,7 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     cell: ({ row }) => {
       const status = String(row.original.verificationStatus);
       return (
-        <Badge variant={getVerificationStatusBadgeVariant(status)}>
+        <Badge className={getVerificationStatusBadgeClass(status)}>
           {getVerificationStatusLabel(status) || "—"}
         </Badge>
       );

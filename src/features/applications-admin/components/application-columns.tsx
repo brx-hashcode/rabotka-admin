@@ -8,20 +8,22 @@ import { getApplicationStatusLabel } from "#/lib/status-labels";
 
 export type Application = AdminApplicationListItem;
 
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
+export function getAppStatusBadgeClass(status: string): string {
   switch (status) {
-    case "ACCEPTED":
-      return "default";
-    case "REJECTED":
-      return "destructive";
-    case "CANCELLED":
-      return "secondary";
     case "PENDING":
-      return "outline";
+      return "bg-amber-500 text-white border-transparent";
+    case "ACCEPTED":
+      return "bg-emerald-500 text-white border-transparent";
+    case "STARTED":
+      return "bg-blue-500 text-white border-transparent";
+    case "COMPLETED":
+      return "bg-violet-600 text-white border-transparent";
+    case "REJECTED":
+      return "bg-rose-600 text-white border-transparent";
+    case "CANCELLED":
+      return "bg-orange-500 text-white border-transparent";
     default:
-      return "outline";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -70,7 +72,7 @@ const applicationDataColumns: ColumnDef<Application, unknown>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge className={getAppStatusBadgeClass(status)}>
           {getApplicationStatusLabel(status)}
         </Badge>
       );
@@ -85,7 +87,7 @@ const applicationDataColumns: ColumnDef<Application, unknown>[] = [
       if (!applied)
         return <span className="text-muted-foreground text-sm">—</span>;
       return (
-        <Badge variant="destructive">
+        <Badge className="bg-rose-600 text-white border-transparent">
           {row.original.penaltyAmount?.toLocaleString() ?? "Yes"} FCFA
         </Badge>
       );

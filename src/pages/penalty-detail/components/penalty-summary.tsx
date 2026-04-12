@@ -43,8 +43,7 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
               Payment
             </p>
             <Badge
-              variant={isPaid ? "default" : "destructive"}
-              className="mt-1"
+              className={`mt-1 ${isPaid ? "bg-emerald-500 text-white border-transparent" : "bg-rose-600 text-white border-transparent"}`}
             >
               {isPaid ? "Paid" : "Unpaid"}
             </Badge>

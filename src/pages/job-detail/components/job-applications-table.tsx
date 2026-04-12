@@ -9,7 +9,8 @@ import { DataTable, ProfileCell } from "#/components/table";
 import { getCommonColumns } from "#/components/table/data-table-column";
 import { Badge } from "#/components/ui/badge";
 
-import { statusBadgeVariant, formatDate, formatAmount } from "../helpers";
+import { formatDate, formatAmount } from "../helpers";
+import { getAppStatusBadgeClass } from "#/features/applications-admin/components/application-columns";
 import { cn } from "#/lib/utils";
 import { buttonVariants } from "#/components/ui/button";
 import { Eye } from "lucide-react";
@@ -40,7 +41,7 @@ const dataColumns: ColumnDef<AdminJobApplicationItem>[] = [
       const app = row.original;
       return (
         <div className="space-y-0.5">
-          <Badge variant={statusBadgeVariant(app.status)}>
+          <Badge className={getAppStatusBadgeClass(app.status)}>
             {getApplicationStatusLabel(app.status)}
           </Badge>
         </div>
