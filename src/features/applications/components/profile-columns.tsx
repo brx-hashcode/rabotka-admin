@@ -12,31 +12,42 @@ import {
 
 export type Profile = AdminProfileListItem;
 
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "ACTIVE":
-      return "default";
-    case "BANNED":
-      return "destructive";
+      return "bg-emerald-500 text-white border-transparent";
     case "SUSPENDED":
-      return "secondary";
+      return "bg-amber-500 text-white border-transparent";
+    case "BANNED":
+      return "bg-rose-600 text-white border-transparent";
+    case "PENDING_ACTIVATION":
+      return "bg-sky-500/15 text-sky-700 border-sky-200 dark:text-sky-300 dark:border-sky-800";
     default:
-      return "outline";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
-export function getVerificationStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" {
+export function getVerificationStatusBadgeClass(status: string): string {
   switch (status) {
     case "VERIFIED":
-      return "default";
+      return "bg-emerald-500 text-white border-transparent";
     case "REJECTED":
-      return "destructive";
+      return "bg-rose-600 text-white border-transparent";
+    case "PENDING":
+      return "bg-amber-500/15 text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800";
     default:
-      return "secondary";
+      return "bg-muted text-muted-foreground border-border";
+  }
+}
+
+function getProfileTypeBadgeClass(type: string): string {
+  switch (type) {
+    case "EMPLOYER":
+      return "bg-violet-600 text-white border-transparent";
+    case "WORKER":
+      return "bg-blue-500 text-white border-transparent";
+    default:
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -74,7 +85,7 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
+        <Badge className={getStatusBadgeClass(status)}>
           {getAccountStatusLabel(status)}
         </Badge>
       );
@@ -86,8 +97,11 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     header: "Type",
     cell: ({ row }) => {
       const type = row.original.profileType;
-      const variant = type === "EMPLOYER" ? "default" : "secondary";
-      return <Badge variant={variant}>{getProfileTypeLabel(type)}</Badge>;
+      return (
+        <Badge className={getProfileTypeBadgeClass(type)}>
+          {getProfileTypeLabel(type)}
+        </Badge>
+      );
     },
   },
   {
@@ -97,7 +111,13 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     cell: ({ row }) => {
       const connected = row.original.whatsappConnected;
       return (
-        <Badge variant={connected ? "default" : "outline"}>
+        <Badge
+          className={
+            connected
+              ? "bg-emerald-500 text-white border-transparent"
+              : "bg-muted text-muted-foreground border-border"
+          }
+        >
           {connected ? "Connected" : "Disconnected"}
         </Badge>
       );

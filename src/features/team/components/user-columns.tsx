@@ -7,27 +7,18 @@ import { UserRowActions } from "./user-row-actions";
 
 export type AdminUser = AdminUserListItem;
 
-function getRoleBadgeVariant(
-  role: string,
-): "default" | "secondary" | "outline" {
+function getRoleBadgeClass(role: string): string {
   switch (role) {
     case "SUPER_ADMIN":
-      return "default";
+      return "bg-violet-600 text-white border-transparent hover:bg-violet-700";
     case "ADMIN":
-      return "secondary";
+      return "bg-blue-600 text-white border-transparent hover:bg-blue-700";
+    case "MANAGER":
+      return "bg-amber-500 text-white border-transparent hover:bg-amber-600";
+    case "MODERATOR":
+      return "bg-teal-500 text-white border-transparent hover:bg-teal-600";
     default:
-      return "outline";
-  }
-}
-
-function getRoleLabel(role: string): string {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return "Super Admin";
-    case "ADMIN":
-      return "Admin";
-    default:
-      return role;
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -64,8 +55,8 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
     accessorKey: "role",
     header: "Role",
     cell: ({ row }) => (
-      <Badge variant={getRoleBadgeVariant(row.original.role)}>
-        {getRoleLabel(row.original.role)}
+      <Badge className={getRoleBadgeClass(row.original.role)}>
+        {row.original.role}
       </Badge>
     ),
   },

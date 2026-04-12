@@ -8,20 +8,41 @@ import { getJobOfferStatusLabel } from "#/lib/status-labels";
 
 export type JobOffer = AdminJobOfferListItem;
 
-function getStatusBadgeVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
+function getStatusBadgeClass(status: string): string {
   switch (status) {
     case "ACTIVE":
-      return "default";
-    case "COMPLETED":
-      return "secondary";
+      return "bg-emerald-500 text-white border-transparent";
+    case "PARTIALLY_FILLED":
+      return "bg-cyan-500 text-white border-transparent";
     case "FILLED":
-      return "outline";
+      return "bg-blue-600 text-white border-transparent";
+    case "IN_PROGRESS":
+      return "bg-indigo-500 text-white border-transparent";
+    case "COMPLETED":
+      return "bg-violet-600 text-white border-transparent";
     case "CANCELLED":
-      return "destructive";
+      return "bg-rose-500 text-white border-transparent";
+    case "EXPIRED":
+      return "bg-orange-500 text-white border-transparent";
+    case "DRAFT":
+      return "bg-muted text-muted-foreground border-border";
     default:
-      return "outline";
+      return "bg-muted text-muted-foreground border-border";
+  }
+}
+
+function getPaymentFlowBadgeClass(flow: string): string {
+  switch (flow) {
+    case "HOURLY":
+      return "bg-sky-500/15 text-sky-700 border-sky-200 dark:text-sky-300 dark:border-sky-800";
+    case "DAILY":
+      return "bg-amber-500/15 text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800";
+    case "FIXED":
+      return "bg-purple-500/15 text-purple-700 border-purple-200 dark:text-purple-300 dark:border-purple-800";
+    case "MONTHLY":
+      return "bg-teal-500/15 text-teal-700 border-teal-200 dark:text-teal-300 dark:border-teal-800";
+    default:
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -57,10 +78,7 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     cell: ({ row }) => {
       const status = String(row.original.status);
       return (
-        <Badge
-          variant={getStatusBadgeVariant(status)}
-          className={status === "FILLED" ? "bg-blue-600 text-white border-transparent" : undefined}
-        >
+        <Badge className={getStatusBadgeClass(status)}>
           {getJobOfferStatusLabel(status)}
         </Badge>
       );
@@ -71,7 +89,9 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     accessorKey: "paymentFlow",
     header: "Payment",
     cell: ({ row }) => (
-      <Badge variant="outline">{row.original.paymentFlow}</Badge>
+      <Badge className={getPaymentFlowBadgeClass(row.original.paymentFlow)}>
+        {row.original.paymentFlow}
+      </Badge>
     ),
   },
   {
