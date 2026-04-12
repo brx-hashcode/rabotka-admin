@@ -48,6 +48,12 @@ const navMain: NavItem[] = [
   { title: "Overview", url: "/", icon: IconLayoutGrid },
   { title: "Profiles", url: "/profiles", icon: IconUser },
   { title: "Job Openings", url: "/jobs", icon: IconBriefcase },
+  {
+    title: "Job Categories",
+    url: "/job-categories",
+    icon: IconTag,
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+  },
   { title: "Applications", url: "/applications", icon: IconFileText },
   { title: "Compliance", url: "/penalties", icon: IconAlertTriangle },
   {
@@ -94,12 +100,7 @@ const documents: NavItem[] = [
     icon: IconFile,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
-  {
-    title: "Job Categories",
-    url: "/job-categories",
-    icon: IconTag,
-    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
-  },
+
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

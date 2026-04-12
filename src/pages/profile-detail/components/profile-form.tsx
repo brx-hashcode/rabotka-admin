@@ -203,6 +203,12 @@ export function ProfileForm({
               </SelectContent>
             </Select>
           </div>
+          {profile.categoryName && (
+            <div className="space-y-1.5">
+              <FieldLabel>Category</FieldLabel>
+              <Input value={profile.categoryName} disabled />
+            </div>
+          )}
           <div className="space-y-1.5">
             <FieldLabel>Account Status</FieldLabel>
             <Select value={profile.status} disabled>

@@ -57,6 +57,8 @@ export type AdminVerificationImageItem = {
 };
 
 export type AdminProfileDetailResponse = AdminProfileListItem & {
+  categoryId: string | null;
+  categoryName: string | null;
   jobOffersCount: number;
   applicationsCount: number;
   penaltiesCount: number;
