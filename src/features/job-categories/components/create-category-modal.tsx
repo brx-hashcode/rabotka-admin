@@ -80,7 +80,8 @@ export function CreateCategoryModal({
       queryClient.invalidateQueries({ queryKey: ["admin", "job-categories"] });
       handleClose();
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to create category"),
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to create category"),
   });
 
   return (
@@ -176,7 +177,7 @@ export function CreateCategoryModal({
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Creating…" : "Create category"}
+                {isPending ? "Creating…" : "Create"}
               </Button>
             </div>
           </form>

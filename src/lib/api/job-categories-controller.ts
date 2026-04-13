@@ -48,12 +48,12 @@ class JobCategoriesController extends AdminBaseController {
     );
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/job-categories/${id}`,
       new URLSearchParams(),
     );
-    return this.delete<void>(url);
+    return this.delete<{ success: boolean }>(url);
   }
 }
 

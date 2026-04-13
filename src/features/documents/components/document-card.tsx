@@ -32,7 +32,17 @@ import {
   deleteDocument,
   DOCUMENT_CATEGORY_LABELS,
   type AdminDocumentItem,
+  type DocumentCategory,
 } from "#/lib/api/documents-controller";
+
+const CATEGORY_BADGE_CLASS: Record<DocumentCategory, string> = {
+  AGREEMENT: "bg-violet-600 text-white border-transparent",
+  CONTRACT:  "bg-blue-500 text-white border-transparent",
+  POLICY:    "bg-indigo-500 text-white border-transparent",
+  INVOICE:   "bg-orange-500 text-white border-transparent",
+  REPORT:    "bg-teal-600 text-white border-transparent",
+  OTHER:     "bg-muted text-muted-foreground border-border",
+};
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import { RenameDocumentModal } from "./rename-document-modal";
 import { useRole } from "#/hooks/use-role";
@@ -174,7 +184,7 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
             <p className="font-medium text-sm leading-snug line-clamp-2">
               {document.title}
             </p>
-            <Badge variant="secondary" className="text-xs uppercase">
+            <Badge className={`text-xs uppercase ${CATEGORY_BADGE_CLASS[document.category]}`}>
               {DOCUMENT_CATEGORY_LABELS[document.category]}
             </Badge>
             {document.variables.length > 0 && (

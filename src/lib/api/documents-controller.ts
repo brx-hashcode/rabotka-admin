@@ -117,9 +117,9 @@ class AdminDocumentsController extends AdminBaseController {
     );
   }
 
-  async deleteDocument(id: string): Promise<void> {
+  async deleteDocument(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(`/admin/documents/${id}`, new URLSearchParams());
-    return this.delete<void>(url);
+    return this.delete<{ success: boolean }>(url);
   }
 }
 
