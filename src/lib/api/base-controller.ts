@@ -79,7 +79,26 @@ export class AdminBaseController extends BaseController {
     );
   }
 
-  protected delete<T>(path: string, headers?: HeadersInit): Promise<T> {
-    return this.apiService.delete<T>(path, this.mergeCsrfHeaders(headers));
+  protected async delete<T>(path: string, headers?: HeadersInit): Promise<T> {
+    const mergedHeaders = this.mergeCsrfHeaders(headers);
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const url = `${appConfig.apiUrl}${normalizedPath}`;
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: mergedHeaders,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const msg =
+        (body as Record<string, string>).message ??
+        (body as Record<string, string>).error ??
+        "Unknown error";
+      throw new Error(msg);
+    }
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
+      return { success: true } as T;
+    }
+    return res.json() as Promise<T>;
   }
 }

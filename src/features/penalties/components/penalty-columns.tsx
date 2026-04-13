@@ -59,7 +59,7 @@ const penaltyDataColumns: ColumnDef<Penalty, unknown>[] = [
     cell: ({ row }) => {
       const paid = row.original.paidAt != null;
       return (
-        <Badge variant={paid ? "default" : "destructive"}>
+        <Badge className={paid ? "bg-emerald-500 text-white border-transparent" : "bg-rose-600 text-white border-transparent"}>
           {paid ? "Paid" : "Unpaid"}
         </Badge>
       );

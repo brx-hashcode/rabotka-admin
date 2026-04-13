@@ -84,7 +84,8 @@ export function EditCategoryModal({
       queryClient.invalidateQueries({ queryKey: ["admin", "job-categories"] });
       onOpenChange(false);
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to update category"),
+    onError: (err: Error) =>
+      toast.error(err.message || "Failed to update category"),
   });
 
   return (
@@ -137,7 +138,11 @@ export function EditCategoryModal({
                   <FormItem>
                     <FormLabel>Slug</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="nettoyage" className="font-mono text-sm" />
+                      <Input
+                        {...field}
+                        placeholder="nettoyage"
+                        className="font-mono text-sm"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,9 +154,17 @@ export function EditCategoryModal({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormLabel>
+                      Description{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Short description of this category" />
+                      <Input
+                        {...field}
+                        placeholder="Short description of this category"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,11 +173,15 @@ export function EditCategoryModal({
             </div>
 
             <div className="px-6 py-4 border-t shrink-0 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving…" : "Save changes"}
+                {isPending ? "Saving…" : "Save"}
               </Button>
             </div>
           </form>

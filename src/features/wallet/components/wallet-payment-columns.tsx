@@ -11,17 +11,25 @@ import { getProfileInvoices } from "#/lib/api/profiles-controller";
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
-const STATUS_BADGE: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }
-> = {
-  PENDING: { label: "Pending", variant: "secondary" },
-  COMPLETED: { label: "Completed", variant: "default" },
-  FAILED: { label: "Failed", variant: "destructive" },
-  REFUNDED: { label: "Refunded", variant: "outline" },
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  PENDING:   { label: "Pending",   className: "bg-amber-500 text-white border-transparent" },
+  COMPLETED: { label: "Completed", className: "bg-emerald-500 text-white border-transparent" },
+  FAILED:    { label: "Failed",    className: "bg-rose-600 text-white border-transparent" },
+  REFUNDED:  { label: "Refunded",  className: "bg-sky-500 text-white border-transparent" },
+};
+
+const TYPE_BADGE: Record<string, string> = {
+  REGISTRATION:   "bg-violet-600 text-white border-transparent",
+  JOB_POSTING:    "bg-blue-500 text-white border-transparent",
+  PENALTY:        "bg-rose-600 text-white border-transparent",
+  CONTACT_UNLOCK: "bg-teal-600 text-white border-transparent",
+};
+
+const METHOD_BADGE: Record<string, string> = {
+  MOBILE_MONEY: "bg-orange-500 text-white border-transparent",
+  CARD:         "bg-indigo-500 text-white border-transparent",
+  WALLET:       "bg-cyan-600 text-white border-transparent",
+  OTHER:        "bg-muted text-muted-foreground border-border",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -134,7 +142,7 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "type",
     header: "Type",
     cell: ({ row }) => (
-      <Badge variant="outline" className="text-xs">
+      <Badge className={`text-xs ${TYPE_BADGE[row.original.type] ?? "bg-muted text-muted-foreground border-border"}`}>
         {TYPE_LABELS[row.original.type] ?? row.original.type}
       </Badge>
     ),
@@ -154,9 +162,9 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "paymentMethod",
     header: "Method",
     cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
+      <Badge className={`text-xs ${METHOD_BADGE[row.original.paymentMethod] ?? "bg-muted text-muted-foreground border-border"}`}>
         {METHOD_LABELS[row.original.paymentMethod] ?? row.original.paymentMethod}
-      </span>
+      </Badge>
     ),
   },
   {
@@ -166,9 +174,9 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     cell: ({ row }) => {
       const cfg = STATUS_BADGE[row.original.status] ?? {
         label: row.original.status,
-        variant: "secondary" as const,
+        className: "bg-muted text-muted-foreground border-border",
       };
-      return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
+      return <Badge className={cfg.className}>{cfg.label}</Badge>;
     },
   },
   {

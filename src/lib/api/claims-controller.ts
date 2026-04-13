@@ -98,9 +98,9 @@ class AdminClaimsController extends AdminBaseController {
     return this.patch<AdminClaimItem>(url, payload as Record<string, unknown>);
   }
 
-  async deleteClaim(id: string): Promise<void> {
+  async deleteClaim(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(`/admin/claims/${id}`, new URLSearchParams());
-    return this.delete<void>(url);
+    return this.delete<{ success: boolean }>(url);
   }
 
   async listComments(claimId: string): Promise<AdminClaimCommentItem[]> {
@@ -113,9 +113,9 @@ class AdminClaimsController extends AdminBaseController {
     return this.post<AdminClaimCommentItem>(url, { content });
   }
 
-  async deleteComment(claimId: string, commentId: string): Promise<void> {
+  async deleteComment(claimId: string, commentId: string): Promise<{ success: boolean }> {
     const url = this.createURL(`/admin/claims/${claimId}/comments/${commentId}`, new URLSearchParams());
-    return this.delete<void>(url);
+    return this.delete<{ success: boolean }>(url);
   }
 }
 
