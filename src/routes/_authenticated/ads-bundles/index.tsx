@@ -6,10 +6,10 @@ import AdsBundlesPage from "#/pages/ads-bundles";
 export const Route = createFileRoute("/_authenticated/ads-bundles/")({
   component: () => (
     <Layout
-      title="Ad Bundles"
+      title="Advertisements Bundles"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Ad Bundles" },
+        { label: "Advertisements Bundles" },
       ]}
     >
       <AdsBundlesPage />

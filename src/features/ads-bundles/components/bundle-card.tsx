@@ -221,6 +221,35 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
         </div>
       </div>
 
+      <AlertDialog open={toggleOpen} onOpenChange={setToggleOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bundle.is_active ? "Deactivate bundle?" : "Activate bundle?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bundle.is_active
+                ? `"${bundle.name}" will be deactivated. It will no longer be available for new advertisements.`
+                : `"${bundle.name}" will be activated and become available for new advertisements.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => doToggle()}
+              disabled={isToggling}
+              className={bundle.is_active ? "" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs border-0 outline-none ring-0"}
+            >
+              {isToggling
+                ? "Saving…"
+                : bundle.is_active
+                  ? "Deactivate"
+                  : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

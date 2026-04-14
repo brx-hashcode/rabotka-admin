@@ -55,7 +55,7 @@ export default function AdsBundlesPage() {
   return (
     <div className="pt-6">
       <PageListHeader
-        title="Ad Bundles"
+        title="Advertisements Bundles"
         description="Manage advertisement bundles available for campaigns."
         actions={
           <Button onClick={() => setCreateOpen(true)}>
