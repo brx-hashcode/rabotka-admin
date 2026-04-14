@@ -39,6 +39,8 @@ export type AdminPaymentItem = {
   createdAt: string;
 };
 
+export type MonthlyRevenuePoint = { month: string; revenue: number };
+
 export type AdminWalletTransactionsParams = {
   page?: number;
   limit?: number;
@@ -111,6 +113,12 @@ class AdminWalletController extends AdminBaseController {
     return this.get<AdminPaymentsListResponse>(url);
   }
 
+  async getMonthlyRevenue(months = 12): Promise<MonthlyRevenuePoint[]> {
+    const query = this.buildSearchParams({ months });
+    const url = this.createURL("/admin/wallet/monthly-revenue", query);
+    return this.get<MonthlyRevenuePoint[]>(url);
+  }
+
   async fetchInvoiceBlob(invoiceId: string): Promise<Blob> {
     const token = getCsrfToken();
     const response = await fetch(
@@ -139,6 +147,7 @@ const controller = new AdminWalletController();
 export const getWalletInfo = controller.getInfo.bind(controller);
 export const getWalletTransactions = controller.getTransactions.bind(controller);
 export const getWalletPayments = controller.getPayments.bind(controller);
+export const getMonthlyRevenue = controller.getMonthlyRevenue.bind(controller);
 export const downloadAdminInvoice = controller.downloadInvoice.bind(controller);
 export const fetchAdminInvoiceBlob = controller.fetchInvoiceBlob.bind(controller);
 
