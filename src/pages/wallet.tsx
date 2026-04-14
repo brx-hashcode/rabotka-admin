@@ -10,6 +10,8 @@ import {
   DEFAULT_WALLET_TAB,
   walletTransactionColumns,
   walletPaymentColumns,
+  WalletRevenueBarChart,
+  WalletRevenueRadarChart,
   type WalletTab,
 } from "#/features/wallet";
 import type {
@@ -170,6 +172,14 @@ export default function WalletPage() {
   return (
     <div className="flex flex-col gap-6 pt-6">
       <WalletInfoCard />
+      <div className="grid grid-cols-12 items-stretch gap-4">
+        <div className="col-span-12 min-h-0 lg:col-span-9">
+          <WalletRevenueBarChart />
+        </div>
+        <div className="col-span-12 min-h-0 lg:col-span-3">
+          <WalletRevenueRadarChart />
+        </div>
+      </div>
       <Tabs
         value={activeTab ?? DEFAULT_WALLET_TAB}
         onValueChange={(v) => setActiveTab(v as WalletTab)}
