@@ -15,10 +15,10 @@ import {
   IconWallet,
   IconCalendar,
   IconTag,
+  IconPackage,
+  IconSpeakerphone,
 } from "@tabler/icons-react";
-
 import rabotkaLogo from "#/assets/rabotka-logo.png";
-
 import { NavDocuments } from "#/layouts/nav-documents";
 import { NavMain } from "#/layouts/nav-main";
 import { NavSecondary } from "#/layouts/nav-secondary";
@@ -100,7 +100,18 @@ const documents: NavItem[] = [
     icon: IconFile,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
-
+  {
+    title: "Ads bundles",
+    url: "/ads-bundles",
+    icon: IconPackage,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "Advertisements",
+    url: "/advertisements",
+    icon: IconSpeakerphone,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

@@ -62,12 +62,12 @@ export class AdminEventsController extends AdminBaseController {
 
   async create(data: CreateEventParams): Promise<AdminEvent> {
     const url = this.createURL("/admin/event", new URLSearchParams());
-    return this.post<AdminEvent>(url, data as unknown as Record<string, unknown>);
+    return this.post<AdminEvent>(url, data as unknown);
   }
 
   async update(id: number, data: UpdateEventParams): Promise<AdminEvent> {
     const url = this.createURL(`/admin/event/${id}`, new URLSearchParams());
-    return this.patch<AdminEvent>(url, data as unknown as Record<string, unknown>);
+    return this.patch<AdminEvent>(url, data as unknown);
   }
 
   async remove(id: number): Promise<{ success: boolean }> {

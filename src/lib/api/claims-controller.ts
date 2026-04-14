@@ -71,7 +71,7 @@ export type UpdateClaimPayload = {
 class AdminClaimsController extends AdminBaseController {
   async createClaim(payload: CreateClaimPayload): Promise<AdminClaimItem> {
     const url = this.createURL("/admin/claims", new URLSearchParams());
-    return this.post<AdminClaimItem>(url, payload as Record<string, unknown>);
+    return this.post<AdminClaimItem>(url, payload);
   }
 
   async listClaims(params: AdminClaimsListParams): Promise<AdminClaimsListResponse> {
@@ -95,7 +95,7 @@ class AdminClaimsController extends AdminBaseController {
 
   async updateClaim(id: string, payload: UpdateClaimPayload): Promise<AdminClaimItem> {
     const url = this.createURL(`/admin/claims/${id}`, new URLSearchParams());
-    return this.patch<AdminClaimItem>(url, payload as Record<string, unknown>);
+    return this.patch<AdminClaimItem>(url, payload);
   }
 
   async deleteClaim(id: string): Promise<{ success: boolean }> {

@@ -26,6 +26,7 @@ export class AdminAuthController extends AdminBaseController {
       return await this.post<SendOTPResponse>("/auth/admin/send-otp", { email });
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 
@@ -37,6 +38,7 @@ export class AdminAuthController extends AdminBaseController {
       });
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 
@@ -45,6 +47,7 @@ export class AdminAuthController extends AdminBaseController {
       return await this.get<Admin>("/auth/admin/me");
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 
@@ -53,6 +56,7 @@ export class AdminAuthController extends AdminBaseController {
       return await this.patch<Admin>("/auth/admin/me", data);
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 
@@ -61,6 +65,7 @@ export class AdminAuthController extends AdminBaseController {
       return await this.post<{ success: boolean }>("/auth/admin/logout", {});
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 }

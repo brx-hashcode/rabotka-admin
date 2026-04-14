@@ -96,7 +96,7 @@ export class AdminJobOffersController extends AdminBaseController {
       `/admin/job-offers/${id}`,
       new URLSearchParams(),
     );
-    return this.patch<AdminJobOfferDetailResponse>(url, data as Record<string, unknown>);
+    return this.patch<AdminJobOfferDetailResponse>(url, data);
   }
 
   async updateJobOfferStatus(
