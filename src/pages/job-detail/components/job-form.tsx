@@ -62,13 +62,14 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     quantity: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
+  const [paymentFlowError, setPaymentFlowError] = useState(false);
 
   useEffect(() => {
     const data: FormData = {
       title: job.title ?? "",
       description: job.description ?? "",
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
-      amount: String(job.amount ?? ""),
+      amount: job.amount != null ? String(job.amount) : "",
       paymentFlow: job.paymentFlow ?? "",
       address: job.address ?? "",
       note: job.note ?? "",
@@ -78,28 +79,49 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     setInitialForm(data);
   }, [job]);
 
+  const hasAmount = form.amount.trim() !== "" && Number(form.amount) > 0;
+
   const isDirty = (Object.keys(form) as (keyof FormData)[]).some(
     (k) => form[k] !== initialForm[k],
   );
 
   const updateField = (field: keyof FormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
+      // Clear paymentFlow when amount is removed
+      setForm((prev) => ({ ...prev, amount: value, paymentFlow: "" }));
+      setPaymentFlowError(false);
+    } else {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = async () => {
+    // Require paymentFlow if amount is set
+    if (hasAmount && !form.paymentFlow) {
+      setPaymentFlowError(true);
+      return;
+    }
+    setPaymentFlowError(false);
+
     const params: AdminUpdateJobOfferParams = {};
     if (form.title !== initialForm.title) params.title = form.title;
     if (form.description !== initialForm.description)
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.amount !== initialForm.amount) params.amount = Number(form.amount);
-    if (form.paymentFlow !== initialForm.paymentFlow)
-      params.paymentFlow = form.paymentFlow;
     if (form.address !== initialForm.address) params.address = form.address;
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
+
+    // Amount: send null to clear, number to set, omit if unchanged
+    if (form.amount !== initialForm.amount) {
+      params.amount = hasAmount ? Number(form.amount) : null;
+      // Always clear paymentFlow together when amount is cleared
+      params.paymentFlow = hasAmount ? (form.paymentFlow || null) : null;
+    } else if (hasAmount && form.paymentFlow !== initialForm.paymentFlow) {
+      params.paymentFlow = form.paymentFlow || null;
+    }
 
     await onSave(params);
     setInitialForm(form);
@@ -140,25 +162,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Amount (FCFA)</FieldLabel>
-            <Input
-              type="number"
-              value={form.amount}
-              onChange={(e) => updateField("amount", e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel>Address</FieldLabel>
-            <Input
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <FieldLabel>Quantity</FieldLabel>
             <Input
               type="number"
@@ -166,6 +169,60 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               onChange={(e) => updateField("quantity", e.target.value)}
               min={1}
               max={100}
+              disabled={disabled}
+            />
+          </div>
+
+          {/* Amount + Payment Flow row */}
+          <div className="space-y-1.5">
+            <FieldLabel>Amount (FCFA)</FieldLabel>
+            <Input
+              type="number"
+              value={form.amount}
+              onChange={(e) => updateField("amount", e.target.value)}
+              placeholder="Leave empty if no fixed price"
+              disabled={disabled}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Leave empty if no fixed price
+            </p>
+          </div>
+
+          {hasAmount ? (
+            <div className="space-y-1.5">
+              <FieldLabel>Payment Flow</FieldLabel>
+              <Select
+                value={form.paymentFlow}
+                onValueChange={(v) => {
+                  updateField("paymentFlow", v);
+                  setPaymentFlowError(false);
+                }}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HOURLY">Hourly</SelectItem>
+                  <SelectItem value="DAILY">Daily</SelectItem>
+                  <SelectItem value="MONTHLY">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+              {paymentFlowError && (
+                <p className="text-[11px] text-destructive">
+                  Select a payment frequency
+                </p>
+              )}
+            </div>
+          ) : (
+            <div />
+          )}
+
+          <div className="space-y-1.5">
+            <FieldLabel>Address</FieldLabel>
+            <Input
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -185,25 +242,8 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
 
         <Separator className="my-6" />
 
-        {/* Read-only fields */}
+        {/* Read-only status */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-          <div className="space-y-1.5">
-            <FieldLabel>Payment Flow</FieldLabel>
-            <Select
-              value={form.paymentFlow}
-              onValueChange={(v) => updateField("paymentFlow", v)}
-              disabled={disabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="HOURLY">Hourly</SelectItem>
-                <SelectItem value="DAILY">Daily</SelectItem>
-                <SelectItem value="MONTHLY">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-1.5">
             <FieldLabel>Status</FieldLabel>
             <Select value={job.status} disabled>

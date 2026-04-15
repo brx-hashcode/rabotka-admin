@@ -27,6 +27,7 @@ import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
+import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
 import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
@@ -132,6 +133,12 @@ const AuthenticatedApplicationsIndexRoute =
     path: '/applications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdvertisementsIndexRoute =
+  AuthenticatedAdvertisementsIndexRouteImport.update({
+    id: '/advertisements/',
+    path: '/advertisements/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdsBundlesIndexRoute =
   AuthenticatedAdsBundlesIndexRouteImport.update({
     id: '/ads-bundles/',
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
+  '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
+  '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
+  '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/ads-bundles/'
+    | '/advertisements/'
     | '/applications/'
     | '/claim/'
     | '/documents/'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
     | '/ads-bundles'
+    | '/advertisements'
     | '/applications'
     | '/claim'
     | '/documents'
@@ -295,6 +307,7 @@ export interface FileRouteTypes {
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/ads-bundles/'
+    | '/_authenticated/advertisements/'
     | '/_authenticated/applications/'
     | '/_authenticated/claim/'
     | '/_authenticated/documents/'
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/advertisements/': {
+      id: '/_authenticated/advertisements/'
+      path: '/advertisements'
+      fullPath: '/advertisements/'
+      preLoaderRoute: typeof AuthenticatedAdvertisementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/ads-bundles/': {
       id: '/_authenticated/ads-bundles/'
       path: '/ads-bundles'
@@ -490,6 +510,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
+  AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
@@ -515,6 +536,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
+  AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,

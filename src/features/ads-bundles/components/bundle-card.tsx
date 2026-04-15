@@ -10,6 +10,7 @@ import {
   Users,
   CalendarDays,
   Repeat2,
+  Megaphone,
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -41,13 +42,13 @@ import { BundleDialog } from "./bundle-dialog";
 function channelBadgeClass(channel: string): string {
   switch (channel) {
     case "EMAIL":
-      return "text-[10px] py-0 px-1.5 bg-sky-500/15 text-sky-500 border-sky-500/30";
+      return "text-[10px] py-0 px-1.5 bg-sky-500 text-white border-transparent";
     case "WHATSAPP":
-      return "text-[10px] py-0 px-1.5 bg-green-500/15 text-green-500 border-green-500/30";
+      return "text-[10px] py-0 px-1.5 bg-green-600 text-white border-transparent";
     case "BOTH":
-      return "text-[10px] py-0 px-1.5 bg-violet-500/15 text-violet-500 border-violet-500/30";
+      return "text-[10px] py-0 px-1.5 bg-violet-500 text-white border-transparent";
     default:
-      return "text-[10px] py-0 px-1.5";
+      return "text-[10px] py-0 px-1.5 bg-zinc-500 text-white border-transparent";
   }
 }
 
@@ -97,21 +98,9 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
         <div className="flex-1 flex flex-col p-5 gap-4">
           {/* Header row */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col gap-1">
-              <p className="font-semibold text-base leading-tight">
-                {bundle.name}
-              </p>
-              {bundle.is_active ? (
-                <Badge className="w-fit text-[10px] py-0 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
-                  Active
-                </Badge>
-              ) : (
-                <Badge className="w-fit text-[10px] py-0 bg-rose-500/15 text-rose-500 border-rose-500/30">
-                  Inactive
-                </Badge>
-              )}
+            <div className="bg-muted rounded-lg p-2">
+              <Megaphone className="size-6 text-muted-foreground" />
             </div>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -152,6 +141,22 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          {/* Name & status */}
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold text-base leading-tight">
+              {bundle.name}
+            </p>
+            {bundle.is_active ? (
+              <Badge className="w-fit text-[10px] py-0 bg-emerald-500 text-white border-transparent">
+                Active
+              </Badge>
+            ) : (
+              <Badge className="w-fit text-[10px] py-0 bg-rose-500 text-white border-transparent">
+                Inactive
+              </Badge>
+            )}
           </div>
 
           {/* Price */}

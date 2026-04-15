@@ -5,8 +5,8 @@ export type AdminJobOfferListItem = {
   title: string;
   description: string;
   scheduledAt: string;
-  amount: number;
-  paymentFlow: string;
+  amount: number | null;
+  paymentFlow: string | null;
   address: string;
   note: string | null;
   quantity: number;
@@ -51,8 +51,8 @@ export type AdminUpdateJobOfferParams = {
   title?: string;
   description?: string;
   scheduledAt?: string;
-  amount?: number;
-  paymentFlow?: string;
+  amount?: number | null;
+  paymentFlow?: string | null;
   address?: string;
   note?: string;
   quantity?: number;

@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Plus } from "lucide-react";
-import { IconSpeakerphone } from "@tabler/icons-react";
+import { Plus, Megaphone } from "lucide-react";
 import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -29,7 +28,7 @@ export default function AdsBundlesPage() {
     listSection = (
       <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
         <div className="bg-muted rounded-full p-5">
-          <IconSpeakerphone className="size-10 text-muted-foreground" />
+          <Megaphone className="size-10 text-muted-foreground" />
         </div>
         <p className="font-medium text-lg">No bundles yet</p>
         <p className="text-muted-foreground text-sm max-w-xs">

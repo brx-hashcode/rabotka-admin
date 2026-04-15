@@ -39,6 +39,21 @@ export const APPLICATION_STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Cancelled",
 } as const;
 
+export const ADVERTISEMENT_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PENDING_REVIEW: "Pending Review",
+  APPROVED: "Approved",
+  ACTIVE: "Active",
+  PAUSED: "Paused",
+  COMPLETED: "Completed",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+} as const;
+
+export function getAdvertisementStatusLabel(status: string): string {
+  return ADVERTISEMENT_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+}
+
 export const PENALTY_PAYMENT_STATUS_LABELS: Record<string, string> = {
   paid: "Paid",
   unpaid: "Unpaid",

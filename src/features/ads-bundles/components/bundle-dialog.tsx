@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,11 +28,30 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
+import { ImageUploadZone } from "#/pages/profile-detail/components/image-upload-zone";
 import {
   createBundle,
   updateBundle,
   type AdBundle,
 } from "#/lib/api/advertisements-controller";
+import { appConfig } from "#/config";
+import { getCsrfToken } from "#/lib/api/csrf-token";
+
+async function uploadImages(files: File[]): Promise<string[]> {
+  if (files.length === 0) return [];
+  const formData = new FormData();
+  for (const file of files) formData.append("files", file);
+  const csrfToken = getCsrfToken();
+  const res = await fetch(`${appConfig.apiUrl}/file/upload?is_multipl=true`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+    headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
+  });
+  if (!res.ok) throw new Error("Image upload failed");
+  const json = (await res.json()) as { files: { file_url: string }[] };
+  return json.files.map((f) => f.file_url);
+}
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -74,6 +93,25 @@ export function BundleDialog({
   const queryClient = useQueryClient();
   const isEdit = bundle != null;
 
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const handleAddImages = useCallback((newFiles: File[]) => {
+    setImageFiles((prev) => [...prev, ...newFiles]);
+    setImagePreviews((prev) => [
+      ...prev,
+      ...newFiles.map((f) => URL.createObjectURL(f)),
+    ]);
+  }, []);
+
+  const handleRemoveImage = useCallback((index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -110,11 +148,17 @@ export function BundleDialog({
               channel: undefined,
             },
       );
+      setImageFiles([]);
+      setImagePreviews((prev) => {
+        for (const url of prev) URL.revokeObjectURL(url);
+        return [];
+      });
     }
   }, [open, bundle, isEdit, form]);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (values: FormValues) => {
+    mutationFn: async (values: FormValues) => {
+      const imageUrls = await uploadImages(imageFiles);
       const payload = {
         name: values.name,
         description: values.description,
@@ -125,6 +169,7 @@ export function BundleDialog({
         maxDurationDays: values.maxDurationDays,
         allowedChannels: [values.channel],
         isActive: true,
+        imageUrls,
       };
       return isEdit ? updateBundle(bundle.id, payload) : createBundle(payload);
     },
@@ -282,6 +327,15 @@ export function BundleDialog({
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+
+              <ImageUploadZone
+                label="Images"
+                files={imageFiles}
+                previews={imagePreviews}
+                onAdd={handleAddImages}
+                onRemove={handleRemoveImage}
+                maxFiles={5}
               />
             </div>
 
