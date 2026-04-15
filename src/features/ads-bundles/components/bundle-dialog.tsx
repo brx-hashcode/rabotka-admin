@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,30 +28,11 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
-import { ImageUploadZone } from "#/pages/profile-detail/components/image-upload-zone";
 import {
   createBundle,
   updateBundle,
   type AdBundle,
 } from "#/lib/api/advertisements-controller";
-import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
-
-async function uploadImages(files: File[]): Promise<string[]> {
-  if (files.length === 0) return [];
-  const formData = new FormData();
-  for (const file of files) formData.append("files", file);
-  const csrfToken = getCsrfToken();
-  const res = await fetch(`${appConfig.apiUrl}/file/upload?is_multipl=true`, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-    headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
-  });
-  if (!res.ok) throw new Error("Image upload failed");
-  const json = (await res.json()) as { files: { file_url: string }[] };
-  return json.files.map((f) => f.file_url);
-}
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -61,11 +42,12 @@ const schema = z.object({
   maxFrequencyPerWeek: z.coerce.number().int().min(1, "Frequency must be >= 1"),
   maxDurationDays: z.coerce.number().int().min(1, "Duration must be >= 1 day"),
   channel: z.enum(["EMAIL", "WHATSAPP", "BOTH"], {
-    required_error: "Select a channel",
+    message: "Select a channel",
   }),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
 
 function resolveChannel(channels: string[]): "EMAIL" | "WHATSAPP" | "BOTH" {
   const has = (v: string) => channels.includes(v);
@@ -77,6 +59,11 @@ function resolveChannel(channels: string[]): "EMAIL" | "WHATSAPP" | "BOTH" {
 function submitLabel(isPending: boolean, isEdit: boolean): string {
   if (isPending) return "Saving…";
   return isEdit ? "Save" : "Create";
+}
+
+function asNumericInputValue(value: unknown): string | number {
+  if (typeof value === "number" || typeof value === "string") return value;
+  return "";
 }
 
 type BundleDialogProps = {
@@ -93,26 +80,7 @@ export function BundleDialog({
   const queryClient = useQueryClient();
   const isEdit = bundle != null;
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-
-  const handleAddImages = useCallback((newFiles: File[]) => {
-    setImageFiles((prev) => [...prev, ...newFiles]);
-    setImagePreviews((prev) => [
-      ...prev,
-      ...newFiles.map((f) => URL.createObjectURL(f)),
-    ]);
-  }, []);
-
-  const handleRemoveImage = useCallback((index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
-  }, []);
-
-  const form = useForm<FormValues>({
+  const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -148,17 +116,11 @@ export function BundleDialog({
               channel: undefined,
             },
       );
-      setImageFiles([]);
-      setImagePreviews((prev) => {
-        for (const url of prev) URL.revokeObjectURL(url);
-        return [];
-      });
     }
   }, [open, bundle, isEdit, form]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
-      const imageUrls = await uploadImages(imageFiles);
       const payload = {
         name: values.name,
         description: values.description,
@@ -169,7 +131,6 @@ export function BundleDialog({
         maxDurationDays: values.maxDurationDays,
         allowedChannels: [values.channel],
         isActive: true,
-        imageUrls,
       };
       return isEdit ? updateBundle(bundle.id, payload) : createBundle(payload);
     },
@@ -236,6 +197,7 @@ export function BundleDialog({
                     <FormControl>
                       <Input
                         {...field}
+                        value={asNumericInputValue(field.value)}
                         type="number"
                         min={0}
                         placeholder="5000"
@@ -256,6 +218,7 @@ export function BundleDialog({
                       <FormControl>
                         <Input
                           {...field}
+                          value={asNumericInputValue(field.value)}
                           type="number"
                           min={1}
                           placeholder="500"
@@ -274,6 +237,7 @@ export function BundleDialog({
                       <FormControl>
                         <Input
                           {...field}
+                          value={asNumericInputValue(field.value)}
                           type="number"
                           min={1}
                           placeholder="3"
@@ -292,6 +256,7 @@ export function BundleDialog({
                       <FormControl>
                         <Input
                           {...field}
+                          value={asNumericInputValue(field.value)}
                           type="number"
                           min={1}
                           placeholder="30"
@@ -327,15 +292,6 @@ export function BundleDialog({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
-              <ImageUploadZone
-                label="Images"
-                files={imageFiles}
-                previews={imagePreviews}
-                onAdd={handleAddImages}
-                onRemove={handleRemoveImage}
-                maxFiles={5}
               />
             </div>
 
