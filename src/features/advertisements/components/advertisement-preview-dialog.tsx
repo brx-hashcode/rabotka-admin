@@ -28,7 +28,10 @@ function getDefaultChannel(hasEmail: boolean, hasWhatsApp: boolean): Channel {
   return "EMAIL";
 }
 
-function getLineTypePrefix(isBold: boolean, isItalic: boolean): "b" | "i" | "t" {
+function getLineTypePrefix(
+  isBold: boolean,
+  isItalic: boolean,
+): "b" | "i" | "t" {
   if (isBold) return "b";
   if (isItalic) return "i";
   return "t";

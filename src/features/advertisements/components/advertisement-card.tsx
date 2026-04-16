@@ -25,7 +25,7 @@ import {
   IconCreditCard,
 } from "@tabler/icons-react";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -272,6 +272,16 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const canCancel = s !== "COMPLETED" && s !== "CANCELLED" && s !== "REJECTED";
   const isReadOnly = s === "COMPLETED" || s === "CANCELLED" || s === "REJECTED";
 
+  /** Hide delete while the campaign is live; pause first, then delete. */
+  const canDelete =
+    s === "DRAFT" ||
+    s === "PAUSED" ||
+    s === "PENDING_REVIEW" ||
+    s === "APPROVED";
+
+  /** Single divider before Cancel/Delete (after “View as” + workflow). */
+  const showSeparatorBeforeDanger = canCancel || canDelete;
+
   const formatDate = (d: string) => {
     try {
       return format(new Date(d), "dd/MM/yyyy");
@@ -338,7 +348,6 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                     <Eye className="size-4" />
                     View as
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   {canEdit && (
                     <DropdownMenuItem onClick={() => setEditOpen(true)}>
                       <Pencil className="size-4" />
@@ -383,23 +392,27 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                       Resume
                     </DropdownMenuItem>
                   )}
+                  {showSeparatorBeforeDanger ? (
+                    <DropdownMenuSeparator />
+                  ) : null}
                   {canCancel && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setCancelOpen(true)}>
-                        <IconBan className="size-4" />
-                        Cancel
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      onClick={() => setCancelOpen(true)}
+                    >
+                      <IconBan className="size-4" />
+                      Cancel
+                    </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setDeleteOpen(true)}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete
-                  </DropdownMenuItem>
+                  {canDelete && (
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -562,7 +575,6 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => rejectMut.mutate()}
               disabled={!rejectReason.trim() || rejectMut.isPending}
-              className="bg-destructive hover:bg-destructive/90"
             >
               {rejectMut.isPending ? "Rejecting…" : "Reject"}
             </AlertDialogAction>
@@ -625,7 +637,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => cancelMut.mutate()}
               disabled={cancelMut.isPending}
-              className="bg-destructive hover:bg-destructive/90"
+              className={buttonVariants({ variant: "destructive" })}
             >
               {cancelMut.isPending ? "Cancelling…" : "Cancel Ad"}
             </AlertDialogAction>
@@ -647,7 +659,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => deleteMut.mutate()}
               disabled={deleteMut.isPending}
-              className="bg-destructive hover:bg-destructive/90"
+              className={buttonVariants({ variant: "destructive" })}
             >
               {deleteMut.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>

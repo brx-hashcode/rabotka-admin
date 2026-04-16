@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "#/components/ui/dialog";
-import { Button } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { X } from "lucide-react";
 import {
@@ -355,7 +355,10 @@ export function ClaimDetailSheet({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove()}>
+                      <AlertDialogAction
+                        onClick={() => remove()}
+                        className={buttonVariants({ variant: "destructive" })}
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>

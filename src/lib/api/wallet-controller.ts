@@ -113,9 +113,20 @@ class AdminWalletController extends AdminBaseController {
     return this.get<AdminPaymentsListResponse>(url);
   }
 
-  async getMonthlyRevenue(months = 12): Promise<MonthlyRevenuePoint[]> {
-    const query = this.buildSearchParams({ months });
+  /** Jan–Dec revenue for the given calendar year (defaults to current year on the server if omitted). */
+  async getMonthlyRevenue(year?: number): Promise<MonthlyRevenuePoint[]> {
+    const query = this.buildSearchParams(
+      year === undefined || year === null ? {} : { year },
+    );
     const url = this.createURL("/admin/wallet/monthly-revenue", query);
+    return this.get<MonthlyRevenuePoint[]>(url);
+  }
+
+  /** Rolling window of `months` months ending at the current month (for radar chart). */
+  async getRollingMonthlyRevenue(months: number): Promise<MonthlyRevenuePoint[]> {
+    const qs = new URLSearchParams();
+    qs.set("rollingMonths", String(months));
+    const url = this.createURL("/admin/wallet/monthly-revenue", qs);
     return this.get<MonthlyRevenuePoint[]>(url);
   }
 
@@ -148,6 +159,8 @@ export const getWalletInfo = controller.getInfo.bind(controller);
 export const getWalletTransactions = controller.getTransactions.bind(controller);
 export const getWalletPayments = controller.getPayments.bind(controller);
 export const getMonthlyRevenue = controller.getMonthlyRevenue.bind(controller);
+export const getRollingMonthlyRevenue =
+  controller.getRollingMonthlyRevenue.bind(controller);
 export const downloadAdminInvoice = controller.downloadInvoice.bind(controller);
 export const fetchAdminInvoiceBlob = controller.fetchInvoiceBlob.bind(controller);
 

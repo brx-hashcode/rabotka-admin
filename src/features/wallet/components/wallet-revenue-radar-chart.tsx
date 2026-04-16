@@ -14,7 +14,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "#/components/ui/chart";
-import { getMonthlyRevenue } from "#/lib/api/wallet-controller";
+import { getRollingMonthlyRevenue } from "#/lib/api/wallet-controller";
+
+const RADAR_MONTHS = 6;
 
 const BASE_COLOR = "hsl(217 91% 60%)";
 
@@ -33,22 +35,25 @@ export function WalletRevenueRadarChart() {
   const gradBaseId = `radarg${useId().replaceAll(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const { data: raw = [] } = useQuery({
-    queryKey: ["admin", "wallet", "monthly-revenue"],
-    queryFn: () => getMonthlyRevenue(12),
+    queryKey: ["admin", "wallet", "monthly-revenue", "rollingMonths", RADAR_MONTHS],
+    queryFn: () => getRollingMonthlyRevenue(RADAR_MONTHS),
   });
 
-  const last6 = raw.slice(-6);
+  /** API should return exactly `RADAR_MONTHS` rows; keep last N if a stale full-year payload appears. */
+  const series =
+    raw.length > RADAR_MONTHS ? raw.slice(-RADAR_MONTHS) : raw;
 
-  const chartData = last6.map((d) => ({
+  const chartData = series.map((d) => ({
     ...d,
     monthLabel: formatMonthLabel(d.month),
   }));
 
-  const firstMonth = last6.length > 0 ? formatMonthLabel(last6[0].month) : "";
+  const firstMonth =
+    series.length > 0 ? formatMonthLabel(series[0].month) : "";
   const lastMonth =
-    last6.length > 0 ? formatMonthLabel(last6[last6.length - 1].month) : "";
-  const year =
-    last6.length > 0 ? last6[last6.length - 1].month.slice(0, 4) : "";
+    series.length > 0 ? formatMonthLabel(series[series.length - 1].month) : "";
+  const yearLabel =
+    series.length > 0 ? series[series.length - 1].month.slice(0, 4) : "";
 
   // memoised so the gradient id is stable across renders
   const gradientId = useMemo(() => `${gradBaseId}-radar-fill`, [gradBaseId]);
@@ -58,7 +63,9 @@ export function WalletRevenueRadarChart() {
       <CardHeader className="items-center pb-0">
         <CardTitle>Revenue Distribution</CardTitle>
         <CardDescription>
-          {firstMonth} – {lastMonth} {year}
+          {series.length > 0
+            ? `${firstMonth} – ${lastMonth} ${yearLabel}`
+            : `Last ${RADAR_MONTHS} months`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 pb-0">

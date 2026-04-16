@@ -135,7 +135,7 @@ function AlertDialogAction({
     <AlertDialogPrimitive.Action
       data-slot="alert-dialog-action"
       className={cn(
-        buttonVariants({ variant: "destructive" }),
+        buttonVariants({ variant: "default" }),
         "mt-2 sm:mt-0",
         className
       )}

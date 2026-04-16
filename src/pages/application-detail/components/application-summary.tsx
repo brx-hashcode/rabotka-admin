@@ -16,6 +16,8 @@ import { Separator } from "#/components/ui/separator";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { appConfig } from "#/config";
 import { getCsrfToken } from "#/lib/api/csrf-token";
+import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
+import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -29,41 +31,63 @@ type Props = {
   application: AdminApplicationDetailResponse;
 };
 
-async function downloadAdminPdf(path: string, filename: string) {
+async function fetchAdminPdfBlob(path: string): Promise<Blob> {
   const token = getCsrfToken();
-  const headers: Record<string, string> = token ? { "x-csrf-token": token } : {};
-  const res = await fetch(`${appConfig.apiUrl}${path}`, { credentials: "include", headers });
+  const headers: Record<string, string> = token
+    ? { "x-csrf-token": token }
+    : {};
+  const res = await fetch(`${appConfig.apiUrl}${path}`, {
+    credentials: "include",
+    headers,
+  });
   if (!res.ok) throw new Error("Download failed");
-  const blob = await res.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const a = globalThis.document.createElement("a");
-  a.href = objectUrl;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(objectUrl);
+  return res.blob();
 }
 
 export function ApplicationSummary({ application }: Readonly<Props>) {
-  const [isDownloadingContract, setIsDownloadingContract] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<ViewerDocument | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  async function handleDownloadContract() {
+  async function handlePreview() {
     if (!application.contractId) return;
-    setIsDownloadingContract(true);
+    setLoading(true);
     try {
-      await downloadAdminPdf(
+      const blob = await fetchAdminPdfBlob(
         `/admin/contracts/${application.contractId}/download`,
-        `contrat_${application.workerName.replace(/\s+/g, "_")}.pdf`,
       );
+      const objectUrl = URL.createObjectURL(blob);
+      const filename = `contrat_${application.workerName.replace(/\s+/g, "_")}.pdf`;
+      setPreviewDoc({
+        url: objectUrl,
+        title: "Contract",
+        description: filename,
+        fileType: "pdf",
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = filename;
+          a.click();
+        },
+      });
+      setDrawerOpen(true);
     } catch {
-      toast.error("Failed to download contract");
+      toast.error("Failed to load contract");
     } finally {
-      setIsDownloadingContract(false);
+      setLoading(false);
+    }
+  }
+
+  function handleOpenChange(open: boolean) {
+    setDrawerOpen(open);
+    if (!open && previewDoc) {
+      URL.revokeObjectURL(previewDoc.url);
+      setPreviewDoc(null);
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Worker card */}
       <Card>
         <CardHeader className="pb-0">
           <CardTitle className="text-sm">Worker</CardTitle>
@@ -123,7 +147,6 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
         </CardContent>
       </Card>
 
-      {/* Employer card */}
       <Card>
         <CardHeader className="pb-0">
           <CardTitle className="text-sm">Employer</CardTitle>
@@ -180,15 +203,23 @@ export function ApplicationSummary({ application }: Readonly<Props>) {
       </Card>
 
       {application.contractId && (
-        <Button
-          variant="outline"
-          className="w-full"
-          disabled={isDownloadingContract}
-          onClick={handleDownloadContract}
-        >
-          <IconFileTypePdf className="size-4 text-red-500" />
-          {isDownloadingContract ? "Downloading…" : "Download Contract PDF"}
-        </Button>
+        <>
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={loading}
+            onClick={handlePreview}
+            title="Preview contract PDF"
+          >
+            <IconFileTypePdf className="size-4 text-red-500" />
+            <span>{loading ? "Downloading..." : "contract"}</span>
+          </Button>
+          <DocumentViewerDrawer
+            open={drawerOpen}
+            onOpenChange={handleOpenChange}
+            document={previewDoc}
+          />
+        </>
       )}
     </div>
   );
