@@ -4,19 +4,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 import {
+  getNotificationHref,
+  NOTIFICATION_ENTITY_LABELS,
+} from "#/features/notifications/utils";
+import {
   useSocketStore,
   type AdminNotificationPayload,
 } from "#/stores/use-socket-store";
-
-const ENTITY_LABELS: Record<string, string> = {
-  profile: "Profil",
-  "job-offer": "Offre",
-  application: "Candidature",
-  claim: "Réclamation",
-  event: "Événement",
-  payment: "Paiement",
-  penalty: "Pénalité",
-};
 
 const ENTITY_COLORS: Record<string, string> = {
   profile: "bg-blue-500",
@@ -27,19 +21,6 @@ const ENTITY_COLORS: Record<string, string> = {
   payment: "bg-green-500",
   penalty: "bg-red-500",
 };
-
-function getNotificationHref(entityType: string, entityId: string): string | null {
-  switch (entityType) {
-    case "profile":     return `/profiles/${entityId}`;
-    case "job-offer":   return `/jobs/${entityId}`;
-    case "application": return `/applications/${entityId}`;
-    case "penalty":     return `/penalties/${entityId}`;
-    case "claim":       return "/claim";
-    case "event":       return "/events";
-    case "payment":     return "/wallet";
-    default:            return null;
-  }
-}
 
 function timeAgo(timestamp: string): string {
   const seconds = Math.floor(
@@ -154,7 +135,7 @@ function NotificationItem({
   onClick,
 }: Readonly<{ notification: AdminNotificationPayload; onClick?: () => void }>) {
   const label =
-    ENTITY_LABELS[notification.entityType] ?? notification.entityType;
+    NOTIFICATION_ENTITY_LABELS[notification.entityType] ?? notification.entityType;
   const dotColor = ENTITY_COLORS[notification.entityType] ?? "bg-gray-500";
 
   return (

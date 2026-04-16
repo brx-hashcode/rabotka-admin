@@ -132,6 +132,7 @@ export function ClaimDetailSheet({
   const assignedUser = claim?.assignedUserId
     ? users.find((u) => u.id === claim.assignedUserId)
     : null;
+  const canUnassign = canManageContent && status !== "COMPLETED" && status !== "REJECTED";
 
   return (
     <Dialog
@@ -276,7 +277,7 @@ export function ClaimDetailSheet({
                       email={assignedUser.email}
                       avatarUrl={null}
                     />
-                    {canManageContent && (
+                    {canUnassign && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button

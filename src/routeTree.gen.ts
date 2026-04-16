@@ -19,6 +19,7 @@ import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
+import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
@@ -87,6 +88,12 @@ const AuthenticatedPaymentRequestsIndexRoute =
   AuthenticatedPaymentRequestsIndexRouteImport.update({
     id: '/payment-requests/',
     path: '/payment-requests/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedLogsIndexRoute = AuthenticatedLogsIndexRouteImport.update({
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/logs/': typeof AuthenticatedLogsIndexRoute
+  '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -211,6 +219,7 @@ export interface FileRoutesByTo {
   '/job-categories': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/logs': typeof AuthenticatedLogsIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -238,6 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
+  '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/job-categories/'
     | '/jobs/'
     | '/logs/'
+    | '/notifications/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/job-categories'
     | '/jobs'
     | '/logs'
+    | '/notifications'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -316,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/job-categories/'
     | '/_authenticated/jobs/'
     | '/_authenticated/logs/'
+    | '/_authenticated/notifications/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       path: '/payment-requests'
       fullPath: '/payment-requests/'
       preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/logs/': {
@@ -519,6 +539,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJobCategoriesIndexRoute: typeof AuthenticatedJobCategoriesIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
+  AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -545,6 +566,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJobCategoriesIndexRoute: AuthenticatedJobCategoriesIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
+  AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,

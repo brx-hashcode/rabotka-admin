@@ -41,6 +41,14 @@ export class AdminNotificationController extends AdminBaseController {
     );
     await this.post<unknown>(url);
   }
+
+  async deleteOne(id: string): Promise<void> {
+    const url = this.createURL(
+      `/admin/notifications/${id}`,
+      new URLSearchParams(),
+    );
+    await this.delete<unknown>(url);
+  }
 }
 
 const controller = new AdminNotificationController();
@@ -48,3 +56,4 @@ export const listNotifications = controller.list.bind(controller);
 export const markAllNotificationsRead =
   controller.markAllRead.bind(controller);
 export const clearAllNotifications = controller.clearAll.bind(controller);
+export const deleteNotification = controller.deleteOne.bind(controller);
