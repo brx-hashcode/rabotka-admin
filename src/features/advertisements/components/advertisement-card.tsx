@@ -14,9 +14,6 @@ import {
   Trash2,
   Eye,
   ChartColumnIncreasing,
-  Send,
-  MailOpen,
-  MousePointerClick,
 } from "lucide-react";
 import {
   IconPhoto,
@@ -48,13 +45,6 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Textarea } from "#/components/ui/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "#/components/ui/sheet";
 import type { Advertisement } from "#/lib/api/advertisements-controller";
 import {
   confirmPaymentAdvertisement,
@@ -69,6 +59,7 @@ import {
 import { getAdvertisementStatusLabel } from "#/lib/status-labels";
 import { AdvertisementDialog } from "./advertisement-dialog";
 import { AdvertisementPreviewDialog } from "./advertisement-preview-dialog";
+import { AdvertisementStatsSheet } from "./advertisement-stats-sheet";
 
 function getStatusBadgeClass(status: string): string {
   switch (status) {
@@ -501,67 +492,11 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
         </div>
       </div>
 
-      <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
-        <SheetContent className="sm:max-w-xl">
-          <SheetHeader className="border-b">
-            <SheetTitle>Advertisement Stats</SheetTitle>
-            <SheetDescription className="line-clamp-2">
-              {ad.title}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Sent
-                </p>
-                <span className="inline-flex size-7 items-center justify-center rounded-md bg-blue-500/10 text-blue-500">
-                  <Send className="size-3.5" />
-                </span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold">
-                {ad.total_sent.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Total deliveries attempted
-              </p>
-            </div>
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Opened
-                </p>
-                <span className="inline-flex size-7 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-500">
-                  <MailOpen className="size-3.5" />
-                </span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold">
-                {ad.total_opened.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Messages opened by recipients
-              </p>
-            </div>
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Clicks
-                </p>
-                <span className="inline-flex size-7 items-center justify-center rounded-md bg-violet-500/10 text-violet-500">
-                  <MousePointerClick className="size-3.5" />
-                </span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold">
-                {ad.total_clicks.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                CTA and link interactions
-              </p>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <AdvertisementStatsSheet
+        open={statsOpen}
+        onOpenChange={setStatsOpen}
+        advertisement={ad}
+      />
 
       <AlertDialog
         open={confirmPaymentOpen}

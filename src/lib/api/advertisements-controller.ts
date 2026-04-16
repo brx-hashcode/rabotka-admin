@@ -88,6 +88,47 @@ export type CreateAdvertisementParams = {
 
 export type UpdateAdvertisementParams = Partial<CreateAdvertisementParams>;
 
+export type AdvertisementAnalyticsLink = {
+  hash: string;
+  originalUrl: string;
+  clickCount: number;
+  lastClickedAt: string | null;
+};
+
+export type AdvertisementTimelinePoint = {
+  date: string;
+  sent: number;
+  clicked: number;
+  failed: number;
+};
+
+export type AdvertisementDeliveryLogItem = {
+  id: string;
+  profileId: string;
+  profileName: string;
+  profileEmail: string;
+  channel: string;
+  status: string;
+  sentAt: string | null;
+  openedAt: string | null;
+  clickedAt: string | null;
+  failureReason: string | null;
+};
+
+export type AdvertisementAnalytics = {
+  totalSent: number;
+  totalOpened: number;
+  totalClicks: number;
+  openRate: number;
+  clickRate: number;
+  clickedDeliveries: number;
+  clickThroughRate: number;
+  remainingDays: number;
+  links: AdvertisementAnalyticsLink[];
+  timeline: AdvertisementTimelinePoint[];
+  deliveryLogs: AdvertisementDeliveryLogItem[];
+};
+
 // ─── Bundle ───────────────────────────────────────────────────────────────────
 
 export type AdBundle = {
@@ -191,6 +232,14 @@ class AdvertisementsController extends AdminBaseController {
     return this.delete<{ success: boolean }>(url);
   }
 
+  async getAdvertisementAnalytics(id: string): Promise<AdvertisementAnalytics> {
+    const url = this.createURL(
+      `/admin/advertisements/${id}/analytics`,
+      new URLSearchParams(),
+    );
+    return this.get<AdvertisementAnalytics>(url);
+  }
+
   // ─── Bundles ───────────────────────────────────────────────────────────────
 
   async listBundles(): Promise<AdBundle[]> {
@@ -243,6 +292,8 @@ export const pauseAdvertisement = controller.pauseAdvertisement.bind(controller)
 export const resumeAdvertisement = controller.resumeAdvertisement.bind(controller);
 export const cancelAdvertisement = controller.cancelAdvertisement.bind(controller);
 export const deleteAdvertisement = controller.deleteAdvertisement.bind(controller);
+export const getAdvertisementAnalytics =
+  controller.getAdvertisementAnalytics.bind(controller);
 
 export const listBundles = controller.listBundles.bind(controller);
 export const createBundle = controller.createBundle.bind(controller);
