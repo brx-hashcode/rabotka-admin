@@ -130,7 +130,7 @@ function InvoicePreviewCell({
         title="Preview invoice PDF"
       >
         <IconFileTypePdf className="size-4 text-red-500" />
-        <span>{loading ? "Downloading..." : "invoice"}</span>
+        <span>invoice</span>
       </Button>
       <DocumentViewerDrawer
         open={drawerOpen}

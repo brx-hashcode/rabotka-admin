@@ -8,7 +8,6 @@ import type {
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
-import { Separator } from "#/components/ui/separator";
 import { Card, CardContent } from "#/components/ui/card";
 import {
   Select,
@@ -69,7 +68,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       title: job.title ?? "",
       description: job.description ?? "",
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
-      amount: job.amount != null ? String(job.amount) : "",
+      amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
       address: job.address ?? "",
       note: job.note ?? "",
@@ -87,7 +86,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
 
   const updateField = (field: keyof FormData, value: string) => {
     if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
-      // Clear paymentFlow when amount is removed
       setForm((prev) => ({ ...prev, amount: value, paymentFlow: "" }));
       setPaymentFlowError(false);
     } else {
@@ -96,7 +94,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   };
 
   const handleSave = async () => {
-    // Require paymentFlow if amount is set
     if (hasAmount && !form.paymentFlow) {
       setPaymentFlowError(true);
       return;
@@ -114,11 +111,9 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
 
-    // Amount: send null to clear, number to set, omit if unchanged
     if (form.amount !== initialForm.amount) {
       params.amount = hasAmount ? Number(form.amount) : null;
-      // Always clear paymentFlow together when amount is cleared
-      params.paymentFlow = hasAmount ? (form.paymentFlow || null) : null;
+      params.paymentFlow = hasAmount ? form.paymentFlow || null : null;
     } else if (hasAmount && form.paymentFlow !== initialForm.paymentFlow) {
       params.paymentFlow = form.paymentFlow || null;
     }
@@ -146,7 +141,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-20 resize-none"
-              rows={16}
+              rows={10}
               disabled={disabled}
             />
           </div>
@@ -173,7 +168,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
             />
           </div>
 
-          {/* Amount + Payment Flow row */}
           <div className="space-y-1.5">
             <FieldLabel>Amount (FCFA)</FieldLabel>
             <Input
@@ -237,26 +231,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               rows={3}
               disabled={disabled}
             />
-          </div>
-        </div>
-
-        <Separator className="my-6" />
-
-        {/* Read-only status */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-          <div className="space-y-1.5">
-            <FieldLabel>Status</FieldLabel>
-            <Select value={job.status} disabled>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="FILLED">Filled</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

@@ -273,7 +273,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const canPause = s === "ACTIVE";
   const canResume = s === "PAUSED";
   const canCancel = s !== "COMPLETED" && s !== "CANCELLED" && s !== "REJECTED";
-  const isReadOnly = s === "COMPLETED" || s === "CANCELLED" || s === "REJECTED";
+  // const isReadOnly = s === "COMPLETED" || s === "CANCELLED" || s === "REJECTED";
 
   const canDelete =
     s === "DRAFT" ||
@@ -318,108 +318,91 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             )}
           </div>
 
-          {isReadOnly && (
-            <div className="absolute top-2 right-2 z-10">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm"
-                onClick={() => setPreviewOpen(true)}
-              >
-                <Eye className="size-4" />
-                <span className="sr-only">View as</span>
-              </Button>
-            </div>
-          )}
-          {!isReadOnly && (
-            <div className="absolute top-2 right-2 z-10">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm"
+          <div className="absolute top-2 right-2 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm"
+                >
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">Options</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
+                  <Eye className="size-4" />
+                  View as
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatsOpen(true)}>
+                  <ChartColumnIncreasing className="size-4" />
+                  Stats
+                </DropdownMenuItem>
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <Pencil className="size-4" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canConfirmPayment && (
+                  <DropdownMenuItem onClick={() => setConfirmPaymentOpen(true)}>
+                    <IconCreditCard className="size-4" />
+                    Confirm Payment
+                  </DropdownMenuItem>
+                )}
+                {canSubmit && (
+                  <DropdownMenuItem onClick={() => setSubmitOpen(true)}>
+                    <IconSend className="size-4" />
+                    Submit for Review
+                  </DropdownMenuItem>
+                )}
+                {canApprove && (
+                  <DropdownMenuItem onClick={() => setApproveOpen(true)}>
+                    <IconCheck className="size-4" />
+                    Approve
+                  </DropdownMenuItem>
+                )}
+                {canReject && (
+                  <DropdownMenuItem onClick={() => setRejectOpen(true)}>
+                    <IconX className="size-4" />
+                    Reject
+                  </DropdownMenuItem>
+                )}
+                {canPause && (
+                  <DropdownMenuItem onClick={() => setPauseOpen(true)}>
+                    <IconPlayerPause className="size-4" />
+                    Pause
+                  </DropdownMenuItem>
+                )}
+                {canResume && (
+                  <DropdownMenuItem onClick={() => setResumeOpen(true)}>
+                    <IconPlayerPlay className="size-4" />
+                    Resume
+                  </DropdownMenuItem>
+                )}
+                {showSeparatorBeforeDanger ? <DropdownMenuSeparator /> : null}
+                {canCancel && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    onClick={() => setCancelOpen(true)}
                   >
-                    <MoreHorizontal className="size-4" />
-                    <span className="sr-only">Options</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
-                    <Eye className="size-4" />
-                    View as
+                    <IconBan className="size-4" />
+                    Cancel
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatsOpen(true)}>
-                    <ChartColumnIncreasing className="size-4" />
-                    Stats
+                )}
+                {canDelete && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete
                   </DropdownMenuItem>
-                  {canEdit && (
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                      <Pencil className="size-4" />
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {canConfirmPayment && (
-                    <DropdownMenuItem
-                      onClick={() => setConfirmPaymentOpen(true)}
-                    >
-                      <IconCreditCard className="size-4" />
-                      Confirm Payment
-                    </DropdownMenuItem>
-                  )}
-                  {canSubmit && (
-                    <DropdownMenuItem onClick={() => setSubmitOpen(true)}>
-                      <IconSend className="size-4" />
-                      Submit for Review
-                    </DropdownMenuItem>
-                  )}
-                  {canApprove && (
-                    <DropdownMenuItem onClick={() => setApproveOpen(true)}>
-                      <IconCheck className="size-4" />
-                      Approve
-                    </DropdownMenuItem>
-                  )}
-                  {canReject && (
-                    <DropdownMenuItem onClick={() => setRejectOpen(true)}>
-                      <IconX className="size-4" />
-                      Reject
-                    </DropdownMenuItem>
-                  )}
-                  {canPause && (
-                    <DropdownMenuItem onClick={() => setPauseOpen(true)}>
-                      <IconPlayerPause className="size-4" />
-                      Pause
-                    </DropdownMenuItem>
-                  )}
-                  {canResume && (
-                    <DropdownMenuItem onClick={() => setResumeOpen(true)}>
-                      <IconPlayerPlay className="size-4" />
-                      Resume
-                    </DropdownMenuItem>
-                  )}
-                  {showSeparatorBeforeDanger ? <DropdownMenuSeparator /> : null}
-                  {canCancel && (
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                      onClick={() => setCancelOpen(true)}
-                    >
-                      <IconBan className="size-4" />
-                      Cancel
-                    </DropdownMenuItem>
-                  )}
-                  {canDelete && (
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                      onClick={() => setDeleteOpen(true)}
-                    >
-                      <Trash2 className="size-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col p-5 gap-3">

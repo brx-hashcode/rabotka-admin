@@ -1,4 +1,4 @@
-import { ArrowRight, Trash2 } from "lucide-react";
+import { EyeIcon, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,8 @@ export function NotificationRowActions({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <ArrowRight className="size-4" />
+          <MoreHorizontal className="size-4" />
+          <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
@@ -33,7 +34,8 @@ export function NotificationRowActions({
           disabled={!canOpen}
           onSelect={() => onOpen(notification)}
         >
-          Open
+          <EyeIcon className="size-4" />
+          View
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
