@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import type {
   AdminJobOfferDetailResponse,
   AdminUpdateJobOfferParams,
 } from "#/lib/api/jobs-controller";
+import { listJobCategories } from "#/lib/api/job-categories-controller";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -23,6 +25,7 @@ type FormData = {
   scheduledAt: string;
   amount: string;
   paymentFlow: string;
+  categoryId: string;
   address: string;
   note: string;
   quantity: string;
@@ -42,6 +45,23 @@ function toLocalDateTimeValue(isoStr: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function applyAmountChanges(
+  params: AdminUpdateJobOfferParams,
+  form: { amount: string; paymentFlow: string },
+  initialForm: { amount: string; paymentFlow: string },
+  hasAmount: boolean,
+) {
+  if (form.amount !== initialForm.amount) {
+    params.amount = hasAmount ? Number(form.amount) : null;
+    params.paymentFlow = hasAmount ? form.paymentFlow || null : null;
+    return;
+  }
+
+  if (hasAmount && form.paymentFlow !== initialForm.paymentFlow) {
+    params.paymentFlow = form.paymentFlow || null;
+  }
+}
+
 type Props = {
   job: AdminJobOfferDetailResponse;
   onSave: (data: AdminUpdateJobOfferParams) => Promise<void>;
@@ -56,12 +76,17 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     scheduledAt: "",
     amount: "",
     paymentFlow: "",
+    categoryId: "",
     address: "",
     note: "",
     quantity: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
   const [paymentFlowError, setPaymentFlowError] = useState(false);
+  const categoriesQuery = useQuery({
+    queryKey: ["admin", "job-categories"],
+    queryFn: listJobCategories,
+  });
 
   useEffect(() => {
     const data: FormData = {
@@ -70,6 +95,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
       amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
+      categoryId: job.category?.id ?? "",
       address: job.address ?? "",
       note: job.note ?? "",
       quantity: String(job.quantity ?? 1),
@@ -106,17 +132,14 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
+    if (form.categoryId !== initialForm.categoryId)
+      params.categoryId = form.categoryId || null;
     if (form.address !== initialForm.address) params.address = form.address;
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
 
-    if (form.amount !== initialForm.amount) {
-      params.amount = hasAmount ? Number(form.amount) : null;
-      params.paymentFlow = hasAmount ? form.paymentFlow || null : null;
-    } else if (hasAmount && form.paymentFlow !== initialForm.paymentFlow) {
-      params.paymentFlow = form.paymentFlow || null;
-    }
+    applyAmountChanges(params, form, initialForm, hasAmount);
 
     await onSave(params);
     setInitialForm(form);
@@ -142,6 +165,35 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-20 resize-none"
               rows={10}
+              disabled={disabled}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <FieldLabel>Category</FieldLabel>
+            <Select
+              value={form.categoryId}
+              onValueChange={(v) => updateField("categoryId", v)}
+              disabled={disabled || categoriesQuery.isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoriesQuery.data?.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <FieldLabel>Address</FieldLabel>
+            <Input
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -211,15 +263,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           ) : (
             <div />
           )}
-
-          <div className="space-y-1.5">
-            <FieldLabel>Address</FieldLabel>
-            <Input
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
-              disabled={disabled}
-            />
-          </div>
 
           <div className="col-span-2 space-y-1.5">
             <FieldLabel>Note</FieldLabel>

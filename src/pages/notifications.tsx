@@ -143,7 +143,7 @@ export default function NotificationsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
               onClick={() => {
                 if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
               }}
@@ -165,7 +165,7 @@ export default function NotificationsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
               onClick={() => clearAllMutation.mutate()}
             >
               Clear all

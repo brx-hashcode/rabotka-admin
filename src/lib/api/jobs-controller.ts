@@ -3,6 +3,7 @@ import { AdminBaseController } from "./base-controller";
 export type AdminJobOfferListItem = {
   id: string;
   title: string;
+  category: { id: string; name: string } | null;
   description: string;
   scheduledAt: string;
   amount: number | null;
@@ -53,6 +54,7 @@ export type AdminUpdateJobOfferParams = {
   scheduledAt?: string;
   amount?: number | null;
   paymentFlow?: string | null;
+  categoryId?: string | null;
   address?: string;
   note?: string;
   quantity?: number;
