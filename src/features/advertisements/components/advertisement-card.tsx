@@ -273,15 +273,8 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const canPause = s === "ACTIVE";
   const canResume = s === "PAUSED";
   const canCancel = s !== "COMPLETED" && s !== "CANCELLED" && s !== "REJECTED";
-  // const isReadOnly = s === "COMPLETED" || s === "CANCELLED" || s === "REJECTED";
 
-  const canDelete =
-    s === "DRAFT" ||
-    s === "PAUSED" ||
-    s === "PENDING_REVIEW" ||
-    s === "APPROVED";
-
-  const showSeparatorBeforeDanger = canCancel || canDelete;
+  const showSeparatorBeforeDanger = canCancel;
 
   const formatDate = (d: string) => {
     try {
@@ -391,15 +384,13 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                     Cancel
                   </DropdownMenuItem>
                 )}
-                {canDelete && (
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    onClick={() => setDeleteOpen(true)}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="size-4" />
+                  Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
