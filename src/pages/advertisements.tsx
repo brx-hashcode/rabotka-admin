@@ -73,7 +73,6 @@ export default function AdvertisementsPage() {
         }
       />
 
-      {/* Filters */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Select
           value={status || ALL}

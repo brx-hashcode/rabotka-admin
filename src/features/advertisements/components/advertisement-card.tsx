@@ -13,6 +13,10 @@ import {
   Pencil,
   Trash2,
   Eye,
+  ChartColumnIncreasing,
+  Send,
+  MailOpen,
+  MousePointerClick,
 } from "lucide-react";
 import {
   IconPhoto,
@@ -44,6 +48,13 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Textarea } from "#/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "#/components/ui/sheet";
 import type { Advertisement } from "#/lib/api/advertisements-controller";
 import {
   confirmPaymentAdvertisement,
@@ -109,7 +120,7 @@ function ImageCarousel({ urls }: Readonly<{ urls: string[] }>) {
 
   if (urls.length === 0) {
     return (
-      <div className="flex h-60 w-full items-center justify-center bg-muted">
+      <div className="flex h-70 w-full items-center justify-center bg-muted">
         <IconPhoto className="size-10 text-muted-foreground" />
       </div>
     );
@@ -179,6 +190,7 @@ type Props = { advertisement: Advertisement };
 export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -272,14 +284,12 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const canCancel = s !== "COMPLETED" && s !== "CANCELLED" && s !== "REJECTED";
   const isReadOnly = s === "COMPLETED" || s === "CANCELLED" || s === "REJECTED";
 
-  /** Hide delete while the campaign is live; pause first, then delete. */
   const canDelete =
     s === "DRAFT" ||
     s === "PAUSED" ||
     s === "PENDING_REVIEW" ||
     s === "APPROVED";
 
-  /** Single divider before Cancel/Delete (after “View as” + workflow). */
   const showSeparatorBeforeDanger = canCancel || canDelete;
 
   const formatDate = (d: string) => {
@@ -348,6 +358,10 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                     <Eye className="size-4" />
                     View as
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatsOpen(true)}>
+                    <ChartColumnIncreasing className="size-4" />
+                    Stats
+                  </DropdownMenuItem>
                   {canEdit && (
                     <DropdownMenuItem onClick={() => setEditOpen(true)}>
                       <Pencil className="size-4" />
@@ -392,9 +406,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                       Resume
                     </DropdownMenuItem>
                   )}
-                  {showSeparatorBeforeDanger ? (
-                    <DropdownMenuSeparator />
-                  ) : null}
+                  {showSeparatorBeforeDanger ? <DropdownMenuSeparator /> : null}
                   {canCancel && (
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive focus:bg-destructive/10"
@@ -488,6 +500,68 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
           </span>
         </div>
       </div>
+
+      <Sheet open={statsOpen} onOpenChange={setStatsOpen}>
+        <SheetContent className="sm:max-w-xl">
+          <SheetHeader className="border-b">
+            <SheetTitle>Advertisement Stats</SheetTitle>
+            <SheetDescription className="line-clamp-2">
+              {ad.title}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Sent
+                </p>
+                <span className="inline-flex size-7 items-center justify-center rounded-md bg-blue-500/10 text-blue-500">
+                  <Send className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-semibold">
+                {ad.total_sent.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Total deliveries attempted
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Opened
+                </p>
+                <span className="inline-flex size-7 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-500">
+                  <MailOpen className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-semibold">
+                {ad.total_opened.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Messages opened by recipients
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Clicks
+                </p>
+                <span className="inline-flex size-7 items-center justify-center rounded-md bg-violet-500/10 text-violet-500">
+                  <MousePointerClick className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-semibold">
+                {ad.total_clicks.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                CTA and link interactions
+              </p>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog
         open={confirmPaymentOpen}
