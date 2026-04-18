@@ -69,12 +69,17 @@ const schema = z.object({
   }),
   sector: z.string().optional(),
   contactPhone: z.string().optional(),
-  contactEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
+  contactEmail: z
+    .string()
+    .email("Invalid email address")
+    .optional()
+    .or(z.literal("")),
   language: z.enum(["fr", "en"]),
   // Campaign
   bundleId: z.string().min(1, "Bundle is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
+  dispatchTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Must be HH:MM"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -158,6 +163,7 @@ export function AdvertisementDialog({
       bundleId: "",
       startDate: "",
       endDate: "",
+      dispatchTime: "08:00",
     },
   });
 
@@ -179,6 +185,7 @@ export function AdvertisementDialog({
           bundleId: advertisement.bundle_id,
           startDate: advertisement.start_date?.slice(0, 10) ?? "",
           endDate: advertisement.end_date?.slice(0, 10) ?? "",
+          dispatchTime: advertisement.dispatch_time ?? "08:00",
         });
         const existing = advertisement.image_urls ?? [];
         setExistingCount(existing.length);
@@ -198,6 +205,7 @@ export function AdvertisementDialog({
           bundleId: "",
           startDate: "",
           endDate: "",
+          dispatchTime: "08:00",
         });
         setExistingCount(0);
         setImageFiles([]);
@@ -226,6 +234,7 @@ export function AdvertisementDialog({
         advertiserType: values.advertiserType,
         startDate: values.startDate,
         endDate: values.endDate,
+        dispatchTime: values.dispatchTime,
         language: values.language,
         imageUrls,
         tags,
@@ -419,24 +428,6 @@ export function AdvertisementDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="sector"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Sector{" "}
-                          <span className="text-muted-foreground">
-                            (optional)
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Tech, Finance…" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
                     name="contactPhone"
                     render={({ field }) => (
                       <FormItem>
@@ -476,6 +467,25 @@ export function AdvertisementDialog({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="sector"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Sector{" "}
+                        <span className="text-muted-foreground">
+                          (optional)
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Tech, Finance…" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="space-y-4">
@@ -512,28 +522,46 @@ export function AdvertisementDialog({
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-5 gap-4">
+                  <div className="col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="startDate"
+                    name="dispatchTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Date</FormLabel>
+                        <FormLabel>Time (UTC)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" />
+                          <Input {...field} type="time" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

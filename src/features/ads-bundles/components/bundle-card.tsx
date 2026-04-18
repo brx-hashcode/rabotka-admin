@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Repeat2,
   Megaphone,
+  Target,
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -88,6 +89,12 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
     bundle.allowed_channels.length >= 2
       ? "BOTH"
       : (bundle.allowed_channels[0] ?? "—");
+
+  function audienceLabel(audience: string): string {
+    if (audience === "WORKER") return "Workers";
+    if (audience === "EMPLOYER") return "Employers";
+    return "Everyone";
+  }
 
   return (
     <>
@@ -214,6 +221,15 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
                 {channelLabel}
               </Badge>
               <span>delivery channel</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Target className="size-3.5 shrink-0 text-foreground" />
+              <span>
+                Audience:{" "}
+                <span className="font-medium text-foreground">
+                  {audienceLabel(bundle.target_audience)}
+                </span>
+              </span>
             </li>
           </ul>
         </div>

@@ -43,6 +43,7 @@ export type Advertisement = {
   tags: string[];
   start_date: string;
   end_date: string;
+  dispatch_time: string;
   target_filters: Record<string, unknown> | null;
   status: AdvertisementStatus;
   rejection_reason: string | null;
@@ -75,6 +76,7 @@ export type CreateAdvertisementParams = {
   advertiserType: string;
   startDate: string;
   endDate: string;
+  dispatchTime?: string;
   imageUrls?: string[];
   callToAction?: string;
   ctaUrl?: string;
@@ -143,6 +145,7 @@ export type AdBundle = {
   max_frequency_per_week: number;
   max_duration_days: number;
   allowed_channels: string[];
+  target_audience: "WORKER" | "EMPLOYER" | "BOTH";
   is_active: boolean;
   created_at: string;
   image_urls?: string[];
@@ -157,6 +160,7 @@ export type CreateBundleParams = {
   maxFrequencyPerWeek: number;
   maxDurationDays: number;
   allowedChannels: string[];
+  targetAudience?: "WORKER" | "EMPLOYER" | "BOTH";
   isActive?: boolean;
   imageUrls?: string[];
 };

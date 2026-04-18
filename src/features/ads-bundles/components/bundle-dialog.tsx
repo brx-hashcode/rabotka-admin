@@ -44,6 +44,9 @@ const schema = z.object({
   channel: z.enum(["EMAIL", "WHATSAPP", "BOTH"], {
     message: "Select a channel",
   }),
+  targetAudience: z.enum(["WORKER", "EMPLOYER", "BOTH"], {
+    message: "Select a target audience",
+  }),
 });
 
 type FormInput = z.input<typeof schema>;
@@ -90,6 +93,7 @@ export function BundleDialog({
       maxFrequencyPerWeek: 1,
       maxDurationDays: 7,
       channel: undefined,
+      targetAudience: undefined,
     },
   });
 
@@ -105,6 +109,7 @@ export function BundleDialog({
               maxFrequencyPerWeek: bundle.max_frequency_per_week,
               maxDurationDays: bundle.max_duration_days,
               channel: resolveChannel(bundle.allowed_channels),
+              targetAudience: bundle.target_audience,
             }
           : {
               name: "",
@@ -114,6 +119,7 @@ export function BundleDialog({
               maxFrequencyPerWeek: 1,
               maxDurationDays: 7,
               channel: undefined,
+              targetAudience: undefined,
             },
       );
     }
@@ -130,6 +136,7 @@ export function BundleDialog({
         maxFrequencyPerWeek: values.maxFrequencyPerWeek,
         maxDurationDays: values.maxDurationDays,
         allowedChannels: [values.channel],
+        targetAudience: values.targetAudience,
         isActive: true,
       };
       return isEdit ? updateBundle(bundle.id, payload) : createBundle(payload);
@@ -287,6 +294,32 @@ export function BundleDialog({
                         <SelectItem value="EMAIL">EMAIL</SelectItem>
                         <SelectItem value="WHATSAPP">WHATSAPP</SelectItem>
                         <SelectItem value="BOTH">BOTH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="targetAudience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Audience</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select target audience" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="WORKER">Workers only</SelectItem>
+                        <SelectItem value="EMPLOYER">Employers only</SelectItem>
+                        <SelectItem value="BOTH">Both</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -57,8 +57,10 @@ function computeDispatchDates(
   startDate: Date,
   endDate: Date,
   freqPerWeek: number,
+  dispatchTime: string,
 ): DispatchEntry[] {
   const now = new Date();
+  const [dispatchHour, dispatchMinute] = dispatchTime.split(":").map(Number);
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
   const dispatches: DispatchEntry[] = [];
   let previousExpected = 0;
@@ -67,7 +69,7 @@ function computeDispatchDates(
     const expected = Math.floor((day / 7) * freqPerWeek) + 1;
     if (expected > previousExpected) {
       const dispatchDay = addDays(startDate, day);
-      const dispatchAt = setSeconds(setMinutes(setHours(dispatchDay, 8), 0), 0);
+      const dispatchAt = setSeconds(setMinutes(setHours(dispatchDay, dispatchHour), dispatchMinute), 0);
 
       let status: DispatchStatus;
       if (isBefore(dispatchAt, now)) {
@@ -160,7 +162,7 @@ export function AdvertisementPlanningSheet({
   const { weeks, sentCount, totalDispatches } = useMemo(() => {
     const startDate = startOfDay(parseISO(ad.start_date));
     const endDate = startOfDay(parseISO(ad.end_date));
-    const dispatches = computeDispatchDates(startDate, endDate, freqPerWeek);
+    const dispatches = computeDispatchDates(startDate, endDate, freqPerWeek, ad.dispatch_time ?? "08:00");
     const grouped = groupIntoWeeks(startDate, endDate, dispatches);
     const sent = dispatches.filter((d) => d.status === "sent").length;
     return { weeks: grouped, sentCount: sent, totalDispatches: dispatches.length };
@@ -183,7 +185,7 @@ export function AdvertisementPlanningSheet({
           <div className="flex items-center gap-2 flex-wrap pt-1">
             <Badge variant="outline" className="text-xs gap-1">
               <Clock className="size-3" />
-              08:00 UTC
+              {ad.dispatch_time ?? "08:00"} UTC
             </Badge>
             <Badge variant="outline" className="text-xs">
               {freqPerWeek}x / week
@@ -238,7 +240,7 @@ export function AdvertisementPlanningSheet({
                           {format(entry.date, "EEEE, dd MMMM yyyy")}
                         </span>
                         <span className="text-xs text-muted-foreground font-mono shrink-0 mr-2">
-                          08:00 UTC
+                          {ad.dispatch_time ?? "08:00"} UTC
                         </span>
                         <DispatchStatusBadge status={entry.status} />
                       </div>
