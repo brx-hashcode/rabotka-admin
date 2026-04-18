@@ -78,24 +78,19 @@ async function uploadImages(files: File[]): Promise<string[]> {
 }
 
 const schema = z.object({
-  // Content
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   callToAction: z.string().optional(),
   ctaUrl: z.string().optional(),
-  // Advertiser
   advertiserType: z.enum(["COMPANY", "INDIVIDUAL"], {
     message: "Select advertiser type",
   }),
   sector: z.string().optional(),
   contactPhone: z.string().optional(),
   contactEmail: z
-    .string()
-    .email("Invalid email address")
-    .optional()
-    .or(z.literal("")),
+    .union([z.email("Invalid email address"), z.literal("")])
+    .optional(),
   language: z.enum(["fr", "en"]),
-  // Campaign
   bundleId: z.string().min(1, "Bundle is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
