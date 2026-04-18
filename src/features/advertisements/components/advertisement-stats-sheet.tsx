@@ -299,15 +299,14 @@ export function AdvertisementStatsSheet({
   const radialChartData = useMemo(() => {
     const totalSent = data?.totalSent ?? advertisement.total_sent;
     const totalClicks = data?.totalClicks ?? advertisement.total_clicks;
+    const clicked = Math.min(totalClicks, totalSent);
+    const remaining =
+      totalSent > 0 ? Math.max(totalSent - clicked, 0) : 1;
 
-    return [
-      { name: "clicked", value: totalClicks, fill: "var(--color-clicked)" },
-      {
-        name: "remaining",
-        value: Math.max(totalSent - totalClicks, 0),
-        fill: "var(--color-remaining)",
-      },
-    ];
+    // One row + stacked RadialBars so arc = clicked / (clicked + remaining).
+    // Multiple rows without stacking each get their own ring scaled by max(value),
+    // which makes the "clicked" ring always look 100% when it equals max.
+    return [{ clicked, remaining }];
   }, [advertisement.total_clicks, advertisement.total_sent, data]);
 
   const clickRate = data?.clickRate ?? 0;
@@ -593,7 +592,18 @@ export function AdvertisementStatsSheet({
                         polarRadius={[86, 74]}
                         className="first:fill-muted last:fill-background"
                       />
-                      <RadialBar dataKey="value" background cornerRadius={10} />
+                      <RadialBar
+                        dataKey="clicked"
+                        stackId="gauge"
+                        fill="var(--color-clicked)"
+                        cornerRadius={10}
+                      />
+                      <RadialBar
+                        dataKey="remaining"
+                        stackId="gauge"
+                        fill="var(--color-remaining)"
+                        cornerRadius={10}
+                      />
                       <PolarRadiusAxis
                         tick={false}
                         tickLine={false}

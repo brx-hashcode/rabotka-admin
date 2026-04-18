@@ -11,7 +11,7 @@ import {
   setMinutes,
   setSeconds,
 } from "date-fns";
-import { AlertCircle, CalendarDays, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import {
   Sheet,
@@ -28,7 +28,7 @@ type Props = {
   advertisement: Advertisement;
 };
 
-type DispatchStatus = "sent" | "in-progress" | "pending" | "upcoming";
+type DispatchStatus = "sent" | "in-progress" | "upcoming";
 
 type DispatchEntry = {
   date: Date;
@@ -48,18 +48,15 @@ type Week = {
  * The backend dispatches at 08:00 UTC daily using:
  *   expectedSends = floor((daysSinceStart / 7) * freqPerWeek) + 1
  *
- * Status is derived from the ad's actual total_sent count (from delivery logs),
- * not from the current time — to avoid false "Sent" labels when the backend
- * missed or delayed a dispatch (e.g. ad was approved after start_date).
- *
- * "pending" means the scheduled time passed but no delivery log recorded yet —
- * the backend will catch up on the next daily dispatch run.
+ * Status is purely time-based:
+ * - "sent"        = 08:00 UTC has passed for that date
+ * - "in-progress" = today, but 08:00 UTC hasn't passed yet
+ * - "upcoming"    = future date
  */
 function computeDispatchDates(
   startDate: Date,
   endDate: Date,
   freqPerWeek: number,
-  actualSentCount: number,
 ): DispatchEntry[] {
   const now = new Date();
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
@@ -71,9 +68,15 @@ function computeDispatchDates(
     if (expected > previousExpected) {
       const dispatchDay = addDays(startDate, day);
       const dispatchAt = setSeconds(setMinutes(setHours(dispatchDay, 8), 0), 0);
-      const slotIndex = dispatches.length;
 
-      const status = resolveStatus(slotIndex, actualSentCount, dispatchDay, dispatchAt, now);
+      let status: DispatchStatus;
+      if (isBefore(dispatchAt, now)) {
+        status = "sent";
+      } else if (isToday(dispatchDay)) {
+        status = "in-progress";
+      } else {
+        status = "upcoming";
+      }
 
       dispatches.push({ date: dispatchDay, dayIndex: day, status });
       previousExpected = expected;
@@ -81,19 +84,6 @@ function computeDispatchDates(
   }
 
   return dispatches;
-}
-
-function resolveStatus(
-  slotIndex: number,
-  actualSentCount: number,
-  dispatchDay: Date,
-  dispatchAt: Date,
-  now: Date,
-): DispatchStatus {
-  if (slotIndex < actualSentCount) return "sent";
-  if (isToday(dispatchDay) && isBefore(now, dispatchAt)) return "in-progress";
-  if (isBefore(dispatchAt, now)) return "pending";
-  return "upcoming";
 }
 
 function groupIntoWeeks(
@@ -120,7 +110,6 @@ function groupIntoWeeks(
 function entryRowClass(status: DispatchStatus): string {
   if (status === "sent") return "bg-emerald-500/5 border-emerald-500/20";
   if (status === "in-progress") return "bg-amber-400/5 border-amber-400/20";
-  if (status === "pending") return "bg-orange-500/5 border-orange-500/20";
   return "bg-muted/20";
 }
 
@@ -135,9 +124,6 @@ function DispatchStatusIndicator({ status }: Readonly<{ status: DispatchStatus }
   }
   if (status === "in-progress") {
     return <Loader2 className="size-4 text-amber-400 shrink-0 animate-spin" />;
-  }
-  if (status === "pending") {
-    return <AlertCircle className="size-4 text-orange-500 shrink-0" />;
   }
   return <div className="size-2 rounded-full bg-muted-foreground/40 shrink-0 mx-1" />;
 }
@@ -157,13 +143,6 @@ function DispatchStatusBadge({ status }: Readonly<{ status: DispatchStatus }>) {
       </Badge>
     );
   }
-  if (status === "pending") {
-    return (
-      <Badge className="text-xs bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10">
-        Pending
-      </Badge>
-    );
-  }
   return (
     <Badge variant="outline" className="text-xs text-muted-foreground">
       Upcoming
@@ -178,15 +157,14 @@ export function AdvertisementPlanningSheet({
 }: Readonly<Props>) {
   const freqPerWeek = ad.bundle?.max_frequency_per_week ?? 1;
 
-  const { weeks, sentCount, pendingCount, totalDispatches } = useMemo(() => {
+  const { weeks, sentCount, totalDispatches } = useMemo(() => {
     const startDate = startOfDay(parseISO(ad.start_date));
     const endDate = startOfDay(parseISO(ad.end_date));
-    const dispatches = computeDispatchDates(startDate, endDate, freqPerWeek, ad.total_sent);
+    const dispatches = computeDispatchDates(startDate, endDate, freqPerWeek);
     const grouped = groupIntoWeeks(startDate, endDate, dispatches);
     const sent = dispatches.filter((d) => d.status === "sent").length;
-    const pending = dispatches.filter((d) => d.status === "pending").length;
-    return { weeks: grouped, sentCount: sent, pendingCount: pending, totalDispatches: dispatches.length };
-  }, [ad.start_date, ad.end_date, ad.total_sent, freqPerWeek]);
+    return { weeks: grouped, sentCount: sent, totalDispatches: dispatches.length };
+  }, [ad.start_date, ad.end_date, freqPerWeek]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -214,24 +192,13 @@ export function AdvertisementPlanningSheet({
               <CheckCircle2 className="size-3" />
               {sentCount} sent
             </Badge>
-            {pendingCount > 0 && (
-              <Badge className="text-xs bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/10 gap-1">
-                <AlertCircle className="size-3" />
-                {pendingCount} pending
-              </Badge>
-            )}
             <Badge variant="outline" className="text-xs text-muted-foreground">
-              {totalDispatches - sentCount - pendingCount} upcoming
+              {totalDispatches - sentCount} upcoming
             </Badge>
           </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          {pendingCount > 0 && (
-            <div className="rounded-md border border-orange-500/20 bg-orange-500/5 px-4 py-3 text-xs text-orange-500 leading-relaxed">
-              <strong>{pendingCount} dispatch{pendingCount !== 1 ? "es" : ""}</strong> missed their scheduled time. The backend will catch up on the next daily run (08:00 UTC).
-            </div>
-          )}
 
           {weeks.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
