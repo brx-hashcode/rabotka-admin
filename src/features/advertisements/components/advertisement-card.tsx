@@ -14,6 +14,7 @@ import {
   Trash2,
   Eye,
   ChartColumnIncreasing,
+  CalendarClock,
 } from "lucide-react";
 import {
   IconPhoto,
@@ -60,6 +61,7 @@ import { getAdvertisementStatusLabel } from "#/lib/status-labels";
 import { AdvertisementDialog } from "./advertisement-dialog";
 import { AdvertisementPreviewDialog } from "./advertisement-preview-dialog";
 import { AdvertisementStatsSheet } from "./advertisement-stats-sheet";
+import { AdvertisementPlanningSheet } from "./advertisement-planning-sheet";
 
 function getStatusBadgeClass(status: string): string {
   switch (status) {
@@ -182,6 +184,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [planningOpen, setPlanningOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -332,6 +335,10 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                   <ChartColumnIncreasing className="size-4" />
                   Stats
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlanningOpen(true)}>
+                  <CalendarClock className="size-4" />
+                  Planning
+                </DropdownMenuItem>
                 {canEdit && (
                   <DropdownMenuItem onClick={() => setEditOpen(true)}>
                     <Pencil className="size-4" />
@@ -469,6 +476,12 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
       <AdvertisementStatsSheet
         open={statsOpen}
         onOpenChange={setStatsOpen}
+        advertisement={ad}
+      />
+
+      <AdvertisementPlanningSheet
+        open={planningOpen}
+        onOpenChange={setPlanningOpen}
         advertisement={ad}
       />
 

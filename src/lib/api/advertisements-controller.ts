@@ -36,6 +36,7 @@ export type Advertisement = {
   banner_url: string | null;
   logo_url: string | null;
   contact_phone: string | null;
+  contact_email: string | null;
   sector: string | null;
   advertiser_type: string;
   language: string;
@@ -81,6 +82,7 @@ export type CreateAdvertisementParams = {
   bannerUrl?: string;
   logoUrl?: string;
   contactPhone?: string;
+  contactEmail?: string;
   sector?: string;
   language?: string;
   tags?: string[];

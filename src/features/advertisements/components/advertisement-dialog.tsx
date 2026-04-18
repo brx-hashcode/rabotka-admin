@@ -69,6 +69,7 @@ const schema = z.object({
   }),
   sector: z.string().optional(),
   contactPhone: z.string().optional(),
+  contactEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
   language: z.enum(["fr", "en"]),
   // Campaign
   bundleId: z.string().min(1, "Bundle is required"),
@@ -152,6 +153,7 @@ export function AdvertisementDialog({
       advertiserType: undefined,
       sector: "",
       contactPhone: "",
+      contactEmail: "",
       language: "fr",
       bundleId: "",
       startDate: "",
@@ -172,6 +174,7 @@ export function AdvertisementDialog({
             | "INDIVIDUAL",
           sector: advertisement.sector ?? "",
           contactPhone: advertisement.contact_phone ?? "",
+          contactEmail: advertisement.contact_email ?? "",
           language: (advertisement.language as "fr" | "en") ?? "fr",
           bundleId: advertisement.bundle_id,
           startDate: advertisement.start_date?.slice(0, 10) ?? "",
@@ -230,6 +233,7 @@ export function AdvertisementDialog({
         ...(values.ctaUrl ? { ctaUrl: values.ctaUrl } : {}),
         ...(values.sector ? { sector: values.sector } : {}),
         ...(values.contactPhone ? { contactPhone: values.contactPhone } : {}),
+        ...(values.contactEmail ? { contactEmail: values.contactEmail } : {}),
       };
       return isEdit
         ? updateAdvertisement(advertisement.id, payload)
@@ -443,7 +447,29 @@ export function AdvertisementDialog({
                           </span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="+242 0x xxx xx xx " />
+                          <Input {...field} placeholder="+242 0x xxx xx xx" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contactEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Contact Email{" "}
+                          <span className="text-muted-foreground">
+                            (optional)
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="contact@example.com"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
