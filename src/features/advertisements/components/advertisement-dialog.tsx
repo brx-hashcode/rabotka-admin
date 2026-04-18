@@ -41,6 +41,26 @@ import { appConfig } from "#/config";
 import { getCsrfToken } from "#/lib/api/csrf-token";
 import { IconPlus } from "@tabler/icons-react";
 
+/** Convert "HH:MM" UTC string to local HH:MM for display in the time input */
+function utcTimeToLocal(utcTime: string): string {
+  const [h, m] = utcTime.split(":").map(Number);
+  const d = new Date();
+  d.setUTCHours(h, m, 0, 0);
+  const lh = String(d.getHours()).padStart(2, "0");
+  const lm = String(d.getMinutes()).padStart(2, "0");
+  return `${lh}:${lm}`;
+}
+
+/** Convert local "HH:MM" (from time input) to UTC HH:MM for storage */
+function localTimeToUtc(localTime: string): string {
+  const [h, m] = localTime.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  const uh = String(d.getUTCHours()).padStart(2, "0");
+  const um = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${uh}:${um}`;
+}
+
 async function uploadImages(files: File[]): Promise<string[]> {
   if (files.length === 0) return [];
   const formData = new FormData();
@@ -185,7 +205,7 @@ export function AdvertisementDialog({
           bundleId: advertisement.bundle_id,
           startDate: advertisement.start_date?.slice(0, 10) ?? "",
           endDate: advertisement.end_date?.slice(0, 10) ?? "",
-          dispatchTime: advertisement.dispatch_time ?? "08:00",
+          dispatchTime: utcTimeToLocal(advertisement.dispatch_time ?? "08:00"),
         });
         const existing = advertisement.image_urls ?? [];
         setExistingCount(existing.length);
@@ -234,7 +254,7 @@ export function AdvertisementDialog({
         advertiserType: values.advertiserType,
         startDate: values.startDate,
         endDate: values.endDate,
-        dispatchTime: values.dispatchTime,
+        dispatchTime: localTimeToUtc(values.dispatchTime),
         language: values.language,
         imageUrls,
         tags,

@@ -15,6 +15,8 @@ import {
   Eye,
   ChartColumnIncreasing,
   CalendarClock,
+  Target,
+  Briefcase,
 } from "lucide-react";
 import {
   IconPhoto,
@@ -62,6 +64,12 @@ import { AdvertisementDialog } from "./advertisement-dialog";
 import { AdvertisementPreviewDialog } from "./advertisement-preview-dialog";
 import { AdvertisementStatsSheet } from "./advertisement-stats-sheet";
 import { AdvertisementPlanningSheet } from "./advertisement-planning-sheet";
+
+function audienceLabel(audience: string): string {
+  if (audience === "WORKER") return "Workers";
+  if (audience === "EMPLOYER") return "Employers";
+  return "Everyone";
+}
 
 function getStatusBadgeClass(status: string): string {
   switch (status) {
@@ -443,6 +451,25 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
                     {ad.bundle.max_frequency_per_week}×
                   </span>{" "}
                   per week
+                </span>
+              </div>
+            )}
+            {ad.bundle && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Target className="size-3.5 shrink-0" />
+                <span>
+                  Audience:{" "}
+                  <span className="font-medium text-foreground">
+                    {audienceLabel(ad.bundle.target_audience)}
+                  </span>
+                </span>
+              </div>
+            )}
+            {ad.sector && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Briefcase className="size-3.5 shrink-0" />
+                <span className="font-medium text-foreground truncate">
+                  {ad.sector}
                 </span>
               </div>
             )}

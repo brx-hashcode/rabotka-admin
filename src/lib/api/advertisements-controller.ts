@@ -21,6 +21,7 @@ export type AdBundleSummary = {
   max_frequency_per_week: number;
   max_duration_days: number;
   allowed_channels: string[];
+  target_audience: "WORKER" | "EMPLOYER" | "BOTH";
 };
 
 export type Advertisement = {

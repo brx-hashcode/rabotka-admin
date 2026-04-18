@@ -43,6 +43,14 @@ type Week = {
   dispatches: DispatchEntry[];
 };
 
+/** Convert stored UTC "HH:MM" to local "HH:MM" for display and comparison */
+function utcTimeToLocal(utcTime: string): string {
+  const [h, m] = utcTime.split(":").map(Number);
+  const d = new Date();
+  d.setUTCHours(h, m, 0, 0);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 /**
  * Computes the planned dispatch dates for an advertisement.
  * The backend dispatches at 08:00 UTC daily using:
@@ -60,7 +68,8 @@ function computeDispatchDates(
   dispatchTime: string,
 ): DispatchEntry[] {
   const now = new Date();
-  const [dispatchHour, dispatchMinute] = dispatchTime.split(":").map(Number);
+  const localTime = utcTimeToLocal(dispatchTime);
+  const [dispatchHour, dispatchMinute] = localTime.split(":").map(Number);
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
   const dispatches: DispatchEntry[] = [];
   let previousExpected = 0;
@@ -185,7 +194,7 @@ export function AdvertisementPlanningSheet({
           <div className="flex items-center gap-2 flex-wrap pt-1">
             <Badge variant="outline" className="text-xs gap-1">
               <Clock className="size-3" />
-              {ad.dispatch_time ?? "08:00"} UTC
+              {utcTimeToLocal(ad.dispatch_time ?? "08:00")} local
             </Badge>
             <Badge variant="outline" className="text-xs">
               {freqPerWeek}x / week
@@ -240,7 +249,7 @@ export function AdvertisementPlanningSheet({
                           {format(entry.date, "EEEE, dd MMMM yyyy")}
                         </span>
                         <span className="text-xs text-muted-foreground font-mono shrink-0 mr-2">
-                          {ad.dispatch_time ?? "08:00"} UTC
+                          {utcTimeToLocal(ad.dispatch_time ?? "08:00")}
                         </span>
                         <DispatchStatusBadge status={entry.status} />
                       </div>
