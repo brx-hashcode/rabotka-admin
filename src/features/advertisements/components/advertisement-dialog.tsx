@@ -87,9 +87,7 @@ const schema = z.object({
   }),
   sector: z.string().optional(),
   contactPhone: z.string().optional(),
-  contactEmail: z
-    .union([z.email("Invalid email address"), z.literal("")])
-    .optional(),
+  contactEmail: z.email("Invalid email address"),
   language: z.enum(["fr", "en"]),
   bundleId: z.string().min(1, "Bundle is required"),
   startDate: z.string().min(1, "Start date is required"),
@@ -257,7 +255,7 @@ export function AdvertisementDialog({
         ...(values.ctaUrl ? { ctaUrl: values.ctaUrl } : {}),
         ...(values.sector ? { sector: values.sector } : {}),
         ...(values.contactPhone ? { contactPhone: values.contactPhone } : {}),
-        ...(values.contactEmail ? { contactEmail: values.contactEmail } : {}),
+        contactEmail: values.contactEmail,
       };
       return isEdit
         ? updateAdvertisement(advertisement.id, payload)
@@ -464,12 +462,7 @@ export function AdvertisementDialog({
                     name="contactEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Contact Email{" "}
-                          <span className="text-muted-foreground">
-                            (optional)
-                          </span>
-                        </FormLabel>
+                        <FormLabel>Contact Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
