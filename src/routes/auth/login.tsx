@@ -9,6 +9,7 @@ import {
 import { fetchAndSetCsrfToken } from "#/lib/api/csrf-token";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
+import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
 import {
   Card,
   CardContent,
@@ -97,8 +98,9 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
+      <ChatDoodleBg />
+      <div className="relative z-10 w-full max-w-sm">
         <Card>
           <CardHeader className="text-center space-y-1">
             <div className="flex justify-center mb-2">

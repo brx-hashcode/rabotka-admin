@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -37,22 +36,14 @@ function getLineTypePrefix(
   return "t";
 }
 
-function formatDate(iso: string) {
-  try {
-    return format(new Date(iso), "EEEE d MMMM yyyy", { locale: fr });
-  } catch {
-    return iso;
-  }
-}
 
 function EmailPreview({ ad }: Readonly<{ ad: Advertisement }>) {
   const name = "John Doe";
   const title = ad.title;
-  const startDate = formatDate(ad.start_date);
-  const endDate = formatDate(ad.end_date);
   const description = ad.description;
   const ctaUrl = ad.cta_url;
   const callToAction = ad.call_to_action ?? "En savoir plus";
+  const tags = ad.tags ?? [];
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white text-[#333] font-[Ubuntu,sans-serif] text-[15px] leading-relaxed max-w-[600px] mx-auto">
@@ -100,10 +91,6 @@ function EmailPreview({ ad }: Readonly<{ ad: Advertisement }>) {
           {title}
         </p>
 
-        <p>
-          <strong>Du</strong> {startDate} <strong>au</strong> {endDate}
-        </p>
-
         {description && (
           <div
             style={{ color: "#555" }}
@@ -125,6 +112,27 @@ function EmailPreview({ ad }: Readonly<{ ad: Advertisement }>) {
               {description}
             </ReactMarkdown>
           </div>
+        )}
+
+        {tags.length > 0 && (
+          <p style={{ margin: "8px 0" }}>
+            {tags.map((t) => (
+              <span
+                key={t}
+                style={{
+                  display: "inline-block",
+                  margin: "2px 4px 2px 0",
+                  padding: "2px 10px",
+                  borderRadius: 9999,
+                  border: "1px solid #6ee7b7",
+                  color: "#059669",
+                  fontSize: 12,
+                }}
+              >
+                #{t}
+              </span>
+            ))}
+          </p>
         )}
 
         {ctaUrl && (
@@ -161,18 +169,17 @@ function EmailPreview({ ad }: Readonly<{ ad: Advertisement }>) {
 
 function WhatsAppPreview({ ad }: Readonly<{ ad: Advertisement }>) {
   const title = ad.title;
-  const startDate = formatDate(ad.start_date);
-  const endDate = formatDate(ad.end_date);
   const description = ad.description;
   const ctaUrl = ad.cta_url;
   const callToAction = ad.call_to_action ?? "En savoir plus";
+  const tags = ad.tags ?? [];
 
   const lines = [
     `📢 *Nouvelle annonce Rabotka*`,
     ``,
     `*${title}*`,
-    `📅 Du ${startDate} au ${endDate}`,
     description ? `\n${description}` : null,
+    tags.length ? `\n${tags.map((t) => `#${t}`).join("  ")}` : null,
     ctaUrl ? `\nPour plus d'informations :\n${callToAction} → ${ctaUrl}` : null,
     ``,
     `_L'équipe Rabotka_`,
