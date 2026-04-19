@@ -11,7 +11,7 @@ import {
   setMinutes,
   setSeconds,
 } from "date-fns";
-import { CalendarDays, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Loader } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import {
   Sheet,
@@ -78,7 +78,10 @@ function computeDispatchDates(
     const expected = Math.floor((day / 7) * freqPerWeek) + 1;
     if (expected > previousExpected) {
       const dispatchDay = addDays(startDate, day);
-      const dispatchAt = setSeconds(setMinutes(setHours(dispatchDay, dispatchHour), dispatchMinute), 0);
+      const dispatchAt = setSeconds(
+        setMinutes(setHours(dispatchDay, dispatchHour), dispatchMinute),
+        0,
+      );
 
       let status: DispatchStatus;
       if (isBefore(dispatchAt, now)) {
@@ -112,7 +115,12 @@ function groupIntoWeeks(
     const weekDispatches = dispatches.filter(
       (d) => d.dayIndex >= w * 7 && d.dayIndex < (w + 1) * 7,
     );
-    weeks.push({ weekNumber: w + 1, from: weekFrom, to: weekTo, dispatches: weekDispatches });
+    weeks.push({
+      weekNumber: w + 1,
+      from: weekFrom,
+      to: weekTo,
+      dispatches: weekDispatches,
+    });
   }
 
   return weeks;
@@ -129,14 +137,18 @@ function entryTextClass(status: DispatchStatus): string {
   return "text-foreground";
 }
 
-function DispatchStatusIndicator({ status }: Readonly<{ status: DispatchStatus }>) {
+function DispatchStatusIndicator({
+  status,
+}: Readonly<{ status: DispatchStatus }>) {
   if (status === "sent") {
     return <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />;
   }
   if (status === "in-progress") {
-    return <Loader2 className="size-4 text-amber-400 shrink-0 animate-spin" />;
+    return <Loader className="size-4 text-amber-400 shrink-0 animate-spin" />;
   }
-  return <div className="size-2 rounded-full bg-muted-foreground/40 shrink-0 mx-1" />;
+  return (
+    <div className="size-2 rounded-full bg-muted-foreground/40 shrink-0 mx-1" />
+  );
 }
 
 function DispatchStatusBadge({ status }: Readonly<{ status: DispatchStatus }>) {
@@ -171,10 +183,19 @@ export function AdvertisementPlanningSheet({
   const { weeks, sentCount, totalDispatches } = useMemo(() => {
     const startDate = startOfDay(parseISO(ad.start_date));
     const endDate = startOfDay(parseISO(ad.end_date));
-    const dispatches = computeDispatchDates(startDate, endDate, freqPerWeek, ad.dispatch_time ?? "08:00");
+    const dispatches = computeDispatchDates(
+      startDate,
+      endDate,
+      freqPerWeek,
+      ad.dispatch_time ?? "08:00",
+    );
     const grouped = groupIntoWeeks(startDate, endDate, dispatches);
     const sent = dispatches.filter((d) => d.status === "sent").length;
-    return { weeks: grouped, sentCount: sent, totalDispatches: dispatches.length };
+    return {
+      weeks: grouped,
+      sentCount: sent,
+      totalDispatches: dispatches.length,
+    };
   }, [ad.start_date, ad.end_date, freqPerWeek]);
 
   return (
@@ -210,7 +231,6 @@ export function AdvertisementPlanningSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-
           {weeks.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No dispatch dates available.
@@ -224,12 +244,14 @@ export function AdvertisementPlanningSheet({
                       Week {week.weekNumber}
                     </span>
                     <span className="text-xs text-muted-foreground truncate">
-                      ({format(week.from, "dd MMM")} – {format(week.to, "dd MMM yyyy")})
+                      ({format(week.from, "dd MMM")} –{" "}
+                      {format(week.to, "dd MMM yyyy")})
                     </span>
                   </div>
                   <div className="flex-1 h-px bg-border" />
                   <Badge variant="secondary" className="text-xs shrink-0">
-                    {week.dispatches.length} send{week.dispatches.length !== 1 ? "s" : ""}
+                    {week.dispatches.length} send
+                    {week.dispatches.length !== 1 ? "s" : ""}
                   </Badge>
                 </div>
 
@@ -245,7 +267,9 @@ export function AdvertisementPlanningSheet({
                         className={`flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors ${entryRowClass(entry.status)}`}
                       >
                         <DispatchStatusIndicator status={entry.status} />
-                        <span className={`text-sm font-medium flex-1 ${entryTextClass(entry.status)}`}>
+                        <span
+                          className={`text-sm font-medium flex-1 ${entryTextClass(entry.status)}`}
+                        >
                           {format(entry.date, "EEEE, dd MMMM yyyy")}
                         </span>
                         <span className="text-xs text-muted-foreground font-mono shrink-0 mr-2">
@@ -261,7 +285,8 @@ export function AdvertisementPlanningSheet({
           )}
 
           <p className="text-xs text-muted-foreground text-center pt-2 pb-4">
-            Actual dispatch times may vary by a few minutes depending on queue load.
+            Actual dispatch times may vary by a few minutes depending on queue
+            load.
           </p>
         </div>
       </SheetContent>

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Plus, Megaphone } from "lucide-react";
 import { useQueryState, parseAsString } from "nuqs";
+import { useQuery } from "@tanstack/react-query";
 import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -15,14 +16,45 @@ import { AdvertisementCard } from "#/features/advertisements/components/advertis
 import { AdvertisementDialog } from "#/features/advertisements/components/advertisement-dialog";
 import { useAdvertisementsList } from "#/hooks/use-advertisements-list";
 import { ADVERTISEMENT_STATUS_LABELS } from "#/lib/status-labels";
+import { listBundles } from "#/lib/api/advertisements-controller";
 
 const ALL = "__all__";
+
+const AUDIENCE_LABELS: Record<string, string> = {
+  WORKER: "Workers",
+  EMPLOYER: "Employers",
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+};
 
 export default function AdvertisementsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading } = useAdvertisementsList();
 
-  const [status, setStatus] = useQueryState("status", parseAsString.withDefault(""));
+  const [status, setStatus] = useQueryState(
+    "status",
+    parseAsString.withDefault(""),
+  );
+  const [bundleId, setBundleId] = useQueryState(
+    "bundleId",
+    parseAsString.withDefault(""),
+  );
+  const [targetAudience, setTargetAudience] = useQueryState(
+    "targetAudience",
+    parseAsString.withDefault(""),
+  );
+  const [channel, setChannel] = useQueryState(
+    "channel",
+    parseAsString.withDefault(""),
+  );
+
+  const { data: bundles = [] } = useQuery({
+    queryKey: ["admin", "ad-bundles"],
+    queryFn: listBundles,
+  });
 
   let listSection: ReactNode;
 
@@ -42,7 +74,8 @@ export default function AdvertisementsPage() {
         </div>
         <p className="font-medium text-lg">No advertisements yet</p>
         <p className="text-muted-foreground text-sm max-w-xs">
-          Create your first advertisement campaign to start reaching your audience.
+          Create your first advertisement campaign to start reaching your
+          audience.
         </p>
         <Button className="mt-2" onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
@@ -83,7 +116,60 @@ export default function AdvertisementsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>All statuses</SelectItem>
-            {Object.entries(ADVERTISEMENT_STATUS_LABELS).map(([value, label]) => (
+            {Object.entries(ADVERTISEMENT_STATUS_LABELS).map(
+              ([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ),
+            )}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={bundleId || ALL}
+          onValueChange={(v) => setBundleId(v === ALL ? "" : v)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All bundles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>All bundles</SelectItem>
+            {bundles.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={targetAudience || ALL}
+          onValueChange={(v) => setTargetAudience(v === ALL ? "" : v)}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All audiences" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>All audiences</SelectItem>
+            {Object.entries(AUDIENCE_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={channel || ALL}
+          onValueChange={(v) => setChannel(v === ALL ? "" : v)}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All channels" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>All channels</SelectItem>
+            {Object.entries(CHANNEL_LABELS).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>

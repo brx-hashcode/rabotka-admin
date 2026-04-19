@@ -8,6 +8,9 @@ const advertisementsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   status: parseAsString.withDefault(""),
+  bundleId: parseAsString.withDefault(""),
+  targetAudience: parseAsString.withDefault(""),
+  channel: parseAsString.withDefault(""),
 };
 
 export function useAdvertisementsList() {
@@ -15,7 +18,7 @@ export function useAdvertisementsList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { status } = queryState;
+  const { status, bundleId, targetAudience, channel } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -23,12 +26,15 @@ export function useAdvertisementsList() {
       return;
     }
     setPage(1);
-  }, [status, setPage]);
+  }, [status, bundleId, targetAudience, channel, setPage]);
 
   const params = {
     page: queryState.page,
     limit: queryState.limit,
     ...(queryState.status ? { status: queryState.status } : {}),
+    ...(queryState.bundleId ? { bundleId: queryState.bundleId } : {}),
+    ...(queryState.targetAudience ? { targetAudience: queryState.targetAudience } : {}),
+    ...(queryState.channel ? { channel: queryState.channel } : {}),
   };
 
   const query = useQuery({

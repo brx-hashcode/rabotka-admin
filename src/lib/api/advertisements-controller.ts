@@ -61,6 +61,9 @@ export type AdvertisementsListParams = {
   page?: number;
   limit?: number;
   status?: string;
+  bundleId?: string;
+  targetAudience?: string;
+  channel?: string;
 };
 
 export type AdvertisementsListResponse = {
@@ -178,6 +181,9 @@ class AdvertisementsController extends AdminBaseController {
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.status) searchParams.status = params.status;
+    if (params.bundleId) searchParams.bundleId = params.bundleId;
+    if (params.targetAudience) searchParams.targetAudience = params.targetAudience;
+    if (params.channel) searchParams.channel = params.channel;
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/advertisements", query);
