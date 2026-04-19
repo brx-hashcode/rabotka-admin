@@ -45,19 +45,19 @@ export type NavItem = {
 };
 
 const navMain: NavItem[] = [
-  { title: "Overview", url: "/", icon: IconLayoutGrid },
+  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
   { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Job Openings", url: "/jobs", icon: IconBriefcase },
+  { title: "Missions", url: "/jobs", icon: IconBriefcase },
   {
-    title: "Job Categories",
+    title: "Categories",
     url: "/job-categories",
     icon: IconTag,
     roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
   { title: "Applications", url: "/applications", icon: IconFileText },
-  { title: "Compliance", url: "/penalties", icon: IconAlertTriangle },
+  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
   {
-    title: "Team Members",
+    title: "Team",
     url: "/team",
     icon: IconUsers,
     roles: ["ADMIN", "SUPER_ADMIN"],

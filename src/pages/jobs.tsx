@@ -35,7 +35,7 @@ export default function JobsPage() {
   return (
     <div className="pt-6">
       <PageListHeader
-        title="Job Openings"
+        title="Missions"
         description="Browse and filter published job offers and their status."
       />
       <DataTable
