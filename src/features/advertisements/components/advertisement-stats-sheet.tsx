@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   CartesianGrid,
@@ -11,7 +11,16 @@ import {
   RadialBarChart,
   XAxis,
 } from "recharts";
-import { Download, MailOpen, MousePointerClick, Send } from "lucide-react";
+import {
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  MailOpen,
+  MousePointerClick,
+  Send,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 
 import { DataTable, ProfileCell } from "#/components/table";
@@ -284,6 +293,65 @@ function RadialLabel({
   );
 }
 
+const LOG_PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+function DeliveryLogPagination({
+  total,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+}: Readonly<{
+  total: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}>) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
+  return (
+    <div className="flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
+      <p className="text-sm text-muted-foreground tabular-nums">
+        {total === 0 ? "No results" : `Showing ${start}–${end} of ${total}`}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Rows per page</span>
+          <select
+            className="h-8 rounded-md border bg-background px-2 text-sm"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          >
+            {LOG_PAGE_SIZE_OPTIONS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium tabular-nums whitespace-nowrap">
+            Page {page} of {totalPages}
+          </span>
+          <Button variant="outline" size="icon" className="size-8" onClick={() => onPageChange(1)} disabled={page <= 1}>
+            <ChevronFirst className="size-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="size-8" onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+            <ChevronLeft className="size-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="size-8" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>
+            <ChevronRight className="size-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="size-8" onClick={() => onPageChange(totalPages)} disabled={page >= totalPages}>
+            <ChevronLast className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdvertisementStatsSheet({
   open,
   onOpenChange,
@@ -295,6 +363,8 @@ export function AdvertisementStatsSheet({
   );
 
   const deliveryColumns = useMemo(() => makeDeliveryLogColumns(), []);
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize, setLogPageSize] = useState(10);
 
   const radialChartData = useMemo(() => {
     const totalSent = data?.totalSent ?? advertisement.total_sent;
@@ -312,6 +382,11 @@ export function AdvertisementStatsSheet({
   const clickRate = data?.clickRate ?? 0;
   const timelineData = data?.timeline ?? [];
   const deliveryLogs = data?.deliveryLogs ?? [];
+
+  const paginatedLogs = useMemo(() => {
+    const start = (logPage - 1) * logPageSize;
+    return deliveryLogs.slice(start, start + logPageSize);
+  }, [deliveryLogs, logPage, logPageSize]);
 
   const exportDisabled = isLoading || isError || !data;
   const fileBase = useMemo(() => {
@@ -434,8 +509,8 @@ export function AdvertisementStatsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-5xl">
-        <SheetHeader className="border-b">
+      <SheetContent className="w-full sm:max-w-5xl flex flex-col overflow-hidden">
+        <SheetHeader className="border-b shrink-0">
           <SheetTitle>Advertisement Stats</SheetTitle>
           <SheetDescription className="flex items-center justify-between mt-0">
             <h2 className="text-2xl font-semibold text-primary">
@@ -469,6 +544,7 @@ export function AdvertisementStatsSheet({
           </SheetDescription>
         </SheetHeader>
 
+        <div className="flex-1 overflow-y-auto">
         <div className="space-y-6 p-4">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <StatsCard
@@ -634,15 +710,25 @@ export function AdvertisementStatsSheet({
                 </div>
               ) : (
                 <DataTable
-                  data={deliveryLogs}
+                  data={paginatedLogs}
                   columns={deliveryColumns}
                   isLoading={isLoading}
                   getRowId={(row) => row.id}
                   emptyMessage="No delivery logs found for this advertisement."
+                  footer={
+                    <DeliveryLogPagination
+                      total={deliveryLogs.length}
+                      page={logPage}
+                      pageSize={logPageSize}
+                      onPageChange={(p) => setLogPage(p)}
+                      onPageSizeChange={(s) => { setLogPageSize(s); setLogPage(1); }}
+                    />
+                  }
                 />
               )}
             </CardContent>
           </Card>
+        </div>
         </div>
       </SheetContent>
     </Sheet>
