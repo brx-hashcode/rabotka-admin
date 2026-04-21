@@ -1,6 +1,6 @@
 import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "./csrf-token";
+import { fetchWithCsrfRetry } from "./csrf-token";
 
 export type AdminWalletInfo = {
   totalRevenue: number;
@@ -131,13 +131,9 @@ class AdminWalletController extends AdminBaseController {
   }
 
   async fetchInvoiceBlob(invoiceId: string): Promise<Blob> {
-    const token = getCsrfToken();
-    const response = await fetch(
+    const response = await fetchWithCsrfRetry(
       `${appConfig.apiUrl}/admin/invoices/${invoiceId}/download`,
-      {
-        credentials: "include",
-        headers: token ? { "x-csrf-token": token } : {},
-      },
+      { credentials: "include" },
     );
     if (!response.ok) throw new Error("Download failed");
     return response.blob();

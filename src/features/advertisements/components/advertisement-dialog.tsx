@@ -38,7 +38,7 @@ import {
   type Advertisement,
 } from "#/lib/api/advertisements-controller";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
+import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { IconPlus } from "@tabler/icons-react";
 
 /** Convert "HH:MM" UTC string to local HH:MM for display in the time input */
@@ -65,13 +65,10 @@ async function uploadImages(files: File[]): Promise<string[]> {
   if (files.length === 0) return [];
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
-  const csrfToken = getCsrfToken();
-  const res = await fetch(`${appConfig.apiUrl}/file/upload?is_multipl=true`, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-    headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
-  });
+  const res = await fetchWithCsrfRetry(
+    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
+    { method: "POST", body: formData, credentials: "include" },
+  );
   if (!res.ok) throw new Error("Image upload failed");
   const json = (await res.json()) as { files: { file_url: string }[] };
   return json.files.map((f) => f.file_url);

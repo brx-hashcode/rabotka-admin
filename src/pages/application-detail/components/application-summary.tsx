@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
+import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
@@ -32,13 +32,8 @@ type Props = {
 };
 
 async function fetchAdminPdfBlob(path: string): Promise<Blob> {
-  const token = getCsrfToken();
-  const headers: Record<string, string> = token
-    ? { "x-csrf-token": token }
-    : {};
-  const res = await fetch(`${appConfig.apiUrl}${path}`, {
+  const res = await fetchWithCsrfRetry(`${appConfig.apiUrl}${path}`, {
     credentials: "include",
-    headers,
   });
   if (!res.ok) throw new Error("Download failed");
   return res.blob();

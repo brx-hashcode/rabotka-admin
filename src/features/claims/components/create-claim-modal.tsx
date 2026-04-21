@@ -38,21 +38,15 @@ import {
   type AdminProfileListItem,
 } from "#/lib/api/profiles-controller";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
+import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 
 async function uploadFiles(files: File[]): Promise<string[]> {
   if (files.length === 0) return [];
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
-  const csrfToken = getCsrfToken();
-  const res = await fetch(
+  const res = await fetchWithCsrfRetry(
     `${appConfig.apiUrl}/file/upload?is_multipl=true`,
-    {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
-    },
+    { method: "POST", body: formData, credentials: "include" },
   );
   if (!res.ok) throw new Error("File upload failed");
   const json = (await res.json()) as { files: { file_url: string }[] };

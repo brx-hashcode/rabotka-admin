@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 import type {
   AdminJobOfferDetailResponse,
   AdminUpdateJobOfferParams,
 } from "#/lib/api/jobs-controller";
-import { listJobCategories } from "#/lib/api/job-categories-controller";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -25,7 +23,6 @@ type FormData = {
   scheduledAt: string;
   amount: string;
   paymentFlow: string;
-  categoryId: string;
   address: string;
   note: string;
   quantity: string;
@@ -83,10 +80,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
   const [paymentFlowError, setPaymentFlowError] = useState(false);
-  const categoriesQuery = useQuery({
-    queryKey: ["admin", "job-categories"],
-    queryFn: listJobCategories,
-  });
 
   useEffect(() => {
     const data: FormData = {
@@ -95,7 +88,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
       amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
-      categoryId: job.category?.id ?? "",
       address: job.address ?? "",
       note: job.note ?? "",
       quantity: String(job.quantity ?? 1),
