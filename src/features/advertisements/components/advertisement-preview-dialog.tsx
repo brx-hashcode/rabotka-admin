@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { toPng } from "html-to-image";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
 } from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
-import { IconMail, IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconMail, IconBrandWhatsapp, IconDownload } from "@tabler/icons-react";
 import type { Advertisement } from "#/lib/api/advertisements-controller";
 
 type Channel = "EMAIL" | "WHATSAPP";
@@ -73,15 +74,15 @@ function EmailPreview({ ad }: Readonly<{ ad: Advertisement }>) {
         </div>
       </div>
 
-      <div className="p-6 space-y-3">
-        {ad.image_urls?.[0] && (
-          <img
-            src={ad.image_urls[0]}
-            alt={title}
-            className="w-full max-h-52 object-cover rounded mb-2"
-          />
-        )}
+      {ad.image_urls?.[0] && (
+        <img
+          src={ad.image_urls[0]}
+          alt={title}
+          className="w-full max-h-64 object-cover"
+        />
+      )}
 
+      <div className="p-6 space-y-3">
         <p>
           Bonjour <strong>{name}</strong>,
         </p>
@@ -262,6 +263,29 @@ export function AdvertisementPreviewDialog({
   const defaultChannel = getDefaultChannel(hasEmail, hasWhatsApp);
 
   const [activeChannel, setActiveChannel] = useState<Channel>(defaultChannel);
+  const [isSaving, setIsSaving] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const handleSaveImage = async () => {
+    if (!previewRef.current) return;
+    setIsSaving(true);
+    try {
+      const dataUrl = await toPng(previewRef.current, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
+      const link = document.createElement("a");
+      const slug = advertisement.title.toLowerCase().replace(/\s+/g, "-").slice(0, 40);
+      link.download = `ad-preview-${activeChannel.toLowerCase()}-${slug}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // silent — user can retry
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -295,17 +319,32 @@ export function AdvertisementPreviewDialog({
               WhatsApp
             </Button>
           )}
-          <Badge variant="outline" className="ml-auto self-center text-[10px]">
-            Preview only — placeholder recipient
-          </Badge>
+          <div className="ml-auto flex items-center gap-2">
+            <Badge variant="outline" className="self-center text-[10px]">
+              Preview only — placeholder recipient
+            </Badge>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleSaveImage}
+              disabled={isSaving}
+              className="gap-1.5 shrink-0"
+            >
+              <IconDownload className="size-4" />
+              {isSaving ? "Saving…" : "Save as image"}
+            </Button>
+          </div>
         </div>
 
         <div className="overflow-y-auto px-6 py-5 flex-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {activeChannel === "EMAIL" ? (
-            <EmailPreview ad={advertisement} />
-          ) : (
-            <WhatsAppPreview ad={advertisement} />
-          )}
+          <div ref={previewRef}>
+            {activeChannel === "EMAIL" ? (
+              <EmailPreview ad={advertisement} />
+            ) : (
+              <WhatsAppPreview ad={advertisement} />
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
