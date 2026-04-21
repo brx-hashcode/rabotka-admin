@@ -9,7 +9,6 @@ import {
   IconSettings,
   IconUser,
   IconUsers,
-  IconLayoutGrid,
   type Icon,
   IconFile,
   IconWallet,
@@ -17,6 +16,7 @@ import {
   IconTag,
   IconPackage,
   IconSpeakerphone,
+  IconHome,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -45,7 +45,7 @@ export type NavItem = {
 };
 
 const navMain: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: IconLayoutGrid },
+  { title: "Dashboard", url: "/", icon: IconHome },
   { title: "Profiles", url: "/profiles", icon: IconUser },
   { title: "Missions", url: "/jobs", icon: IconBriefcase },
   {
