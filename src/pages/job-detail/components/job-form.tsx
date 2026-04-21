@@ -73,7 +73,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     scheduledAt: "",
     amount: "",
     paymentFlow: "",
-    categoryId: "",
     address: "",
     note: "",
     quantity: "",
@@ -124,8 +123,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.categoryId !== initialForm.categoryId)
-      params.categoryId = form.categoryId || null;
     if (form.address !== initialForm.address) params.address = form.address;
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
@@ -161,27 +158,36 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <FieldLabel>Category</FieldLabel>
-            <Select
-              value={form.categoryId}
-              onValueChange={(v) => updateField("categoryId", v)}
-              disabled={disabled || categoriesQuery.isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categoriesQuery.data?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-1.5 col-span-2">
+            <FieldLabel>Indexing</FieldLabel>
+            <div className="flex items-start gap-2 rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 px-3 py-2.5">
+              <span className="mt-0.5 text-base leading-none">🔍</span>
+              <div className="space-y-0.5">
+                {job.category ? (
+                  <>
+                    <p className="text-xs font-medium text-foreground">
+                      {job.category.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Indexed — matched via title, description &amp; content
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Not yet indexed
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Category is inferred automatically from the job content by
+                      the recommendation engine
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-2">
             <FieldLabel>Address</FieldLabel>
             <Input
               value={form.address}
