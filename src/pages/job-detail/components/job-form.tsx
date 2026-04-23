@@ -161,15 +161,15 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           <div className="space-y-1.5 col-span-2">
             <FieldLabel>Indexing</FieldLabel>
             <div className="flex items-start gap-2 rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 px-3 py-2.5">
-              <span className="mt-0.5 text-base leading-none">🔍</span>
               <div className="space-y-0.5">
-                {job.category ? (
+                {job.vectorIndexedAt ? (
                   <>
                     <p className="text-xs font-medium text-foreground">
-                      {job.category.name}
+                      Indexed
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Indexed — matched via title, description &amp; content
+                      Last indexed{' '}
+                      {new Date(job.vectorIndexedAt).toLocaleString()}
                     </p>
                   </>
                 ) : (
@@ -178,8 +178,8 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
                       Not yet indexed
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Category is inferred automatically from the job content by
-                      the recommendation engine
+                      Will be indexed automatically. Category is inferred from
+                      job content and employer profile.
                     </p>
                   </>
                 )}
