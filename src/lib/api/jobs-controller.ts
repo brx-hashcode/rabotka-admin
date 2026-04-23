@@ -20,6 +20,7 @@ export type AdminJobOfferListItem = {
   applicationsCount: number;
   createdAt: string;
   updatedAt: string;
+  vectorIndexedAt: string | null;
 };
 
 export type AdminJobApplicationItem = {
