@@ -5,11 +5,8 @@ import JobCategoriesPage from "#/pages/job-categories";
 export const Route = createFileRoute("/_authenticated/job-categories/")({
   component: () => (
     <Layout
-      title="Job Categories"
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Job Categories" },
-      ]}
+      title="Categories"
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Categories" }]}
     >
       <JobCategoriesPage />
     </Layout>

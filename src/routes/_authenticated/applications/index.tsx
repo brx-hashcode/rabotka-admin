@@ -6,11 +6,8 @@ import ApplicationsPage from "#/pages/applications";
 export const Route = createFileRoute("/_authenticated/applications/")({
   component: () => (
     <Layout
-      title="Applications"
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Applications" },
-      ]}
+      title="Applicants"
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Applicants" }]}
     >
       <ApplicationsPage />
     </Layout>

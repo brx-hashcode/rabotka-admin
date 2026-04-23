@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
-import { Button } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import {
   deleteDocument,
@@ -226,7 +226,11 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => doDelete()} disabled={isDeleting}>
+            <AlertDialogAction
+              onClick={() => doDelete()}
+              disabled={isDeleting}
+              className={buttonVariants({ variant: "destructive" })}
+            >
               {isDeleting ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

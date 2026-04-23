@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   IconDotsVertical,
   IconLogout,
+  IconBell,
   IconUserCircle,
 } from "@tabler/icons-react";
 
@@ -107,6 +108,13 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={() => navigate({ to: "/notifications" })}
+              >
+                <IconBell />
+                Notifications
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
                 onSelect={() => navigate({ to: "/profile" })}

@@ -1,9 +1,9 @@
 import {
   IconDots,
+  IconEyeOff,
   IconFolder,
   IconRefresh,
   IconShare3,
-  IconTrash,
 } from "@tabler/icons-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback } from "react";
@@ -103,8 +103,8 @@ export const NavDocuments = ({
                   variant="destructive"
                   onSelect={() => hide(item.title)}
                 >
-                  <IconTrash />
-                  <span>Delete</span>
+                  <IconEyeOff />
+                  <span>Hide</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

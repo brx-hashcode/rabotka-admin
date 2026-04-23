@@ -19,6 +19,7 @@ import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
+import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
@@ -27,6 +28,8 @@ import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
+import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
+import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
 import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
 import { Route as AuthenticatedJobsJobIdRouteImport } from './routes/_authenticated/jobs/$jobId'
@@ -87,6 +90,12 @@ const AuthenticatedPaymentRequestsIndexRoute =
     path: '/payment-requests/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLogsIndexRoute = AuthenticatedLogsIndexRouteImport.update({
   id: '/logs/',
   path: '/logs/',
@@ -131,6 +140,18 @@ const AuthenticatedApplicationsIndexRoute =
     path: '/applications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdvertisementsIndexRoute =
+  AuthenticatedAdvertisementsIndexRouteImport.update({
+    id: '/advertisements/',
+    path: '/advertisements/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdsBundlesIndexRoute =
+  AuthenticatedAdsBundlesIndexRouteImport.update({
+    id: '/ads-bundles/',
+    path: '/ads-bundles/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProfilesProfileIdRoute =
   AuthenticatedProfilesProfileIdRouteImport.update({
     id: '/profiles/$profileId',
@@ -162,6 +183,8 @@ export interface FileRoutesByFullPath {
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
+  '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
+  '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
@@ -170,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/logs/': typeof AuthenticatedLogsIndexRoute
+  '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -185,6 +209,8 @@ export interface FileRoutesByTo {
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
+  '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
+  '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
@@ -193,6 +219,7 @@ export interface FileRoutesByTo {
   '/job-categories': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/logs': typeof AuthenticatedLogsIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -210,6 +237,8 @@ export interface FileRoutesById {
   '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
+  '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
+  '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
@@ -218,6 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
+  '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -235,6 +265,8 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
+    | '/ads-bundles/'
+    | '/advertisements/'
     | '/applications/'
     | '/claim/'
     | '/documents/'
@@ -243,6 +275,7 @@ export interface FileRouteTypes {
     | '/job-categories/'
     | '/jobs/'
     | '/logs/'
+    | '/notifications/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -258,6 +291,8 @@ export interface FileRouteTypes {
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
+    | '/ads-bundles'
+    | '/advertisements'
     | '/applications'
     | '/claim'
     | '/documents'
@@ -266,6 +301,7 @@ export interface FileRouteTypes {
     | '/job-categories'
     | '/jobs'
     | '/logs'
+    | '/notifications'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -282,6 +318,8 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs/$jobId'
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
+    | '/_authenticated/ads-bundles/'
+    | '/_authenticated/advertisements/'
     | '/_authenticated/applications/'
     | '/_authenticated/claim/'
     | '/_authenticated/documents/'
@@ -290,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/job-categories/'
     | '/_authenticated/jobs/'
     | '/_authenticated/logs/'
+    | '/_authenticated/notifications/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -376,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/logs/': {
       id: '/_authenticated/logs/'
       path: '/logs'
@@ -432,6 +478,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/advertisements/': {
+      id: '/_authenticated/advertisements/'
+      path: '/advertisements'
+      fullPath: '/advertisements/'
+      preLoaderRoute: typeof AuthenticatedAdvertisementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ads-bundles/': {
+      id: '/_authenticated/ads-bundles/'
+      path: '/ads-bundles'
+      fullPath: '/ads-bundles/'
+      preLoaderRoute: typeof AuthenticatedAdsBundlesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profiles/$profileId': {
       id: '/_authenticated/profiles/$profileId'
       path: '/profiles/$profileId'
@@ -469,6 +529,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJobsJobIdRoute: typeof AuthenticatedJobsJobIdRoute
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
+  AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
+  AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
@@ -477,6 +539,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJobCategoriesIndexRoute: typeof AuthenticatedJobCategoriesIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
   AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
+  AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -493,6 +556,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJobsJobIdRoute: AuthenticatedJobsJobIdRoute,
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
+  AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
+  AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
@@ -501,6 +566,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJobCategoriesIndexRoute: AuthenticatedJobCategoriesIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
   AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
+  AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,

@@ -110,7 +110,7 @@ export function ProfileForm({
           Profile Information
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <div className="mb-6 flex items-center gap-4">
           <Avatar className="border-border size-20 border-4 shadow-md">
             {profile.avatarUrl ? (
@@ -188,7 +188,6 @@ export function ProfileForm({
           </div>
         </div>
 
-        <Separator className="my-6" />
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           <div className="space-y-1.5">
@@ -203,12 +202,6 @@ export function ProfileForm({
               </SelectContent>
             </Select>
           </div>
-          {profile.categoryName && (
-            <div className="space-y-1.5">
-              <FieldLabel>Category</FieldLabel>
-              <Input value={profile.categoryName} disabled />
-            </div>
-          )}
           <div className="space-y-1.5">
             <FieldLabel>Account Status</FieldLabel>
             <Select value={profile.status} disabled>
@@ -225,6 +218,7 @@ export function ProfileForm({
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-1.5">
             <FieldLabel>Reliability Score</FieldLabel>
             <Input
@@ -240,6 +234,22 @@ export function ProfileForm({
             <FieldLabel>WhatsApp Connected</FieldLabel>
             <Input value={profile.whatsappConnected ? "Yes" : "No"} disabled />
           </div>
+
+          {profile.categoryNames && profile.categoryNames.length > 0 && (
+            <div className="col-span-2 space-y-1.5">
+              <FieldLabel>Categories</FieldLabel>
+              <div className="flex flex-wrap gap-1.5">
+                {profile.categoryNames.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center rounded-full border border-gray-200 bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex min-w-0 justify-end gap-2">

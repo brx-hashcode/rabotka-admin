@@ -8,7 +8,6 @@ import type {
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
-import { Separator } from "#/components/ui/separator";
 import { Card, CardContent } from "#/components/ui/card";
 import {
   Select,
@@ -43,6 +42,23 @@ function toLocalDateTimeValue(isoStr: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function applyAmountChanges(
+  params: AdminUpdateJobOfferParams,
+  form: { amount: string; paymentFlow: string },
+  initialForm: { amount: string; paymentFlow: string },
+  hasAmount: boolean,
+) {
+  if (form.amount !== initialForm.amount) {
+    params.amount = hasAmount ? Number(form.amount) : null;
+    params.paymentFlow = hasAmount ? form.paymentFlow || null : null;
+    return;
+  }
+
+  if (hasAmount && form.paymentFlow !== initialForm.paymentFlow) {
+    params.paymentFlow = form.paymentFlow || null;
+  }
+}
+
 type Props = {
   job: AdminJobOfferDetailResponse;
   onSave: (data: AdminUpdateJobOfferParams) => Promise<void>;
@@ -62,13 +78,14 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     quantity: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
+  const [paymentFlowError, setPaymentFlowError] = useState(false);
 
   useEffect(() => {
     const data: FormData = {
       title: job.title ?? "",
       description: job.description ?? "",
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
-      amount: String(job.amount ?? ""),
+      amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
       address: job.address ?? "",
       note: job.note ?? "",
@@ -78,28 +95,40 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     setInitialForm(data);
   }, [job]);
 
+  const hasAmount = form.amount.trim() !== "" && Number(form.amount) > 0;
+
   const isDirty = (Object.keys(form) as (keyof FormData)[]).some(
     (k) => form[k] !== initialForm[k],
   );
 
   const updateField = (field: keyof FormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
+      setForm((prev) => ({ ...prev, amount: value, paymentFlow: "" }));
+      setPaymentFlowError(false);
+    } else {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = async () => {
+    if (hasAmount && !form.paymentFlow) {
+      setPaymentFlowError(true);
+      return;
+    }
+    setPaymentFlowError(false);
+
     const params: AdminUpdateJobOfferParams = {};
     if (form.title !== initialForm.title) params.title = form.title;
     if (form.description !== initialForm.description)
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.amount !== initialForm.amount) params.amount = Number(form.amount);
-    if (form.paymentFlow !== initialForm.paymentFlow)
-      params.paymentFlow = form.paymentFlow;
     if (form.address !== initialForm.address) params.address = form.address;
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
+
+    applyAmountChanges(params, form, initialForm, hasAmount);
 
     await onSave(params);
     setInitialForm(form);
@@ -124,7 +153,45 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               className="min-h-20 resize-none"
-              rows={16}
+              rows={10}
+              disabled={disabled}
+            />
+          </div>
+
+          <div className="space-y-1.5 col-span-2">
+            <FieldLabel>Indexing</FieldLabel>
+            <div className="flex items-start gap-2 rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 px-3 py-2.5">
+              <span className="mt-0.5 text-base leading-none">🔍</span>
+              <div className="space-y-0.5">
+                {job.category ? (
+                  <>
+                    <p className="text-xs font-medium text-foreground">
+                      {job.category.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Indexed — matched via title, description &amp; content
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Not yet indexed
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Category is inferred automatically from the job content by
+                      the recommendation engine
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 col-span-2">
+            <FieldLabel>Address</FieldLabel>
+            <Input
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -135,25 +202,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               type="datetime-local"
               value={form.scheduledAt}
               onChange={(e) => updateField("scheduledAt", e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel>Amount (FCFA)</FieldLabel>
-            <Input
-              type="number"
-              value={form.amount}
-              onChange={(e) => updateField("amount", e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel>Address</FieldLabel>
-            <Input
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
               disabled={disabled}
             />
           </div>
@@ -170,6 +218,50 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
             />
           </div>
 
+          <div className="space-y-1.5">
+            <FieldLabel>Amount (FCFA)</FieldLabel>
+            <Input
+              type="number"
+              value={form.amount}
+              onChange={(e) => updateField("amount", e.target.value)}
+              placeholder="Leave empty if no fixed price"
+              disabled={disabled}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Leave empty if no fixed price
+            </p>
+          </div>
+
+          {hasAmount ? (
+            <div className="space-y-1.5">
+              <FieldLabel>Payment Flow</FieldLabel>
+              <Select
+                value={form.paymentFlow}
+                onValueChange={(v) => {
+                  updateField("paymentFlow", v);
+                  setPaymentFlowError(false);
+                }}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HOURLY">Hourly</SelectItem>
+                  <SelectItem value="DAILY">Daily</SelectItem>
+                  <SelectItem value="MONTHLY">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+              {paymentFlowError && (
+                <p className="text-[11px] text-destructive">
+                  Select a payment frequency
+                </p>
+              )}
+            </div>
+          ) : (
+            <div />
+          )}
+
           <div className="col-span-2 space-y-1.5">
             <FieldLabel>Note</FieldLabel>
             <Textarea
@@ -180,43 +272,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               rows={3}
               disabled={disabled}
             />
-          </div>
-        </div>
-
-        <Separator className="my-6" />
-
-        {/* Read-only fields */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-          <div className="space-y-1.5">
-            <FieldLabel>Payment Flow</FieldLabel>
-            <Select
-              value={form.paymentFlow}
-              onValueChange={(v) => updateField("paymentFlow", v)}
-              disabled={disabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="HOURLY">Hourly</SelectItem>
-                <SelectItem value="DAILY">Daily</SelectItem>
-                <SelectItem value="MONTHLY">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <FieldLabel>Status</FieldLabel>
-            <Select value={job.status} disabled>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="FILLED">Filled</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

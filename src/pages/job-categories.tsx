@@ -55,7 +55,7 @@ export default function JobCategoriesPage() {
   return (
     <div className="pt-6">
       <PageListHeader
-        title="Job Categories"
+        title="Categories"
         description="Manage mission categories for workers and job offers."
         actions={
           <Button onClick={() => setCreateOpen(true)}>
