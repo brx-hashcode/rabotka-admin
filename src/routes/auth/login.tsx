@@ -4,10 +4,12 @@ import {
   redirect,
   useNavigate,
   isRedirect,
+  useSearch,
 } from "@tanstack/react-router";
 import { fetchAndSetCsrfToken } from "#/lib/api/csrf-token";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
+import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
 import {
   Card,
   CardContent,
@@ -21,16 +23,38 @@ import { useSendOtpMutation } from "#/hooks/use-send-otp-mutation";
 import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe } from "#/lib/api/auth-controller";
 
+function getSafeRedirectTarget(raw: string): string | null {
+  if (!raw) return null;
+
+  try {
+    const url = new URL(raw, globalThis.location.origin);
+    if (url.origin !== globalThis.location.origin) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : "",
+  }),
   beforeLoad: async ({ location }) => {
     try {
       await getMe();
-      throw redirect({
-        to: "/",
-        search: {
-          redirect: location.href,
-        },
-      });
+
+      const redirectParam = new URL(
+        location.href,
+        globalThis.location.origin,
+      ).searchParams.get("redirect");
+      const safeTarget = getSafeRedirectTarget(redirectParam ?? "");
+
+      if (safeTarget) {
+        globalThis.location.replace(safeTarget);
+        return;
+      }
+
+      throw redirect({ to: "/" });
     } catch (error) {
       if (isRedirect(error)) throw error;
     }
@@ -40,6 +64,7 @@ export const Route = createFileRoute("/auth/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect: redirectTarget } = useSearch({ from: "/auth/login" });
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
 
@@ -59,6 +84,12 @@ function LoginPage() {
   async function handleVerifyOtp(data: { otp: string }) {
     await verifyOtp.mutateAsync({ email, otp: data.otp });
 
+    const safeTarget = getSafeRedirectTarget(redirectTarget);
+    if (safeTarget) {
+      globalThis.location.assign(safeTarget);
+      return;
+    }
+
     navigate({ to: "/" });
   }
 
@@ -67,8 +98,9 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
+      <ChatDoodleBg />
+      <div className="relative z-10 w-full max-w-sm">
         <Card>
           <CardHeader className="text-center space-y-1">
             <div className="flex justify-center mb-2">

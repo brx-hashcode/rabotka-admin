@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
-import { Button } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import { useDeleteEvent } from "#/features/calendar/hooks/use-calendar-events";
 
 type DeleteEventDialogProps = {
@@ -50,7 +50,12 @@ export default function DeleteEventDialog({ eventId }: Readonly<DeleteEventDialo
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteEvent}>Continue</AlertDialogAction>
+          <AlertDialogAction
+            onClick={deleteEvent}
+            className={buttonVariants({ variant: "destructive" })}
+          >
+            Continue
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

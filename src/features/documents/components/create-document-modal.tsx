@@ -37,7 +37,7 @@ import {
   type DocumentCategory,
 } from "#/lib/api/documents-controller";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
+import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { IconBrandGoogleDrive, IconUpload } from "@tabler/icons-react";
 
 type SourceMode = "upload" | "google-docs";
@@ -45,13 +45,10 @@ type SourceMode = "upload" | "google-docs";
 async function uploadDocxFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("files", file);
-  const csrfToken = getCsrfToken();
-  const res = await fetch(`${appConfig.apiUrl}/file/upload?is_multipl=true`, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-    headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
-  });
+  const res = await fetchWithCsrfRetry(
+    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
+    { method: "POST", body: formData, credentials: "include" },
+  );
   if (!res.ok) throw new Error("File upload failed");
   const json = (await res.json()) as { files: { file_url: string }[] };
   const url = json.files[0]?.file_url;

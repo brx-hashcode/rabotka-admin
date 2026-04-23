@@ -6,48 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Badge } from "#/components/ui/badge";
-import { appConfig } from "#/config";
-import { getCsrfToken } from "#/lib/api/csrf-token";
-
-type AdminInvoiceItem = {
-  id: string;
-  profileId: string;
-  paymentRequestId: string;
-  amount: string;
-  reason: string;
-  relatedEntityType: string | null;
-  relatedEntityId: string | null;
-  status: string;
-  createdAt: string;
-};
-
-async function fetchProfileInvoices(profileId: string): Promise<AdminInvoiceItem[]> {
-  const token = getCsrfToken();
-  const headers: Record<string, string> = token ? { "x-csrf-token": token } : {};
-  const res = await fetch(`${appConfig.apiUrl}/admin/profiles/${profileId}/invoices`, {
-    credentials: "include",
-    headers,
-  });
-  if (!res.ok) throw new Error("Failed to fetch invoices");
-  return res.json();
-}
-
-async function downloadAdminInvoice(invoiceId: string, filename: string) {
-  const token = getCsrfToken();
-  const headers: Record<string, string> = token ? { "x-csrf-token": token } : {};
-  const res = await fetch(`${appConfig.apiUrl}/admin/invoices/${invoiceId}/download`, {
-    credentials: "include",
-    headers,
-  });
-  if (!res.ok) throw new Error("Download failed");
-  const blob = await res.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const a = globalThis.document.createElement("a");
-  a.href = objectUrl;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(objectUrl);
-}
+import { getProfileInvoices, type AdminInvoiceItem } from "#/lib/api/profiles-controller";
+import { downloadAdminInvoice } from "#/lib/api/wallet-controller";
 
 const REASON_LABELS: Record<string, string> = {
   CONTACT_UNLOCK: "Contact unlock",
@@ -113,7 +73,7 @@ type Props = {
 export function ProfileInvoicesContent({ profileId }: Readonly<Props>) {
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["admin", "profiles", profileId, "invoices"],
-    queryFn: () => fetchProfileInvoices(profileId),
+    queryFn: () => getProfileInvoices(profileId),
   });
 
   if (isLoading) {

@@ -76,7 +76,7 @@ class AdminDocumentsController extends AdminBaseController {
     );
     return this.post<AdminDocumentItem>(
       url,
-      payload as Record<string, unknown>,
+      payload,
     );
   }
 
@@ -89,7 +89,7 @@ class AdminDocumentsController extends AdminBaseController {
     );
     return this.post<AdminDocumentItem>(
       url,
-      payload as Record<string, unknown>,
+      payload,
     );
   }
 
@@ -113,7 +113,7 @@ class AdminDocumentsController extends AdminBaseController {
     const url = this.createURL(`/admin/documents/${id}`, new URLSearchParams());
     return this.patch<AdminDocumentItem>(
       url,
-      payload as Record<string, unknown>,
+      payload,
     );
   }
 

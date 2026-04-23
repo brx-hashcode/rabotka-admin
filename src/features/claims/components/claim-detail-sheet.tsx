@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "#/components/ui/dialog";
-import { Button } from "#/components/ui/button";
+import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { X } from "lucide-react";
 import {
@@ -132,6 +132,7 @@ export function ClaimDetailSheet({
   const assignedUser = claim?.assignedUserId
     ? users.find((u) => u.id === claim.assignedUserId)
     : null;
+  const canUnassign = canManageContent && status !== "COMPLETED" && status !== "REJECTED";
 
   return (
     <Dialog
@@ -276,7 +277,7 @@ export function ClaimDetailSheet({
                       email={assignedUser.email}
                       avatarUrl={null}
                     />
-                    {canManageContent && (
+                    {canUnassign && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
@@ -355,7 +356,10 @@ export function ClaimDetailSheet({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove()}>
+                      <AlertDialogAction
+                        onClick={() => remove()}
+                        className={buttonVariants({ variant: "destructive" })}
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>

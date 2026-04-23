@@ -8,7 +8,7 @@ import { Badge } from "#/components/ui/badge";
 import { Card, CardContent } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 
-import { statusBadgeVariant, formatDate } from "./application-detail/helpers";
+import { statusBadgeClass, formatDate } from "./application-detail/helpers";
 import { ApplicationInfo } from "./application-detail/components/application-info";
 import { ApplicationSummary } from "./application-detail/components/application-summary";
 import { ApplicationPenaltiesTable } from "./application-detail/components/application-penalties-table";
@@ -66,7 +66,7 @@ export default function ApplicationDetailPage({
                 <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   Status
                 </p>
-                <Badge variant={statusBadgeVariant(application.status)} className="mt-1.5">
+                <Badge className={`mt-1.5 ${statusBadgeClass(application.status)}`}>
                   {getApplicationStatusLabel(application.status)}
                 </Badge>
               </CardContent>
@@ -76,7 +76,7 @@ export default function ApplicationDetailPage({
                 <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   Job Status
                 </p>
-                <Badge variant={statusBadgeVariant(application.jobStatus)} className="mt-1.5">
+                <Badge className={`mt-1.5 ${statusBadgeClass(application.jobStatus)}`}>
                   {getJobOfferStatusLabel(application.jobStatus)}
                 </Badge>
               </CardContent>

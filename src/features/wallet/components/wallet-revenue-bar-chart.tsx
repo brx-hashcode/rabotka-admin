@@ -27,9 +27,11 @@ function formatMonthLabel(month: string): string {
 }
 
 export function WalletRevenueBarChart() {
+  const calendarYear = new Date().getFullYear();
+
   const { data: raw = [] } = useQuery({
-    queryKey: ["admin", "wallet", "monthly-revenue"],
-    queryFn: () => getMonthlyRevenue(12),
+    queryKey: ["admin", "wallet", "monthly-revenue", calendarYear],
+    queryFn: () => getMonthlyRevenue(calendarYear),
   });
 
   const chartData = raw.map((d) => ({
@@ -37,17 +39,12 @@ export function WalletRevenueBarChart() {
     monthLabel: formatMonthLabel(d.month),
   }));
 
-  const firstMonth = raw.length > 0 ? formatMonthLabel(raw[0].month) : "";
-  const lastMonth =
-    raw.length > 0 ? formatMonthLabel(raw[raw.length - 1].month) : "";
-  const year = raw.length > 0 ? raw[raw.length - 1].month.slice(0, 4) : "";
-
   return (
     <Card className="flex h-[320px] flex-col overflow-hidden">
       <CardHeader>
         <CardTitle>Monthly Revenue</CardTitle>
         <CardDescription>
-          {firstMonth} – {lastMonth} {year}
+          Jan – Dec {calendarYear}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 pb-4">

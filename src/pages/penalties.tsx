@@ -39,7 +39,7 @@ export default function PenaltiesPage() {
   return (
     <div className="pt-6">
       <PageListHeader
-        title="Compliance"
+        title="Penalties"
         description="Violations, penalties and payment follow-up across profiles."
       />
       <DataTable

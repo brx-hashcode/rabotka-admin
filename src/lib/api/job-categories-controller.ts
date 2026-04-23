@@ -31,7 +31,7 @@ class JobCategoriesController extends AdminBaseController {
 
   async create(payload: CreateJobCategoryPayload): Promise<AdminJobCategory> {
     const url = this.createURL("/admin/job-categories", new URLSearchParams());
-    return this.post<AdminJobCategory>(url, payload as Record<string, unknown>);
+    return this.post<AdminJobCategory>(url, payload);
   }
 
   async update(
@@ -44,7 +44,7 @@ class JobCategoriesController extends AdminBaseController {
     );
     return this.patch<AdminJobCategory>(
       url,
-      payload as Record<string, unknown>,
+      payload,
     );
   }
 

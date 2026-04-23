@@ -3,10 +3,11 @@ import { AdminBaseController } from "./base-controller";
 export type AdminJobOfferListItem = {
   id: string;
   title: string;
+  category: { id: string; name: string } | null;
   description: string;
   scheduledAt: string;
-  amount: number;
-  paymentFlow: string;
+  amount: number | null;
+  paymentFlow: string | null;
   address: string;
   note: string | null;
   quantity: number;
@@ -51,8 +52,9 @@ export type AdminUpdateJobOfferParams = {
   title?: string;
   description?: string;
   scheduledAt?: string;
-  amount?: number;
-  paymentFlow?: string;
+  amount?: number | null;
+  paymentFlow?: string | null;
+  categoryId?: string | null;
   address?: string;
   note?: string;
   quantity?: number;
@@ -96,7 +98,7 @@ export class AdminJobOffersController extends AdminBaseController {
       `/admin/job-offers/${id}`,
       new URLSearchParams(),
     );
-    return this.patch<AdminJobOfferDetailResponse>(url, data as Record<string, unknown>);
+    return this.patch<AdminJobOfferDetailResponse>(url, data);
   }
 
   async updateJobOfferStatus(

@@ -88,21 +88,31 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     id: "paymentFlow",
     accessorKey: "paymentFlow",
     header: "Payment",
-    cell: ({ row }) => (
-      <Badge className={getPaymentFlowBadgeClass(row.original.paymentFlow)}>
-        {row.original.paymentFlow}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const paymentFlow = row.original.paymentFlow;
+      if (!paymentFlow) return "—";
+
+      return (
+        <Badge className={getPaymentFlowBadgeClass(paymentFlow)}>
+          {paymentFlow}
+        </Badge>
+      );
+    },
   },
   {
     id: "amount",
     accessorKey: "amount",
     header: "Amount",
-    cell: ({ row }) => (
-      <span className="text-sm font-medium">
-        {row.original.amount.toLocaleString()} FCFA
-      </span>
-    ),
+    cell: ({ row }) => {
+      const amount = row.original.amount;
+      if (amount == null) return "—";
+
+      return (
+        <span className="text-sm font-medium">
+          {amount.toLocaleString()} FCFA
+        </span>
+      );
+    },
   },
   {
     id: "quantity",

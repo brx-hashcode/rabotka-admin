@@ -12,24 +12,36 @@ import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document
 import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  PENDING:   { label: "Pending",   className: "bg-amber-500 text-white border-transparent" },
-  COMPLETED: { label: "Completed", className: "bg-emerald-500 text-white border-transparent" },
-  FAILED:    { label: "Failed",    className: "bg-rose-600 text-white border-transparent" },
-  REFUNDED:  { label: "Refunded",  className: "bg-sky-500 text-white border-transparent" },
+  PENDING: {
+    label: "Pending",
+    className: "bg-amber-500 text-white border-transparent",
+  },
+  COMPLETED: {
+    label: "Completed",
+    className: "bg-emerald-500 text-white border-transparent",
+  },
+  FAILED: {
+    label: "Failed",
+    className: "bg-rose-600 text-white border-transparent",
+  },
+  REFUNDED: {
+    label: "Refunded",
+    className: "bg-sky-500 text-white border-transparent",
+  },
 };
 
 const TYPE_BADGE: Record<string, string> = {
-  REGISTRATION:   "bg-violet-600 text-white border-transparent",
-  JOB_POSTING:    "bg-blue-500 text-white border-transparent",
-  PENALTY:        "bg-rose-600 text-white border-transparent",
+  REGISTRATION: "bg-violet-600 text-white border-transparent",
+  JOB_POSTING: "bg-blue-500 text-white border-transparent",
+  PENALTY: "bg-rose-600 text-white border-transparent",
   CONTACT_UNLOCK: "bg-teal-600 text-white border-transparent",
 };
 
 const METHOD_BADGE: Record<string, string> = {
   MOBILE_MONEY: "bg-orange-500 text-white border-transparent",
-  CARD:         "bg-indigo-500 text-white border-transparent",
-  WALLET:       "bg-cyan-600 text-white border-transparent",
-  OTHER:        "bg-muted text-muted-foreground border-border",
+  CARD: "bg-indigo-500 text-white border-transparent",
+  WALLET: "bg-cyan-600 text-white border-transparent",
+  OTHER: "bg-muted text-muted-foreground border-border",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -58,7 +70,9 @@ function formatDate(v: string | null | undefined) {
   }
 }
 
-function InvoicePreviewCell({ payment }: Readonly<{ payment: AdminPaymentItem }>) {
+function InvoicePreviewCell({
+  payment,
+}: Readonly<{ payment: AdminPaymentItem }>) {
   const [loading, setLoading] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,7 +83,9 @@ function InvoicePreviewCell({ payment }: Readonly<{ payment: AdminPaymentItem }>
     setLoading(true);
     try {
       const invoices = await getProfileInvoices(payment.profileId);
-      const match = invoices.find((inv) => Number(inv.amount) === payment.amount);
+      const match = invoices.find(
+        (inv) => Number(inv.amount) === payment.amount,
+      );
       if (!match) {
         toast.error("No invoice found for this payment");
         return;
@@ -108,13 +124,13 @@ function InvoicePreviewCell({ payment }: Readonly<{ payment: AdminPaymentItem }>
   return (
     <>
       <Button
-        variant="ghost"
-        size="icon"
+        variant="outline"
         disabled={loading}
         onClick={handlePreview}
         title="Preview invoice PDF"
       >
         <IconFileTypePdf className="size-4 text-red-500" />
+        <span>invoice</span>
       </Button>
       <DocumentViewerDrawer
         open={drawerOpen}
@@ -142,7 +158,9 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "type",
     header: "Type",
     cell: ({ row }) => (
-      <Badge className={`text-xs ${TYPE_BADGE[row.original.type] ?? "bg-muted text-muted-foreground border-border"}`}>
+      <Badge
+        className={`text-xs ${TYPE_BADGE[row.original.type] ?? "bg-muted text-muted-foreground border-border"}`}
+      >
         {TYPE_LABELS[row.original.type] ?? row.original.type}
       </Badge>
     ),
@@ -162,8 +180,11 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "paymentMethod",
     header: "Method",
     cell: ({ row }) => (
-      <Badge className={`text-xs ${METHOD_BADGE[row.original.paymentMethod] ?? "bg-muted text-muted-foreground border-border"}`}>
-        {METHOD_LABELS[row.original.paymentMethod] ?? row.original.paymentMethod}
+      <Badge
+        className={`text-xs ${METHOD_BADGE[row.original.paymentMethod] ?? "bg-muted text-muted-foreground border-border"}`}
+      >
+        {METHOD_LABELS[row.original.paymentMethod] ??
+          row.original.paymentMethod}
       </Badge>
     ),
   },
@@ -194,7 +215,9 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "paidAt",
     header: "Paid At",
     cell: ({ row }) => (
-      <span className="text-sm text-nowrap">{formatDate(row.original.paidAt)}</span>
+      <span className="text-sm text-nowrap">
+        {formatDate(row.original.paidAt)}
+      </span>
     ),
   },
   {
@@ -202,7 +225,9 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => (
-      <span className="text-sm text-nowrap">{formatDate(row.original.createdAt)}</span>
+      <span className="text-sm text-nowrap">
+        {formatDate(row.original.createdAt)}
+      </span>
     ),
   },
   {

@@ -1,6 +1,6 @@
 import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
-import { getCsrfToken } from "./csrf-token";
+import { fetchWithCsrfRetry } from "./csrf-token";
 
 export type AdminInvoiceItem = {
   id: string;
@@ -59,6 +59,8 @@ export type AdminVerificationImageItem = {
 export type AdminProfileDetailResponse = AdminProfileListItem & {
   categoryId: string | null;
   categoryName: string | null;
+  categoryIds: string[];
+  categoryNames: string[];
   jobOffersCount: number;
   applicationsCount: number;
   penaltiesCount: number;
@@ -290,13 +292,9 @@ export class AdminProfilesController extends AdminBaseController {
   }
 
   async downloadProfileAgreement(profileId: string): Promise<Blob> {
-    const token = getCsrfToken();
-    const response = await fetch(
+    const response = await fetchWithCsrfRetry(
       `${appConfig.apiUrl}/admin/profiles/${profileId}/agreement/download`,
-      {
-        credentials: "include",
-        headers: token ? { "x-csrf-token": token } : {},
-      },
+      { credentials: "include" },
     );
     if (!response.ok) throw new Error("Download failed");
     return response.blob();

@@ -9,16 +9,16 @@ import {
   IconSettings,
   IconUser,
   IconUsers,
-  IconLayoutGrid,
   type Icon,
   IconFile,
   IconWallet,
   IconCalendar,
   IconTag,
+  IconPackage,
+  IconSpeakerphone,
+  IconHome,
 } from "@tabler/icons-react";
-
 import rabotkaLogo from "#/assets/rabotka-logo.png";
-
 import { NavDocuments } from "#/layouts/nav-documents";
 import { NavMain } from "#/layouts/nav-main";
 import { NavSecondary } from "#/layouts/nav-secondary";
@@ -45,19 +45,19 @@ export type NavItem = {
 };
 
 const navMain: NavItem[] = [
-  { title: "Overview", url: "/", icon: IconLayoutGrid },
+  { title: "Dashboard", url: "/", icon: IconHome },
   { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Job Openings", url: "/jobs", icon: IconBriefcase },
+  { title: "Missions", url: "/jobs", icon: IconBriefcase },
   {
-    title: "Job Categories",
+    title: "Categories",
     url: "/job-categories",
     icon: IconTag,
     roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
   { title: "Applications", url: "/applications", icon: IconFileText },
-  { title: "Compliance", url: "/penalties", icon: IconAlertTriangle },
+  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
   {
-    title: "Team Members",
+    title: "Team",
     url: "/team",
     icon: IconUsers,
     roles: ["ADMIN", "SUPER_ADMIN"],
@@ -100,7 +100,18 @@ const documents: NavItem[] = [
     icon: IconFile,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
-
+  {
+    title: "Ads bundles",
+    url: "/ads-bundles",
+    icon: IconPackage,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "Advertisements",
+    url: "/advertisements",
+    icon: IconSpeakerphone,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
