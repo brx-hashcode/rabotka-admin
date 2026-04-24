@@ -20,7 +20,7 @@ import { Input } from "#/components/ui/input";
 import { Switch } from "#/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
-import { generatePhonePairingOtp } from "#/lib/api/auth-controller";
+import { generatePhonePairingOtp, unpairPhone } from "#/lib/api/auth-controller";
 
 const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
@@ -36,6 +36,7 @@ const getInitials = (firstName: string, lastName: string): string => {
 
 type PairingPhase =
   | "idle"
+  | "confirm-repair"
   | "name-input"
   | "show-code"
   | "generating"
@@ -59,12 +60,18 @@ function PhonePairingCard({
 
   useEffect(() => {
     if (phonePairedAt !== prevPairedAt.current) {
+      const prev = prevPairedAt.current;
       prevPairedAt.current = phonePairedAt;
-      clearTimer();
-      setPhase("idle");
-      setOtp("");
-      setQrUrl("");
-      setErrorMsg("");
+      // Only reset the card when pairing completes (null → date).
+      // When re-pair clears the DB (date → null), the OTP/QR screen
+      // must stay visible so the phone can still scan and verify.
+      if (phonePairedAt !== null && prev === null) {
+        clearTimer();
+        setPhase("idle");
+        setOtp("");
+        setQrUrl("");
+        setErrorMsg("");
+      }
     }
   }, [phonePairedAt]);
 
@@ -87,6 +94,17 @@ function PhonePairingCard({
   }
 
   useEffect(() => () => clearTimer(), []);
+
+  async function handleUnpair() {
+    setPhase("generating");
+    try {
+      await unpairPhone();
+      handleReset();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to disconnect phone.");
+      setPhase("error");
+    }
+  }
 
   async function handleGenerate() {
     const name = inputName.trim();
@@ -164,11 +182,33 @@ function PhonePairingCard({
             <Button
               size="sm"
               variant={phonePairedAt ? "outline" : "default"}
-              onClick={() => setPhase("name-input")}
+              onClick={() => setPhase(phonePairedAt ? "confirm-repair" : "name-input")}
               className="shrink-0"
             >
               {phonePairedAt ? "Re-pair" : "Pair a phone"}
             </Button>
+          </div>
+        )}
+
+        {phase === "confirm-repair" && (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              This will immediately disconnect{" "}
+              <strong>{phoneName ?? "the current phone"}</strong>. The old
+              device will no longer be able to log in via QR code.
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={handleReset}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleUnpair}
+              >
+                Disconnect phone
+              </Button>
+            </div>
           </div>
         )}
 
@@ -252,9 +292,6 @@ function PhonePairingCard({
                   Regenerate
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={handleReset}>
-                Done
-              </Button>
             </div>
           </div>
         )}

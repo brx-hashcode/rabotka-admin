@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import {
   Card,
@@ -9,10 +9,7 @@ import {
 } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
-import {
-  PHONE_TOKEN_KEY,
-  confirmQrSessionFromPhone,
-} from "#/lib/api/auth-controller";
+import { confirmQrSessionFromPhone } from "#/lib/api/auth-controller";
 
 export const Route = createFileRoute("/auth/qr-confirm")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -21,23 +18,12 @@ export const Route = createFileRoute("/auth/qr-confirm")({
   component: QrConfirmPage,
 });
 
-type Phase = "checking" | "not-paired" | "ready" | "loading" | "done" | "error";
+type Phase = "ready" | "loading" | "done" | "not-paired" | "error";
 
 function QrConfirmPage() {
   const { session } = useSearch({ from: "/auth/qr-confirm" });
-  const [phase, setPhase] = useState<Phase>("checking");
-  const [phoneToken, setPhoneToken] = useState("");
+  const [phase, setPhase] = useState<Phase>("ready");
   const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    const token = localStorage.getItem(PHONE_TOKEN_KEY) ?? "";
-    if (!token) {
-      setPhase("not-paired");
-    } else {
-      setPhoneToken(token);
-      setPhase("ready");
-    }
-  }, []);
 
   async function handleConfirm() {
     if (!session) {
@@ -45,18 +31,19 @@ function QrConfirmPage() {
       setPhase("error");
       return;
     }
-    // Re-read token at confirm time in case it was updated by a re-pair
-    const token = localStorage.getItem(PHONE_TOKEN_KEY) ?? "";
-    if (!token) {
-      setPhase("not-paired");
-      return;
-    }
     setPhase("loading");
     try {
-      await confirmQrSessionFromPhone(session, token);
+      await confirmQrSessionFromPhone(session);
       setPhase("done");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to confirm.";
+      const isNotPaired =
+        msg.toLowerCase().includes("not paired") ||
+        msg.toLowerCase().includes("phone token");
+      if (isNotPaired) {
+        setPhase("not-paired");
+        return;
+      }
       const needsRepair =
         msg.toLowerCase().includes("expired") ||
         msg.toLowerCase().includes("invalid") ||
@@ -90,10 +77,6 @@ function QrConfirmPage() {
           </CardHeader>
 
           <CardContent className="flex flex-col gap-4">
-            {phase === "checking" && (
-              <p className="text-muted-foreground text-sm text-center">Checking…</p>
-            )}
-
             {phase === "not-paired" && (
               <p className="text-muted-foreground text-sm text-center">
                 Go to your admin profile on desktop, open the{" "}

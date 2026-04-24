@@ -10,7 +10,7 @@ import {
 } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { PHONE_TOKEN_KEY, verifyPhonePairingOtp } from "#/lib/api/auth-controller";
+import { verifyPhonePairingOtp } from "#/lib/api/auth-controller";
 
 export const Route = createFileRoute("/auth/phone-pair")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -34,8 +34,7 @@ function PhonePairPage() {
     if (otp.length !== 6) return;
     setPhase("loading");
     try {
-      const { token } = await verifyPhonePairingOtp(userId, otp);
-      localStorage.setItem(PHONE_TOKEN_KEY, token);
+      await verifyPhonePairingOtp(userId, otp);
       setPhase("done");
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Verification failed.");
