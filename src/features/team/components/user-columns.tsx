@@ -1,9 +1,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { getCommonColumns } from "#/components/table";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import type { AdminUserListItem } from "#/lib/api/users-controller";
 import { UserRowActions } from "./user-row-actions";
+
+function getInitials(first: string, last: string): string {
+  return ((first[0] ?? "") + (last[0] ?? "")).toUpperCase() || "?";
+}
 
 export type AdminUser = AdminUserListItem;
 
@@ -40,13 +45,20 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
     accessorKey: "firstName",
     header: "Name",
     cell: ({ row }) => (
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium">
-          {row.original.firstName} {row.original.lastName}
-        </span>
-        <span className="text-muted-foreground text-xs">
-          {row.original.email}
-        </span>
+      <div className="flex items-center gap-3">
+        <Avatar className="h-8 w-8 shrink-0">
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+            {getInitials(row.original.firstName, row.original.lastName)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium">
+            {row.original.firstName} {row.original.lastName}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {row.original.email}
+          </span>
+        </div>
       </div>
     ),
   },
