@@ -91,6 +91,7 @@ function PhonePairingCard({
   async function handleGenerate() {
     const name = inputName.trim();
     if (!name) return;
+
     setPhase("generating");
     try {
       const result = await generatePhonePairingOtp(name);
