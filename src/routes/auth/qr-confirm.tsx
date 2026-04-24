@@ -45,18 +45,26 @@ function QrConfirmPage() {
       setPhase("error");
       return;
     }
+    // Re-read token at confirm time in case it was updated by a re-pair
+    const token = localStorage.getItem(PHONE_TOKEN_KEY) ?? "";
+    if (!token) {
+      setPhase("not-paired");
+      return;
+    }
     setPhase("loading");
     try {
-      await confirmQrSessionFromPhone(session, phoneToken);
+      await confirmQrSessionFromPhone(session, token);
       setPhase("done");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to confirm.";
-      const isExpired =
+      const needsRepair =
         msg.toLowerCase().includes("expired") ||
-        msg.toLowerCase().includes("invalid");
+        msg.toLowerCase().includes("invalid") ||
+        msg.toLowerCase().includes("not found") ||
+        msg.toLowerCase().includes("reset");
       setErrorMsg(
-        isExpired
-          ? "Phone pairing has expired. Re-pair your phone in your admin profile."
+        needsRepair
+          ? "Phone pairing has expired or been reset. Re-pair your phone in your admin profile."
           : msg,
       );
       setPhase("error");

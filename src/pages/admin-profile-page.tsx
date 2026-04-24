@@ -55,6 +55,18 @@ function PhonePairingCard({
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevPairedAt = useRef<string | null>(phonePairedAt);
+
+  useEffect(() => {
+    if (phonePairedAt !== prevPairedAt.current) {
+      prevPairedAt.current = phonePairedAt;
+      clearTimer();
+      setPhase("idle");
+      setOtp("");
+      setQrUrl("");
+      setErrorMsg("");
+    }
+  }, [phonePairedAt]);
 
   function clearTimer() {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -82,7 +94,8 @@ function PhonePairingCard({
     setPhase("generating");
     try {
       const result = await generatePhonePairingOtp(name);
-      const base = window.location.origin;
+      const base = globalThis.location.origin;
+
       setOtp(result.otp);
       setQrUrl(`${base}/auth/phone-pair?u=${result.userId}`);
       startCountdown(result.expiresIn);
