@@ -27,6 +27,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
   const socketRef = useRef<Socket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string>("");
+  const consumeNonceRef = useRef<string>("");
 
   function clearTimer() {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -47,6 +48,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
     try {
       const session = await initQrSession();
       sessionIdRef.current = session.sessionId;
+      consumeNonceRef.current = session.consumeNonce;
       setQrUrl(session.qrUrl);
       setSecondsLeft(session.expiresIn);
       setPhase("ready");
@@ -76,7 +78,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
         clearTimer();
         disconnectSocket();
         setPhase("scanned");
-        consumeQrSession(session.sessionId)
+        consumeQrSession(session.sessionId, consumeNonceRef.current)
           .then(() => {
             setPhase("done");
             setTimeout(() => {

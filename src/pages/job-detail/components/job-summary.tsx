@@ -52,9 +52,13 @@ export function JobSummary({ job }: Readonly<Props>) {
             <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
               Pay type
             </p>
-            <Badge variant="outline" className="mt-1">
-              {job.paymentFlow}
-            </Badge>
+            {job.paymentFlow ? (
+              <Badge variant="outline" className="mt-1">
+                {job.paymentFlow}
+              </Badge>
+            ) : (
+              <span className="mt-1 text-sm text-muted-foreground">—</span>
+            )}
           </CardContent>
         </Card>
 

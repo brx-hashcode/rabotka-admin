@@ -1,6 +1,5 @@
 import { AdminBaseController } from "./base-controller";
 
-export const PHONE_TOKEN_KEY = "admin_phone_token";
 
 export type AdminRole = "ADMIN" | "SUPER_ADMIN" | "MANAGER" | "MODERATOR";
 
@@ -75,6 +74,7 @@ export class AdminAuthController extends AdminBaseController {
 
   async initQrSession(): Promise<{
     sessionId: string;
+    consumeNonce: string;
     qrUrl: string;
     expiresIn: number;
   }> {
@@ -97,9 +97,9 @@ export class AdminAuthController extends AdminBaseController {
     }
   }
 
-  async consumeQrSession(sessionId: string): Promise<{ success: boolean }> {
+  async consumeQrSession(sessionId: string, consumeNonce: string): Promise<{ success: boolean }> {
     try {
-      return await this.post("/auth/admin/qr/consume", { sessionId });
+      return await this.post("/auth/admin/qr/consume", { sessionId, consumeNonce });
     } catch (error) {
       this.handleError(error);
       throw error;
@@ -108,13 +108,18 @@ export class AdminAuthController extends AdminBaseController {
 
   async confirmQrSessionFromPhone(
     sessionId: string,
-    phoneToken: string,
   ): Promise<{ success: boolean }> {
     try {
-      return await this.post("/auth/admin/qr/confirm", {
-        sessionId,
-        phoneToken,
-      });
+      return await this.post("/auth/admin/qr/confirm", { sessionId });
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async unpairPhone(): Promise<{ success: boolean }> {
+    try {
+      return await this.delete("/auth/admin/phone/pair");
     } catch (error) {
       this.handleError(error);
       throw error;
@@ -137,7 +142,7 @@ export class AdminAuthController extends AdminBaseController {
   async verifyPhonePairingOtp(
     userId: string,
     otp: string,
-  ): Promise<{ token: string }> {
+  ): Promise<{ success: boolean }> {
     try {
       return await this.post("/auth/admin/phone/pair/verify", { userId, otp });
     } catch (error) {
@@ -159,6 +164,7 @@ export const {
   pollQrSession,
   consumeQrSession,
   confirmQrSessionFromPhone,
+  unpairPhone,
   generatePhonePairingOtp,
   verifyPhonePairingOtp,
 } = controller;
