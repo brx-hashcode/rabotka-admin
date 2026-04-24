@@ -17,8 +17,10 @@ import {
   CardHeader,
   CardTitle,
 } from "#/components/ui/card";
+import { Button } from "#/components/ui/button";
 import { Step1EmailForm } from "#/features/auth/components/step1-email-form";
 import { Step2OtpForm } from "#/features/auth/components/step2-otp-form";
+import { QrLoginDialog } from "#/features/auth/components/qr-login-dialog";
 import { useSendOtpMutation } from "#/hooks/use-send-otp-mutation";
 import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe } from "#/lib/api/auth-controller";
@@ -67,6 +69,7 @@ function LoginPage() {
   const { redirect: redirectTarget } = useSearch({ from: "/auth/login" });
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
+  const [qrOpen, setQrOpen] = useState(false);
 
   useEffect(() => {
     void fetchAndSetCsrfToken();
@@ -138,9 +141,34 @@ function LoginPage() {
                 }
               />
             )}
+
+            {step === 1 && (
+              <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      or
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setQrOpen(true)}
+                >
+                  Sign in with QR code
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <QrLoginDialog open={qrOpen} onOpenChange={setQrOpen} />
     </div>
   );
 }

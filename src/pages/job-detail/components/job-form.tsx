@@ -161,6 +161,9 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           <div className="space-y-1.5 col-span-2">
             <FieldLabel>Indexing</FieldLabel>
             <div className="flex items-start gap-2 rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 px-3 py-2.5">
+              <span
+                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${job.vectorIndexedAt ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
+              />
               <div className="space-y-0.5">
                 {job.vectorIndexedAt ? (
                   <>
