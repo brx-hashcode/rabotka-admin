@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthQrConfirmRouteImport } from './routes/auth/qr-confirm'
+import { Route as AuthPhonePairRouteImport } from './routes/auth/phone-pair'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
 import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
@@ -43,6 +45,16 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthQrConfirmRoute = AuthQrConfirmRouteImport.update({
+  id: '/auth/qr-confirm',
+  path: '/auth/qr-confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthPhonePairRoute = AuthPhonePairRouteImport.update({
+  id: '/auth/phone-pair',
+  path: '/auth/phone-pair',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
@@ -179,6 +191,8 @@ const AuthenticatedApplicationsApplicationIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/phone-pair': typeof AuthPhonePairRoute
+  '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
@@ -204,6 +218,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
+  '/auth/phone-pair': typeof AuthPhonePairRoute
+  '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/': typeof AuthenticatedIndexRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
@@ -232,6 +248,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
+  '/auth/phone-pair': typeof AuthPhonePairRoute
+  '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
@@ -261,6 +279,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth/login'
+    | '/auth/phone-pair'
+    | '/auth/qr-confirm'
     | '/applications/$applicationId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
@@ -286,6 +306,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth/login'
+    | '/auth/phone-pair'
+    | '/auth/qr-confirm'
     | '/'
     | '/applications/$applicationId'
     | '/jobs/$jobId'
@@ -313,6 +335,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/auth/login'
+    | '/auth/phone-pair'
+    | '/auth/qr-confirm'
     | '/_authenticated/'
     | '/_authenticated/applications/$applicationId'
     | '/_authenticated/jobs/$jobId'
@@ -341,6 +365,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthPhonePairRoute: typeof AuthPhonePairRoute
+  AuthQrConfirmRoute: typeof AuthQrConfirmRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -358,6 +384,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/auth/qr-confirm': {
+      id: '/auth/qr-confirm'
+      path: '/auth/qr-confirm'
+      fullPath: '/auth/qr-confirm'
+      preLoaderRoute: typeof AuthQrConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/phone-pair': {
+      id: '/auth/phone-pair'
+      path: '/auth/phone-pair'
+      fullPath: '/auth/phone-pair'
+      preLoaderRoute: typeof AuthPhonePairRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
       id: '/auth/login'
@@ -584,6 +624,8 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthLoginRoute: AuthLoginRoute,
+  AuthPhonePairRoute: AuthPhonePairRoute,
+  AuthQrConfirmRoute: AuthQrConfirmRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
