@@ -22,17 +22,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { generatePhonePairingOtp } from "#/lib/api/auth-controller";
 
-function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
+const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
     <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
       {children}
     </label>
   );
-}
+};
 
-function getInitials(firstName: string, lastName: string): string {
+const getInitials = (firstName: string, lastName: string): string => {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
-}
+};
 
 type PairingPhase =
   | "idle"
