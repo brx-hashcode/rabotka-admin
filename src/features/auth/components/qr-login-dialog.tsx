@@ -134,7 +134,17 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
           {phase === "ready" && qrUrl && (
             <>
               <div className="rounded-xl border border-border bg-white p-3 shadow-sm">
-                <QRCodeSVG value={qrUrl} size={180} />
+                <QRCodeSVG
+                  value={qrUrl}
+                  size={180}
+                  level="H"
+                  imageSettings={{
+                    src: "/rabotka-logo.png",
+                    height: 36,
+                    width: 36,
+                    excavate: true,
+                  }}
+                />
               </div>
               <p className="text-sm text-muted-foreground">
                 Expires in{" "}
