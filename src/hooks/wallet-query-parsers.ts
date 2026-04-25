@@ -1,6 +1,7 @@
 import { parseAsInteger, parseAsString, parseAsArrayOf } from "nuqs";
+import { appConfig } from "#/config";
 
-export const defaultWalletTableLimit = 20;
+export const defaultWalletTableLimit = appConfig.defaultPaginationLimit;
 
 export const walletPaymentsParsers = {
   page: parseAsInteger.withDefault(1),
