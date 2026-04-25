@@ -250,7 +250,17 @@ function PhonePairingCard({
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               <div className="shrink-0 rounded-lg border border-border bg-white p-2 shadow-sm self-start">
-                <QRCodeSVG value={qrUrl} size={116} />
+                <QRCodeSVG
+                  value={qrUrl}
+                  size={116}
+                  level="H"
+                  imageSettings={{
+                    src: "/rabotka-logo.png",
+                    height: 24,
+                    width: 24,
+                    excavate: true,
+                  }}
+                />
               </div>
               <div className="flex flex-col gap-3">
                 <div>
