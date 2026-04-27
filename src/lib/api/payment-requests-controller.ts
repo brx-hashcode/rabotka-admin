@@ -15,6 +15,8 @@ export type AdminPaymentRequestListItem = {
   profileStatus: string;
   profileType: string;
   status: PaymentRequestStatus;
+  gateway: string | null;
+  gatewayPaymentRef: string | null;
   paymentReference: string | null;
   proofImages: string[];
   rejectionNote: string | null;
