@@ -65,12 +65,22 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
     },
   },
   {
+    id: "gateway",
+    accessorKey: "gateway",
+    header: "Gateway",
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.gateway ?? "—"}
+      </span>
+    ),
+  },
+  {
     id: "paymentReference",
     accessorKey: "paymentReference",
     header: "Reference",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {row.original.paymentReference ?? "—"}
+        {row.original.gatewayPaymentRef ?? row.original.paymentReference ?? "—"}
       </span>
     ),
   },
