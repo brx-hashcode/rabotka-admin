@@ -6,6 +6,7 @@ import { appConfig } from "#/config";
 import {
   IconFileTypePdf,
   IconFileTypeDocx,
+  IconMarkdown,
   IconFile,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
@@ -52,6 +53,8 @@ function DocIcon({ mimeType }: Readonly<{ mimeType: string }>) {
     return <IconFileTypePdf className="text-red-500 size-10" />;
   if (mimeType.includes("wordprocessingml"))
     return <IconFileTypeDocx className="text-blue-500 size-10" />;
+  if (mimeType === "text/markdown" || mimeType === "text/x-markdown")
+    return <IconMarkdown className="text-purple-400 size-10" />;
   return <IconFile className="text-muted-foreground size-10" />;
 }
 
