@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Clock,
   Loader,
+  PauseCircle,
 } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -32,7 +33,7 @@ type Props = {
   advertisement: Advertisement;
 };
 
-type DispatchStatus = "sent" | "missed" | "in-progress" | "upcoming";
+type DispatchStatus = "sent" | "missed" | "in-progress" | "paused" | "upcoming";
 
 type DispatchEntry = {
   date: Date;
@@ -49,12 +50,22 @@ type Week = {
   dispatches: DispatchEntry[];
 };
 
-/** Convert stored UTC "HH:MM" to local-time Date on a given day */
-function scheduledMoment(day: Date, utcTime: string): Date {
+/**
+ * Build the exact UTC dispatch moment for a given calendar day index.
+ * startDate is the ad start date (as a local midnight Date).
+ * We reconstruct the UTC date by formatting the local date then parsing as UTC.
+ */
+function scheduledMoment(dispatchDay: Date, utcTime: string): Date {
   const [h, m] = utcTime.split(":").map(Number);
-  const d = new Date(day);
-  d.setUTCHours(h, m, 0, 0);
-  return d;
+  // Get the local calendar date string, then interpret it as a UTC date at dispatch time.
+  // This ensures the scheduled moment always lands on the correct UTC calendar day.
+  const localDateStr = format(dispatchDay, "yyyy-MM-dd");
+  return new Date(`${localDateStr}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`);
+}
+
+/** UTC calendar date string ("YYYY-MM-DD") for a local Date — matches backend dispatch records */
+function utcDayKey(dispatchDay: Date, utcTime: string): string {
+  return scheduledMoment(dispatchDay, utcTime).toISOString().slice(0, 10);
 }
 
 /** Format a UTC time string ("HH:MM") to local HH:MM for display */
@@ -86,6 +97,7 @@ function computeDispatchDates(
   freqPerWeek: number,
   dispatchTime: string,
   dispatchedMap: Map<string, Date>,
+  paused: boolean,
 ): DispatchEntry[] {
   const now = new Date();
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
@@ -97,8 +109,8 @@ function computeDispatchDates(
     if (expected > previousExpected) {
       const dispatchDay = addDays(startDate, day);
       const scheduledAt = scheduledMoment(dispatchDay, dispatchTime);
-      // UTC date key to match backend dispatch records
-      const dayKey = format(dispatchDay, "yyyy-MM-dd");
+      // UTC calendar date key — matches what the backend stores in dispatch_events.day
+      const dayKey = utcDayKey(dispatchDay, dispatchTime);
 
       let status: DispatchStatus;
       let actualAt: Date | null = null;
@@ -109,7 +121,7 @@ function computeDispatchDates(
       } else if (isBefore(scheduledAt, now) && !isToday(dispatchDay)) {
         status = "missed";
       } else if (isToday(dispatchDay)) {
-        status = "in-progress";
+        status = paused ? "paused" : "in-progress";
       } else {
         status = "upcoming";
       }
@@ -147,11 +159,12 @@ function entryRowClass(status: DispatchStatus): string {
   if (status === "sent") return "bg-emerald-500/5 border-emerald-500/20";
   if (status === "missed") return "bg-orange-500/5 border-orange-500/20";
   if (status === "in-progress") return "bg-amber-400/5 border-amber-400/20";
+  if (status === "paused") return "bg-muted/30 border-muted";
   return "bg-muted/20";
 }
 
 function entryTextClass(status: DispatchStatus): string {
-  if (status === "sent" || status === "missed") return "text-muted-foreground";
+  if (status === "sent" || status === "missed" || status === "paused") return "text-muted-foreground";
   return "text-foreground";
 }
 
@@ -159,6 +172,7 @@ function DispatchStatusIndicator({ status }: Readonly<{ status: DispatchStatus }
   if (status === "sent") return <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />;
   if (status === "missed") return <AlertTriangle className="size-4 text-orange-500 shrink-0" />;
   if (status === "in-progress") return <Loader className="size-4 text-amber-400 shrink-0 animate-spin" />;
+  if (status === "paused") return <PauseCircle className="size-4 text-muted-foreground shrink-0" />;
   return <div className="size-2 rounded-full bg-muted-foreground/40 shrink-0 mx-1" />;
 }
 
@@ -181,6 +195,13 @@ function DispatchStatusBadge({ status }: Readonly<{ status: DispatchStatus }>) {
     return (
       <Badge className="text-xs bg-amber-400/10 text-amber-500 border-amber-400/20 hover:bg-amber-400/10">
         Today
+      </Badge>
+    );
+  }
+  if (status === "paused") {
+    return (
+      <Badge variant="outline" className="text-xs text-muted-foreground">
+        Paused
       </Badge>
     );
   }
@@ -230,6 +251,8 @@ export function AdvertisementPlanningSheet({
     return map;
   }, [analytics?.dispatchEvents]);
 
+  const paused = ad.status === "PAUSED";
+
   const { weeks, sentCount, missedCount, upcomingCount, totalDispatches } = useMemo(() => {
     const startDate = startOfDay(parseISO(ad.start_date));
     const endDate = startOfDay(parseISO(ad.end_date));
@@ -239,12 +262,13 @@ export function AdvertisementPlanningSheet({
       freqPerWeek,
       ad.dispatch_time ?? "08:00",
       dispatchedMap,
+      paused,
     );
     const grouped = groupIntoWeeks(startDate, endDate, dispatches);
     const sent = dispatches.filter((d) => d.status === "sent").length;
     const missed = dispatches.filter((d) => d.status === "missed").length;
     const upcoming = dispatches.filter(
-      (d) => d.status === "upcoming" || d.status === "in-progress",
+      (d) => d.status === "upcoming" || d.status === "in-progress" || d.status === "paused",
     ).length;
     return {
       weeks: grouped,
