@@ -97,9 +97,10 @@ function computeDispatchDates(
   freqPerWeek: number,
   dispatchTime: string,
   dispatchedMap: Map<string, Date>,
-  paused: boolean,
+  adStatus: string,
 ): DispatchEntry[] {
   const now = new Date();
+  const isLive = adStatus === "ACTIVE";
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
   const dispatches: DispatchEntry[] = [];
   let previousExpected = 0;
@@ -121,7 +122,8 @@ function computeDispatchDates(
       } else if (isBefore(scheduledAt, now) && !isToday(dispatchDay)) {
         status = "missed";
       } else if (isToday(dispatchDay)) {
-        status = paused ? "paused" : "in-progress";
+        // Only ACTIVE ads can still dispatch today — everything else is frozen
+        status = isLive ? "in-progress" : "paused";
       } else {
         status = "upcoming";
       }
@@ -251,8 +253,6 @@ export function AdvertisementPlanningSheet({
     return map;
   }, [analytics?.dispatchEvents]);
 
-  const paused = ad.status === "PAUSED";
-
   const { weeks, sentCount, missedCount, upcomingCount, totalDispatches } = useMemo(() => {
     const startDate = startOfDay(parseISO(ad.start_date));
     const endDate = startOfDay(parseISO(ad.end_date));
@@ -262,7 +262,7 @@ export function AdvertisementPlanningSheet({
       freqPerWeek,
       ad.dispatch_time ?? "08:00",
       dispatchedMap,
-      paused,
+      ad.status,
     );
     const grouped = groupIntoWeeks(startDate, endDate, dispatches);
     const sent = dispatches.filter((d) => d.status === "sent").length;
