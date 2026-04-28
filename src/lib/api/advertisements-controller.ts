@@ -123,6 +123,11 @@ export type AdvertisementDeliveryLogItem = {
   failureReason: string | null;
 };
 
+export type AdvertisementDispatchEvent = {
+  day: string;          // "YYYY-MM-DD" UTC
+  dispatchedAt: string; // ISO UTC timestamp of first delivery in that batch
+};
+
 export type AdvertisementAnalytics = {
   totalSent: number;
   totalOpened: number;
@@ -132,6 +137,7 @@ export type AdvertisementAnalytics = {
   clickedDeliveries: number;
   clickThroughRate: number;
   remainingDays: number;
+  dispatchEvents: AdvertisementDispatchEvent[];
   links: AdvertisementAnalyticsLink[];
   timeline: AdvertisementTimelinePoint[];
   deliveryLogs: AdvertisementDeliveryLogItem[];
