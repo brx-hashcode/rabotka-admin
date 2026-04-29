@@ -13,6 +13,7 @@ import {
   type AdminClaimCommentItem,
 } from "#/lib/api/claims-controller";
 import { useRole } from "#/hooks/use-role";
+import { useClaimCommentsSocket } from "#/hooks/use-claim-comments-socket";
 
 function getInitials(name: string): string {
   return (
@@ -35,6 +36,8 @@ export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  useClaimCommentsSocket(claimId);
+
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["admin", "claims", claimId, "comments"],
     queryFn: () => listClaimComments(claimId),
@@ -47,21 +50,26 @@ export function ClaimComments({ claimId }: Readonly<ClaimCommentsProps>) {
 
   const { mutate: submit, isPending: isSending } = useMutation({
     mutationFn: () => addClaimComment(claimId, text.trim()),
-    onSuccess: () => {
+    onSuccess: (newComment) => {
       setText("");
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "claims", claimId, "comments"],
-      });
+      queryClient.setQueryData<AdminClaimCommentItem[]>(
+        ["admin", "claims", claimId, "comments"],
+        (prev = []) => {
+          if (prev.some((c) => c.id === newComment.id)) return prev;
+          return [...prev, newComment];
+        },
+      );
     },
     onError: () => toast.error("Failed to add comment"),
   });
 
   const { mutate: remove } = useMutation({
     mutationFn: (commentId: string) => deleteClaimComment(claimId, commentId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "claims", claimId, "comments"],
-      }),
+    onSuccess: (_, commentId) =>
+      queryClient.setQueryData<AdminClaimCommentItem[]>(
+        ["admin", "claims", claimId, "comments"],
+        (prev = []) => prev.filter((c) => c.id !== commentId),
+      ),
     onError: () => toast.error("Failed to delete comment"),
   });
 
