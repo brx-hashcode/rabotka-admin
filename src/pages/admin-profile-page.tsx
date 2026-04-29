@@ -52,9 +52,11 @@ type PairingPhase =
 function PhonePairingCard({
   phonePairedAt,
   phoneName,
+  totpEnabled,
 }: Readonly<{
   phonePairedAt: string | null;
   phoneName: string | null;
+  totpEnabled: boolean;
 }>) {
   const [phase, setPhase] = useState<PairingPhase>("idle");
   const [inputName, setInputName] = useState("");
@@ -205,7 +207,9 @@ function PhonePairingCard({
                   <>
                     <p className="text-sm font-medium">No phone paired</p>
                     <p className="text-muted-foreground text-xs">
-                      Pair your phone to enable QR code login.
+                      {totpEnabled
+                        ? "Pair your phone to enable QR code login."
+                        : "Enable two-factor authentication to pair a phone."}
                     </p>
                   </>
                 )}
@@ -218,6 +222,8 @@ function PhonePairingCard({
                 setPhase(phonePairedAt ? "confirm-repair" : "name-input")
               }
               className="shrink-0"
+              disabled={!totpEnabled}
+              title={!totpEnabled ? "Enable two-factor authentication first" : undefined}
             >
               {phonePairedAt ? "Re-pair" : "Pair a phone"}
             </Button>
@@ -683,6 +689,7 @@ export default function AdminProfilePage() {
         <PhonePairingCard
           phonePairedAt={admin.phonePairedAt ?? null}
           phoneName={admin.phoneName ?? null}
+          totpEnabled={admin.totpEnabled ?? false}
         />
 
         <TotpCard
