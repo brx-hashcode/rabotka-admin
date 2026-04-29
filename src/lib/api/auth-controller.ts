@@ -11,6 +11,7 @@ export type Admin = {
   role: AdminRole;
   phonePairedAt: string | null;
   phoneName: string | null;
+  totpEnabled: boolean;
 };
 
 export type SendOTPResponse = {
@@ -20,7 +21,8 @@ export type SendOTPResponse = {
 
 export type VerifyOTPResponse = {
   success: boolean;
-  message?: string;
+  totpRequired?: boolean;
+  pendingToken?: string;
 };
 
 export class AdminAuthController extends AdminBaseController {
@@ -39,6 +41,45 @@ export class AdminAuthController extends AdminBaseController {
         email,
         otp,
       });
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async totpLogin(
+    pendingToken: string,
+    code: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      return await this.post("/auth/admin/totp/login", { pendingToken, code });
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async totpSetup(): Promise<{ secret: string; qrDataUrl: string }> {
+    try {
+      return await this.post("/auth/admin/totp/setup", {});
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async totpEnable(code: string): Promise<{ success: boolean }> {
+    try {
+      return await this.post("/auth/admin/totp/enable", { code });
+    } catch (error) {
+      this.handleError(error);
+      throw error;
+    }
+  }
+
+  async totpDisable(code: string): Promise<{ success: boolean }> {
+    try {
+      return await this.post("/auth/admin/totp/disable", { code });
     } catch (error) {
       this.handleError(error);
       throw error;
@@ -157,6 +198,10 @@ const controller = new AdminAuthController();
 export const {
   sendOTP,
   verifyOTP,
+  totpLogin,
+  totpSetup,
+  totpEnable,
+  totpDisable,
   getMe,
   updateMe,
   logout,

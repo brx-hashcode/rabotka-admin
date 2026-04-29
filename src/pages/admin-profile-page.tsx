@@ -9,7 +9,8 @@ import {
   IconBell,
   IconDeviceMobile,
 } from "@tabler/icons-react";
-import { QRCodeSVG } from "qrcode.react";
+import QrCodeStyling from "qr-code-styling";
+import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
 
 import { toast } from "sonner";
 import { useAdminProfile } from "#/hooks/use-admin-profile";
@@ -20,7 +21,13 @@ import { Input } from "#/components/ui/input";
 import { Switch } from "#/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
-import { generatePhonePairingOtp, unpairPhone } from "#/lib/api/auth-controller";
+import {
+  generatePhonePairingOtp,
+  unpairPhone,
+  totpSetup,
+  totpEnable,
+  totpDisable,
+} from "#/lib/api/auth-controller";
 
 const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
@@ -57,6 +64,7 @@ function PhonePairingCard({
   const [errorMsg, setErrorMsg] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevPairedAt = useRef<string | null>(phonePairedAt);
+  const qrContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (phonePairedAt !== prevPairedAt.current) {
@@ -95,13 +103,37 @@ function PhonePairingCard({
 
   useEffect(() => () => clearTimer(), []);
 
+  useEffect(() => {
+    if (!qrUrl || !qrContainerRef.current) return;
+    const container = qrContainerRef.current;
+    getRoundedLogoDataUrl("/rabotka-logo.png", 48, 12).then((logoDataUrl) => {
+      const qr = new QrCodeStyling({
+        width: 120,
+        height: 120,
+        margin: 0,
+        data: qrUrl,
+        image: logoDataUrl,
+        dotsOptions: { type: "rounded", color: "#252525" },
+        cornersSquareOptions: { type: "extra-rounded", color: "#000000" },
+        cornersDotOptions: { type: "rounded", color: "#252525" },
+        backgroundOptions: { color: "#f5f5f5" },
+        imageOptions: { margin: 3 },
+        qrOptions: { errorCorrectionLevel: "H" },
+      });
+      container.innerHTML = "";
+      qr.append(container);
+    });
+  }, [qrUrl]);
+
   async function handleUnpair() {
     setPhase("generating");
     try {
       await unpairPhone();
       handleReset();
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to disconnect phone.");
+      setErrorMsg(
+        err instanceof Error ? err.message : "Failed to disconnect phone.",
+      );
       setPhase("error");
     }
   }
@@ -182,7 +214,9 @@ function PhonePairingCard({
             <Button
               size="sm"
               variant={phonePairedAt ? "outline" : "default"}
-              onClick={() => setPhase(phonePairedAt ? "confirm-repair" : "name-input")}
+              onClick={() =>
+                setPhase(phonePairedAt ? "confirm-repair" : "name-input")
+              }
               className="shrink-0"
             >
               {phonePairedAt ? "Re-pair" : "Pair a phone"}
@@ -201,11 +235,7 @@ function PhonePairingCard({
               <Button size="sm" variant="outline" onClick={handleReset}>
                 Cancel
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleUnpair}
-              >
+              <Button size="sm" variant="destructive" onClick={handleUnpair}>
                 Disconnect phone
               </Button>
             </div>
@@ -249,18 +279,8 @@ function PhonePairingCard({
         {phase === "show-code" && (
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-              <div className="shrink-0 rounded-lg border border-border bg-white p-2 shadow-sm self-start">
-                <QRCodeSVG
-                  value={qrUrl}
-                  size={116}
-                  level="H"
-                  imageSettings={{
-                    src: "/rabotka-logo.png",
-                    height: 24,
-                    width: 24,
-                    excavate: true,
-                  }}
-                />
+              <div className="shrink-0 overflow-hidden rounded-xl border-2 p-0 border-foreground bg-white self-start shadow-sm">
+                <div ref={qrContainerRef} />
               </div>
               <div className="flex flex-col gap-3">
                 <div>
@@ -317,6 +337,172 @@ function PhonePairingCard({
             >
               Try again
             </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+type TotpPhase = "idle" | "setup" | "confirm" | "disable" | "loading";
+
+function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; onChanged: () => void }>) {
+  const [phase, setPhase] = useState<TotpPhase>("idle");
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [secret, setSecret] = useState("");
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleStartSetup() {
+    setPhase("loading");
+    setError("");
+    try {
+      const result = await totpSetup();
+      setQrDataUrl(result.qrDataUrl);
+      setSecret(result.secret);
+      setPhase("setup");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to start setup.");
+      setPhase("idle");
+    }
+  }
+
+  async function handleEnable() {
+    setError("");
+    try {
+      await totpEnable(code);
+      toast.success("Authenticator enabled");
+      setCode("");
+      setPhase("idle");
+      onChanged();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid code.");
+    }
+  }
+
+  async function handleDisable() {
+    setError("");
+    try {
+      await totpDisable(code);
+      toast.success("Authenticator disabled");
+      setCode("");
+      setPhase("idle");
+      onChanged();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid code.");
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
+          <IconShield className="size-4" />
+          Two-factor authentication
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {phase === "idle" && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              {totpEnabled ? (
+                <>
+                  <p className="text-sm font-medium">Authenticator enabled</p>
+                  <p className="text-xs text-muted-foreground">Your account is protected with 2FA.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium">Authenticator not enabled</p>
+                  <p className="text-xs text-muted-foreground">Add an extra layer of security to your account.</p>
+                </>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant={totpEnabled ? "outline" : "default"}
+              onClick={() => totpEnabled ? setPhase("disable") : void handleStartSetup()}
+              className="shrink-0"
+            >
+              {totpEnabled ? "Disable" : "Enable"}
+            </Button>
+          </div>
+        )}
+
+        {phase === "loading" && (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <div className="size-4 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+            Setting up…
+          </div>
+        )}
+
+        {phase === "setup" && qrDataUrl && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code below to confirm.
+            </p>
+            <div className="flex justify-center">
+              <img src={qrDataUrl} alt="TOTP QR code" className="h-44 w-44 rounded-lg border border-border" />
+            </div>
+            <p className="text-center text-xs text-muted-foreground break-all">
+              Manual key: <span className="font-mono font-medium">{secret}</span>
+            </p>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              className="text-center text-xl tracking-widest font-mono"
+              autoFocus
+            />
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setPhase("idle"); setCode(""); setError(""); }}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={code.length !== 6}
+                onClick={() => void handleEnable()}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {phase === "disable" && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Enter the current code from your authenticator app to disable 2FA.
+            </p>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              className="text-center text-xl tracking-widest font-mono"
+              autoFocus
+            />
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setPhase("idle"); setCode(""); setError(""); }}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                disabled={code.length !== 6}
+                onClick={() => void handleDisable()}
+              >
+                Disable 2FA
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
@@ -497,6 +683,11 @@ export default function AdminProfilePage() {
         <PhonePairingCard
           phonePairedAt={admin.phonePairedAt ?? null}
           phoneName={admin.phoneName ?? null}
+        />
+
+        <TotpCard
+          totpEnabled={admin.totpEnabled ?? false}
+          onChanged={() => void queryClient.invalidateQueries({ queryKey: ["admin", "me"] })}
         />
 
         <Card>
