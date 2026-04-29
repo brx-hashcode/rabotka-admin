@@ -222,8 +222,10 @@ function PhonePairingCard({
                 setPhase(phonePairedAt ? "confirm-repair" : "name-input")
               }
               className="shrink-0"
-              disabled={!totpEnabled}
-              title={!totpEnabled ? "Enable two-factor authentication first" : undefined}
+              disabled={totpEnabled === false}
+              title={
+                totpEnabled ? undefined : "Enable two-factor authentication first"
+              }
             >
               {phonePairedAt ? "Re-pair" : "Pair a phone"}
             </Button>
@@ -459,7 +461,9 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
               placeholder="000000"
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setCode(e.target.value.replaceAll(/\D/g, ""))
+              }
               className="text-center text-xl tracking-widest font-mono"
               autoFocus
             />
@@ -491,7 +495,9 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
               placeholder="000000"
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setCode(e.target.value.replaceAll(/\D/g, ""))
+              }
               className="text-center text-xl tracking-widest font-mono"
               autoFocus
             />
@@ -694,7 +700,11 @@ export default function AdminProfilePage() {
 
         <TotpCard
           totpEnabled={admin.totpEnabled ?? false}
-          onChanged={() => void queryClient.invalidateQueries({ queryKey: ["admin", "me"] })}
+          onChanged={() => {
+            queryClient
+              .invalidateQueries({ queryKey: ["admin", "me"] })
+              .catch(() => undefined);
+          }}
         />
 
         <Card>
