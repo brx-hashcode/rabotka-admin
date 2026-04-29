@@ -10,7 +10,12 @@ import {
   DialogDescription,
 } from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
-import { initQrSession, consumeQrSession } from "#/lib/api/auth-controller";
+import { Input } from "#/components/ui/input";
+import {
+  initQrSession,
+  consumeQrSession,
+  totpLogin,
+} from "#/lib/api/auth-controller";
 import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
 
 type Props = {
@@ -18,13 +23,24 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-type Phase = "loading" | "ready" | "scanned" | "done" | "expired" | "error";
+type Phase =
+  | "loading"
+  | "ready"
+  | "scanned"
+  | "totp"
+  | "done"
+  | "expired"
+  | "error";
 
 export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("loading");
   const [qrUrl, setQrUrl] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [totpCode, setTotpCode] = useState("");
+  const [totpError, setTotpError] = useState("");
+  const [totpPending, setTotpPending] = useState(false);
+  const pendingTokenRef = useRef<string>("");
   const socketRef = useRef<Socket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionIdRef = useRef<string>("");
@@ -41,15 +57,6 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
     navigate({ to: "/" });
   }
 
-  function handleQrConfirmedSuccess() {
-    setPhase("done");
-    setTimeout(redirectToHome, 800);
-  }
-
-  function handleQrConfirmedError() {
-    setPhase("error");
-  }
-
   function disconnectSocket() {
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -61,6 +68,8 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
     setPhase("loading");
     clearTimer();
     disconnectSocket();
+    setTotpCode("");
+    setTotpError("");
 
     try {
       const session = await initQrSession();
@@ -96,13 +105,36 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
         disconnectSocket();
         setPhase("scanned");
         consumeQrSession(session.sessionId, consumeNonceRef.current)
-          .then(handleQrConfirmedSuccess)
-          .catch(handleQrConfirmedError);
+          .then((result) => {
+            if (result.totpRequired && result.pendingToken) {
+              pendingTokenRef.current = result.pendingToken;
+              setPhase("totp");
+            } else {
+              setPhase("done");
+              setTimeout(redirectToHome, 800);
+            }
+          })
+          .catch(() => setPhase("error"));
       });
 
       socketRef.current = socket;
     } catch {
       setPhase("error");
+    }
+  }
+
+  async function handleTotpSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setTotpError("");
+    setTotpPending(true);
+    try {
+      await totpLogin(pendingTokenRef.current, totpCode);
+      setPhase("done");
+      setTimeout(redirectToHome, 800);
+    } catch (err: unknown) {
+      setTotpError(err instanceof Error ? err.message : "Invalid code.");
+    } finally {
+      setTotpPending(false);
     }
   }
 
@@ -114,6 +146,8 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
       disconnectSocket();
       setPhase("loading");
       setQrUrl("");
+      setTotpCode("");
+      setTotpError("");
     }
     return () => {
       clearTimer();
@@ -123,9 +157,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
 
   useEffect(() => {
     if (!qrUrl || !qrContainerRef.current) return;
-
     const container = qrContainerRef.current;
-
     getRoundedLogoDataUrl("/rabotka-logo.png", 64, 16).then((logoDataUrl) => {
       const qr = new QrCodeStyling({
         width: 200,
@@ -140,7 +172,6 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
         imageOptions: { margin: 4 },
         qrOptions: { errorCorrectionLevel: "H" },
       });
-
       container.innerHTML = "";
       qr.append(container);
       qrInstanceRef.current = qr;
@@ -150,18 +181,21 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const seconds = String(secondsLeft % 60).padStart(2, "0");
 
+  const isLocked = phase === "scanned" || phase === "totp" || phase === "done";
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={
-        phase === "scanned" || phase === "done" ? undefined : onOpenChange
-      }
-    >
+    <Dialog open={open} onOpenChange={isLocked ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Sign in with QR code</DialogTitle>
+          <DialogTitle>
+            {phase === "totp"
+              ? "Two-factor authentication"
+              : "Sign in with QR code"}
+          </DialogTitle>
           <DialogDescription>
-            Scan this code with your phone to authenticate.
+            {phase === "totp"
+              ? "Enter the 6-digit code from your authenticator app."
+              : "Scan this code with your phone to authenticate."}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,12 +206,11 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
 
           {(phase === "ready" || phase === "expired") && qrUrl && (
             <>
-              <div className="relative overflow-hidden p-3 rounded-xl border-2 border-foreground bg-white transition-all duration-300">
+              <div className="relative overflow-hidden rounded-xl p-3 border-2 border-foreground bg-white transition-all duration-300">
                 <div
                   ref={qrContainerRef}
                   className={phase === "expired" ? "opacity-25 grayscale" : ""}
                 />
-
                 {phase === "expired" && (
                   <button
                     type="button"
@@ -227,14 +260,49 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
             </>
           )}
 
-          {(phase === "scanned" || phase === "done") && (
+          {phase === "scanned" && (
             <div className="flex flex-col items-center gap-4 py-8">
               <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted border-t-foreground" />
-              <p className="text-sm font-medium">
-                {phase === "scanned"
-                  ? "Verified — signing you in…"
-                  : "Redirecting…"}
-              </p>
+              <p className="text-sm font-medium">QR confirmed — checking…</p>
+            </div>
+          )}
+
+          {phase === "totp" && (
+            <form
+              onSubmit={(e) => void handleTotpSubmit(e)}
+              className="flex flex-col gap-4 w-full"
+            >
+              <Input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="000000"
+                maxLength={6}
+                value={totpCode}
+                onChange={(e) =>
+                  setTotpCode(e.target.value.replaceAll(/\D/g, ""))
+                }
+                className="text-center text-xl tracking-widest font-mono"
+                autoFocus
+              />
+              {totpError && (
+                <p className="text-sm text-destructive text-center">
+                  {totpError}
+                </p>
+              )}
+              <Button
+                type="submit"
+                disabled={totpCode.length !== 6 || totpPending}
+              >
+                {totpPending ? "Verifying…" : "Verify"}
+              </Button>
+            </form>
+          )}
+
+          {phase === "done" && (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+              <p className="text-sm font-medium">Redirecting…</p>
             </div>
           )}
 
@@ -257,4 +325,3 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
     </Dialog>
   );
 }
-

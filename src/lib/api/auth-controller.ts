@@ -138,7 +138,7 @@ export class AdminAuthController extends AdminBaseController {
     }
   }
 
-  async consumeQrSession(sessionId: string, consumeNonce: string): Promise<{ success: boolean }> {
+  async consumeQrSession(sessionId: string, consumeNonce: string): Promise<{ success: boolean; totpRequired?: boolean; pendingToken?: string }> {
     try {
       return await this.post("/auth/admin/qr/consume", { sessionId, consumeNonce });
     } catch (error) {
