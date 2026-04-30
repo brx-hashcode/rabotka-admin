@@ -3,11 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
     container_name: rabotka_admin
-    ports:
-      - "81:80"
     restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      VITE_PORT: ${VITE_PORT:-3300}
+    ports:
+      - "${VITE_PORT:-3300}:${VITE_PORT:-3300}"
     networks:
       - rabotka_network
 
