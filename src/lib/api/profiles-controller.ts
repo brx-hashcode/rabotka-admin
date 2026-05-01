@@ -247,6 +247,18 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileWallet>(url);
   }
 
+  async creditWallet(
+    id: string,
+    amount: number,
+    note?: string,
+  ): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/wallet/credit`,
+      new URLSearchParams(),
+    );
+    return this.post<{ success: boolean }>(url, { amount, note });
+  }
+
   async getMessages(id: string): Promise<AdminProfileMessage[]> {
     const url = this.createURL(
       `/admin/profiles/${id}/messages`,
@@ -313,6 +325,7 @@ export const getProfilePaymentRequests = controller.getPaymentRequests.bind(cont
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
+export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
 export const getProfileInvoices = controller.getInvoices.bind(controller);
