@@ -100,7 +100,7 @@ function computeDispatchDates(
   adStatus: string,
 ): DispatchEntry[] {
   const now = new Date();
-  const isLive = adStatus === "ACTIVE";
+  const isLive = adStatus === "ACTIVE" || adStatus === "APPROVED";
   const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
   const dispatches: DispatchEntry[] = [];
   let previousExpected = 0;
