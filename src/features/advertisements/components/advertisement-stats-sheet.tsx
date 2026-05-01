@@ -47,6 +47,12 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Skeleton } from "#/components/ui/skeleton";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -257,11 +263,30 @@ function makeDeliveryLogColumns(): ColumnDef<AdvertisementDeliveryLogItem>[] {
     {
       accessorKey: "failureReason",
       header: "Failure",
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {row.original.failureReason || "—"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const reason = row.original.failureReason;
+        if (!reason) {
+          return <span className="text-sm text-muted-foreground">—</span>;
+        }
+        return (
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-sm text-muted-foreground block max-w-[220px] truncate cursor-help">
+                  {reason}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="left"
+                align="center"
+                className="max-w-sm whitespace-normal wrap-break-word text-xs leading-relaxed"
+              >
+                {reason}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
   ];
 }
@@ -696,38 +721,41 @@ export function AdvertisementStatsSheet({
             </div>
           )}
 
-          <Card className="rounded-lg">
-            <CardHeader>
-              <CardTitle>Ad Delivery Log</CardTitle>
-              <CardDescription>
+          <section className="space-y-3">
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold leading-none">
+                Ad Delivery Log
+              </h3>
+              <p className="text-sm text-muted-foreground">
                 Per-recipient delivery history for this campaign.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isError ? (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-                  Failed to load advertisement analytics.
-                </div>
-              ) : (
-                <DataTable
-                  data={paginatedLogs}
-                  columns={deliveryColumns}
-                  isLoading={isLoading}
-                  getRowId={(row) => row.id}
-                  emptyMessage="No delivery logs found for this advertisement."
-                  footer={
-                    <DeliveryLogPagination
-                      total={deliveryLogs.length}
-                      page={logPage}
-                      pageSize={logPageSize}
-                      onPageChange={(p) => setLogPage(p)}
-                      onPageSizeChange={(s) => { setLogPageSize(s); setLogPage(1); }}
-                    />
-                  }
-                />
-              )}
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            {isError ? (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+                Failed to load advertisement analytics.
+              </div>
+            ) : (
+              <DataTable
+                data={paginatedLogs}
+                columns={deliveryColumns}
+                isLoading={isLoading}
+                getRowId={(row) => row.id}
+                emptyMessage="No delivery logs found for this advertisement."
+                footer={
+                  <DeliveryLogPagination
+                    total={deliveryLogs.length}
+                    page={logPage}
+                    pageSize={logPageSize}
+                    onPageChange={(p) => setLogPage(p)}
+                    onPageSizeChange={(s) => {
+                      setLogPageSize(s);
+                      setLogPage(1);
+                    }}
+                  />
+                }
+              />
+            )}
+          </section>
         </div>
         </div>
       </SheetContent>
