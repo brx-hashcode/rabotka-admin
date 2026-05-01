@@ -1,21 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   IconWallet,
   IconGavel,
   IconLock,
+  IconPlus,
 } from "@tabler/icons-react";
-import type { ForwardRefExoticComponent, RefAttributes } from "react";
-import type { Icon, IconProps } from "@tabler/icons-react";
+import type { ComponentType } from "react";
+import type { IconProps } from "@tabler/icons-react";
 import {
   getProfileWallet,
+  creditProfileWallet,
   type AdminProfileWalletTransaction,
 } from "#/lib/api/profiles-controller";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { Skeleton } from "#/components/ui/skeleton";
+import { Button } from "#/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "#/components/ui/dialog";
+import { Input } from "#/components/ui/input";
+import { Label } from "#/components/ui/label";
+import { toast } from "sonner";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   WELCOME_CREDIT: "Welcome credit",
+  MANUAL_CREDIT: "Manual credit (admin)",
   CONTACT_UNLOCK_DEBIT: "Contact unlock",
   CONTACT_UNLOCK_CREDIT: "Contact unlock refund",
   CONTACT_UNLOCK_CREDIT_CONVERSION: "Unlock expired — credit",
@@ -51,6 +66,7 @@ function txTypeLabel(type: string) {
 function isCredit(type: string): boolean {
   return (
     type === "WELCOME_CREDIT" ||
+    type === "MANUAL_CREDIT" ||
     type === "CONTACT_UNLOCK_CREDIT" ||
     type === "CONTACT_UNLOCK_CREDIT_CONVERSION" ||
     type === "MOBILE_MONEY_TOPUP" ||
@@ -65,7 +81,7 @@ function sumByType(transactions: AdminProfileWalletTransaction[], type: string) 
 }
 
 type StatCardProps = {
-  icon: ForwardRefExoticComponent<Omit<IconProps, "ref"> & RefAttributes<Icon>>;
+  icon: ComponentType<IconProps>;
   label: string;
   value: string;
   highlight?: boolean;
@@ -95,21 +111,115 @@ function StatCard({ icon: Icon, label, value, highlight }: Readonly<StatCardProp
   );
 }
 
+type CreditModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (amount: number, note: string) => void;
+  isPending: boolean;
+};
+
+function CreditWalletModal({ open, onOpenChange, onSubmit, isPending }: Readonly<CreditModalProps>) {
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = Number(amount);
+    if (!parsed || parsed <= 0) return;
+    onSubmit(parsed, note.trim());
+  }
+
+  function handleOpenChange(v: boolean) {
+    if (!v) { setAmount(""); setNote(""); }
+    onOpenChange(v);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Credit wallet</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="credit-amount">Amount (FCFA)</Label>
+            <Input
+              id="credit-amount"
+              type="number"
+              min={1}
+              step={1}
+              placeholder="e.g. 500"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="credit-note">
+              Note <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              id="credit-note"
+              type="text"
+              placeholder="Reason for credit…"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={120}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending || !amount}>
+              {isPending ? "Crediting…" : "Credit"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 type Props = {
   profileId: string;
 };
 
 export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
+  const queryClient = useQueryClient();
+  const [creditOpen, setCreditOpen] = useState(false);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "profiles", profileId, "wallet"],
     queryFn: () => getProfileWallet(profileId),
+  });
+
+  const creditMutation = useMutation({
+    mutationFn: ({ amount, note }: { amount: number; note: string }) =>
+      creditProfileWallet(profileId, amount, note || undefined),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "profiles", profileId, "wallet"],
+      });
+      setCreditOpen(false);
+      toast.success("Wallet credited successfully");
+    },
+    onError: () => {
+      toast.error("Failed to credit wallet");
+    },
   });
 
   if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
@@ -148,10 +258,19 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
 
       {/* Transactions table */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-semibold">
             Transaction history
           </CardTitle>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => setCreditOpen(true)}
+          >
+            <IconPlus className="size-3.5" />
+            Credit wallet
+          </Button>
         </CardHeader>
         <CardContent className="p-0">
           {transactions.length === 0 ? (
@@ -170,6 +289,13 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
           )}
         </CardContent>
       </Card>
+
+      <CreditWalletModal
+        open={creditOpen}
+        onOpenChange={setCreditOpen}
+        onSubmit={(amount, note) => creditMutation.mutate({ amount, note })}
+        isPending={creditMutation.isPending}
+      />
     </div>
   );
 }
