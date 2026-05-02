@@ -1,6 +1,6 @@
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
-import { Send, ChevronsUpDown, Check, SearchIcon, Paperclip, X } from "lucide-react";
+import { Send, Paperclip, X } from "lucide-react";
 import { useId, useState } from "react";
 import {
   Dialog,
@@ -8,23 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
-import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  getProfilesList,
   sendProfileMessage,
   type AdminProfileListItem,
 } from "#/lib/api/profiles-controller";
+import { ProfileCombobox } from "#/components/profile-combobox";
 import { IconSend } from "@tabler/icons-react";
 import { useRole } from "#/hooks/use-role";
 
@@ -35,21 +26,12 @@ export const DirectMessagesButton = ({
 }: Readonly<{ className?: string }>) => {
   const { canManageContent } = useRole();
   const [isOpen, setIsOpen] = useState(false);
-  const [comboOpen, setComboOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const [selectedProfile, setSelectedProfile] =
     useState<AdminProfileListItem | null>(null);
   const [channel, setChannel] = useState<Channel>("EMAIL");
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const messageId = useId();
-
-  const { data: searchResults = [] } = useQuery({
-    queryKey: ["admin", "profiles", "dm-search", search],
-    queryFn: () => getProfilesList({ q: search, limit: 8 }).then((r) => r.data),
-    enabled: search.trim().length >= 1,
-    staleTime: 10_000,
-  });
 
   const { mutate: send, isPending } = useMutation({
     mutationFn: () => {
@@ -79,10 +61,8 @@ export const DirectMessagesButton = ({
   const handleClose = () => {
     setIsOpen(false);
     setSelectedProfile(null);
-    setSearch("");
     setText("");
     setChannel("EMAIL");
-    setComboOpen(false);
     setAttachments([]);
   };
 
@@ -112,87 +92,12 @@ export const DirectMessagesButton = ({
           </DialogHeader>
 
           <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
-            {/* Profile dropdown */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" id="dm-recipient-label">
-                Recipient
-              </span>
-              <DropdownMenu open={comboOpen} onOpenChange={setComboOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={comboOpen}
-                    aria-labelledby="dm-recipient-label"
-                    className="w-full justify-between font-normal"
-                  >
-                    {selectedProfile
-                      ? `${selectedProfile.firstName} ${selectedProfile.lastName}`
-                      : "Search by name, email or phone…"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="w-(--radix-dropdown-menu-trigger-width)"
-                >
-                  <DropdownMenuLabel className="font-normal p-0">
-                    <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5">
-                      <SearchIcon
-                        className="text-muted-foreground size-4 shrink-0"
-                        aria-hidden
-                      />
-                      <Input
-                        placeholder="Search profiles…"
-                        className="placeholder:text-muted-foreground h-7 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onKeyDown={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {search.trim().length === 0 && (
-                    <p className="text-muted-foreground px-3 py-4 text-center text-sm">
-                      Type to search profiles.
-                    </p>
-                  )}
-                  {search.trim().length > 0 && searchResults.length === 0 && (
-                    <p className="text-muted-foreground px-3 py-4 text-center text-sm">
-                      No profiles found.
-                    </p>
-                  )}
-                  {searchResults.map((profile) => (
-                    <DropdownMenuItem
-                      key={profile.id}
-                      className="flex cursor-pointer items-center gap-2 py-1.5 pl-2 pr-2"
-                      onSelect={() => {
-                        setSelectedProfile(profile);
-                        setComboOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "h-4 w-4 shrink-0",
-                          selectedProfile?.id === profile.id
-                            ? "opacity-100"
-                            : "opacity-0",
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {profile.firstName} {profile.lastName}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {profile.email} · {profile.phone}
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <ProfileCombobox
+              value={selectedProfile}
+              onChange={setSelectedProfile}
+              label="Recipient"
+              placeholder="Search by name, email or phone…"
+            />
 
             {/* Channel selector */}
             <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0">

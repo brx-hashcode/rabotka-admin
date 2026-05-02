@@ -57,6 +57,8 @@ export type AdminApplicationsListParams = {
   q?: string;
   status?: string[];
   penalty_applied?: string[];
+  worker_id?: string;
+  employer_id?: string;
 };
 
 export class AdminApplicationsController extends AdminBaseController {
@@ -70,6 +72,8 @@ export class AdminApplicationsController extends AdminBaseController {
     if (params.status?.length) searchParams.status = params.status;
     if (params.penalty_applied?.length)
       searchParams.penalty_applied = params.penalty_applied;
+    if (params.worker_id) searchParams.worker_id = params.worker_id;
+    if (params.employer_id) searchParams.employer_id = params.employer_id;
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/applications", query);
