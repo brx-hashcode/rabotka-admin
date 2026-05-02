@@ -80,6 +80,16 @@ export class AdminPenaltiesController extends AdminBaseController {
     );
     return this.delete<{ success: boolean }>(url);
   }
+
+  async createPenalty(body: {
+    workerId: string;
+    applicationId: string;
+    amount: number;
+    reason: string;
+  }): Promise<AdminPenaltyDetailResponse> {
+    const url = this.createURL("/admin/penalties", new URLSearchParams());
+    return this.post<AdminPenaltyDetailResponse>(url, body);
+  }
 }
 
 const controller = new AdminPenaltiesController();
@@ -87,3 +97,4 @@ export const getPenaltiesList = controller.getList.bind(controller);
 export const getPenaltyById = controller.getById.bind(controller);
 export const confirmPenaltyPayment = controller.confirmPayment.bind(controller);
 export const deletePenalty = controller.deletePenalty.bind(controller);
+export const createPenalty = controller.createPenalty.bind(controller);
