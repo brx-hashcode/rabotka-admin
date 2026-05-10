@@ -75,7 +75,7 @@ jobs:
           VITE_PORT=${{ steps.vault.outputs.port }}
           EOF
           sed -i 's/^[[:space:]]*//' ~/rabotka-admin-prod/.env
-          cd ~/rabotka-admin-prod && git pull origin main && \
+          cd ~/rabotka-admin-prod && git fetch origin main && git reset --hard origin/main && \
           docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
   # ───────────────────────────────────────────────────────────────────────────
