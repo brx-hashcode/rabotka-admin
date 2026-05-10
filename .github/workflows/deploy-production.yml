@@ -90,15 +90,20 @@ jobs:
 
     steps:
       - name: Wait for container to stabilize
-        run: sleep 15
+        run: sleep 30
 
       - name: Check admin is reachable
         run: |
-          STATUS=$(curl -o /dev/null -sf -w "%{http_code}" \
-            --max-time 15 \
-            "https://${{ secrets.PROD_ADMIN_DOMAIN }}")
-          echo "HTTP status: $STATUS"
-          [ "$STATUS" = "200" ]
+          for i in 1 2 3; do
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
+              --max-time 20 \
+              "https://${{ secrets.PROD_ADMIN_DOMAIN }}")
+            echo "Attempt $i — HTTP status: $STATUS"
+            [ "$STATUS" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "Admin did not return 200 after 3 attempts"
+          exit 1
 
       - name: Slack notify success
         if: success()
