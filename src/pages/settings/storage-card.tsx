@@ -35,6 +35,7 @@ const DRIVER_KEYS: Record<StorageDriver, string[]> = {
     "storage.cloudflare.bucket_name",
     "storage.cloudflare.access_key_id",
     "storage.cloudflare.secret_access_key",
+    "storage.cloudflare.public_base_url",
   ],
   CLOUDINARY: [
     "storage.cloudinary.cloud_name",
