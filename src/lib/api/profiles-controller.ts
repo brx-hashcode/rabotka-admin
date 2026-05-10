@@ -295,6 +295,13 @@ export class AdminProfilesController extends AdminBaseController {
     return this.post<{ success: boolean }>(url, { channel, message });
   }
 
+  async updateAvatar(id: string, file: File): Promise<{ avatarUrl: string }> {
+    const url = this.createURL(`/admin/profiles/${id}/avatar`, new URLSearchParams());
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return this.patch<{ avatarUrl: string }>(url, formData);
+  }
+
   async getInvoices(profileId: string): Promise<AdminInvoiceItem[]> {
     const url = this.createURL(
       `/admin/profiles/${profileId}/invoices`,
@@ -329,3 +336,4 @@ export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
 export const getProfileInvoices = controller.getInvoices.bind(controller);
+export const updateProfileAvatar = controller.updateAvatar.bind(controller);

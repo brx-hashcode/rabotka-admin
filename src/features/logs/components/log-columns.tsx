@@ -40,7 +40,7 @@ function getEntityBadgeClass(entity: string): string {
     case "PAYMENTREQUEST":return "bg-orange-500 text-white border-transparent";
     case "CLAIM":         return "bg-amber-500 text-white border-transparent";
     case "USER":          return "bg-indigo-500 text-white border-transparent";
-    case "PENALTY":       return "bg-rose-600 text-white border-transparent";
+    case "PENALTY":       return "bg-orange-600 text-white border-transparent";
     case "DOCUMENT":      return "bg-violet-600 text-white border-transparent";
     case "WALLET":        return "bg-cyan-600 text-white border-transparent";
     default:              return "bg-muted text-muted-foreground border-border";

@@ -33,7 +33,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 const TYPE_BADGE: Record<string, string> = {
   REGISTRATION: "bg-violet-600 text-white border-transparent",
   JOB_POSTING: "bg-blue-500 text-white border-transparent",
-  PENALTY: "bg-rose-600 text-white border-transparent",
+  PENALTY: "bg-orange-600 text-white border-transparent",
   CONTACT_UNLOCK: "bg-teal-600 text-white border-transparent",
 };
 
