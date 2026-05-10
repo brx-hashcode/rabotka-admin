@@ -9,14 +9,14 @@ export type Penalty = AdminPenaltyListItem;
 
 const penaltyDataColumns: ColumnDef<Penalty, unknown>[] = [
   {
-    id: "worker",
-    accessorKey: "workerName",
-    header: "Worker",
+    id: "profile",
+    accessorKey: "profileName",
+    header: "Profile",
     cell: ({ row }) => (
       <ProfileCell
-        name={row.original.workerName}
-        email={row.original.workerEmail}
-        avatarUrl={row.original.workerAvatarUrl}
+        name={row.original.profileName}
+        email={row.original.profileEmail}
+        avatarUrl={row.original.profileAvatarUrl}
       />
     ),
   },
@@ -26,8 +26,8 @@ const penaltyDataColumns: ColumnDef<Penalty, unknown>[] = [
     header: "Job",
     cell: ({ row }) => (
       <div className="max-w-[200px]">
-        <span className="truncate font-medium text-sm">
-          {row.original.jobTitle}
+        <span className="font-medium text-sm wrap-break-word">
+          {row.original.jobTitle ?? "—"}
         </span>
       </div>
     ),

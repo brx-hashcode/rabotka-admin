@@ -6,6 +6,7 @@ import {
   verifyProfile,
   updateProfileStatus,
   getProfileLogs,
+  updateProfileAvatar,
   type AdminProfileDetailResponse,
   type AdminUpdateProfileParams,
   type AdminVerifyProfileParams,
@@ -71,6 +72,19 @@ export function useProfileDetail(profileId: string) {
     },
   });
 
+  const avatarMutation = useMutation({
+    mutationFn: (file: File) => updateProfileAvatar(profileId, file),
+    onSuccess: ({ avatarUrl }) => {
+      queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, (prev) =>
+        prev ? { ...prev, avatarUrl } : prev,
+      );
+      toast.success("Avatar updated");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   return {
     profile: query.data ?? null,
     isLoading: query.isLoading,
@@ -85,5 +99,7 @@ export function useProfileDetail(profileId: string) {
     isUpdatingStatus: statusMutation.isPending,
     logs: logsQuery.data ?? [],
     isLoadingLogs: logsQuery.isLoading,
+    updateAvatar: avatarMutation.mutateAsync,
+    isUploadingAvatar: avatarMutation.isPending,
   };
 }

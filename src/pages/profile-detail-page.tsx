@@ -73,6 +73,8 @@ export default function ProfileDetailPage({
     isVerifying,
     updateStatus: submitStatus,
     isUpdatingStatus,
+    updateAvatar: submitAvatarUpdate,
+    isUploadingAvatar,
     logs,
     isLoadingLogs,
   } = useProfileDetail(profileId);
@@ -296,6 +298,8 @@ export default function ProfileDetailPage({
                 profile={profile}
                 onSave={handleSave}
                 isSaving={isUpdating}
+                onAvatarChange={submitAvatarUpdate}
+                isUploadingAvatar={isUploadingAvatar}
                 readOnly={!canManageContent}
               />
             </div>

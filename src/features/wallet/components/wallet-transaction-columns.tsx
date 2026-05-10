@@ -23,7 +23,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
 };
 
 function getTxTypeBadgeClass(type: string): string {
-  if (type.includes("PENALTY")) return "bg-rose-600 text-white border-transparent";
+  if (type.includes("PENALTY")) return "bg-orange-600 text-white border-transparent";
   if (type.includes("CONTACT_UNLOCK_DEBIT") || type.includes("DEBIT") || type.includes("_DEBIT")) return "bg-orange-500 text-white border-transparent";
   if (type.includes("TOPUP") || type.includes("CREDIT") || type.includes("WELCOME")) return "bg-emerald-500 text-white border-transparent";
   if (type.includes("JOB_POSTING")) return "bg-blue-500 text-white border-transparent";
