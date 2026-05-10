@@ -34,19 +34,13 @@ import { createPenalty } from "#/lib/api/penalties-controller";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
 
 const schema = z.object({
-  applicationId: z.string().min(1, "Sélectionnez une candidature"),
+  applicationId: z.string().optional(),
   amount: z.coerce.number().int().min(1, "Montant requis (min 1 FCFA)"),
   reason: z.string().min(3, "Raison requise"),
 });
 
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
-
-function selectPlaceholder(isLoading: boolean, count: number): string {
-  if (isLoading) return "Chargement…";
-  if (count === 0) return "Aucune candidature";
-  return "Sélectionnez une mission";
-}
 
 type Props = {
   open: boolean;
@@ -66,13 +60,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
   const isEmployer = selectedProfile?.profileType === "EMPLOYER";
 
   const applicationsQuery = useQuery({
-    queryKey: [
-      "admin",
-      "applications",
-      "picker",
-      selectedProfile?.id,
-      isEmployer,
-    ],
+    queryKey: ["admin", "applications", "picker", selectedProfile?.id, isEmployer],
     queryFn: () =>
       getApplicationsList({
         ...(isEmployer
@@ -86,8 +74,8 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
   const mutation = useMutation({
     mutationFn: (values: FormValues) =>
       createPenalty({
-        workerId: selectedProfile!.id,
-        applicationId: values.applicationId,
+        profileId: selectedProfile!.id,
+        applicationId: values.applicationId || undefined,
         amount: values.amount,
         reason: values.reason,
       }),
@@ -121,97 +109,96 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
           <DialogTitle>Créer une pénalité</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <ProfileCombobox
-            value={selectedProfile}
-            onChange={handleProfileChange}
-            label="Profil"
-          />
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+            className="space-y-4"
+          >
+            <ProfileCombobox
+              value={selectedProfile}
+              onChange={handleProfileChange}
+              label="Profil"
+            />
 
-          {selectedProfile != null && (
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="applicationId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mission</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={applicationsQuery.isLoading}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue
-                              placeholder={selectPlaceholder(
-                                applicationsQuery.isLoading,
-                                applications.length,
-                              )}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {applications.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.jobTitle}{" "}
-                              <span className="text-muted-foreground text-xs">
-                                · {a.status}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Montant (FCFA)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={1} {...field} value={field.value as number} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Raison</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ex: Absence non justifiée au poste."
-                          rows={3}
-                          {...field}
+            <FormField
+              control={form.control}
+              name="applicationId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mission <span className="text-muted-foreground text-xs">(optionnel)</span></FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!selectedProfile || applicationsQuery.isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={
+                            !selectedProfile
+                              ? "Sélectionnez un profil d'abord"
+                              : applicationsQuery.isLoading
+                                ? "Chargement…"
+                                : "Aucune mission liée (optionnel)"
+                          }
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {applications.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.jobTitle}{" "}
+                          <span className="text-muted-foreground text-xs">
+                            · {a.status}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <div className="flex justify-end pt-1">
-                  <Button type="submit" disabled={mutation.isPending}>
-                    {mutation.isPending ? "Création…" : "Créer la pénalité"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          )}
-        </div>
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Montant (FCFA)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={1} {...field} value={field.value as number} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Raison</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Ex: Absence non justifiée au poste."
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end pt-1">
+              <Button type="submit" disabled={!selectedProfile || mutation.isPending}>
+                {mutation.isPending ? "Création…" : "Créer la pénalité"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

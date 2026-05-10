@@ -18,7 +18,8 @@ import { Separator } from "#/components/ui/separator";
 
 import { formatDate, formatAmount } from "../helpers";
 
-function getInitials(name: string): string {
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
   const parts = name.trim().split(/\s+/);
   return (
     ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase().slice(0, 2) ||
@@ -32,6 +33,7 @@ type Props = {
 
 export function PenaltySummary({ penalty }: Readonly<Props>) {
   const isPaid = penalty.paidAt != null;
+  const hasApplication = penalty.applicationId != null;
 
   return (
     <div className="space-y-6">
@@ -84,31 +86,31 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
         </Card>
       </div>
 
-      {/* Worker card */}
+      {/* Profile card */}
       <Card>
         <CardHeader className="pb-0">
-          <CardTitle className="text-sm">Worker</CardTitle>
+          <CardTitle className="text-sm">Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              {penalty.workerAvatarUrl ? (
+              {penalty.profileAvatarUrl ? (
                 <AvatarImage
-                  src={penalty.workerAvatarUrl}
-                  alt={penalty.workerName}
+                  src={penalty.profileAvatarUrl}
+                  alt={penalty.profileName}
                   className="object-cover"
                 />
               ) : null}
               <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                {getInitials(penalty.workerName)}
+                {getInitials(penalty.profileName)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">
-                {penalty.workerName || "—"}
+                {penalty.profileName || "—"}
               </p>
               <p className="text-muted-foreground truncate text-xs">
-                {penalty.workerEmail || "—"}
+                {penalty.profileEmail || "—"}
               </p>
             </div>
           </div>
@@ -119,24 +121,24 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
             <div className="flex items-center gap-2.5">
               <IconMail className="text-muted-foreground size-4 shrink-0" />
               <span className="truncate text-sm">
-                {penalty.workerEmail || "—"}
+                {penalty.profileEmail || "—"}
               </span>
             </div>
             <div className="flex items-center gap-2.5">
               <IconPhone className="text-muted-foreground size-4 shrink-0" />
-              <span className="text-sm">{penalty.workerPhone || "—"}</span>
+              <span className="text-sm">{penalty.profilePhone || "—"}</span>
             </div>
             <div className="flex items-center gap-2.5">
               <IconUser className="text-muted-foreground size-4 shrink-0" />
               <span className="text-muted-foreground text-xs">
-                Worker account
+                Profile account
               </span>
             </div>
           </div>
 
           <Link
             to="/profiles/$profileId"
-            params={{ profileId: penalty.workerId }}
+            params={{ profileId: penalty.profileId }}
             className={buttonVariants({
               variant: "outline",
               className: "w-full",
@@ -148,36 +150,40 @@ export function PenaltySummary({ penalty }: Readonly<Props>) {
         </CardContent>
       </Card>
 
-      {/* Quick links */}
-      <Card>
-        <CardHeader className="pb-0">
-          <CardTitle className="text-sm">Related</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Link
-            to="/jobs/$jobId"
-            params={{ jobId: penalty.jobOfferId }}
-            className={buttonVariants({
-              variant: "outline",
-              className: "w-full",
-            })}
-          >
-            <IconBriefcase className="size-3.5" />
-            View Job
-          </Link>
-          <Link
-            to="/applications/$applicationId"
-            params={{ applicationId: penalty.applicationId }}
-            className={buttonVariants({
-              variant: "outline",
-              className: "w-full",
-            })}
-          >
-            <IconFileText className="size-3.5" />
-            View Application
-          </Link>
-        </CardContent>
-      </Card>
+      {/* Related links — only shown when an application exists */}
+      {hasApplication && (
+        <Card>
+          <CardHeader className="pb-0">
+            <CardTitle className="text-sm">Related</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {penalty.jobOfferId && (
+              <Link
+                to="/jobs/$jobId"
+                params={{ jobId: penalty.jobOfferId }}
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "w-full",
+                })}
+              >
+                <IconBriefcase className="size-3.5" />
+                View Job
+              </Link>
+            )}
+            <Link
+              to="/applications/$applicationId"
+              params={{ applicationId: penalty.applicationId! }}
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
+            >
+              <IconFileText className="size-3.5" />
+              View Application
+            </Link>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

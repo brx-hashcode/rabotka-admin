@@ -2,19 +2,18 @@ import { AdminBaseController } from "./base-controller";
 
 export type AdminPenaltyListItem = {
   id: string;
-  workerName: string;
-  workerEmail: string;
-  workerPhone: string;
-  workerAvatarUrl: string | null;
-  workerId: string;
-  applicationId: string;
-  jobTitle: string;
+  profileName: string;
+  profileEmail: string;
+  profilePhone: string;
+  profileAvatarUrl: string | null;
+  profileId: string;
+  applicationId: string | null;
+  jobTitle: string | null;
   amount: number;
   reason: string | null;
   appliedAt: string;
   paidAt: string | null;
   createdAt: string;
-  updatedAt: string;
 };
 
 export type AdminPenaltiesResponse = {
@@ -25,13 +24,13 @@ export type AdminPenaltiesResponse = {
 };
 
 export type AdminPenaltyDetailResponse = AdminPenaltyListItem & {
-  jobOfferId: string;
-  jobScheduledAt: string;
-  jobAmount: number;
-  jobAddress: string;
-  jobPaymentFlow: string;
-  jobStatus: string;
-  applicationStatus: string;
+  jobOfferId: string | null;
+  jobScheduledAt: string | null;
+  jobAmount: number | null;
+  jobAddress: string | null;
+  jobPaymentFlow: string | null;
+  jobStatus: string | null;
+  applicationStatus: string | null;
 };
 
 export type AdminPenaltiesListParams = {
@@ -82,8 +81,8 @@ export class AdminPenaltiesController extends AdminBaseController {
   }
 
   async createPenalty(body: {
-    workerId: string;
-    applicationId: string;
+    profileId: string;
+    applicationId?: string;
     amount: number;
     reason: string;
   }): Promise<AdminPenaltyDetailResponse> {

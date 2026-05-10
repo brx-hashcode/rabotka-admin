@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { IconUser } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
+import { IconUser, IconCamera, IconLoader2 } from "@tabler/icons-react";
 
 import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 
@@ -49,6 +49,8 @@ type ProfileFormProps = {
     phone: string;
   }) => Promise<void>;
   isSaving: boolean;
+  onAvatarChange?: (file: File) => Promise<unknown>;
+  isUploadingAvatar?: boolean;
   readOnly?: boolean;
 };
 
@@ -56,6 +58,8 @@ export function ProfileForm({
   profile,
   onSave,
   isSaving,
+  onAvatarChange,
+  isUploadingAvatar = false,
   readOnly = false,
 }: Readonly<ProfileFormProps>) {
   const [form, setForm] = useState<FormData>({
@@ -67,6 +71,21 @@ export function ProfileForm({
     description: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    if (!readOnly && onAvatarChange && !isUploadingAvatar) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onAvatarChange) return;
+    await onAvatarChange(file);
+    // Reset so the same file can be re-selected if needed
+    e.target.value = "";
+  };
 
   useEffect(() => {
     const data: FormData = {
@@ -112,18 +131,46 @@ export function ProfileForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="mb-6 flex items-center gap-4">
-          <Avatar className="border-border size-20 border-4 shadow-md">
-            {profile.avatarUrl ? (
-              <AvatarImage
-                src={profile.avatarUrl}
-                alt={`${profile.firstName} ${profile.lastName}`}
-                className="object-cover"
-              />
-            ) : null}
-            <AvatarFallback className="text-xl">
-              {initials || <IconUser className="size-8" />}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative shrink-0">
+            <Avatar className="border-border size-20 border-4 shadow-md">
+              {profile.avatarUrl ? (
+                <AvatarImage
+                  src={profile.avatarUrl}
+                  alt={`${profile.firstName} ${profile.lastName}`}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="text-xl">
+                {initials || <IconUser className="size-8" />}
+              </AvatarFallback>
+            </Avatar>
+
+            {!readOnly && onAvatarChange && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleAvatarClick}
+                  disabled={isUploadingAvatar}
+                  aria-label="Change avatar"
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 disabled:cursor-not-allowed"
+                >
+                  {isUploadingAvatar ? (
+                    <IconLoader2 className="size-6 animate-spin text-white" />
+                  ) : (
+                    <IconCamera className="size-6 text-white" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </>
+            )}
+          </div>
+
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold">
               {profile.firstName} {profile.lastName}
