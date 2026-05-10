@@ -19,8 +19,8 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY vite.config.ts ./
-COPY tsconfig.json ./
+COPY vite.config.ts tsconfig.json ./
+COPY src ./src
 
 ENV VITE_PORT=3300
 EXPOSE 3300

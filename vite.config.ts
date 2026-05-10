@@ -31,6 +31,7 @@ const config = defineConfig(({mode}) => {
   preview: {
       host: "0.0.0.0",
       port: Number.parseInt(env.VITE_PORT) || 3300,
+      allowedHosts: true,
       proxy: {
         "/api": {
           target: env.VITE_BACKEND_URL,
