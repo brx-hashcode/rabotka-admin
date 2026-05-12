@@ -158,7 +158,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
   useEffect(() => {
     if (!qrUrl || !qrContainerRef.current) return;
     const container = qrContainerRef.current;
-    getRoundedLogoDataUrl("/rabotka-logo.png", 64, 16).then((logoDataUrl) => {
+    getRoundedLogoDataUrl("/rabotka-logo.png", 64, 12).then((logoDataUrl) => {
       const qr = new QrCodeStyling({
         width: 200,
         height: 200,
@@ -166,10 +166,10 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
         data: qrUrl,
         image: logoDataUrl,
         dotsOptions: { type: "rounded", color: "#252525" },
-        cornersSquareOptions: { type: "extra-rounded", color: "#000000" },
+        cornersSquareOptions: { type: "extra-rounded", color: "#37a148" },
         cornersDotOptions: { type: "rounded", color: "#252525" },
         backgroundOptions: { color: "#f5f5f5" },
-        imageOptions: { margin: 4 },
+        imageOptions: { margin: 2 },
         qrOptions: { errorCorrectionLevel: "H" },
       });
       container.innerHTML = "";
@@ -206,7 +206,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
 
           {(phase === "ready" || phase === "expired") && qrUrl && (
             <>
-              <div className="relative overflow-hidden rounded-xl p-3 border-2 border-foreground bg-white transition-all duration-300">
+              <div className="relative overflow-hidden rounded-xl border-2 border-foreground bg-white transition-all duration-300">
                 <div
                   ref={qrContainerRef}
                   className={phase === "expired" ? "opacity-25 grayscale" : ""}
