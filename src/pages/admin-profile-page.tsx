@@ -116,7 +116,7 @@ function PhonePairingCard({
         data: qrUrl,
         image: logoDataUrl,
         dotsOptions: { type: "rounded", color: "#252525" },
-        cornersSquareOptions: { type: "extra-rounded", color: "#000000" },
+        cornersSquareOptions: { type: "extra-rounded", color: "#37a148" },
         cornersDotOptions: { type: "rounded", color: "#252525" },
         backgroundOptions: { color: "#f5f5f5" },
         imageOptions: { margin: 3 },
