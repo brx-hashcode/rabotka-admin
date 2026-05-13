@@ -181,7 +181,7 @@ export function FeesCard() {
         <p className="text-muted-foreground mb-4 text-xs">
           Applied when an employer cancels an accepted worker within the penalty-free window, or when a filled offer expires without the job being started.
         </p>
-        <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+        <div className="mb-6">
           <div className="space-y-1.5">
             <FieldLabel>Score deduction</FieldLabel>
             <NumericInput
