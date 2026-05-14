@@ -46,7 +46,7 @@ async function uploadDocxFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("files", file);
   const res = await fetchWithCsrfRetry(
-    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
+    `${appConfig.apiUrl}/file/upload?is_multipl=true&access=public`,
     { method: "POST", body: formData, credentials: "include" },
   );
   if (!res.ok) throw new Error("File upload failed");
@@ -113,8 +113,10 @@ export function CreateDocumentModal({
 
   const { mutate: submitUpload, isPending: isUploadPending } = useMutation({
     mutationFn: async (values: UploadFormValues) => {
-      if (!selectedFile) throw new Error("Please select a file (.docx, .pdf, or .md)");
+      if (!selectedFile)
+        throw new Error("Please select a file (.docx, .pdf, or .md)");
       const fileUrl = await uploadDocxFile(selectedFile);
+
       return createDocumentFromUpload({
         title: values.title,
         category: values.category,

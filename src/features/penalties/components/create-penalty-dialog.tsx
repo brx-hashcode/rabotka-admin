@@ -133,15 +133,17 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={
-                            !selectedProfile
-                              ? "Sélectionnez un profil d'abord"
-                              : applicationsQuery.isLoading
-                                ? "Chargement…"
-                                : "Aucune mission liée (optionnel)"
-                          }
-                        />
+                        <span className="truncate">
+                          <SelectValue
+                            placeholder={
+                              !selectedProfile
+                                ? "Sélectionnez un profil d'abord"
+                                : applicationsQuery.isLoading
+                                  ? "Chargement…"
+                                  : "Aucune mission liée (optionnel)"
+                            }
+                          />
+                        </span>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
