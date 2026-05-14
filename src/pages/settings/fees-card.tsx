@@ -11,8 +11,7 @@ type FormState = {
   "fees.late_cancellation_score_deduction": string;
   "fees.cancellation_threshold_hours": string;
   "fees.reliability_score_min": string;
-  "fees.employer_cancel_score_deduction": string;
-  "fees.employer_ghost_score_deduction": string;
+  "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
   "fees.max_concurrent_applications": string;
   "fees.contact_unlock_fee_employer": string;
@@ -28,8 +27,7 @@ const EMPTY: FormState = {
   "fees.late_cancellation_score_deduction": "",
   "fees.cancellation_threshold_hours": "",
   "fees.reliability_score_min": "",
-  "fees.employer_cancel_score_deduction": "",
-  "fees.employer_ghost_score_deduction": "",
+  "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
   "fees.max_concurrent_applications": "",
   "fees.contact_unlock_fee_employer": "",
@@ -139,7 +137,7 @@ export function FeesCard() {
 
       <CardContent>
         <p className="pt-6 text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          worker
+          Worker – late cancellation
         </p>
         <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
           <div className="space-y-1.5">
@@ -151,7 +149,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Reliability score deduction</FieldLabel>
+            <FieldLabel>Score deduction</FieldLabel>
             <NumericInput
               value={form["fees.late_cancellation_score_deduction"]}
               onChange={(v) => set("fees.late_cancellation_score_deduction", v)}
@@ -167,7 +165,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Max concurrent applications (per worker)</FieldLabel>
+            <FieldLabel>Max concurrent applications</FieldLabel>
             <NumericInput
               value={form["fees.max_concurrent_applications"]}
               onChange={(v) => set("fees.max_concurrent_applications", v)}
@@ -178,22 +176,17 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          employer
+          Employer – late cancellation / ghost offer
         </p>
-        <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+        <p className="text-muted-foreground mb-4 text-xs">
+          Applied when an employer cancels an accepted worker within the penalty-free window, or when a filled offer expires without the job being started.
+        </p>
+        <div className="mb-6">
           <div className="space-y-1.5">
-            <FieldLabel>Deduction (accepted worker cancellation)</FieldLabel>
+            <FieldLabel>Score deduction</FieldLabel>
             <NumericInput
-              value={form["fees.employer_cancel_score_deduction"]}
-              onChange={(v) => set("fees.employer_cancel_score_deduction", v)}
-              suffix="pts"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <FieldLabel>Deduction (expired ghosted offer)</FieldLabel>
-            <NumericInput
-              value={form["fees.employer_ghost_score_deduction"]}
-              onChange={(v) => set("fees.employer_ghost_score_deduction", v)}
+              value={form["fees.employer_late_cancel_score_deduction"]}
+              onChange={(v) => set("fees.employer_late_cancel_score_deduction", v)}
               suffix="pts"
             />
           </div>

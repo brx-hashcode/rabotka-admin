@@ -22,6 +22,11 @@ const DRIVER_LABELS: Record<StorageDriver, string> = {
   VERCEL_BLOB: "Vercel Blob",
 };
 
+const FULL_WIDTH_KEYS = new Set([
+  "storage.cloudflare.public_base_url",
+  "storage.s3.endpoint",
+]);
+
 const DRIVER_KEYS: Record<StorageDriver, string[]> = {
   S3: [
     "storage.s3.bucket",
@@ -35,6 +40,7 @@ const DRIVER_KEYS: Record<StorageDriver, string[]> = {
     "storage.cloudflare.bucket_name",
     "storage.cloudflare.access_key_id",
     "storage.cloudflare.secret_access_key",
+    "storage.cloudflare.public_base_url",
   ],
   CLOUDINARY: [
     "storage.cloudinary.cloud_name",
@@ -197,7 +203,7 @@ export function StorageCard() {
             const value = form[key] ?? "";
 
             return (
-              <div key={key} className="space-y-1.5">
+              <div key={key} className={`space-y-1.5${FULL_WIDTH_KEYS.has(key) ? " sm:col-span-2" : ""}`}>
                 <FieldLabel>{label}</FieldLabel>
                 {isSecret ? (
                   <SecretInput value={value} onChange={(v) => set(key, v)} />

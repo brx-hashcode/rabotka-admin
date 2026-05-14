@@ -10,16 +10,12 @@ type FormState = {
   "contact.email": string;
   "contact.phone": string;
   "contact.address": string;
-  "contact.orange_money_number": string;
-  "contact.airtel_money_number": string;
 };
 
 const EMPTY: FormState = {
   "contact.email": "",
   "contact.phone": "",
   "contact.address": "",
-  "contact.orange_money_number": "",
-  "contact.airtel_money_number": "",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -74,7 +70,7 @@ export function ContactCard() {
               Contact Information
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Public contact details and mobile payment numbers
+              Public contact details
             </p>
           </div>
         </div>
@@ -117,28 +113,6 @@ export function ContactCard() {
               value={form["contact.address"]}
               onChange={(e) => set("contact.address", e.target.value)}
               placeholder="Brazzaville, Congo"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel>MTN Money Number</FieldLabel>
-            <Input
-              value={form["contact.orange_money_number"]}
-              onChange={(e) =>
-                set("contact.orange_money_number", e.target.value)
-              }
-              placeholder="+242 06 000 0000"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel>Airtel Money Number</FieldLabel>
-            <Input
-              value={form["contact.airtel_money_number"]}
-              onChange={(e) =>
-                set("contact.airtel_money_number", e.target.value)
-              }
-              placeholder="+242 05 000 0000"
             />
           </div>
         </div>
