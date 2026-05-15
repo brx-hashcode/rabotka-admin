@@ -7,6 +7,7 @@ import { Separator } from "#/components/ui/separator";
 import { Switch } from "#/components/ui/switch";
 import { Label } from "#/components/ui/label";
 import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
 import { toast } from "sonner";
 import { reindexMatching } from "#/lib/api/matching-controller";
 
@@ -15,6 +16,8 @@ export function MatchingCard() {
     useSystemConfigCategory("MATCHING");
 
   const [useEmbeddings, setUseEmbeddings] = useState(false);
+  const [recommendationsEnabled, setRecommendationsEnabled] = useState(true);
+  const [minNotificationScore, setMinNotificationScore] = useState("0.55");
 
   const reindexMutation = useMutation({
     mutationFn: reindexMatching,
@@ -23,16 +26,30 @@ export function MatchingCard() {
   });
 
   useEffect(() => {
-    const item = configs.find((c) => c.key === "matching.use_embeddings");
-    if (!item) return;
-    setUseEmbeddings(item.value === "true");
+    for (const item of configs) {
+      if (item.key === "matching.use_embeddings") setUseEmbeddings(item.value === "true");
+      if (item.key === "matching.recommendations_enabled") setRecommendationsEnabled(item.value === "true");
+      if (item.key === "matching.min_notification_score") setMinNotificationScore(item.value);
+    }
   }, [configs]);
 
   async function handleToggle(checked: boolean) {
     setUseEmbeddings(checked);
-    await saveChanges({
-      "matching.use_embeddings": String(checked),
-    });
+    await saveChanges({ "matching.use_embeddings": String(checked) });
+  }
+
+  async function handleRecommendationsToggle(checked: boolean) {
+    setRecommendationsEnabled(checked);
+    await saveChanges({ "matching.recommendations_enabled": String(checked) });
+  }
+
+  async function handleScoreBlur() {
+    const n = parseFloat(minNotificationScore);
+    if (isNaN(n) || n < 0 || n > 1) {
+      toast.error("Le score doit être compris entre 0 et 1");
+      return;
+    }
+    await saveChanges({ "matching.min_notification_score": String(n) });
   }
 
   return (
@@ -72,6 +89,54 @@ export function MatchingCard() {
             checked={useEmbeddings}
             onCheckedChange={handleToggle}
             disabled={isLoading || isSaving}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="recommendations-enabled" className="text-sm font-medium">
+              Job recommendation notifications
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              When enabled, workers are notified via WhatsApp when a new job
+              matches their profile. Disable to pause all recommendation
+              notifications without touching code.
+            </p>
+          </div>
+          <Switch
+            id="recommendations-enabled"
+            checked={recommendationsEnabled}
+            onCheckedChange={handleRecommendationsToggle}
+            disabled={isLoading || isSaving}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="min-notification-score" className="text-sm font-medium">
+              Minimum notification score
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Minimum match score (0–1) required before sending a recommendation
+              notification. Higher values mean fewer but higher-quality alerts.
+              Default: 0.55.
+            </p>
+          </div>
+          <Input
+            id="min-notification-score"
+            type="number"
+            min={0}
+            max={1}
+            step={0.05}
+            value={minNotificationScore}
+            onChange={(e) => setMinNotificationScore(e.target.value)}
+            onBlur={handleScoreBlur}
+            disabled={isLoading || isSaving}
+            className="w-24 text-right"
           />
         </div>
 
