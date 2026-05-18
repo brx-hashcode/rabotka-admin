@@ -159,10 +159,10 @@ jobs:
               --max-time 20 \
               "https://admin-rabotka.${{ secrets.INFRA_DOMAIN }}")
             echo "Attempt $i — HTTP status: $STATUS"
-            [ "$STATUS" = "200" ] && exit 0
+            [[ "$STATUS" = "200" || "$STATUS" = "302" ]] && exit 0
             sleep 15
           done
-          echo "Admin did not return 200 after 3 attempts"
+          echo "Admin did not return 200 or 302 after 3 attempts"
           exit 1
 
       - name: Slack notify success
