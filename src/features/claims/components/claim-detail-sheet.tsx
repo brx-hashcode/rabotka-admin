@@ -29,6 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
+import { appConfig } from "#/config";
 import { updateClaim, deleteClaim } from "#/lib/api/claims-controller";
 import type {
   AdminClaimItem,
@@ -388,23 +389,15 @@ export function ClaimDetailSheet({
               {selectedImageUrl?.split("/").pop()}
             </DialogTitle>
             {selectedImageUrl && (
-              <button
-                onClick={async () => {
-                  const res = await fetch(selectedImageUrl);
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = selectedImageUrl.split("/").pop() ?? "image";
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
+              <a
+                href={`${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(selectedImageUrl)}`}
+                download={selectedImageUrl.split("/").pop() ?? "image"}
                 className="absolute right-12 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 title="Download"
               >
                 <Download className="h-4 w-4 text-white" />
                 <span className="sr-only">Download</span>
-              </button>
+              </a>
             )}
           </DialogHeader>
           <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
