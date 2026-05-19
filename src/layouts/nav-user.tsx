@@ -52,7 +52,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
 
   const handleLogout = async () => {
     await logout().catch(() => null);
-    await navigate({ to: "/auth/login" });
+    await navigate({ to: "/auth/login", search: { redirect: "" } });
   };
 
   return (
@@ -88,8 +88,9 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={avatarUrl} alt={user.name} />
                   <AvatarFallback className="font-semibold bg-primary text-primary-foreground">
-                    {initials}
+                    {firstName[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
