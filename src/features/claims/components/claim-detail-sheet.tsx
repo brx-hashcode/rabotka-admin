@@ -11,7 +11,7 @@ import {
 } from "#/components/ui/dialog";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
-import { X } from "lucide-react";
+import { Download, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -388,12 +388,27 @@ export function ClaimDetailSheet({
             <DialogTitle className="text-white text-sm">
               {selectedImageUrl?.split("/").pop()}
             </DialogTitle>
-            <DialogClose asChild>
-              <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                <X className="h-4 w-4 text-white" />
-                <span className="sr-only">Close</span>
-              </button>
-            </DialogClose>
+            <div className="absolute right-4 top-3 flex items-center gap-2">
+              {selectedImageUrl && (
+                <a
+                  href={selectedImageUrl}
+                  download={selectedImageUrl.split("/").pop()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  title="Download"
+                >
+                  <Download className="h-4 w-4 text-white" />
+                  <span className="sr-only">Download</span>
+                </a>
+              )}
+              <DialogClose asChild>
+                <button className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                  <X className="h-4 w-4 text-white" />
+                  <span className="sr-only">Close</span>
+                </button>
+              </DialogClose>
+            </div>
           </DialogHeader>
           <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
             {selectedImageUrl && (
