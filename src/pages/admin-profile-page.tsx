@@ -15,7 +15,8 @@ import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
 import { toast } from "sonner";
 import { useAdminProfile } from "#/hooks/use-admin-profile";
 import { useTheme } from "#/components/theme-provider";
-import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { renderAdminAvatar } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Switch } from "#/components/ui/switch";
@@ -37,9 +38,6 @@ const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   );
 };
 
-const getInitials = (firstName: string, lastName: string): string => {
-  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
-};
 
 type PairingPhase =
   | "idle"
@@ -625,7 +623,7 @@ export default function AdminProfilePage() {
 
   if (!admin) return null;
 
-  const initials = getInitials(admin.firstName || "A", admin.lastName || "");
+  const avatarUrl = renderAdminAvatar(admin.firstName || "A");
   const fullName = [admin.firstName, admin.lastName].filter(Boolean).join(" ");
 
   return (
@@ -634,8 +632,9 @@ export default function AdminProfilePage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 pt-8 text-center">
             <Avatar className="border-border size-24 border-4 shadow-md">
+              <AvatarImage src={avatarUrl} alt={fullName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                {initials || <IconUser className="size-8" />}
+                <IconUser className="size-8" />
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
