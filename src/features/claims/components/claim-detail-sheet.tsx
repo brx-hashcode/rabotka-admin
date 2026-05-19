@@ -7,11 +7,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "#/components/ui/dialog";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
-import { Download, X } from "lucide-react";
+import { Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -388,27 +387,25 @@ export function ClaimDetailSheet({
             <DialogTitle className="text-white text-sm">
               {selectedImageUrl?.split("/").pop()}
             </DialogTitle>
-            <div className="absolute right-4 top-3 flex items-center gap-2">
-              {selectedImageUrl && (
-                <a
-                  href={selectedImageUrl}
-                  download={selectedImageUrl.split("/").pop()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4 text-white" />
-                  <span className="sr-only">Download</span>
-                </a>
-              )}
-              <DialogClose asChild>
-                <button className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                  <X className="h-4 w-4 text-white" />
-                  <span className="sr-only">Close</span>
-                </button>
-              </DialogClose>
-            </div>
+            {selectedImageUrl && (
+              <button
+                onClick={async () => {
+                  const res = await fetch(selectedImageUrl);
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = selectedImageUrl.split("/").pop() ?? "image";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="absolute right-12 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                title="Download"
+              >
+                <Download className="h-4 w-4 text-white" />
+                <span className="sr-only">Download</span>
+              </button>
+            )}
           </DialogHeader>
           <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
             {selectedImageUrl && (
