@@ -11,3 +11,9 @@ export function formatXAF(amount: number): string {
     currency: "XAF",
   }).format(amount);
 }
+
+export function renderAdminAvatar(firstName: string) {
+  const url = `https://api.dicebear.com/9.x/adventurer-neutral/svg?flip=true&seed=${firstName}`;
+
+  return url;
+}
