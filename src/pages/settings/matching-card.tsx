@@ -18,6 +18,8 @@ export function MatchingCard() {
   const [useEmbeddings, setUseEmbeddings] = useState(false);
   const [recommendationsEnabled, setRecommendationsEnabled] = useState(true);
   const [minNotificationScore, setMinNotificationScore] = useState("0.55");
+  const [maxNotificationWorkers, setMaxNotificationWorkers] = useState("20");
+  const [notificationCooldownMinutes, setNotificationCooldownMinutes] = useState("60");
 
   const reindexMutation = useMutation({
     mutationFn: reindexMatching,
@@ -30,6 +32,8 @@ export function MatchingCard() {
       if (item.key === "matching.use_embeddings") setUseEmbeddings(item.value === "true");
       if (item.key === "matching.recommendations_enabled") setRecommendationsEnabled(item.value === "true");
       if (item.key === "matching.min_notification_score") setMinNotificationScore(item.value);
+      if (item.key === "matching.max_notification_workers") setMaxNotificationWorkers(item.value);
+      if (item.key === "matching.notification_cooldown_minutes") setNotificationCooldownMinutes(item.value);
     }
   }, [configs]);
 
@@ -46,10 +50,28 @@ export function MatchingCard() {
   async function handleScoreBlur() {
     const n = parseFloat(minNotificationScore);
     if (isNaN(n) || n < 0 || n > 1) {
-      toast.error("Le score doit être compris entre 0 et 1");
+      toast.error("Score must be between 0 and 1");
       return;
     }
     await saveChanges({ "matching.min_notification_score": String(n) });
+  }
+
+  async function handleMaxWorkersBlur() {
+    const n = parseInt(maxNotificationWorkers, 10);
+    if (isNaN(n) || n < 1) {
+      toast.error("Value must be at least 1");
+      return;
+    }
+    await saveChanges({ "matching.max_notification_workers": String(n) });
+  }
+
+  async function handleCooldownBlur() {
+    const n = parseInt(notificationCooldownMinutes, 10);
+    if (isNaN(n) || n < 0) {
+      toast.error("Cooldown must be 0 or greater");
+      return;
+    }
+    await saveChanges({ "matching.notification_cooldown_minutes": String(n) });
   }
 
   return (
@@ -135,6 +157,56 @@ export function MatchingCard() {
             value={minNotificationScore}
             onChange={(e) => setMinNotificationScore(e.target.value)}
             onBlur={handleScoreBlur}
+            disabled={isLoading || isSaving}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="max-notification-workers" className="text-sm font-medium">
+              Max notified workers per offer
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Maximum number of workers who receive a WhatsApp notification when a new
+              job offer is published. Default: 20.
+            </p>
+          </div>
+          <Input
+            id="max-notification-workers"
+            type="number"
+            min={1}
+            step={1}
+            value={maxNotificationWorkers}
+            onChange={(e) => setMaxNotificationWorkers(e.target.value)}
+            onBlur={handleMaxWorkersBlur}
+            disabled={isLoading || isSaving}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="notification-cooldown" className="text-sm font-medium">
+              Minimum cooldown between notifications (minutes)
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Prevents sending multiple recommendation notifications to the same worker
+              in quick succession. Set to 0 to disable. Default: 60 min.
+            </p>
+          </div>
+          <Input
+            id="notification-cooldown"
+            type="number"
+            min={0}
+            step={5}
+            value={notificationCooldownMinutes}
+            onChange={(e) => setNotificationCooldownMinutes(e.target.value)}
+            onBlur={handleCooldownBlur}
             disabled={isLoading || isSaving}
             className="w-24 text-right"
           />
