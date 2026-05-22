@@ -1,5 +1,8 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { IconDeviceMobile } from "@tabler/icons-react";
+import { Button } from "#/components/ui/button";
+import { SheetTrigger } from "#/components/ui/sheet";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Tabs, TabsContent } from "#/components/ui/tabs";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
@@ -12,6 +15,7 @@ import {
   walletPaymentColumns,
   WalletRevenueBarChart,
   WalletRevenueRadarChart,
+  MobileMoneySheet,
   type WalletTab,
 } from "#/features/wallet";
 import type {
@@ -180,24 +184,34 @@ export default function WalletPage() {
           <WalletRevenueRadarChart />
         </div>
       </div>
-      <Tabs
-        value={activeTab ?? DEFAULT_WALLET_TAB}
-        onValueChange={(v) => setActiveTab(v as WalletTab)}
-        className="w-full flex-col justify-start gap-6"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <WalletTabsList />
-          <WalletExportMenu
-            activeTab={(activeTab ?? DEFAULT_WALLET_TAB) as WalletTab}
-          />
-        </div>
-        <TabsContent value="transactions">
-          <WalletTransactionsTable />
-        </TabsContent>
-        <TabsContent value="payments">
-          <WalletPaymentsTable />
-        </TabsContent>
-      </Tabs>
+      <MobileMoneySheet>
+        <Tabs
+          value={activeTab ?? DEFAULT_WALLET_TAB}
+          onValueChange={(v) => setActiveTab(v as WalletTab)}
+          className="w-full flex-col justify-start gap-6"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <WalletTabsList />
+            <div className="flex items-center gap-2">
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <IconDeviceMobile className="size-4 mr-1" />
+                  Mobile Money
+                </Button>
+              </SheetTrigger>
+              <WalletExportMenu
+                activeTab={(activeTab ?? DEFAULT_WALLET_TAB) as WalletTab}
+              />
+            </div>
+          </div>
+          <TabsContent value="transactions">
+            <WalletTransactionsTable />
+          </TabsContent>
+          <TabsContent value="payments">
+            <WalletPaymentsTable />
+          </TabsContent>
+        </Tabs>
+      </MobileMoneySheet>
     </div>
   );
 }

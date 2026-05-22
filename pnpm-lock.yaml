@@ -119,6 +119,9 @@ importers:
       react-pdf:
         specifier: ^10.4.1
         version: 10.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-svg-credit-card-payment-icons:
+        specifier: ^6.0.3
+        version: 6.0.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -4644,6 +4647,18 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
+        optional: true
+
+  react-svg-credit-card-payment-icons@6.0.3:
+    resolution: {integrity: sha512-WD5p9GDHb4K2siFItXmiYYwukOFwpDUa8ePEIJCLcnQ9J31fV9h0rEWG6rrX5T6RlgnQwRyDyPNfDIhm42ryQw==}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+      react-native-svg: '>=12'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native-svg:
         optional: true
 
   react-transition-group@4.4.5:
@@ -10272,6 +10287,12 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.14
+
+  react-svg-credit-card-payment-icons@6.0.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      react-dom: 19.2.4(react@19.2.4)
 
   react-transition-group@4.4.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
