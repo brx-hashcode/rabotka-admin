@@ -378,13 +378,15 @@ a {
 /* Hide scrollbars but keep scroll behavior */
 html,
 body,
-[data-slot="sidebar-inset"] {
+[data-slot="sidebar-inset"],
+.no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
-[data-slot="sidebar-inset"]::-webkit-scrollbar {
+[data-slot="sidebar-inset"]::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
