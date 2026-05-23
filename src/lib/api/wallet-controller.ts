@@ -55,8 +55,10 @@ export type AdminMobileMoneyTransactionItem = {
   amount: number;
   referenceType: string | null;
   referenceId: string | null;
-  gateway: string;
-  operator: string;
+  gateway: string | null;
+  operator: string | null;
+  description: string | null;
+  status: string;
   createdAt: string;
 };
 
@@ -174,6 +176,18 @@ class AdminWalletController extends AdminBaseController {
     return this.get<AdminMobileMoneyBalanceResult>(url);
   }
 
+  async recordMobileMoneyWithdrawal(body: {
+    amount: number;
+    description?: string;
+    reference?: string;
+  }): Promise<{ walletId: string; newBalance: number; transactionId: string }> {
+    const url = this.createURL(
+      "/admin/wallet/mobile-money/withdrawal",
+      new URLSearchParams(),
+    );
+    return this.post<{ walletId: string; newBalance: number; transactionId: string }>(url, body);
+  }
+
   async getMobileMoneyTransactions(
     params: AdminMobileMoneyTransactionsParams,
   ): Promise<AdminMobileMoneyTransactionsResponse> {
@@ -226,6 +240,8 @@ export const getMobileMoneyBalance =
   controller.getMobileMoneyBalance.bind(controller);
 export const getMobileMoneyTransactions =
   controller.getMobileMoneyTransactions.bind(controller);
+export const recordMobileMoneyWithdrawal =
+  controller.recordMobileMoneyWithdrawal.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 
