@@ -115,26 +115,6 @@ const mmColumns: ColumnDef<AdminMobileMoneyTransactionItem, unknown>[] = [
     ),
   },
   {
-    id: "status",
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status ?? "COMPLETED";
-      const isCompleted = status === "COMPLETED";
-      return (
-        <Badge
-          className={
-            isCompleted
-              ? "bg-emerald-500/10 text-emerald-500 border-transparent text-xs capitalize"
-              : "bg-muted text-muted-foreground border-transparent text-xs capitalize"
-          }
-        >
-          {status.toLowerCase()}
-        </Badge>
-      );
-    },
-  },
-  {
     id: "createdAt",
     accessorKey: "createdAt",
     header: "Date",
