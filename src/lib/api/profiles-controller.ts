@@ -41,7 +41,7 @@ export type AdminKycDocumentItem = {
   id: string;
   documentType: string | null;
   documentCategory: string;
-  documentUrl: string;
+  documentUrl: string | null;
   verificationStatus: string;
   verifiedAt: string | null;
   verifiedBy: string | null;
