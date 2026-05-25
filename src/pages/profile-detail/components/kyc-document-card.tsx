@@ -17,19 +17,27 @@ type Props = {
 };
 
 export function KycDocumentCard({ doc, onPreview }: Props) {
-  const isImage = isLikelyImageAsset(doc.documentUrl);
+  const hasUrl = !!doc.documentUrl;
+  const isImage = hasUrl && isLikelyImageAsset(doc.documentUrl);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <div className="bg-muted relative flex h-36 items-center justify-center">
         {isImage ? (
           <img
-            src={doc.documentUrl}
+            src={doc.documentUrl ?? ""}
             alt={docCategoryLabel(doc.documentCategory)}
             className="h-full w-full object-cover"
           />
         ) : (
-          <IconFileText className="text-muted-foreground size-12" />
+          <div className="flex flex-col items-center gap-1">
+            <IconFileText className="text-muted-foreground size-12" />
+            {!hasUrl && (
+              <span className="text-muted-foreground text-[10px]">
+                Fichier indisponible
+              </span>
+            )}
+          </div>
         )}
         <Badge
           className={`absolute top-2 right-2 ${getVerificationStatusBadgeClass(doc.verificationStatus)}`}
@@ -49,8 +57,9 @@ export function KycDocumentCard({ doc, onPreview }: Props) {
           size="sm"
           className="mt-2 w-full"
           onClick={onPreview}
+          disabled={!hasUrl}
         >
-          Preview
+          {hasUrl ? "Preview" : "Indisponible"}
         </Button>
       </div>
     </Card>

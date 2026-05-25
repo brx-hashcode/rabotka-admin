@@ -225,7 +225,7 @@ export type ViewerDocument = {
 export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
   const inferred = isLikelyImageAsset(doc.documentUrl) ? "image" : undefined;
   return {
-    url: doc.documentUrl,
+    url: doc.documentUrl ?? "",
     title: docCategoryLabel(doc.documentCategory),
     description: `${docTypeLabel(doc.documentType)} — Uploaded ${formatDate(doc.createdAt)}`,
     fileType: inferred,

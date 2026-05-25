@@ -191,11 +191,19 @@ export function KycVerificationModal({
                 >
                   <button
                     type="button"
-                    title="Preview document"
-                    onClick={() => setDocumentPreviewUrl(doc.documentUrl)}
-                    className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90"
+                    title={
+                      doc.documentUrl
+                        ? "Preview document"
+                        : "Document file is missing"
+                    }
+                    onClick={() =>
+                      doc.documentUrl &&
+                      setDocumentPreviewUrl(doc.documentUrl)
+                    }
+                    disabled={!doc.documentUrl}
+                    className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isLikelyImageAsset(doc.documentUrl) ? (
+                    {doc.documentUrl && isLikelyImageAsset(doc.documentUrl) ? (
                       <>
                         <img
                           src={doc.documentUrl}
