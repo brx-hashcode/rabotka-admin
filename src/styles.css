@@ -398,3 +398,29 @@ body::-webkit-scrollbar,
     @apply bg-background text-foreground;
   }
 }
+
+/* Top progress bar (NextJsTopLoader-style). Driven by `src/lib/top-loader.ts`. */
+#nprogress {
+  pointer-events: none;
+}
+#nprogress .bar {
+  background: hsl(var(--whatsapp));
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  box-shadow:
+    0 0 10px hsl(var(--whatsapp)),
+    0 0 6px hsl(var(--whatsapp));
+  opacity: 1;
+  transform: rotate(3deg) translate(0, -4px);
+}
