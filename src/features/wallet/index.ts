@@ -6,3 +6,4 @@ export type { WalletTab } from "./components/wallet-tabs";
 export { WalletExportMenu } from "./components/wallet-export-menu";
 export { WalletRevenueBarChart } from "./components/wallet-revenue-bar-chart";
 export { WalletRevenueRadarChart } from "./components/wallet-revenue-radar-chart";
+export { MobileMoneySheet } from "./components/mobile-money-sheet";

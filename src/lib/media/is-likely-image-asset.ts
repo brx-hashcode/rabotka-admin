@@ -16,11 +16,15 @@ const IMAGE_FILE_TYPES = new Set([
  * Detects image assets for preview: extensions, image/* fileType, Cloudinary image delivery.
  * Keep in sync with document / KYC viewers.
  */
-export function isLikelyImageAsset(url: string, fileType?: string): boolean {
+export function isLikelyImageAsset(
+  url: string | null | undefined,
+  fileType?: string | null,
+): boolean {
   const ft = (fileType ?? "").toLowerCase();
   if (ft.startsWith("image/")) return true;
   if (IMAGE_FILE_TYPES.has(ft)) return true;
 
+  if (!url) return false;
   const u = url.toLowerCase();
   if (u.includes("/image/upload/")) return true;
 

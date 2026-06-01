@@ -41,6 +41,44 @@ export type AdminPaymentItem = {
 
 export type MonthlyRevenuePoint = { month: string; revenue: number };
 
+export type AdminMobileMoneyBalanceResult = {
+  balance: number;
+  transactionCount: number;
+  byOperator: Record<string, number>;
+  byGateway: Record<string, number>;
+};
+
+export type AdminMobileMoneyTransactionItem = {
+  id: string;
+  walletId: string;
+  type: string;
+  amount: number;
+  referenceType: string | null;
+  referenceId: string | null;
+  gateway: string | null;
+  operator: string | null;
+  description: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export type AdminMobileMoneyTransactionsParams = {
+  page?: number;
+  limit?: number;
+  gateway?: string;
+  operator?: string;
+  type?: string;
+  created_from?: string;
+  created_to?: string;
+};
+
+export type AdminMobileMoneyTransactionsResponse = {
+  data: AdminMobileMoneyTransactionItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 export type AdminWalletTransactionsParams = {
   page?: number;
   limit?: number;
@@ -130,6 +168,45 @@ class AdminWalletController extends AdminBaseController {
     return this.get<MonthlyRevenuePoint[]>(url);
   }
 
+  async getMobileMoneyBalance(): Promise<AdminMobileMoneyBalanceResult> {
+    const url = this.createURL(
+      "/admin/wallet/mobile-money/balance",
+      new URLSearchParams(),
+    );
+    return this.get<AdminMobileMoneyBalanceResult>(url);
+  }
+
+  async recordMobileMoneyWithdrawal(body: {
+    amount: number;
+    description?: string;
+    reference?: string;
+  }): Promise<{ walletId: string; newBalance: number; transactionId: string }> {
+    const url = this.createURL(
+      "/admin/wallet/mobile-money/withdrawal",
+      new URLSearchParams(),
+    );
+    return this.post<{ walletId: string; newBalance: number; transactionId: string }>(url, body);
+  }
+
+  async getMobileMoneyTransactions(
+    params: AdminMobileMoneyTransactionsParams,
+  ): Promise<AdminMobileMoneyTransactionsResponse> {
+    const searchParams: Record<string, unknown> = {};
+    if (params.page != null) searchParams.page = params.page;
+    if (params.limit != null) searchParams.limit = params.limit;
+    if (params.gateway) searchParams.gateway = params.gateway;
+    if (params.operator) searchParams.operator = params.operator;
+    if (params.type) searchParams.type = params.type;
+    if (params.created_from) searchParams.created_from = params.created_from;
+    if (params.created_to) searchParams.created_to = params.created_to;
+    const query = this.buildSearchParams(searchParams);
+    const url = this.createURL(
+      "/admin/wallet/mobile-money/transactions",
+      query,
+    );
+    return this.get<AdminMobileMoneyTransactionsResponse>(url);
+  }
+
   async fetchInvoiceBlob(invoiceId: string): Promise<Blob> {
     const response = await fetchWithCsrfRetry(
       `${appConfig.apiUrl}/admin/invoices/${invoiceId}/download`,
@@ -159,6 +236,12 @@ export const getRollingMonthlyRevenue =
   controller.getRollingMonthlyRevenue.bind(controller);
 export const downloadAdminInvoice = controller.downloadInvoice.bind(controller);
 export const fetchAdminInvoiceBlob = controller.fetchInvoiceBlob.bind(controller);
+export const getMobileMoneyBalance =
+  controller.getMobileMoneyBalance.bind(controller);
+export const getMobileMoneyTransactions =
+  controller.getMobileMoneyTransactions.bind(controller);
+export const recordMobileMoneyWithdrawal =
+  controller.recordMobileMoneyWithdrawal.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 
