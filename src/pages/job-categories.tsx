@@ -32,9 +32,9 @@ export default function JobCategoriesPage() {
         <div className="bg-muted rounded-full p-5">
           <Tag className="size-10 text-muted-foreground" />
         </div>
-        <p className="font-medium text-lg">No categories yet</p>
+        <p className="font-medium text-lg">No domains yet</p>
         <p className="text-muted-foreground text-sm max-w-xs">
-          Categories help workers find relevant missions and improve matching.
+          Domains help workers find relevant job offers and improve matching.
         </p>
         <Button className="mt-2" onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
@@ -55,8 +55,8 @@ export default function JobCategoriesPage() {
   return (
     <div className="pt-6">
       <PageListHeader
-        title="Categories"
-        description="Manage mission categories for workers and job offers."
+        title="Domains"
+        description="Manage job domains for workers and job offers."
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" />
