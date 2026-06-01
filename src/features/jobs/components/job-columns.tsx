@@ -72,6 +72,16 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     ),
   },
   {
+    id: "reference",
+    accessorKey: "reference",
+    header: "Reference",
+    cell: ({ row }) => (
+      <code className="text-xs font-mono rounded bg-muted px-1.5 py-0.5">
+        {row.original.reference}
+      </code>
+    ),
+  },
+  {
     id: "status",
     accessorKey: "status",
     header: "Status",

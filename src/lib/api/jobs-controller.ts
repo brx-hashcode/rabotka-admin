@@ -2,6 +2,7 @@ import { AdminBaseController } from "./base-controller";
 
 export type AdminJobOfferListItem = {
   id: string;
+  reference: string;
   title: string;
   category: { id: string; name: string } | null;
   description: string;
