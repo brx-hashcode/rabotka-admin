@@ -284,7 +284,7 @@ export function ProfileForm({
 
           {profile.categoryNames && profile.categoryNames.length > 0 && (
             <div className="col-span-2 space-y-1.5">
-              <FieldLabel>Categories</FieldLabel>
+              <FieldLabel>Domains</FieldLabel>
               <div className="flex flex-wrap gap-1.5">
                 {profile.categoryNames.map((name) => (
                   <span
