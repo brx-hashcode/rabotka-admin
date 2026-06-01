@@ -43,21 +43,23 @@ function SingleDatePicker({
   return (
     <div className="flex items-center">
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "h-8 justify-start gap-1.5 text-xs font-normal",
-            !date && "text-muted-foreground",
-            date ? "rounded-r-none border-r-0" : "",
-            className,
-          )}
-        >
-          <IconCalendar className="size-3.5 shrink-0" />
-          <span>{date ? format(date, "MMM d, yyyy") : placeholder}</span>
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-8 justify-start gap-1.5 text-xs font-normal",
+              !date && "text-muted-foreground",
+              date ? "rounded-r-none border-r-0" : "",
+              className,
+            )}
+          >
+            <IconCalendar className="size-3.5 shrink-0" />
+            <span>{date ? format(date, "MMM d, yyyy") : placeholder}</span>
+          </Button>
+        }
+      />
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
