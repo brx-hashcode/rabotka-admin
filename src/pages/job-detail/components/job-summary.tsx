@@ -33,6 +33,16 @@ type Props = {
 export function JobSummary({ job }: Readonly<Props>) {
   return (
     <div className="space-y-6">
+      <Card className="gap-2 py-4">
+        <CardContent className="px-4">
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+            Reference
+          </p>
+          <code className="mt-1 inline-block text-sm font-mono font-semibold rounded bg-muted px-2 py-0.5">
+            {job.reference}
+          </code>
+        </CardContent>
+      </Card>
       <div className="grid grid-cols-2 gap-3">
         <Card className="gap-2 py-4">
           <CardContent className="px-4">
