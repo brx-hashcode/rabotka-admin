@@ -47,9 +47,9 @@ export type NavItem = {
 const navMain: NavItem[] = [
   { title: "Dashboard", url: "/", icon: IconGridDots },
   { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Missions", url: "/jobs", icon: IconBriefcase },
+  { title: "Job Offers", url: "/jobs", icon: IconBriefcase },
   {
-    title: "Categories",
+    title: "Domains",
     url: "/job-categories",
     icon: IconTag,
     roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
@@ -76,20 +76,20 @@ const navSecondary: NavItem[] = [
 
 const documents: NavItem[] = [
   {
-    title: "Payroll & Wallet",
+    title: "Wallet",
     url: "/wallet",
     icon: IconWallet,
     roles: ["SUPER_ADMIN", "ADMIN"],
   },
-  { title: "Expense Claims", url: "/claim", icon: IconReport },
+  { title: "Claims", url: "/claim", icon: IconReport },
   {
-    title: "HR Events",
+    title: "Events",
     url: "/events",
     icon: IconCalendar,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
   {
-    title: "Activity Logs",
+    title: "Logs",
     url: "/logs",
     icon: IconFileWord,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
@@ -101,7 +101,7 @@ const documents: NavItem[] = [
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
   {
-    title: "Ads bundles",
+    title: "Ad Bundles",
     url: "/ads-bundles",
     icon: IconPackage,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
