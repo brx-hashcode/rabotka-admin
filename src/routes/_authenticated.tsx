@@ -1,12 +1,16 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { getMe } from "#/lib/api/auth-controller";
-import { fetchAndSetCsrfToken } from "#/lib/api/csrf-token";
+import { ensureCsrfToken } from "#/lib/api/csrf-token";
+import { getQueryClient } from "#/app/providers";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     try {
-      await getMe();
-      await fetchAndSetCsrfToken();
+      await getQueryClient().ensureQueryData({
+        queryKey: ["admin", "me"],
+        queryFn: getMe,
+      });
+      await ensureCsrfToken();
     } catch {
       throw redirect({
         to: "/auth/login",
