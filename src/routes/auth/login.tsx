@@ -26,6 +26,7 @@ import { QrLoginDialog } from "#/features/auth/components/qr-login-dialog";
 import { useSendOtpMutation } from "#/hooks/use-send-otp-mutation";
 import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe, totpLogin } from "#/lib/api/auth-controller";
+import { getQueryClient } from "#/app/providers";
 import { toast } from "sonner";
 
 function getSafeRedirectTarget(raw: string): string | null {
@@ -46,7 +47,10 @@ export const Route = createFileRoute("/auth/login")({
   }),
   beforeLoad: async ({ location }) => {
     try {
-      await getMe();
+      await getQueryClient().ensureQueryData({
+        queryKey: ["admin", "me"],
+        queryFn: getMe,
+      });
 
       const redirectParam = new URL(
         location.href,
