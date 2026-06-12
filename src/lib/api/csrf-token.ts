@@ -10,6 +10,11 @@ export function setCsrfToken(value: string | null): void {
   token = value;
 }
 
+export async function ensureCsrfToken(): Promise<void> {
+  if (token !== null) return;
+  await fetchAndSetCsrfToken();
+}
+
 export async function fetchAndSetCsrfToken(): Promise<void> {
   try {
     const base = appConfig.apiUrl.replace(/\/$/, "");
