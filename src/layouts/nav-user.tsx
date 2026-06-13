@@ -34,6 +34,7 @@ import {
   useSidebar,
 } from "#/components/ui/sidebar";
 import { logout } from "#/lib/api/auth-controller";
+import { getQueryClient } from "#/app/providers";
 import { useNavigate } from "@tanstack/react-router";
 
 type NavUserProps = {
@@ -52,6 +53,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
 
   const handleLogout = async () => {
     await logout().catch(() => null);
+    getQueryClient().removeQueries({ queryKey: ["admin", "me"] });
     await navigate({ to: "/auth/login", search: { redirect: "" } });
   };
 
