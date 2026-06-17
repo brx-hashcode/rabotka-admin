@@ -1,10 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { getCommonColumns } from "#/components/table";
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import type { AdminUserListItem } from "#/lib/api/users-controller";
-import { renderAdminAvatar } from "#/lib/utils";
 import { UserRowActions } from "./user-row-actions";
 
 export type AdminUser = AdminUserListItem;
@@ -44,7 +43,6 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src={renderAdminAvatar(row.original.firstName)} alt={row.original.firstName} />
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
             {(row.original.firstName[0] ?? "").toUpperCase()}
           </AvatarFallback>
