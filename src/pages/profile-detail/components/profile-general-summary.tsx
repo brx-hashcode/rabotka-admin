@@ -73,6 +73,30 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
             </p>
           </CardContent>
         </Card>
+
+        <Card className="col-span-2 gap-2 py-4">
+          <CardContent className="px-4 flex items-center justify-between">
+            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              Indexed
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge
+                className={
+                  profile.vectorIndexedAt
+                    ? "bg-green-600 text-white border-transparent hover:bg-green-700"
+                    : "bg-amber-500 text-white border-transparent hover:bg-amber-600"
+                }
+              >
+                {profile.vectorIndexedAt ? "Indexed" : "Not Indexed"}
+              </Badge>
+              {profile.vectorIndexedAt && (
+                <span className="text-muted-foreground text-xs">
+                  {formatDate(profile.vectorIndexedAt)}
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Activity stats */}
