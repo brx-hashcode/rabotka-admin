@@ -6,8 +6,7 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { renderAdminAvatar } from "#/lib/utils";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +47,6 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const firstName = user.name.split(" ")[0] ?? user.name;
-  const avatarUrl = renderAdminAvatar(firstName);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -67,7 +65,6 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={avatarUrl} alt={user.name} />
                 <AvatarFallback className="font-semibold bg-primary text-primary-foreground">
                   {firstName[0]?.toUpperCase()}
                 </AvatarFallback>

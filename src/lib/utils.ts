@@ -12,8 +12,10 @@ export function formatXAF(amount: number): string {
   }).format(amount);
 }
 
-export function renderAdminAvatar(firstName: string) {
-  const url = `https://api.dicebear.com/9.x/adventurer-neutral/svg?flip=true&seed=${firstName}`;
-
-  return url;
+export function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts[1]?.[0] ?? "";
+  
+  return (a + b).toUpperCase().slice(0, 2) || "?";
 }
