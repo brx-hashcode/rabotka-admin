@@ -67,6 +67,7 @@ export type AdminProfileDetailResponse = AdminProfileListItem & {
   unpaidPenaltiesCount: number;
   kycDocuments: AdminKycDocumentItem[];
   verificationImages: AdminVerificationImageItem[];
+  vectorIndexedAt: string | null;
 };
 
 export type AdminUpdateProfileParams = {
