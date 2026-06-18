@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocketStore } from "#/stores/use-socket-store";
 import {
-  IconUser,
   IconShield,
   IconMoon,
   IconSun,
@@ -15,8 +14,7 @@ import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
 import { toast } from "sonner";
 import { useAdminProfile } from "#/hooks/use-admin-profile";
 import { useTheme } from "#/components/theme-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { renderAdminAvatar } from "#/lib/utils";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Switch } from "#/components/ui/switch";
@@ -623,8 +621,14 @@ export default function AdminProfilePage() {
 
   if (!admin) return null;
 
-  const avatarUrl = renderAdminAvatar(admin.firstName || "A");
   const fullName = [admin.firstName, admin.lastName].filter(Boolean).join(" ");
+  const initials = fullName
+    .trim()
+    .split(/\s+/)
+    .map((p) => p[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "?";
 
   return (
     <div className="grid grid-cols-1 gap-6 pt-6 lg:grid-cols-3">
@@ -632,9 +636,8 @@ export default function AdminProfilePage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 pt-8 text-center">
             <Avatar className="border-border size-24 border-4 shadow-md">
-              <AvatarImage src={avatarUrl} alt={fullName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                <IconUser className="size-8" />
+                {initials}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
