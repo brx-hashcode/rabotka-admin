@@ -34,11 +34,35 @@ jobs:
             "${{ secrets.VAULT_ADDR }}/v1/auth/approle/login")
           TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.auth.client_token')
 
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error::Vault AppRole login failed. Response keys: $(echo "$LOGIN_RESPONSE" | jq -r 'keys | join(", ")')"
+            echo "::error::Vault errors: $(echo "$LOGIN_RESPONSE" | jq -r '.errors // [] | join(", ")')"
+            exit 1
+          fi
+          echo "Vault login OK, token acquired"
+
           SECRET_RESPONSE=$(curl -s \
             --header "X-Vault-Token: $TOKEN" \
             "${{ secrets.VAULT_ADDR }}/v1/secret/data/apps/rabotka-admin-production")
+
+          SECRET_KEYS=$(echo "$SECRET_RESPONSE" | jq -r '.data.data | keys | join(", ")' 2>/dev/null || echo "none")
+          echo "Secret keys found: $SECRET_KEYS"
+
           VAULT_SECRET=$(echo "$SECRET_RESPONSE" | jq -r '.data.data')
-          echo "vite_backend_url=$(echo "$VAULT_SECRET" | jq -r '.VITE_BACKEND_URL')" >> $GITHUB_OUTPUT
+
+          VITE_BACKEND_URL=$(echo "$VAULT_SECRET" | jq -r '.VITE_BACKEND_URL')
+          if [ -z "$VITE_BACKEND_URL" ] || [ "$VITE_BACKEND_URL" = "null" ]; then
+            echo "::error::VITE_BACKEND_URL not found in Vault secret. Available keys: $SECRET_KEYS"
+            exit 1
+          fi
+          echo "vite_backend_url=$VITE_BACKEND_URL" >> $GITHUB_OUTPUT
+
+          VITE_PORT=$(echo "$VAULT_SECRET" | jq -r '.PORT')
+          if [ -z "$VITE_PORT" ] || [ "$VITE_PORT" = "null" ]; then
+            echo "::error::PORT not found in Vault secret. Available keys: $SECRET_KEYS"
+            exit 1
+          fi
+          echo "vite_port=$VITE_PORT" >> $GITHUB_OUTPUT
 
           curl -sf --request POST \
             --header "X-Vault-Token: $TOKEN" \
@@ -71,7 +95,7 @@ jobs:
           APP_ENV=prod
           ADMIN_DOMAIN=${{ secrets.PROD_ADMIN_DOMAIN }}
           VITE_BACKEND_URL=${{ steps.vault.outputs.vite_backend_url }}
-          VITE_PORT=3300
+          VITE_PORT=${{ steps.vault.outputs.vite_port }}
           EOF
           sed -i 's/^[[:space:]]*//' ~/rabotka-admin-prod/.env
           cd ~/rabotka-admin-prod && git fetch origin main && git reset --hard origin/main && \

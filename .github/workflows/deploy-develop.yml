@@ -109,12 +109,20 @@ jobs:
           echo "Secret keys found: $SECRET_KEYS"
 
           VAULT_SECRET=$(echo "$SECRET_RESPONSE" | jq -r '.data.data')
+
           VITE_BACKEND_URL=$(echo "$VAULT_SECRET" | jq -r '.VITE_BACKEND_URL')
           if [ -z "$VITE_BACKEND_URL" ] || [ "$VITE_BACKEND_URL" = "null" ]; then
             echo "::error::VITE_BACKEND_URL not found in Vault secret. Available keys: $SECRET_KEYS"
             exit 1
           fi
           echo "vite_backend_url=$VITE_BACKEND_URL" >> $GITHUB_OUTPUT
+
+          VITE_PORT=$(echo "$VAULT_SECRET" | jq -r '.PORT')
+          if [ -z "$VITE_PORT" ] || [ "$VITE_PORT" = "null" ]; then
+            echo "::error::PORT not found in Vault secret. Available keys: $SECRET_KEYS"
+            exit 1
+          fi
+          echo "vite_port=$VITE_PORT" >> $GITHUB_OUTPUT
 
           curl -sf --request POST \
             --header "X-Vault-Token: $TOKEN" \
@@ -147,7 +155,7 @@ jobs:
           APP_ENV=develop
           ADMIN_DOMAIN=admin-rabotka.${{ secrets.INFRA_DOMAIN }}
           VITE_BACKEND_URL=${{ steps.vault.outputs.vite_backend_url }}
-          VITE_PORT=3300
+          VITE_PORT=${{ steps.vault.outputs.vite_port }}
           EOF
           sed -i 's/^[[:space:]]*//' ~/rabotka-admin/.env
           cd ~/rabotka-admin && git fetch origin develop && git reset --hard origin/develop && \
