@@ -8,12 +8,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 const config = defineConfig(({mode}) => {
-  const env = loadEnv(mode, process.cwd());
+  const env = { ...loadEnv(mode, process.cwd()), ...process.env };
 
   return {
   server: {
       host: env.VITE_HOST,
-      port: Number.parseInt(env.VITE_PORT),
+      port: Number.parseInt(env.VITE_PORT ?? "3300"),
       hmr: { overlay: false },
       proxy: {
         "/api": {
@@ -29,7 +29,7 @@ const config = defineConfig(({mode}) => {
     },
   preview: {
       host: "0.0.0.0",
-      port: Number.parseInt(env.VITE_PORT) || 3300,
+      port: Number.parseInt(env.VITE_PORT ?? "3300") || 3300,
       allowedHosts: true,
       proxy: {
         "/api": {
