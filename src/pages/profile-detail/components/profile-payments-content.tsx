@@ -35,6 +35,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
   CONTACT_UNLOCK_CREDIT: "Contact unlock refund",
   CONTACT_UNLOCK_CREDIT_CONVERSION: "Unlock expired — credit",
   MOBILE_MONEY_TOPUP: "Mobile money top-up",
+  TOP_UP_CREDIT: "Top up credit",
   PENALTY_DEBIT: "Penalty deducted",
   JOB_POSTING_DEBIT: "Job posting fee",
   JOB_POSTING_PAYMENT: "Job posting payment",
@@ -70,6 +71,7 @@ function isCredit(type: string): boolean {
     type === "CONTACT_UNLOCK_CREDIT" ||
     type === "CONTACT_UNLOCK_CREDIT_CONVERSION" ||
     type === "MOBILE_MONEY_TOPUP" ||
+    type === "TOP_UP_CREDIT" ||
     type === "CREDIT"
   );
 }
