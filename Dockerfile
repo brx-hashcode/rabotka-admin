@@ -16,10 +16,16 @@ RUN pnpm run build
 
 FROM nginxinc/nginx-unprivileged:alpine AS production
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+USER root
+RUN chmod +x /docker-entrypoint.sh
+USER nginx
 
 ENV VITE_PORT=8080
+ENV VITE_BACKEND_URL=http://localhost:5500
 
 EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
