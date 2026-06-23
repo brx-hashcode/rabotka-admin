@@ -18,9 +18,7 @@ FROM nginxinc/nginx-unprivileged:alpine AS production
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# VITE_PORT and VITE_BACKEND_URL are injected at runtime via docker-compose env_file
 ENV VITE_PORT=8080
-ENV VITE_BACKEND_URL=http://localhost:5500
 
 EXPOSE 8080
 
