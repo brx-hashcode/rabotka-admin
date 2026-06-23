@@ -14,15 +14,14 @@ ARG VITE_BACKEND_URL
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 RUN pnpm run build
 
-FROM base AS production
-WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY vite.config.ts tsconfig.json ./
-COPY src ./src
+FROM nginxinc/nginx-unprivileged:alpine AS production
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-ENV VITE_PORT=3300
-EXPOSE 3300
+# VITE_PORT and VITE_BACKEND_URL are injected at runtime via docker-compose env_file
+ENV VITE_PORT=8080
+ENV VITE_BACKEND_URL=http://localhost:5500
 
-CMD ["sh", "-c", "pnpm vite preview --host 0.0.0.0 --port ${VITE_PORT}"]
+EXPOSE 8080
+
+CMD ["nginx", "-g", "daemon off;"]
