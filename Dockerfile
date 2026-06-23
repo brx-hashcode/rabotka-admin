@@ -14,18 +14,15 @@ ARG VITE_BACKEND_URL
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 RUN pnpm run build
 
-FROM nginxinc/nginx-unprivileged:alpine AS production
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf.template
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+FROM base AS production
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY vite.config.ts tsconfig.json ./
+COPY src ./src
 
-USER root
-RUN chmod +x /docker-entrypoint.sh
-USER nginx
+ENV VITE_PORT=3300
+EXPOSE 3300
 
-ENV VITE_PORT=8080
-ENV VITE_BACKEND_URL=http://localhost:5500
-
-EXPOSE 8080
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["sh", "-c", "pnpm vite preview --host 0.0.0.0 --port ${VITE_PORT}"]
