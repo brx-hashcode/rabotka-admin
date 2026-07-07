@@ -20,6 +20,12 @@ type FormState = {
   "fees.contact_recommendation_fee_employer": string;
   "fees.welcome_credit_worker": string;
   "fees.welcome_credit_employer": string;
+  "fees.completion_score_reward": string;
+  "fees.rating_score_delta_1": string;
+  "fees.rating_score_delta_2": string;
+  "fees.rating_score_delta_3": string;
+  "fees.rating_score_delta_4": string;
+  "fees.rating_score_delta_5": string;
 };
 
 const EMPTY: FormState = {
@@ -36,6 +42,12 @@ const EMPTY: FormState = {
   "fees.contact_recommendation_fee_employer": "",
   "fees.welcome_credit_worker": "",
   "fees.welcome_credit_employer": "",
+  "fees.completion_score_reward": "",
+  "fees.rating_score_delta_1": "",
+  "fees.rating_score_delta_2": "",
+  "fees.rating_score_delta_3": "",
+  "fees.rating_score_delta_4": "",
+  "fees.rating_score_delta_5": "",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -51,17 +63,19 @@ function NumericInput({
   onChange,
   placeholder,
   suffix,
+  min = 0,
 }: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   suffix?: string;
+  min?: number;
 }>) {
   return (
     <div className="relative flex items-center">
       <Input
         type="number"
-        min={0}
+        min={min}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -275,6 +289,73 @@ export function FeesCard() {
             <NumericInput
               value={form["fees.billing_block_threshold"]}
               onChange={(v) => set("fees.billing_block_threshold", v)}
+            />
+          </div>
+        </div>
+
+        <Separator className="my-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Reliability score
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Reward for completing a job, plus per-star adjustments applied when the
+          employer rates the worker. Values may be negative (e.g. a 1★ rating
+          lowers the score). Bounded by the minimum reliability score and 100.
+        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-6">
+          <div className="space-y-1.5">
+            <FieldLabel>Completion reward</FieldLabel>
+            <NumericInput
+              value={form["fees.completion_score_reward"]}
+              onChange={(v) => set("fees.completion_score_reward", v)}
+              suffix="pts"
+              min={-100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rating 1★ adjustment</FieldLabel>
+            <NumericInput
+              value={form["fees.rating_score_delta_1"]}
+              onChange={(v) => set("fees.rating_score_delta_1", v)}
+              suffix="pts"
+              min={-100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rating 2★ adjustment</FieldLabel>
+            <NumericInput
+              value={form["fees.rating_score_delta_2"]}
+              onChange={(v) => set("fees.rating_score_delta_2", v)}
+              suffix="pts"
+              min={-100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rating 3★ adjustment</FieldLabel>
+            <NumericInput
+              value={form["fees.rating_score_delta_3"]}
+              onChange={(v) => set("fees.rating_score_delta_3", v)}
+              suffix="pts"
+              min={-100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rating 4★ adjustment</FieldLabel>
+            <NumericInput
+              value={form["fees.rating_score_delta_4"]}
+              onChange={(v) => set("fees.rating_score_delta_4", v)}
+              suffix="pts"
+              min={-100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rating 5★ adjustment</FieldLabel>
+            <NumericInput
+              value={form["fees.rating_score_delta_5"]}
+              onChange={(v) => set("fees.rating_score_delta_5", v)}
+              suffix="pts"
+              min={-100}
             />
           </div>
         </div>
