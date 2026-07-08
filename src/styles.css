@@ -301,10 +301,14 @@ a {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
+  --radius-2lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --shadow-nav-selected: 0 4px 14px -2px hsl(var(--whatsapp) / 0.32);
+  --color-whatsapp: hsl(var(--whatsapp));
+  --color-whatsapp-dark: hsl(var(--whatsapp-dark));
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
