@@ -3,10 +3,10 @@ import {
   IconBriefcase,
   IconDotsVertical,
   IconPencil,
+  IconPhotoOff,
   IconTrash,
 } from "@tabler/icons-react";
 
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -27,7 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
-import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 import { useRole } from "#/hooks/use-role";
 import { useProfilePortfolio } from "#/hooks/use-profile-portfolio";
 import type { AdminPortfolioItem } from "#/lib/api/portfolio-controller";
@@ -245,11 +244,16 @@ function PortfolioImageTile({
   onPreview: () => void;
   onDelete: () => void;
 }>) {
-  const isImage = isLikelyImageAsset(url);
+  const [broken, setBroken] = useState(false);
 
   return (
     <div className="group bg-muted relative aspect-square overflow-hidden rounded-lg">
-      {isImage ? (
+      {broken ? (
+        <div className="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-1">
+          <IconPhotoOff className="size-6" />
+          <span className="text-[10px]">Unavailable</span>
+        </div>
+      ) : (
         <button
           type="button"
           onClick={onPreview}
@@ -257,14 +261,11 @@ function PortfolioImageTile({
         >
           <img
             src={url}
-            alt={`Realization image ${index + 1}`}
+            alt={`Realization ${index + 1}`}
             className="h-full w-full object-cover"
+            onError={() => setBroken(true)}
           />
         </button>
-      ) : (
-        <Badge variant="outline" className="absolute top-2 left-2">
-          File
-        </Badge>
       )}
       {canManage && (
         <Button
