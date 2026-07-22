@@ -31,6 +31,7 @@ import { ProfileKycContent } from "./profile-detail/components/profile-kyc-conte
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
+import { ProfilePortfolioContent } from "./profile-detail/components/profile-portfolio-content";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
@@ -42,7 +43,13 @@ import {
 } from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
 
-type ProfileTab = "general" | "kyc" | "payments" | "invoices" | "messages";
+type ProfileTab =
+  | "general"
+  | "kyc"
+  | "payments"
+  | "invoices"
+  | "messages"
+  | "portfolio";
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
@@ -50,6 +57,7 @@ const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
   { label: "Messages", value: "messages" },
+  { label: "Portfolio", value: "portfolio" },
 ];
 
 const profileTabParser = parseAsStringEnum<ProfileTab>(
@@ -213,6 +221,11 @@ export default function ProfileDetailPage({
     );
   }
 
+  const isWorker = profile.profileType === "WORKER";
+  const visibleTabs = PROFILE_TABS.filter(
+    (t) => t.value !== "portfolio" || isWorker,
+  );
+
   return (
     <div className="space-y-6 pt-6">
       <Tabs
@@ -222,7 +235,7 @@ export default function ProfileDetailPage({
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <TabsList className="h-9 w-full sm:w-auto">
-            {PROFILE_TABS.map((tab) => (
+            {visibleTabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
@@ -331,6 +344,15 @@ export default function ProfileDetailPage({
             profileName={`${profile.firstName} ${profile.lastName}`}
           />
         </TabsContent>
+
+        {isWorker && (
+          <TabsContent value="portfolio">
+            <ProfilePortfolioContent
+              profileId={profileId}
+              onPreviewDoc={handlePreviewDoc}
+            />
+          </TabsContent>
+        )}
       </Tabs>
 
       <ConfirmDialog
