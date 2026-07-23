@@ -11,7 +11,7 @@ import { getProfilesList } from "#/lib/api/profiles-controller";
 
 import { appConfig } from "#/config";
 
-const profilesParsers = {
+export const profilesParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
@@ -23,7 +23,7 @@ const profilesParsers = {
   ),
 };
 
-function toWhatsappConnected(arr: string[]): boolean | undefined {
+export function toWhatsappConnected(arr: string[]): boolean | undefined {
   if (arr.length === 0) return undefined;
   const v = arr[0]?.toLowerCase();
   if (v === "true" || v === "1") return true;
