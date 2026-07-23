@@ -1,4 +1,5 @@
 export { ProfileAction } from "./components/profile-action";
+export { ProfileExportMenu } from "./components/profile-export-menu";
 export {
   profileColumns,
   type Profile,

@@ -7,6 +7,7 @@ import {
   profileTypeOptions,
   whatsappStatusOptions,
   verificationStatusOptions,
+  ProfileExportMenu,
   type Profile,
 } from "#/features/applications";
 import { useProfilesList } from "#/hooks/use-profiles-list";
@@ -38,7 +39,9 @@ function ProfilesTableHeader({
           },
         ]}
         table={table}
-      ></TableHeaderToolbar>
+      >
+        <ProfileExportMenu />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }
