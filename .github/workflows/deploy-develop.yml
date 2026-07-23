@@ -172,20 +172,21 @@ jobs:
       contents: read
 
     steps:
-      - name: Wait for container to stabilize
-        run: sleep 45
-
       - name: Check admin is reachable
         run: |
-          for i in $(seq 1 12); do
+          # Short initial wait, then poll tightly so a healthy container is
+          # detected in ~10-16s while still tolerating a slow start:
+          # 10s + 24×6s ≈ 2.5 min ceiling. Exits on first 200/302.
+          sleep 10
+          for i in $(seq 1 24); do
             STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
               --max-time 20 \
               "https://admin-rabotka.${{ secrets.INFRA_DOMAIN }}")
             echo "Attempt $i — HTTP status: $STATUS"
             [[ "$STATUS" = "200" || "$STATUS" = "302" ]] && exit 0
-            sleep 15
+            sleep 6
           done
-          echo "Admin did not return 200 or 302 after 12 attempts"
+          echo "Admin did not return 200 or 302 after 24 attempts"
           exit 1
 
       - name: Slack notify success
