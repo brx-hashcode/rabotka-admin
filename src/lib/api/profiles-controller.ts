@@ -323,6 +323,27 @@ export class AdminProfilesController extends AdminBaseController {
 
 const controller = new AdminProfilesController();
 export const getProfilesList = controller.getList.bind(controller);
+
+const EXPORT_PAGE_SIZE = 100;
+
+/** Fetch every profile matching the given filters, paging through the list. */
+export async function fetchAllProfiles(
+  filters: Omit<AdminProfilesListParams, "page" | "limit">,
+): Promise<AdminProfileListItem[]> {
+  const all: AdminProfileListItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getProfilesList({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}
 export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
