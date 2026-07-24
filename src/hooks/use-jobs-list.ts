@@ -10,7 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getJobOffersList } from "#/lib/api/jobs-controller";
 
 import { appConfig } from "#/config";
-const jobsParsers = {
+/** Exported so the export menu reads the exact filters the table is showing. */
+export const jobsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),

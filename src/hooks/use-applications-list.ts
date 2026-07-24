@@ -10,7 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getApplicationsList } from "#/lib/api/applications-controller";
 import { appConfig } from "#/config";
 
-const applicationsParsers = {
+/** Exported so the export menu reads the exact filters the table is showing. */
+export const applicationsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
