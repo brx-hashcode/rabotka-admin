@@ -5,6 +5,7 @@ import {
   applicationColumns,
   applicationStatusOptions,
   penaltyAppliedOptions,
+  ApplicationExportMenu,
   type Application,
 } from "#/features/applications-admin";
 import { useApplicationsList } from "#/hooks/use-applications-list";
@@ -30,7 +31,9 @@ function ApplicationsTableHeader({
           },
         ]}
         table={table}
-      />
+      >
+        <ApplicationExportMenu />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }
