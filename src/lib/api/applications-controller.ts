@@ -92,3 +92,24 @@ export class AdminApplicationsController extends AdminBaseController {
 const controller = new AdminApplicationsController();
 export const getApplicationsList = controller.getList.bind(controller);
 export const getApplicationById = controller.getById.bind(controller);
+
+const EXPORT_PAGE_SIZE = 100;
+
+/** Fetch every application matching the given filters, paging through the list. */
+export async function fetchAllApplications(
+  filters: Omit<AdminApplicationsListParams, "page" | "limit">,
+): Promise<AdminApplicationListItem[]> {
+  const all: AdminApplicationListItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getApplicationsList({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}
