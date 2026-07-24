@@ -4,6 +4,7 @@ import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import {
   jobColumns,
   jobStatusOptions,
+  JobExportMenu,
   type JobOffer,
 } from "#/features/jobs";
 import { useJobsList } from "#/hooks/use-jobs-list";
@@ -20,7 +21,9 @@ function JobsTableHeader({
           { id: "status", label: "Status", options: jobStatusOptions },
         ]}
         table={table}
-      />
+      >
+        <JobExportMenu />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }

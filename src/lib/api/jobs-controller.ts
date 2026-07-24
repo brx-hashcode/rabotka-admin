@@ -125,6 +125,28 @@ export class AdminJobOffersController extends AdminBaseController {
 
 const controller = new AdminJobOffersController();
 export const getJobOffersList = controller.getList.bind(controller);
+
+const EXPORT_PAGE_SIZE = 100;
+
+/** Fetch every job offer matching the given filters, paging through the list. */
+export async function fetchAllJobOffers(
+  filters: Omit<AdminJobOffersListParams, "page" | "limit">,
+): Promise<AdminJobOfferListItem[]> {
+  const all: AdminJobOfferListItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getJobOffersList({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}
+
 export const getJobOfferById = controller.getById.bind(controller);
 export const updateJobOffer = controller.updateJobOffer.bind(controller);
 export const updateJobOfferStatus = controller.updateJobOfferStatus.bind(controller);
