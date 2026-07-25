@@ -448,7 +448,7 @@ function ChatThread({
         </div>
       )}
 
-      <div className="flex items-end gap-2 border-t p-3">
+      <div className="flex flex-col gap-2 border-t bg-background px-4 py-3">
         <input
           ref={fileRef}
           type="file"
@@ -456,36 +456,40 @@ function ChatThread({
           multiple
           onChange={(e) => void pickFiles(e.target.files)}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploadAttachment.isPending}
-        >
-          <IconPaperclip className="size-5" />
-        </Button>
-        <Textarea
-          value={text}
-          onChange={(e) => handleTyping(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send();
-            }
-          }}
-          placeholder="Type a message…"
-          className="max-h-32 min-h-10 flex-1 resize-none"
-          rows={1}
-        />
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => void send()}
-          disabled={sendMessage.isPending}
-        >
-          <IconSend className="size-5" />
-        </Button>
+        <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 rounded-full"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploadAttachment.isPending}
+          >
+            <IconPaperclip className="size-4" />
+          </Button>
+          <Textarea
+            value={text}
+            onChange={(e) => handleTyping(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+            placeholder="Type a message…"
+            className="max-h-32 min-h-9 flex-1 resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+            rows={1}
+          />
+          <Button
+            type="button"
+            size="icon"
+            className="size-9 shrink-0 rounded-full"
+            onClick={() => void send()}
+            disabled={sendMessage.isPending}
+          >
+            <IconSend className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <DocumentViewerDrawer
