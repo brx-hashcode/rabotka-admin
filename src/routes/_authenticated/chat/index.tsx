@@ -7,6 +7,7 @@ export const Route = createFileRoute("/_authenticated/chat/")({
     <Layout
       title="Chat"
       breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Chat" }]}
+      fullBleed
     >
       <ChatPage />
     </Layout>
