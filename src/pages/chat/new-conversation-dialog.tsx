@@ -82,7 +82,7 @@ export function UserSearch({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+      <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 transition-colors focus-within:border-ring focus-within:bg-transparent">
         <IconSearch className="size-4 shrink-0 text-muted-foreground" />
         <Input
           autoFocus
@@ -218,59 +218,96 @@ export function NewConversationDialog({ onCreated }: Props) {
       >
         <IconPlus className="size-5" />
       </Button>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>New conversation</DialogTitle>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="space-y-0 border-b bg-muted/30 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
+              <IconMessagePlus className="size-5" />
+            </div>
+            <div className="space-y-0.5 text-left">
+              <DialogTitle className="text-lg leading-tight">
+                New conversation
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">
+                Start a direct message or create a group with your team.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
-        <Tabs defaultValue="direct">
-          <TabsList className="w-full">
-            <TabsTrigger value="direct" className="flex-1 gap-1.5">
+
+        <Tabs defaultValue="direct" className="p-5">
+          <TabsList className="grid w-full grid-cols-2 rounded-lg bg-muted p-1">
+            <TabsTrigger value="direct" className="gap-1.5 rounded-md">
               <IconMessagePlus className="size-4" /> Direct
             </TabsTrigger>
-            <TabsTrigger value="group" className="flex-1 gap-1.5">
+            <TabsTrigger value="group" className="gap-1.5 rounded-md">
               <IconUsersGroup className="size-4" /> Group
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="direct" className="pt-2">
-            <p className="mb-2 text-xs text-muted-foreground">
+          <TabsContent value="direct" className="pt-4">
+            <p className="mb-3 text-sm text-muted-foreground">
               Pick a team member to start a 1:1 chat.
             </p>
             <UserSearch meId={me?.id} selectedIds={[]} onPick={startDirect} />
           </TabsContent>
 
-          <TabsContent value="group" className="space-y-3 pt-2">
-            <Input
-              placeholder="Group name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-            />
+          <TabsContent value="group" className="space-y-4 pt-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <IconUsersGroup className="size-5" />
+              </div>
+              <Input
+                placeholder="Group name"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="h-10"
+              />
+            </div>
+
             {members.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {members.map((m) => (
                   <span
                     key={m.id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pl-1 pr-2 text-xs font-medium text-primary"
                   >
+                    <Avatar className="size-5">
+                      <AvatarFallback className="bg-primary/20 text-[9px] text-primary">
+                        {initials(m.name)}
+                      </AvatarFallback>
+                    </Avatar>
                     {m.name}
-                    <button type="button" onClick={() => toggleMember(m)}>
+                    <button
+                      type="button"
+                      className="rounded-full hover:bg-primary/20"
+                      onClick={() => toggleMember(m)}
+                    >
                       <IconX className="size-3" />
                     </button>
                   </span>
                 ))}
               </div>
             )}
-            <UserSearch
-              meId={me?.id}
-              selectedIds={members.map((m) => m.id)}
-              onPick={toggleMember}
-            />
+
+            <div>
+              <p className="mb-2 text-sm text-muted-foreground">
+                Add members
+              </p>
+              <UserSearch
+                meId={me?.id}
+                selectedIds={members.map((m) => m.id)}
+                onPick={toggleMember}
+              />
+            </div>
+
             <Button
-              className="w-full"
+              className="w-full gap-1.5"
               onClick={() => void startGroup()}
-              disabled={createGroup.isPending}
+              disabled={createGroup.isPending || !groupName.trim() || members.length === 0}
             >
-              Create group ({members.length})
+              <IconUsersGroup className="size-4" />
+              Create group{members.length > 0 ? ` · ${members.length}` : ""}
             </Button>
           </TabsContent>
         </Tabs>
