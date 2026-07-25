@@ -245,7 +245,16 @@ function ChatThread({
   const [viewerDoc, setViewerDoc] = useState<ViewerDocument | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-grow the composer with its content, up to a max height (then scroll).
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [text]);
 
   const isGroup = conversation.type === "GROUP";
 
@@ -468,6 +477,7 @@ function ChatThread({
             <IconPaperclip className="size-4" />
           </Button>
           <Textarea
+            ref={composerRef}
             value={text}
             onChange={(e) => handleTyping(e.target.value)}
             onKeyDown={(e) => {
@@ -477,7 +487,7 @@ function ChatThread({
               }
             }}
             placeholder="Type a message…"
-            className="max-h-32 min-h-9 flex-1 resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+            className="max-h-32 min-h-9 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1 py-1.5 leading-snug shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
             rows={1}
           />
           <Button
