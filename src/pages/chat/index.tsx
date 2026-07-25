@@ -13,6 +13,8 @@ import {
   IconPhoto,
   IconFileTypePdf,
   IconFileText,
+  IconFileSpreadsheet,
+  IconPresentation,
   IconFile,
   IconMusic,
   IconVideo,
@@ -81,6 +83,18 @@ function attachmentFileType(mime: string, name: string): string | undefined {
   if (mime.startsWith("image/")) return "image";
   if (mime === "application/pdf" || /\.pdf$/i.test(name)) return "pdf";
   if (mime.includes("wordprocessingml") || /\.docx?$/i.test(name)) return "docx";
+  if (
+    mime.includes("spreadsheetml") ||
+    mime === "application/vnd.ms-excel" ||
+    /\.xlsx?$/i.test(name)
+  )
+    return "xlsx";
+  if (
+    mime.includes("presentationml") ||
+    mime === "application/vnd.ms-powerpoint" ||
+    /\.pptx?$/i.test(name)
+  )
+    return "pptx";
   if (mime === "text/markdown" || /\.md$/i.test(name)) return "md";
   return undefined;
 }
@@ -104,6 +118,8 @@ function attachmentIcon(mime: string, name: string): Icon {
   if (mime.startsWith("video/")) return IconVideo;
   const type = attachmentFileType(mime, name);
   if (type === "pdf") return IconFileTypePdf;
+  if (type === "xlsx") return IconFileSpreadsheet;
+  if (type === "pptx") return IconPresentation;
   if (type === "docx" || type === "md" || mime.startsWith("text/")) {
     return IconFileText;
   }
