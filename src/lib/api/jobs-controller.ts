@@ -67,6 +67,7 @@ export type AdminJobOffersListParams = {
   limit?: number;
   q?: string;
   status?: string[];
+  deleted?: boolean;
 };
 
 export class AdminJobOffersController extends AdminBaseController {
@@ -78,6 +79,7 @@ export class AdminJobOffersController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.q) searchParams.q = params.q;
     if (params.status?.length) searchParams.status = params.status;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/job-offers", query);
@@ -121,10 +123,19 @@ export class AdminJobOffersController extends AdminBaseController {
     );
     return this.delete<{ success: boolean }>(url);
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/job-offers/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminJobOffersController();
 export const getJobOffersList = controller.getList.bind(controller);
+export const bulkDeleteJobOffers = controller.bulkDelete.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 

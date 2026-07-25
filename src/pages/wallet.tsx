@@ -4,8 +4,15 @@ import { IconDeviceMobile } from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
 import { SheetTrigger } from "#/components/ui/sheet";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
 import { Tabs, TabsContent } from "#/components/ui/tabs";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
+import { useRole } from "#/hooks/use-role";
+import { bulkDeleteWalletTransactions } from "#/lib/api/wallet-controller";
 import {
   WalletInfoCard,
   WalletTabsList,
@@ -49,6 +56,8 @@ const PAYMENT_STATUS_OPTIONS = [
 function TransactionsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<AdminWalletTransactionItem> }>) {
+  const { canManageTeam } = useRole();
+  const deletedView = useIsDeletedView();
   const [createdFrom, setCreatedFrom] = useQueryState(
     "created_from",
     parseAsString.withDefault(""),
@@ -68,9 +77,17 @@ function TransactionsTableHeader({
             label: "Type",
             options: TX_TYPE_OPTIONS,
           },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
       >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeleteWalletTransactions}
+          queryKey={["admin", "wallet", "transactions"]}
+          entityLabel="transaction"
+          disabled={!canManageTeam || deletedView}
+        />
         <DateRangePicker
           from={createdFrom}
           to={createdTo}

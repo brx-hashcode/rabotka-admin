@@ -10,10 +10,19 @@ import {
 import { CreatePenaltyDialog } from "#/features/penalties/components/create-penalty-dialog";
 import { usePenaltiesList } from "#/hooks/use-penalties-list";
 import { Button } from "#/components/ui/button";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
+import { bulkDeletePenalties } from "#/lib/api/penalties-controller";
+import { useRole } from "#/hooks/use-role";
 
 function PenaltiesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Penalty> }>) {
+  const { canManageContent } = useRole();
+  const deletedView = useIsDeletedView();
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -25,9 +34,18 @@ function PenaltiesTableHeader({
             label: "Payment status",
             options: penaltyPaymentStatusOptions,
           },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
-      />
+      >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeletePenalties}
+          queryKey={["admin", "penalties"]}
+          entityLabel="penalty"
+          disabled={!canManageContent || deletedView}
+        />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }

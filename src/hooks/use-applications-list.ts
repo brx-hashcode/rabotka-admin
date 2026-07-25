@@ -17,6 +17,7 @@ export const applicationsParsers = {
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   penalty_applied: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function useApplicationsList() {
@@ -24,7 +25,7 @@ export function useApplicationsList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, status, penalty_applied } = queryState;
+  const { q, status, penalty_applied, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -32,7 +33,7 @@ export function useApplicationsList() {
       return;
     }
     setPage(1);
-  }, [q, status, penalty_applied, setPage]);
+  }, [q, status, penalty_applied, deleted, setPage]);
 
   const params = {
     page: queryState.page,
@@ -42,6 +43,7 @@ export function useApplicationsList() {
     ...(queryState.penalty_applied?.length
       ? { penalty_applied: queryState.penalty_applied }
       : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

@@ -59,6 +59,7 @@ export type AdminApplicationsListParams = {
   penalty_applied?: string[];
   worker_id?: string;
   employer_id?: string;
+  deleted?: boolean;
 };
 
 export class AdminApplicationsController extends AdminBaseController {
@@ -74,6 +75,7 @@ export class AdminApplicationsController extends AdminBaseController {
       searchParams.penalty_applied = params.penalty_applied;
     if (params.worker_id) searchParams.worker_id = params.worker_id;
     if (params.employer_id) searchParams.employer_id = params.employer_id;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/applications", query);
@@ -87,11 +89,20 @@ export class AdminApplicationsController extends AdminBaseController {
     );
     return this.get<AdminApplicationDetailResponse>(url);
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/applications/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminApplicationsController();
 export const getApplicationsList = controller.getList.bind(controller);
 export const getApplicationById = controller.getById.bind(controller);
+export const bulkDeleteApplications = controller.bulkDelete.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 

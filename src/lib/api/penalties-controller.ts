@@ -38,6 +38,7 @@ export type AdminPenaltiesListParams = {
   limit?: number;
   q?: string;
   payment_status?: string[];
+  deleted?: boolean;
 };
 
 export class AdminPenaltiesController extends AdminBaseController {
@@ -50,6 +51,7 @@ export class AdminPenaltiesController extends AdminBaseController {
     if (params.q) searchParams.q = params.q;
     if (params.payment_status?.length)
       searchParams.payment_status = params.payment_status;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/penalties", query);
@@ -89,10 +91,19 @@ export class AdminPenaltiesController extends AdminBaseController {
     const url = this.createURL("/admin/penalties", new URLSearchParams());
     return this.post<AdminPenaltyDetailResponse>(url, body);
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/penalties/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminPenaltiesController();
 export const getPenaltiesList = controller.getList.bind(controller);
+export const bulkDeletePenalties = controller.bulkDelete.bind(controller);
 export const getPenaltyById = controller.getById.bind(controller);
 export const confirmPenaltyPayment = controller.confirmPayment.bind(controller);
 export const deletePenalty = controller.deletePenalty.bind(controller);
