@@ -24,6 +24,7 @@ export type AdminUsersListParams = {
   limit?: number;
   q?: string;
   role?: string[];
+  deleted?: boolean;
 };
 
 export type CreateAdminUserParams = {
@@ -47,6 +48,7 @@ export class AdminUsersController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.q) searchParams.q = params.q;
     if (params.role?.length) searchParams.role = params.role;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/user", query);
@@ -80,10 +82,16 @@ export class AdminUsersController extends AdminBaseController {
     const url = this.createURL(`/user/${id}`, new URLSearchParams());
     return this.delete<{ success: boolean }>(url);
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL("/user/bulk-delete", new URLSearchParams());
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminUsersController();
 export const getUsersList = controller.getList.bind(controller);
+export const bulkDeleteUsers = controller.bulkDelete.bind(controller);
 export const createAdminUser = controller.create.bind(controller);
 export const updateAdminUser = (id: string, data: UpdateAdminUserParams) =>
   controller.update(id, data);

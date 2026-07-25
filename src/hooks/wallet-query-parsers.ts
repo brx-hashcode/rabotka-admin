@@ -20,4 +20,5 @@ export const walletTransactionsParsers = {
   tx_type: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   created_from: parseAsString.withDefault(""),
   created_to: parseAsString.withDefault(""),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
