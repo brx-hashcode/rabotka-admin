@@ -39,6 +39,10 @@ import {
 } from "#/components/ui/sheet";
 import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
 import {
+  DocumentViewerDrawer,
+  type ViewerDocument,
+} from "#/pages/profile-detail/components/document-viewer-drawer";
+import {
   NewConversationDialog,
   UserSearch,
   type PickUser,
@@ -63,6 +67,37 @@ function dayLabel(iso: string): string {
     year:
       d.getFullYear() === today.getFullYear() ? undefined : "numeric",
   });
+}
+
+/** Map an attachment's mime/name to the document viewer's fileType hint. */
+function attachmentFileType(mime: string, name: string): string | undefined {
+  if (mime.startsWith("image/")) return "image";
+  if (mime === "application/pdf" || /\.pdf$/i.test(name)) return "pdf";
+  if (mime.includes("wordprocessingml") || /\.docx?$/i.test(name)) return "docx";
+  if (mime === "text/markdown" || /\.md$/i.test(name)) return "md";
+  return undefined;
+}
+
+function formatBytes(size: number): string {
+  if (!size) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let value = size;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
+function attachmentToViewerDoc(a: ChatAttachment): ViewerDocument {
+  const size = formatBytes(a.size);
+  return {
+    url: a.url,
+    title: a.name,
+    description: [a.mime, size].filter(Boolean).join(" · "),
+    fileType: attachmentFileType(a.mime, a.name),
+  };
 }
 
 function initials(name: string): string {
@@ -207,6 +242,7 @@ function ChatThread({
 
   const [text, setText] = useState("");
   const [pending, setPending] = useState<ChatAttachment[]>([]);
+  const [viewerDoc, setViewerDoc] = useState<ViewerDocument | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -349,7 +385,11 @@ function ChatThread({
                     ) : (
                       <>
                         {m.attachments.map((a) => (
-                          <Attachment key={a.key} attachment={a} />
+                          <Attachment
+                            key={a.key}
+                            attachment={a}
+                            onOpen={setViewerDoc}
+                          />
                         ))}
                         {m.body && (
                           <span className="whitespace-pre-wrap break-words">
@@ -447,6 +487,12 @@ function ChatThread({
           <IconSend className="size-5" />
         </Button>
       </div>
+
+      <DocumentViewerDrawer
+        open={viewerDoc !== null}
+        onOpenChange={(v) => !v && setViewerDoc(null)}
+        document={viewerDoc}
+      />
     </section>
   );
 }
@@ -630,28 +676,42 @@ function GroupMembersSheet({
   );
 }
 
-function Attachment({ attachment }: Readonly<{ attachment: ChatAttachment }>) {
+function Attachment({
+  attachment,
+  onOpen,
+}: Readonly<{
+  attachment: ChatAttachment;
+  onOpen: (doc: ViewerDocument) => void;
+}>) {
   const isImage = attachment.mime.startsWith("image/");
+  const open = () => onOpen(attachmentToViewerDoc(attachment));
+
   if (isImage) {
     return (
-      <a href={attachment.url} target="_blank" rel="noreferrer">
+      <button type="button" onClick={open} className="block">
         <img
           src={attachment.url}
           alt={attachment.name}
           className="mt-1 max-h-48 rounded-md"
         />
-      </a>
+      </button>
     );
   }
   return (
-    <a
-      href={attachment.url}
-      target="_blank"
-      rel="noreferrer"
-      className="mt-1 flex items-center gap-1 underline"
+    <button
+      type="button"
+      onClick={open}
+      className="mt-1 flex max-w-56 items-center gap-2 rounded-md bg-background/15 px-2.5 py-2 text-left transition-colors hover:bg-background/25"
     >
-      <IconPaperclip className="size-3" />
-      {attachment.name}
-    </a>
+      <IconPaperclip className="size-4 shrink-0" />
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate text-sm">{attachment.name}</span>
+        {attachment.size > 0 && (
+          <span className="text-[11px] opacity-70">
+            {formatBytes(attachment.size)}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }
