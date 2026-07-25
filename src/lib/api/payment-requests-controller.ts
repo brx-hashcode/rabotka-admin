@@ -35,6 +35,7 @@ export type AdminPaymentRequestsListParams = {
   page?: number;
   limit?: number;
   status?: PaymentRequestStatus;
+  deleted?: boolean;
 };
 
 export class AdminPaymentRequestsController extends AdminBaseController {
@@ -45,6 +46,7 @@ export class AdminPaymentRequestsController extends AdminBaseController {
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.status) searchParams.status = params.status;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/payment-requests", query);
@@ -77,10 +79,20 @@ export class AdminPaymentRequestsController extends AdminBaseController {
     );
     return this.post<AdminPaymentRequestListItem>(url, { note });
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/payment-requests/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminPaymentRequestsController();
 export const getPaymentRequestsList = controller.getList.bind(controller);
+export const bulkDeletePaymentRequests =
+  controller.bulkDelete.bind(controller);
 export const createPaymentLink = controller.createPaymentLink.bind(controller);
 export const approvePaymentRequest = controller.approve.bind(controller);
 export const rejectPaymentRequest = controller.reject.bind(controller);

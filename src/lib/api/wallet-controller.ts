@@ -86,6 +86,7 @@ export type AdminWalletTransactionsParams = {
   type?: string[];
   created_from?: string;
   created_to?: string;
+  deleted?: boolean;
 };
 
 export type AdminWalletTransactionsResponse = {
@@ -128,6 +129,7 @@ class AdminWalletController extends AdminBaseController {
     if (params.type?.length) searchParams.type = params.type;
     if (params.created_from) searchParams.created_from = params.created_from;
     if (params.created_to) searchParams.created_to = params.created_to;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/wallet/transactions", query);
@@ -225,9 +227,19 @@ class AdminWalletController extends AdminBaseController {
     a.click();
     URL.revokeObjectURL(objectUrl);
   }
+
+  async bulkDeleteTransactions(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/wallet/transactions/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminWalletController();
+export const bulkDeleteWalletTransactions =
+  controller.bulkDeleteTransactions.bind(controller);
 export const getWalletInfo = controller.getInfo.bind(controller);
 export const getWalletTransactions = controller.getTransactions.bind(controller);
 export const getWalletPayments = controller.getPayments.bind(controller);

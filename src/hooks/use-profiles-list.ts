@@ -21,6 +21,7 @@ export const profilesParsers = {
   verification_status: parseAsArrayOf(parseAsString).withDefault(
     [] as string[],
   ),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function toWhatsappConnected(arr: string[]): boolean | undefined {
@@ -42,6 +43,7 @@ export function useProfilesList() {
     profile_type,
     whatsapp_connected: whatsappConnectedArr,
     verification_status,
+    deleted,
   } = queryState;
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function useProfilesList() {
     profile_type,
     whatsappConnectedArr,
     verification_status,
+    deleted,
     setPage,
   ]);
 
@@ -77,6 +80,7 @@ export function useProfilesList() {
     ...(queryState.verification_status?.length
       ? { verification_status: queryState.verification_status }
       : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({
