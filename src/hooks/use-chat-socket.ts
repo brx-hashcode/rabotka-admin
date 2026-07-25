@@ -218,6 +218,22 @@ export function useChatSocket() {
       );
     });
 
+    // I was added to a group: alert directly + make sure it's in my list.
+    socket.on(
+      "chat:added-to-group",
+      (n: {
+        conversationId: string;
+        conversationName: string | null;
+        addedByName: string;
+      }) => {
+        queryClient.invalidateQueries({ queryKey: chatKeys.conversations });
+        playNotificationSound();
+        toast(`Added to ${n.conversationName ?? "a group"}`, {
+          description: `${n.addedByName} added you to the group.`,
+        });
+      },
+    );
+
     // I was removed / left: drop the conversation from my list.
     socket.on(
       "conversation:removed",
