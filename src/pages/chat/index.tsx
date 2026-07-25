@@ -57,6 +57,7 @@ import {
   UserSearch,
   type PickUser,
 } from "./new-conversation-dialog";
+import { EmojiPicker } from "./emoji-picker";
 
 /** Same-day grouping key for the date separators in a thread. */
 function dayKey(iso: string): string {
@@ -347,6 +348,24 @@ function ChatThread({
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const insertEmoji = (emoji: string) => {
+    const el = composerRef.current;
+    if (!el) {
+      setText((t) => t + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + emoji + text.slice(end);
+    setText(next);
+    emitTyping(conversation.id, true);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + emoji.length;
+      el.setSelectionRange(caret, caret);
+    });
+  };
+
   const send = async () => {
     const body = text.trim();
     if (!body && pending.length === 0) return;
@@ -539,6 +558,7 @@ function ChatThread({
           onChange={(e) => void pickFiles(e.target.files)}
         />
         <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-2">
+          <EmojiPicker onPick={insertEmoji} />
           <Button
             type="button"
             variant="ghost"
