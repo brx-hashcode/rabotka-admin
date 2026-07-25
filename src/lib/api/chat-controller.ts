@@ -80,6 +80,28 @@ export class AdminChatController extends AdminBaseController {
     return this.post<ChatConversationItem>(url, { name, memberIds });
   }
 
+  async addMembers(
+    conversationId: string,
+    memberIds: string[],
+  ): Promise<ChatConversationItem> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/members`,
+      new URLSearchParams(),
+    );
+    return this.post<ChatConversationItem>(url, { memberIds });
+  }
+
+  async removeMember(
+    conversationId: string,
+    userId: string,
+  ): Promise<ChatConversationItem> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/members/${userId}`,
+      new URLSearchParams(),
+    );
+    return this.delete<ChatConversationItem>(url);
+  }
+
   async getMessages(
     conversationId: string,
     cursor?: string,
@@ -148,6 +170,9 @@ export const listConversations = controller.listConversations.bind(controller);
 export const createDirectConversation =
   controller.createDirect.bind(controller);
 export const createGroupConversation = controller.createGroup.bind(controller);
+export const addConversationMembers = controller.addMembers.bind(controller);
+export const removeConversationMember =
+  controller.removeMember.bind(controller);
 export const getChatMessages = controller.getMessages.bind(controller);
 export const sendChatMessage = controller.sendMessage.bind(controller);
 export const markConversationRead = controller.markRead.bind(controller);

@@ -23,7 +23,12 @@ import { useAdminMe } from "#/hooks/use-admin-me";
 import { getUsersList } from "#/lib/api/users-controller";
 import { useCreateDirect, useCreateGroup } from "#/hooks/use-chat";
 
-type PickUser = { id: string; name: string; email: string; role: string };
+export type PickUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 function initials(name: string): string {
   return name
@@ -35,13 +40,15 @@ function initials(name: string): string {
 }
 
 /** Debounced-ish searchable user list, searching name + email (like Events). */
-function UserSearch({
+export function UserSearch({
   meId,
   selectedIds,
+  excludeIds = [],
   onPick,
 }: Readonly<{
   meId?: string;
   selectedIds: string[];
+  excludeIds?: string[];
   onPick: (user: PickUser) => void;
 }>) {
   const [query, setQuery] = useState("");
@@ -59,7 +66,7 @@ function UserSearch({
       const res = await getUsersList({ q: value.trim(), limit: 8 });
       setResults(
         res.data
-          .filter((u) => u.id !== meId)
+          .filter((u) => u.id !== meId && !excludeIds.includes(u.id))
           .map((u) => ({
             id: u.id,
             name: `${u.firstName} ${u.lastName}`.trim(),
