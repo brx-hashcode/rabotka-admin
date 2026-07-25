@@ -559,7 +559,7 @@ function GroupMembersSheet({
             {conversation.name ?? "Group"}
           </SheetTitle>
           <span className="text-xs text-muted-foreground">
-            {isTeam ? "Team channel · " : "Group · "}
+            {isTeam ? "RABOTKA GROUP · " : "Group · "}
             {members.length} members
           </span>
         </SheetHeader>
@@ -603,9 +603,11 @@ function GroupMembersSheet({
           )}
 
           {isTeam && (
-            <p className="border-b bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
-              The Team channel syncs automatically with all active team members,
-              so its membership can’t be edited here.
+            <p className="border-b bg-muted/20 px-4 py-5 text-xs leading-relaxed text-muted-foreground">
+              This is the company-wide RABOTKA GROUP — everyone on the team is
+              here by default. Its members stay in sync automatically as
+              teammates are added or removed, so the list can’t be edited by
+              hand.
             </p>
           )}
 
