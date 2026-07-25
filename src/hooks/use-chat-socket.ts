@@ -24,6 +24,35 @@ type ChatNotification = {
 const notificationSound = new Audio("/notification.wav");
 notificationSound.volume = 0.5;
 
+// Browsers gate programmatic audio behind a user gesture. Prime the element on
+// the first interaction so later notification plays (fired from socket events,
+// not gestures) aren't silently blocked.
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  notificationSound.muted = true;
+  notificationSound
+    .play()
+    .then(() => {
+      notificationSound.pause();
+      notificationSound.currentTime = 0;
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      notificationSound.muted = false;
+    });
+}
+
+function playNotificationSound() {
+  try {
+    notificationSound.currentTime = 0;
+  } catch {
+    /* ignore */
+  }
+  void notificationSound.play().catch(() => undefined);
+}
+
 /**
  * App-wide chat socket: connects once (mount at the authenticated layout),
  * wires realtime events into react-query caches + the chat store, and raises
@@ -45,6 +74,9 @@ export function useChatSocket() {
 
   useEffect(() => {
     if (!meId) return;
+
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
 
     const socket = io("/chat", {
       withCredentials: true,
@@ -201,13 +233,15 @@ export function useChatSocket() {
       // message:new already updated the unread badge; here we only alert.
       if (activeId() === n.conversationId) return;
       if (n.senderId === meIdRef.current) return;
-      void notificationSound.play().catch(() => undefined);
+      playNotificationSound();
       toast(n.conversationName ? `${n.senderName} · ${n.conversationName}` : n.senderName, {
         description: n.preview,
       });
     });
 
     return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
       socket.disconnect();
       setSocket(null);
       setConnected(false);

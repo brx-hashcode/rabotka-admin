@@ -43,11 +43,36 @@ export function useMessages(conversationId: string | null) {
 }
 
 export function useSendMessage(conversationId: string) {
-  // Delivery is confirmed by the socket `message:new` (the sender is in the
-  // conversation room), so no optimistic insert is needed — dedupe is by id.
+  const qc = useQueryClient();
+  // Insert the sent message as soon as the POST resolves so the sender sees it
+  // instantly instead of waiting for the socket `message:new` echo. The echo
+  // then dedupes by id, so there's no double.
   return useMutation({
     mutationFn: (input: { body?: string; attachments?: ChatAttachment[] }) =>
       sendChatMessage(conversationId, input),
+    onSuccess: (message) => {
+      qc.setQueryData<ChatMessagesPage>(
+        chatKeys.messages(conversationId),
+        (prev) => {
+          if (!prev) return prev;
+          if (prev.messages.some((m) => m.id === message.id)) return prev;
+          return { ...prev, messages: [...prev.messages, message] };
+        },
+      );
+      qc.setQueryData<ChatConversationItem[]>(
+        chatKeys.conversations,
+        (prev) => {
+          if (!prev) return prev;
+          const next = prev.map((c) =>
+            c.id === conversationId
+              ? { ...c, lastMessage: message, updatedAt: message.createdAt }
+              : c,
+          );
+          next.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+          return next;
+        },
+      );
+    },
   });
 }
 
