@@ -12,6 +12,7 @@ import {
 import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { AppSidebar, SiteHeader } from "#/layouts";
 import { useAdminNotifications } from "#/hooks/use-admin-notifications";
+import { useChatSocket } from "#/hooks/use-chat-socket";
 
 export type LayoutBreadcrumb = Readonly<{
   label: string;
@@ -39,6 +40,7 @@ export function Layout({
 }: LayoutProps) {
   const router = useRouter();
   useAdminNotifications();
+  useChatSocket();
 
   function renderPageHeader() {
     const hasBreadcrumbs = (breadcrumbs?.length ?? 0) > 0;
