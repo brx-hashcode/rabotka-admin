@@ -6,6 +6,13 @@ import {
 } from "#/features/payment-requests";
 import { usePaymentRequestsList } from "#/hooks/use-payment-requests-list";
 import type { Table as TableInstance } from "@tanstack/react-table";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
+import { bulkDeletePaymentRequests } from "#/lib/api/payment-requests-controller";
+import { useRole } from "#/hooks/use-role";
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
@@ -17,6 +24,8 @@ const STATUS_OPTIONS = [
 function PaymentRequestsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<PaymentRequest> }>) {
+  const { canManageContent } = useRole();
+  const deletedView = useIsDeletedView();
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -28,9 +37,18 @@ function PaymentRequestsTableHeader({
             label: "Status",
             options: STATUS_OPTIONS,
           },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
-      />
+      >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeletePaymentRequests}
+          queryKey={["admin", "payment-requests"]}
+          entityLabel="payment request"
+          disabled={!canManageContent || deletedView}
+        />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }

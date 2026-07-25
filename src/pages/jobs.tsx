@@ -1,6 +1,11 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
 import {
   jobColumns,
   jobStatusOptions,
@@ -8,10 +13,14 @@ import {
   type JobOffer,
 } from "#/features/jobs";
 import { useJobsList } from "#/hooks/use-jobs-list";
+import { bulkDeleteJobOffers } from "#/lib/api/jobs-controller";
+import { useRole } from "#/hooks/use-role";
 
 function JobsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<JobOffer> }>) {
+  const { canManageContent } = useRole();
+  const deletedView = useIsDeletedView();
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -19,9 +28,17 @@ function JobsTableHeader({
         searchPlaceholder="Filter jobs..."
         filters={[
           { id: "status", label: "Status", options: jobStatusOptions },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
       >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeleteJobOffers}
+          queryKey={["admin", "jobs"]}
+          entityLabel="job offer"
+          disabled={!canManageContent || deletedView}
+        />
         <JobExportMenu />
       </TableHeaderToolbar>
     </TableHeader>

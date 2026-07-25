@@ -16,6 +16,7 @@ const penaltiesParsers = {
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   payment_status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function usePenaltiesList() {
@@ -23,7 +24,7 @@ export function usePenaltiesList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, payment_status } = queryState;
+  const { q, payment_status, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -31,7 +32,7 @@ export function usePenaltiesList() {
       return;
     }
     setPage(1);
-  }, [q, payment_status, setPage]);
+  }, [q, payment_status, deleted, setPage]);
 
   const params = {
     page: queryState.page,
@@ -40,6 +41,7 @@ export function usePenaltiesList() {
     ...(queryState.payment_status?.length
       ? { payment_status: queryState.payment_status }
       : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

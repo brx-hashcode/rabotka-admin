@@ -1,6 +1,11 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
 import {
   applicationColumns,
   applicationStatusOptions,
@@ -9,10 +14,14 @@ import {
   type Application,
 } from "#/features/applications-admin";
 import { useApplicationsList } from "#/hooks/use-applications-list";
+import { bulkDeleteApplications } from "#/lib/api/applications-controller";
+import { useRole } from "#/hooks/use-role";
 
 function ApplicationsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Application> }>) {
+  const { canManageContent } = useRole();
+  const deletedView = useIsDeletedView();
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -29,9 +38,17 @@ function ApplicationsTableHeader({
             label: "Penalty",
             options: penaltyAppliedOptions,
           },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
       >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeleteApplications}
+          queryKey={["admin", "applications"]}
+          entityLabel="application"
+          disabled={!canManageContent || deletedView}
+        />
         <ApplicationExportMenu />
       </TableHeaderToolbar>
     </TableHeader>
