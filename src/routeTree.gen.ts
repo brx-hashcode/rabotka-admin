@@ -29,6 +29,7 @@ import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
+import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
 import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
@@ -146,6 +147,11 @@ const AuthenticatedClaimIndexRoute = AuthenticatedClaimIndexRouteImport.update({
   path: '/claim/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
+  id: '/chat/',
+  path: '/chat/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedApplicationsIndexRoute =
   AuthenticatedApplicationsIndexRouteImport.update({
     id: '/applications/',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/chat/': typeof AuthenticatedChatIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/chat': typeof AuthenticatedChatIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/ads-bundles/'
     | '/advertisements/'
     | '/applications/'
+    | '/chat/'
     | '/claim/'
     | '/documents/'
     | '/events/'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/ads-bundles'
     | '/advertisements'
     | '/applications'
+    | '/chat'
     | '/claim'
     | '/documents'
     | '/events'
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ads-bundles/'
     | '/_authenticated/advertisements/'
     | '/_authenticated/applications/'
+    | '/_authenticated/chat/'
     | '/_authenticated/claim/'
     | '/_authenticated/documents/'
     | '/_authenticated/events/'
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClaimIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/chat/': {
+      id: '/_authenticated/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/applications/': {
       id: '/_authenticated/applications/'
       path: '/applications'
@@ -572,6 +591,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
   AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
@@ -599,6 +619,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
   AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,

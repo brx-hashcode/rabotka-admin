@@ -17,6 +17,7 @@ import {
   IconPackage,
   IconSpeakerphone,
   IconGridDots,
+  IconMessage,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -34,6 +35,7 @@ import {
 } from "#/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 import { useAdminMe } from "#/hooks/use-admin-me";
+import { useConversations } from "#/hooks/use-chat";
 import type { AdminRole } from "#/lib/api/auth-controller";
 import { appConfig } from "#/config";
 
@@ -42,6 +44,7 @@ export type NavItem = {
   url: string;
   icon: Icon;
   roles?: AdminRole[];
+  badge?: number;
 };
 
 const navMain: NavItem[] = [
@@ -55,6 +58,7 @@ const navMain: NavItem[] = [
     roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
   { title: "Applications", url: "/applications", icon: IconFileText },
+  { title: "Chat", url: "/chat", icon: IconMessage },
   { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
   {
     title: "Team",
@@ -126,9 +130,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const role = admin?.role;
 
-  const filteredNavMain = navMain.filter(
-    (item) => !item.roles || (role && item.roles.includes(role)),
+  const { data: conversations } = useConversations();
+  const chatUnread = (conversations ?? []).reduce(
+    (sum, c) => sum + (c.unreadCount ?? 0),
+    0,
   );
+
+  const filteredNavMain = navMain
+    .filter((item) => !item.roles || (role && item.roles.includes(role)))
+    .map((item) =>
+      item.url === "/chat" ? { ...item, badge: chatUnread } : item,
+    );
 
   const filteredDocuments = documents.filter(
     (item) => !item.roles || (role && item.roles.includes(role)),
