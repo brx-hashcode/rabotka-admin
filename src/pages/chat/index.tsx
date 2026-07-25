@@ -10,7 +10,14 @@ import {
   IconLogout,
   IconUserMinus,
   IconUserPlus,
+  IconPhoto,
+  IconFileTypePdf,
+  IconFileText,
+  IconFile,
+  IconMusic,
+  IconVideo,
 } from "@tabler/icons-react";
+import type { Icon } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
@@ -88,6 +95,19 @@ function formatBytes(size: number): string {
     unit += 1;
   }
   return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
+/** Pick a type icon for an attachment based on its mime/name. */
+function attachmentIcon(mime: string, name: string): Icon {
+  if (mime.startsWith("image/")) return IconPhoto;
+  if (mime.startsWith("audio/")) return IconMusic;
+  if (mime.startsWith("video/")) return IconVideo;
+  const type = attachmentFileType(mime, name);
+  if (type === "pdf") return IconFileTypePdf;
+  if (type === "docx" || type === "md" || mime.startsWith("text/")) {
+    return IconFileText;
+  }
+  return IconFile;
 }
 
 function attachmentToViewerDoc(a: ChatAttachment): ViewerDocument {
@@ -436,24 +456,47 @@ function ChatThread({
       </div>
 
       {pending.length > 0 && (
-        <div className="flex flex-wrap gap-2 border-t px-4 py-2">
-          {pending.map((a) => (
-            <div
-              key={a.key}
-              className="flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
-            >
-              <IconPaperclip className="size-3" />
-              <span className="max-w-32 truncate">{a.name}</span>
-              <button
-                type="button"
-                onClick={() =>
-                  setPending((prev) => prev.filter((x) => x.key !== a.key))
-                }
+        <div className="flex flex-wrap gap-2 border-t px-4 py-3">
+          {pending.map((a) => {
+            const isImage = a.mime.startsWith("image/");
+            const TypeIcon = attachmentIcon(a.mime, a.name);
+            return (
+              <div
+                key={a.key}
+                className="flex max-w-64 items-center gap-2.5 rounded-lg border bg-muted/40 py-1.5 pl-1.5 pr-2"
               >
-                <IconX className="size-3" />
-              </button>
-            </div>
-          ))}
+                <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background">
+                  {isImage ? (
+                    <img
+                      src={a.url}
+                      alt={a.name}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <TypeIcon className="size-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-xs font-medium">{a.name}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {a.size > 0
+                      ? formatBytes(a.size)
+                      : a.mime.split("/")[1]?.toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="ml-1 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  title="Remove"
+                  onClick={() =>
+                    setPending((prev) => prev.filter((x) => x.key !== a.key))
+                  }
+                >
+                  <IconX className="size-3.5" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -700,6 +743,7 @@ function Attachment({
   onOpen: (doc: ViewerDocument) => void;
 }>) {
   const isImage = attachment.mime.startsWith("image/");
+  const TypeIcon = attachmentIcon(attachment.mime, attachment.name);
   const open = () => onOpen(attachmentToViewerDoc(attachment));
 
   if (isImage) {
@@ -717,9 +761,11 @@ function Attachment({
     <button
       type="button"
       onClick={open}
-      className="mt-1 flex max-w-56 items-center gap-2 rounded-md bg-background/15 px-2.5 py-2 text-left transition-colors hover:bg-background/25"
+      className="mt-1 flex max-w-64 items-center gap-2.5 rounded-md bg-background/15 py-1.5 pl-1.5 pr-3 text-left transition-colors hover:bg-background/25"
     >
-      <IconPaperclip className="size-4 shrink-0" />
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background/40">
+        <TypeIcon className="size-5" />
+      </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate text-sm">{attachment.name}</span>
         {attachment.size > 0 && (
