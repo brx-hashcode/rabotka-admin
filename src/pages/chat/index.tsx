@@ -18,6 +18,7 @@ import {
   IconFile,
   IconMusic,
   IconVideo,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import type { Icon } from "@tabler/icons-react";
 
@@ -158,6 +159,11 @@ function formatTime(iso: string): string {
   });
 }
 
+/** Groups get a primary-tinted avatar so they read differently from DMs. */
+function groupAvatarClass(type: ChatConversationItem["type"]): string {
+  return type === "GROUP" ? "bg-primary/15 text-primary" : "";
+}
+
 export default function ChatPage() {
   const { data: me } = useAdminMe();
   const meId = me?.id;
@@ -210,7 +216,13 @@ export default function ChatPage() {
               >
                 <div className="relative">
                   <Avatar className="size-9">
-                    <AvatarFallback>{initials(title)}</AvatarFallback>
+                    <AvatarFallback className={groupAvatarClass(c.type)}>
+                      {c.type === "GROUP" ? (
+                        <IconUsersGroup className="size-4" />
+                      ) : (
+                        initials(title)
+                      )}
+                    </AvatarFallback>
                   </Avatar>
                   {other && (
                     <span
@@ -357,7 +369,9 @@ function ChatThread({
     <section className="flex flex-1 flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b px-5 py-3">
         <Avatar className="size-9">
-          <AvatarFallback>{initials(title)}</AvatarFallback>
+          <AvatarFallback className={groupAvatarClass(conversation.type)}>
+            {isGroup ? <IconUsersGroup className="size-4" /> : initials(title)}
+          </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">{title}</div>
