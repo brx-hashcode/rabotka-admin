@@ -6,6 +6,7 @@ import {
   IconSearch,
   IconX,
   IconCheck,
+  IconPlus,
 } from "@tabler/icons-react";
 
 import {
@@ -207,9 +208,15 @@ export function NewConversationDialog({ onCreated }: Props) {
         if (!v) reset();
       }}
     >
-      <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
-        <IconMessagePlus className="size-4" />
-        New
+      <Button
+        size="icon"
+        variant="secondary"
+        className="size-8 rounded-full"
+        onClick={() => setOpen(true)}
+        aria-label="New conversation"
+        title="New conversation"
+      >
+        <IconPlus className="size-5" />
       </Button>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
