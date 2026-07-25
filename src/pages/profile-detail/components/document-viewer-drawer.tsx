@@ -249,8 +249,13 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
   const [zoom, setZoom] = useState(1);
 
   const pdfFile = useMemo(() => {
-    const absolute = pdfDocumentUrl(url);
-    return { url: absolute };
+    // Load through the same-origin file proxy: storage URLs are cross-origin and
+    // usually lack CORS headers, so react-pdf's fetch is blocked when pointed at
+    // them directly (unlike <img>, which isn't CORS-gated). The proxy is
+    // same-origin (`/api/v1/...`), so the fetch — and its auth cookie — succeed.
+    const absoluteSource = pdfDocumentUrl(url);
+    const proxied = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(absoluteSource)}`;
+    return { url: pdfDocumentUrl(proxied) };
   }, [url]);
 
   const pdfOptions = useMemo(() => {
