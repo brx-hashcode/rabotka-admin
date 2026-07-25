@@ -17,6 +17,7 @@ export const jobsParsers = {
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   payment_flow: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function useJobsList() {
@@ -24,7 +25,7 @@ export function useJobsList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, status, payment_flow } = queryState;
+  const { q, status, payment_flow, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -32,7 +33,7 @@ export function useJobsList() {
       return;
     }
     setPage(1);
-  }, [q, status, payment_flow, setPage]);
+  }, [q, status, payment_flow, deleted, setPage]);
 
   const params = {
     page: queryState.page,
@@ -42,6 +43,7 @@ export function useJobsList() {
     ...(queryState.payment_flow?.length
       ? { payment_flow: queryState.payment_flow }
       : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

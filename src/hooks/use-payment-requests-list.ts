@@ -1,5 +1,11 @@
 import { useEffect, useRef } from "react";
-import { parseAsInteger, parseAsString, useQueryState, useQueryStates } from "nuqs";
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryState,
+  useQueryStates,
+} from "nuqs";
 import { useQuery } from "@tanstack/react-query";
 import {
   getPaymentRequestsList,
@@ -11,6 +17,7 @@ const paymentRequestsParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   status: parseAsString.withDefault(""),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function usePaymentRequestsList() {
@@ -18,7 +25,7 @@ export function usePaymentRequestsList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { status } = queryState;
+  const { status, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -26,7 +33,7 @@ export function usePaymentRequestsList() {
       return;
     }
     setPage(1);
-  }, [status, setPage]);
+  }, [status, deleted, setPage]);
 
   const params = {
     page: queryState.page,
@@ -34,6 +41,7 @@ export function usePaymentRequestsList() {
     ...(queryState.status
       ? { status: queryState.status as PaymentRequestStatus }
       : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

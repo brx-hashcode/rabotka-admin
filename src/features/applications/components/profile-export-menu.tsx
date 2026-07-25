@@ -40,6 +40,7 @@ export function ProfileExportMenu() {
     ...(qs.verification_status?.length
       ? { verification_status: qs.verification_status }
       : {}),
+    ...(qs.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const dateStamp = format(new Date(), "yyyy-MM-dd");

@@ -15,6 +15,7 @@ const usersParsers = {
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   role: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
 export function useUsersList() {
@@ -22,7 +23,7 @@ export function useUsersList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, role } = queryState;
+  const { q, role, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -30,13 +31,14 @@ export function useUsersList() {
       return;
     }
     setPage(1);
-  }, [q, role, setPage]);
+  }, [q, role, deleted, setPage]);
 
   const params = {
     page: queryState.page,
     limit: queryState.limit,
     ...(queryState.q ? { q: queryState.q } : {}),
     ...(queryState.role?.length ? { role: queryState.role } : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

@@ -12,7 +12,7 @@ export function useWalletTransactions() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, tx_type, created_from, created_to } = queryState;
+  const { q, tx_type, created_from, created_to, deleted } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -20,7 +20,7 @@ export function useWalletTransactions() {
       return;
     }
     setPage(1);
-  }, [q, tx_type, created_from, created_to, setPage]);
+  }, [q, tx_type, created_from, created_to, deleted, setPage]);
 
   const params = {
     page: queryState.page,
@@ -29,6 +29,7 @@ export function useWalletTransactions() {
     ...(queryState.tx_type?.length ? { type: queryState.tx_type } : {}),
     ...(queryState.created_from ? { created_from: queryState.created_from } : {}),
     ...(queryState.created_to ? { created_to: queryState.created_to } : {}),
+    ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const query = useQuery({

@@ -37,6 +37,7 @@ export function ApplicationExportMenu() {
     ...(qs.penalty_applied?.length
       ? { penalty_applied: qs.penalty_applied }
       : {}),
+    ...(qs.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const dateStamp = format(new Date(), "yyyy-MM-dd");
