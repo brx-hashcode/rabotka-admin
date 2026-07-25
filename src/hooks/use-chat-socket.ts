@@ -173,6 +173,30 @@ export function useChatSocket() {
       setPresence(data.userId, data.online);
     });
 
+    // Membership changed (added/removed members): replace the cached item.
+    socket.on("conversation:updated", (conversation: ChatConversationItem) => {
+      queryClient.setQueryData<ChatConversationItem[]>(
+        chatKeys.conversations,
+        (prev) => {
+          if (!prev) return [conversation];
+          return prev.some((c) => c.id === conversation.id)
+            ? prev.map((c) => (c.id === conversation.id ? conversation : c))
+            : [conversation, ...prev];
+        },
+      );
+    });
+
+    // I was removed / left: drop the conversation from my list.
+    socket.on(
+      "conversation:removed",
+      ({ conversationId }: { conversationId: string }) => {
+        queryClient.setQueryData<ChatConversationItem[]>(
+          chatKeys.conversations,
+          (prev) => prev?.filter((c) => c.id !== conversationId),
+        );
+      },
+    );
+
     socket.on("chat:notification", (n: ChatNotification) => {
       // message:new already updated the unread badge; here we only alert.
       if (activeId() === n.conversationId) return;

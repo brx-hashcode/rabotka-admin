@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addConversationMembers,
   createDirectConversation,
   createGroupConversation,
   getChatMessages,
   listChatUsers,
   listConversations,
   markConversationRead,
+  removeConversationMember,
   sendChatMessage,
   uploadChatAttachment,
   type ChatAttachment,
@@ -69,6 +71,31 @@ export function useCreateGroup() {
   return useMutation({
     mutationFn: (input: { name: string; memberIds: string[] }) =>
       createGroupConversation(input.name, input.memberIds),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: chatKeys.conversations }),
+  });
+}
+
+export function useAddMembers(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberIds: string[]) =>
+      addConversationMembers(conversationId, memberIds),
+    onSuccess: (updated) => {
+      qc.setQueryData<ChatConversationItem[]>(
+        chatKeys.conversations,
+        (prev) =>
+          prev?.map((c) => (c.id === updated.id ? updated : c)),
+      );
+    },
+  });
+}
+
+export function useRemoveMember(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      removeConversationMember(conversationId, userId),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: chatKeys.conversations }),
   });
