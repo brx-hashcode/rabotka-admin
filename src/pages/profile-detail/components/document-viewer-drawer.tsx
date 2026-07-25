@@ -787,12 +787,18 @@ export function DocumentViewerDrawer({
     document.url.includes("docs.google.com/gview");
   const isPdf =
     !isGoogleDocs && (fileType === "pdf" || document.url.includes(".pdf"));
-  const isDocx =
+  // Word, Excel and PowerPoint all preview through the Office Online embed.
+  const isOffice =
     !isGoogleDocs &&
-    (fileType === "docx" ||
-      fileType === "doc" ||
-      document.url.includes(".docx") ||
-      document.url.includes(".doc"));
+    ([
+      "docx",
+      "doc",
+      "xlsx",
+      "xls",
+      "pptx",
+      "ppt",
+    ].includes(fileType) ||
+      /\.(docx?|xlsx?|pptx?)(\?|#|$)/i.test(document.url));
   const isMd =
     !isGoogleDocs && (fileType === "md" || document.url.endsWith(".md"));
   const isImage = !isGoogleDocs && isLikelyImageAsset(document.url, fileType);
@@ -828,7 +834,7 @@ export function DocumentViewerDrawer({
               <GoogleDocsViewer url={document.url} title={document.title} />
             )}
             {open && isPdf && <PdfViewer url={document.url} onDownload={document.onDownload} />}
-            {open && isDocx && (
+            {open && isOffice && (
               <DocxViewer url={document.url} title={document.title} />
             )}
             {open && isMd && (
@@ -837,7 +843,7 @@ export function DocumentViewerDrawer({
             {open && isImage && (
               <ImageViewer url={document.url} title={document.title} />
             )}
-            {open && !isGoogleDocs && !isPdf && !isDocx && !isMd && !isImage && (
+            {open && !isGoogleDocs && !isPdf && !isOffice && !isMd && !isImage && (
               <DocFallback
                 url={document.url}
                 reason="This file format cannot be previewed in the browser."
