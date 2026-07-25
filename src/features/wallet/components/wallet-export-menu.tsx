@@ -58,6 +58,7 @@ export function WalletExportMenu({
     ...(txQs.tx_type?.length ? { type: txQs.tx_type } : {}),
     ...(txQs.created_from ? { created_from: txQs.created_from } : {}),
     ...(txQs.created_to ? { created_to: txQs.created_to } : {}),
+    ...(txQs.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const dateStamp = format(new Date(), "yyyy-MM-dd");

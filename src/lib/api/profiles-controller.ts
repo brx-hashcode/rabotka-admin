@@ -155,6 +155,7 @@ export type AdminProfilesListParams = {
   profile_type?: string[];
   whatsapp_connected?: boolean;
   verification_status?: string[];
+  deleted?: boolean;
 };
 
 export class AdminProfilesController extends AdminBaseController {
@@ -169,6 +170,7 @@ export class AdminProfilesController extends AdminBaseController {
       searchParams.whatsapp_connected = params.whatsapp_connected;
     if (params.verification_status?.length)
       searchParams.verification_status = params.verification_status;
+    if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
     const url = this.createURL("/admin/profiles", query);
@@ -319,10 +321,19 @@ export class AdminProfilesController extends AdminBaseController {
     if (!response.ok) throw new Error("Download failed");
     return response.blob();
   }
+
+  async bulkDelete(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/profiles/bulk-delete",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminProfilesController();
 export const getProfilesList = controller.getList.bind(controller);
+export const bulkDeleteProfiles = controller.bulkDelete.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 

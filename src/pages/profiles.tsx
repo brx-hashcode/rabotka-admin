@@ -1,6 +1,11 @@
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
+import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import {
+  deletedFilterOptions,
+  useIsDeletedView,
+} from "#/components/table/deleted-filter";
 import {
   profileColumns,
   statusOptions,
@@ -11,10 +16,14 @@ import {
   type Profile,
 } from "#/features/applications";
 import { useProfilesList } from "#/hooks/use-profiles-list";
+import { bulkDeleteProfiles } from "#/lib/api/profiles-controller";
+import { useRole } from "#/hooks/use-role";
 
 function ProfilesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Profile> }>) {
+  const { canManageContent } = useRole();
+  const deletedView = useIsDeletedView();
   return (
     <TableHeader>
       <TableHeaderToolbar
@@ -37,9 +46,17 @@ function ProfilesTableHeader({
             label: "Verification",
             options: verificationStatusOptions,
           },
+          { id: "deleted", label: "Deleted", options: deletedFilterOptions },
         ]}
         table={table}
       >
+        <BulkDeleteButton
+          table={table}
+          deleteFn={bulkDeleteProfiles}
+          queryKey={["admin", "profiles"]}
+          entityLabel="profile"
+          disabled={!canManageContent || deletedView}
+        />
         <ProfileExportMenu />
       </TableHeaderToolbar>
     </TableHeader>

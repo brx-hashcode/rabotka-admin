@@ -247,7 +247,7 @@ export default function ProfileDetailPage({
           </TabsList>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleViewAgreement} disabled={isLoadingAgreement}>
+            <Button variant="secondary" onClick={handleViewAgreement} disabled={isLoadingAgreement}>
               <IconFileText className="size-4" />
               {isLoadingAgreement ? "Loading..." : "View Agreement"}
             </Button>
@@ -255,7 +255,7 @@ export default function ProfileDetailPage({
             {canManageContent && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="secondary">
                     Actions
                     <IconChevronDown className="size-4" />
                   </Button>

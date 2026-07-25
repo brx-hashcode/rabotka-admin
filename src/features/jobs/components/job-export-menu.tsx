@@ -35,6 +35,7 @@ export function JobExportMenu() {
   const filters = {
     ...(qs.q ? { q: qs.q } : {}),
     ...(qs.status?.length ? { status: qs.status } : {}),
+    ...(qs.deleted?.includes("true") ? { deleted: true } : {}),
   };
 
   const dateStamp = format(new Date(), "yyyy-MM-dd");
