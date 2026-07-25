@@ -13,6 +13,7 @@ import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
 import { AppSidebar, SiteHeader } from "#/layouts";
 import { useAdminNotifications } from "#/hooks/use-admin-notifications";
 import { useChatSocket } from "#/hooks/use-chat-socket";
+import { cn } from "#/lib/utils";
 
 export type LayoutBreadcrumb = Readonly<{
   label: string;
@@ -25,6 +26,8 @@ type LayoutProps = Readonly<{
   title?: string;
   description?: string;
   breadcrumbs?: readonly LayoutBreadcrumb[];
+  /** Let the page fill the whole content area (no horizontal/bottom padding). */
+  fullBleed?: boolean;
 }>;
 
 const SIDEBAR_STYLE = {
@@ -37,6 +40,7 @@ export function Layout({
   title,
   description,
   breadcrumbs,
+  fullBleed,
 }: LayoutProps) {
   const router = useRouter();
   useAdminNotifications();
@@ -108,9 +112,16 @@ export function Layout({
           ) : null}
         </div>
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2 px-4 lg:px-6">
+          <div
+            className={cn(
+              "@container/main flex flex-1 flex-col gap-2",
+              !fullBleed && "px-4 lg:px-6",
+            )}
+          >
             {renderPageHeader()}
-            <div className="pb-6">{children}</div>
+            <div className={cn(fullBleed ? "flex min-h-0 flex-1 flex-col" : "pb-6")}>
+              {children}
+            </div>
           </div>
         </div>
       </SidebarInset>

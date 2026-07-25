@@ -183,7 +183,7 @@ export default function ChatPage() {
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-lg border">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* Left: conversation list */}
       <aside className="flex w-72 shrink-0 flex-col border-r">
         <div className="flex items-center justify-between border-b p-3">
