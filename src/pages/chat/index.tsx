@@ -9,17 +9,12 @@ import {
   IconUsers,
   IconLogout,
   IconUserMinus,
+  IconUserPlus,
 } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
 import { cn } from "#/lib/utils";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { useChatStore } from "#/stores/use-chat-store";
@@ -37,17 +32,17 @@ import type {
   ChatConversationItem,
 } from "#/lib/api/chat-controller";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "#/components/ui/sheet";
+import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
+import {
   NewConversationDialog,
   UserSearch,
   type PickUser,
 } from "./new-conversation-dialog";
-
-/** WhatsApp-style scattered doodle tile, drawn once and reused as a background.
- *  Neutral gray strokes at low opacity read well over both the light and dark
- *  chat canvases. */
-const DOODLE_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%23667781' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M28 40h34a6 6 0 0 1 6 6v20a6 6 0 0 1-6 6H44l-10 9v-9h-6a6 6 0 0 1-6-6V46a6 6 0 0 1 6-6z'/><path d='M168 34c-8-9-22-3-22 8 0 9 12 16 22 24 10-8 22-15 22-24 0-11-14-17-22-8z'/><circle cx='268' cy='52' r='20'/><path d='M260 50a3 3 0 0 0 6 0M270 50a3 3 0 0 0 6 0M260 60c4 5 12 5 16 0'/><rect x='36' y='150' width='52' height='38' rx='6'/><circle cx='62' cy='169' r='9'/><path d='M46 150l6-9h20l6 9'/><path d='M176 200v-44l30-6v44'/><circle cx='170' cy='202' r='7'/><circle cx='200' cy='196' r='7'/><path d='M278 168l4 12 12 1-9 8 3 12-10-7-10 7 3-12-9-8 12-1z'/><rect x='30' y='250' width='48' height='34' rx='4'/><path d='M30 254l24 16 24-16'/><circle cx='168' cy='266' r='22'/><path d='M168 252v14l10 6'/><path d='M250 258h40M250 270h30M250 282h36'/></g></svg>`;
-
-const WHATSAPP_BG = `url("data:image/svg+xml,${DOODLE_SVG}")`;
 
 /** Same-day grouping key for the date separators in a thread. */
 function dayKey(iso: string): string {
@@ -279,7 +274,7 @@ function ChatThread({
 
   return (
     <section className="flex flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b bg-[#f0f2f5] p-3 dark:bg-[#202c33]">
+      <header className="flex shrink-0 items-center gap-3 border-b px-5 py-3">
         <Avatar className="size-9">
           <AvatarFallback>{initials(title)}</AvatarFallback>
         </Avatar>
@@ -294,22 +289,20 @@ function ChatThread({
           </div>
         </div>
         {isGroup && (
-          <GroupMembersDialog conversation={conversation} meId={meId} />
+          <GroupMembersSheet conversation={conversation} meId={meId} />
         )}
       </header>
 
-      <div className="relative flex-1 overflow-hidden bg-[#efeae2] dark:bg-[#0b141a]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.05]"
-          style={{ backgroundImage: WHATSAPP_BG, backgroundRepeat: "repeat" }}
-        />
-        <div className="relative h-full space-y-1 overflow-y-auto px-4 py-4 md:px-[6%]">
+      <div className="relative min-h-0 flex-1 overflow-hidden text-foreground">
+        <ChatDoodleBg />
+        <div className="absolute inset-0 flex flex-col gap-1 overflow-y-auto p-5 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {messages.map((m, i) => {
             const mine = m.senderId === meId;
             const prev = messages[i - 1];
-            const newDay = !prev || dayKey(prev.createdAt) !== dayKey(m.createdAt);
+            const newDay =
+              !prev || dayKey(prev.createdAt) !== dayKey(m.createdAt);
             // Group consecutive messages from the same sender: only the first
-            // gets a tail + (in groups) the sender name.
+            // shows the sender's name + the squared "tail" corner.
             const startOfGroup =
               newDay || !prev || prev.senderId !== m.senderId;
             const seen =
@@ -324,85 +317,66 @@ function ChatThread({
               <div key={m.id}>
                 {newDay && (
                   <div className="my-3 flex justify-center">
-                    <span className="rounded-md bg-white/80 px-3 py-1 text-[11px] font-medium text-[#54656f] shadow-sm dark:bg-[#182229] dark:text-[#8696a0]">
+                    <span className="rounded-md bg-background/80 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
                       {dayLabel(m.createdAt)}
                     </span>
                   </div>
                 )}
                 <div
                   className={cn(
-                    "flex",
-                    mine ? "justify-end" : "justify-start",
+                    "flex w-full flex-col gap-1",
+                    mine ? "items-end" : "items-start",
                     startOfGroup ? "mt-2" : "mt-0.5",
                   )}
                 >
+                  {startOfGroup && isGroup && !mine && (
+                    <span className="px-1 text-xs text-muted-foreground">
+                      {m.senderName}
+                    </span>
+                  )}
                   <div
                     className={cn(
-                      "relative max-w-[75%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm md:max-w-[65%]",
+                      "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                       mine
-                        ? "bg-[#d9fdd3] text-[#111b21] dark:bg-[#005c4b] dark:text-[#e9edef]"
-                        : "bg-white text-[#111b21] dark:bg-[#202c33] dark:text-[#e9edef]",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground",
                       startOfGroup &&
-                        (mine ? "rounded-tr-none" : "rounded-tl-none"),
+                        (mine ? "rounded-tr-sm" : "rounded-tl-sm"),
                     )}
                   >
-                    {startOfGroup && (
-                      <span
-                        className={cn(
-                          "absolute top-0 h-3 w-2 overflow-hidden",
-                          mine ? "-right-2" : "-left-2",
-                        )}
-                        aria-hidden
-                      >
-                        <span
-                          className={cn(
-                            "absolute top-0 block size-3 rotate-45",
-                            mine
-                              ? "-left-1 bg-[#d9fdd3] dark:bg-[#005c4b]"
-                              : "-right-1 bg-white dark:bg-[#202c33]",
-                          )}
-                        />
-                      </span>
-                    )}
-                    {isGroup && !mine && startOfGroup && (
-                      <div className="mb-0.5 text-xs font-semibold text-[#1f9d55] dark:text-[#53bdeb]">
-                        {m.senderName}
-                      </div>
-                    )}
                     {m.deletedAt ? (
-                      <em className="opacity-60">Message deleted</em>
+                      <em className="opacity-70">Message deleted</em>
                     ) : (
                       <>
                         {m.attachments.map((a) => (
                           <Attachment key={a.key} attachment={a} />
                         ))}
                         {m.body && (
-                          <span className="whitespace-pre-wrap break-words align-bottom">
+                          <span className="whitespace-pre-wrap break-words">
                             {m.body}
                           </span>
                         )}
                       </>
                     )}
-                    {/* time + ticks, floated bottom-right WhatsApp-style */}
-                    <span className="float-right ml-2 mt-1 inline-flex translate-y-0.5 items-center gap-0.5 text-[10px] text-[#667781] dark:text-[#8696a0]">
-                      {m.editedAt ? "edited " : ""}
-                      {formatTime(m.createdAt)}
-                      {mine &&
-                        !m.deletedAt &&
-                        (seen ? (
-                          <IconChecks className="size-3.5 text-[#53bdeb]" />
-                        ) : (
-                          <IconCheck className="size-3.5" />
-                        ))}
-                    </span>
                   </div>
+                  <span className="flex items-center gap-1 px-1 text-[11px] text-muted-foreground">
+                    {m.editedAt ? "edited · " : ""}
+                    {formatTime(m.createdAt)}
+                    {mine &&
+                      !m.deletedAt &&
+                      (seen ? (
+                        <IconChecks className="size-3.5 text-primary" />
+                      ) : (
+                        <IconCheck className="size-3.5" />
+                      ))}
+                  </span>
                 </div>
               </div>
             );
           })}
           {typingNames.length > 0 && (
             <div className="mt-2 flex justify-start">
-              <div className="rounded-lg rounded-tl-none bg-white px-3 py-2 text-xs italic text-[#667781] shadow-sm dark:bg-[#202c33] dark:text-[#8696a0]">
+              <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-xs italic text-muted-foreground">
                 {typingNames.join(", ")}{" "}
                 {typingNames.length === 1 ? "is" : "are"} typing…
               </div>
@@ -477,11 +451,12 @@ function ChatThread({
   );
 }
 
-function GroupMembersDialog({
+function GroupMembersSheet({
   conversation,
   meId,
 }: Readonly<{ conversation: ChatConversationItem; meId?: string }>) {
   const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const addMembers = useAddMembers(conversation.id);
   const removeMember = useRemoveMember(conversation.id);
   const isTeam = conversation.isTeam;
@@ -491,6 +466,7 @@ function GroupMembersDialog({
   const add = async (user: PickUser) => {
     try {
       await addMembers.mutateAsync([user.id]);
+      setAdding(false);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -506,97 +482,151 @@ function GroupMembersDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setAdding(false);
+      }}
+    >
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        title="Members"
+        title="Group info"
         onClick={() => setOpen(true)}
       >
         <IconUsers className="size-5" />
       </Button>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {conversation.name ?? "Group"} · {members.length} members
-          </DialogTitle>
-        </DialogHeader>
+      <SheetContent
+        side="right"
+        className="w-3/4 gap-0 p-0 sm:w-1/4 sm:max-w-none"
+      >
+        {/* Group identity */}
+        <SheetHeader className="items-center gap-2 border-b bg-muted/30 py-6 text-center">
+          <Avatar className="size-20">
+            <AvatarFallback className="text-2xl">
+              {initials(conversation.name ?? "Group")}
+            </AvatarFallback>
+          </Avatar>
+          <SheetTitle className="text-lg">
+            {conversation.name ?? "Group"}
+          </SheetTitle>
+          <span className="text-xs text-muted-foreground">
+            {isTeam ? "Team channel · " : "Group · "}
+            {members.length} members
+          </span>
+        </SheetHeader>
 
-        {isTeam && (
-          <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-            The Team channel syncs automatically with all active team members,
-            so its membership can’t be edited here.
-          </p>
-        )}
-
-        <div className="max-h-56 space-y-1 overflow-y-auto">
-          {members.map((m) => {
-            const self = m.userId === meId;
-            return (
-              <div
-                key={m.userId}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5"
-              >
-                <Avatar className="size-8 shrink-0">
-                  <AvatarFallback className="text-xs">
-                    {initials(m.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium">
-                    {m.name}
-                    {self && " (You)"}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {m.role}
-                  </span>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* Add members */}
+          {!isTeam && (
+            <div className="border-b p-4">
+              {adding ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Add members</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setAdding(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  <UserSearch
+                    meId={meId}
+                    selectedIds={[]}
+                    excludeIds={memberIds}
+                    onPick={add}
+                  />
                 </div>
-                {!isTeam && !self && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="ml-auto text-muted-foreground hover:text-destructive"
-                    title={`Remove ${m.name}`}
-                    disabled={removeMember.isPending}
-                    onClick={() => void remove(m.userId, false)}
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setAdding(true)}
+                >
+                  <IconUserPlus className="size-4" />
+                  Add member
+                </Button>
+              )}
+            </div>
+          )}
+
+          {isTeam && (
+            <p className="border-b bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+              The Team channel syncs automatically with all active team members,
+              so its membership can’t be edited here.
+            </p>
+          )}
+
+          {/* Members list */}
+          <div className="p-2">
+            <p className="px-2 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {members.length} members
+            </p>
+            <div className="space-y-0.5">
+              {members.map((m) => {
+                const self = m.userId === meId;
+                return (
+                  <div
+                    key={m.userId}
+                    className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60"
                   >
-                    <IconUserMinus className="size-4" />
-                  </Button>
-                )}
-              </div>
-            );
-          })}
+                    <Avatar className="size-10 shrink-0">
+                      <AvatarFallback>{initials(m.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium">
+                        {m.name}
+                        {self && (
+                          <span className="text-muted-foreground"> (You)</span>
+                        )}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {m.role}
+                      </span>
+                    </div>
+                    {!isTeam && !self && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        title={`Remove ${m.name}`}
+                        disabled={removeMember.isPending}
+                        onClick={() => void remove(m.userId, false)}
+                      >
+                        <IconUserMinus className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
+        {/* Leave */}
         {!isTeam && (
-          <>
-            <div className="border-t pt-3">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
-                Add members
-              </p>
-              <UserSearch
-                meId={meId}
-                selectedIds={[]}
-                excludeIds={memberIds}
-                onPick={add}
-              />
-            </div>
+          <div className="border-t p-4">
             <Button
               type="button"
-              variant="outline"
-              className="w-full gap-1.5 text-destructive hover:text-destructive"
+              variant="ghost"
+              className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
               disabled={removeMember.isPending}
               onClick={() => meId && void remove(meId, true)}
             >
               <IconLogout className="size-4" />
               Leave group
             </Button>
-          </>
+          </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
