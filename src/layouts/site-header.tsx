@@ -44,10 +44,10 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium uppercase">
+        <h1 className="hidden text-base font-medium uppercase md:block">
           Because everyone deserves a job ⛑️
         </h1>
-        <div className="absolute left-1/2 -translate-x-1/2">
+        <div className="absolute left-1/2 hidden -translate-x-1/2 md:block">
           <LiveClock />
         </div>
         <div className="ml-auto flex items-center gap-2">
