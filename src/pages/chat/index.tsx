@@ -10,6 +10,7 @@ import {
   IconLogout,
   IconUserMinus,
   IconUserPlus,
+  IconTrash,
   IconPhoto,
   IconFileTypePdf,
   IconFileText,
@@ -36,6 +37,7 @@ import {
   useUploadAttachment,
   useAddMembers,
   useRemoveMember,
+  useDeleteGroup,
 } from "#/hooks/use-chat";
 import type {
   ChatAttachment,
@@ -612,8 +614,10 @@ function GroupMembersSheet({
   const [adding, setAdding] = useState(false);
   const addMembers = useAddMembers(conversation.id);
   const removeMember = useRemoveMember(conversation.id);
+  const deleteGroup = useDeleteGroup(conversation.id);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
   const isTeam = conversation.isTeam;
+  const isCreator = !!meId && conversation.createdBy === meId;
   const members = conversation.participants;
   const memberIds = members.map((m) => m.userId);
 
@@ -630,6 +634,17 @@ function GroupMembersSheet({
     try {
       await removeMember.mutateAsync(userId);
       if (self) setOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const destroy = async () => {
+    if (!globalThis.confirm("Delete this group for everyone? This can't be undone."))
+      return;
+    try {
+      await deleteGroup.mutateAsync();
+      setOpen(false);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -760,7 +775,7 @@ function GroupMembersSheet({
                         )}
                       </span>
                     </div>
-                    {!isTeam && !self && (
+                    {!isTeam && isCreator && !self && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -780,19 +795,32 @@ function GroupMembersSheet({
           </div>
         </div>
 
-        {/* Leave */}
+        {/* Delete (creator) / Leave (members) */}
         {!isTeam && (
           <div className="border-t p-4">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              disabled={removeMember.isPending}
-              onClick={() => meId && void remove(meId, true)}
-            >
-              <IconLogout className="size-4" />
-              Leave group
-            </Button>
+            {isCreator ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={deleteGroup.isPending}
+                onClick={() => void destroy()}
+              >
+                <IconTrash className="size-4" />
+                Delete group
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={removeMember.isPending}
+                onClick={() => meId && void remove(meId, true)}
+              >
+                <IconLogout className="size-4" />
+                Leave group
+              </Button>
+            )}
           </div>
         )}
       </SheetContent>
