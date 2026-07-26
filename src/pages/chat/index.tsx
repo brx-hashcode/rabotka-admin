@@ -1,0 +1,878 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  IconPaperclip,
+  IconSend,
+  IconX,
+  IconChecks,
+  IconCheck,
+  IconUsers,
+  IconLogout,
+  IconUserMinus,
+  IconUserPlus,
+  IconTrash,
+  IconPhoto,
+  IconFileTypePdf,
+  IconFileText,
+  IconFileSpreadsheet,
+  IconPresentation,
+  IconFile,
+  IconMusic,
+  IconVideo,
+  IconUsersGroup,
+} from "@tabler/icons-react";
+import type { Icon } from "@tabler/icons-react";
+
+import { Button } from "#/components/ui/button";
+import { Textarea } from "#/components/ui/textarea";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { cn } from "#/lib/utils";
+import { useAdminMe } from "#/hooks/use-admin-me";
+import { useChatStore } from "#/stores/use-chat-store";
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useMarkRead,
+  useUploadAttachment,
+  useAddMembers,
+  useRemoveMember,
+  useDeleteGroup,
+} from "#/hooks/use-chat";
+import type {
+  ChatAttachment,
+  ChatConversationItem,
+} from "#/lib/api/chat-controller";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "#/components/ui/sheet";
+import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
+import {
+  DocumentViewerDrawer,
+  type ViewerDocument,
+} from "#/pages/profile-detail/components/document-viewer-drawer";
+import {
+  NewConversationDialog,
+  UserSearch,
+  type PickUser,
+} from "./new-conversation-dialog";
+import { EmojiPicker } from "./emoji-picker";
+
+/** Same-day grouping key for the date separators in a thread. */
+function dayKey(iso: string): string {
+  return new Date(iso).toDateString();
+}
+
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year:
+      d.getFullYear() === today.getFullYear() ? undefined : "numeric",
+  });
+}
+
+/** Map an attachment's mime/name to the document viewer's fileType hint. */
+function attachmentFileType(mime: string, name: string): string | undefined {
+  if (mime.startsWith("image/")) return "image";
+  if (mime === "application/pdf" || /\.pdf$/i.test(name)) return "pdf";
+  if (mime.includes("wordprocessingml") || /\.docx?$/i.test(name)) return "docx";
+  if (
+    mime.includes("spreadsheetml") ||
+    mime === "application/vnd.ms-excel" ||
+    /\.xlsx?$/i.test(name)
+  )
+    return "xlsx";
+  if (
+    mime.includes("presentationml") ||
+    mime === "application/vnd.ms-powerpoint" ||
+    /\.pptx?$/i.test(name)
+  )
+    return "pptx";
+  if (mime === "text/markdown" || /\.md$/i.test(name)) return "md";
+  return undefined;
+}
+
+function formatBytes(size: number): string {
+  if (!size) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let value = size;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
+/** Pick a type icon for an attachment based on its mime/name. */
+function attachmentIcon(mime: string, name: string): Icon {
+  if (mime.startsWith("image/")) return IconPhoto;
+  if (mime.startsWith("audio/")) return IconMusic;
+  if (mime.startsWith("video/")) return IconVideo;
+  const type = attachmentFileType(mime, name);
+  if (type === "pdf") return IconFileTypePdf;
+  if (type === "xlsx") return IconFileSpreadsheet;
+  if (type === "pptx") return IconPresentation;
+  if (type === "docx" || type === "md" || mime.startsWith("text/")) {
+    return IconFileText;
+  }
+  return IconFile;
+}
+
+function attachmentToViewerDoc(a: ChatAttachment): ViewerDocument {
+  const size = formatBytes(a.size);
+  return {
+    url: a.url,
+    title: a.name,
+    description: [a.mime, size].filter(Boolean).join(" · "),
+    fileType: attachmentFileType(a.mime, a.name),
+  };
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function conversationTitle(c: ChatConversationItem, meId?: string): string {
+  if (c.type === "GROUP") return c.name ?? "Group";
+  const other = c.participants.find((p) => p.userId !== meId);
+  return other?.name ?? "Direct";
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Groups get a primary-tinted avatar so they read differently from DMs. */
+function groupAvatarClass(type: ChatConversationItem["type"]): string {
+  return type === "GROUP" ? "bg-primary/15 text-primary" : "";
+}
+
+export default function ChatPage() {
+  const { data: me } = useAdminMe();
+  const meId = me?.id;
+  const { data: conversations = [] } = useConversations();
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const setActive = useChatStore((s) => s.setActiveConversation);
+  const onlineUserIds = useChatStore((s) => s.onlineUserIds);
+  const typingByConversation = useChatStore((s) => s.typingByConversation);
+
+  // Default to the first conversation (Team) once loaded.
+  useEffect(() => {
+    if (!selectedId && conversations.length > 0) {
+      setSelectedId(conversations[0].id);
+    }
+  }, [conversations, selectedId]);
+
+  useEffect(() => {
+    setActive(selectedId);
+    return () => setActive(null);
+  }, [selectedId, setActive]);
+
+  const selected = conversations.find((c) => c.id === selectedId) ?? null;
+
+  return (
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      {/* Left: conversation list */}
+      <aside className="flex w-72 shrink-0 flex-col border-r">
+        <div className="flex items-center justify-between border-b px-4 py-3.5">
+          <div className="min-w-0">
+            <div className="font-semibold leading-tight">Chat</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {conversations.length}{" "}
+              {conversations.length === 1 ? "conversation" : "conversations"}
+            </div>
+          </div>
+          <NewConversationDialog onCreated={setSelectedId} />
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {conversations.map((c) => {
+            const title = conversationTitle(c, meId);
+            const other =
+              c.type === "DIRECT"
+                ? c.participants.find((p) => p.userId !== meId)
+                : undefined;
+            const online = other ? onlineUserIds.includes(other.userId) : false;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setSelectedId(c.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 border-b px-3 py-2.5 text-left hover:bg-muted",
+                  selectedId === c.id && "bg-muted",
+                )}
+              >
+                <div className="relative">
+                  <Avatar className="size-9">
+                    <AvatarFallback className={groupAvatarClass(c.type)}>
+                      {c.type === "GROUP" ? (
+                        <IconUsersGroup className="size-4" />
+                      ) : (
+                        initials(title)
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  {other && (
+                    <span
+                      className={cn(
+                        "absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background",
+                        online ? "bg-green-500" : "bg-muted-foreground/40",
+                      )}
+                    />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate font-medium">{title}</span>
+                    {c.unreadCount > 0 && (
+                      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+                        {c.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {c.lastMessage?.body ??
+                      (c.lastMessage?.attachments.length
+                        ? "📎 Attachment"
+                        : "No messages yet")}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* Right: thread */}
+      {selected ? (
+        <ChatThread
+          key={selected.id}
+          conversation={selected}
+          meId={meId}
+          typingUserIds={typingByConversation[selected.id] ?? []}
+        />
+      ) : (
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+          Select a conversation
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatThread({
+  conversation,
+  meId,
+  typingUserIds,
+}: Readonly<{
+  conversation: ChatConversationItem;
+  meId?: string;
+  typingUserIds: string[];
+}>) {
+  const { data: page } = useMessages(conversation.id);
+  const messages = page?.messages ?? [];
+  const sendMessage = useSendMessage(conversation.id);
+  const markRead = useMarkRead();
+  const uploadAttachment = useUploadAttachment();
+  const emitTyping = useChatStore((s) => s.emitTyping);
+
+  const [text, setText] = useState("");
+  const [pending, setPending] = useState<ChatAttachment[]>([]);
+  const [viewerDoc, setViewerDoc] = useState<ViewerDocument | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-grow the composer with its content, up to a max height (then scroll).
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [text]);
+
+  const isGroup = conversation.type === "GROUP";
+
+  // Mark read on open and when new messages arrive while viewing.
+  useEffect(() => {
+    markRead.mutate(conversation.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.id, messages.length]);
+
+  // Scroll to newest on message change.
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  const typingNames = useMemo(() => {
+    const names = typingUserIds
+      .map((id) => conversation.participants.find((p) => p.userId === id)?.name)
+      .filter(Boolean) as string[];
+    return names;
+  }, [typingUserIds, conversation.participants]);
+
+  const handleTyping = (value: string) => {
+    setText(value);
+    emitTyping(conversation.id, true);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(
+      () => emitTyping(conversation.id, false),
+      1500,
+    );
+  };
+
+  const pickFiles = async (files: FileList | null) => {
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      try {
+        const att = await uploadAttachment.mutateAsync(file);
+        setPending((prev) => [...prev, att]);
+      } catch (e) {
+        toast.error((e as Error).message);
+      }
+    }
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const el = composerRef.current;
+    if (!el) {
+      setText((t) => t + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + emoji + text.slice(end);
+    setText(next);
+    emitTyping(conversation.id, true);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + emoji.length;
+      el.setSelectionRange(caret, caret);
+    });
+  };
+
+  const send = async () => {
+    const body = text.trim();
+    if (!body && pending.length === 0) return;
+    setText("");
+    const attachments = pending;
+    setPending([]);
+    emitTyping(conversation.id, false);
+    try {
+      await sendMessage.mutateAsync({ body: body || undefined, attachments });
+    } catch (e) {
+      toast.error((e as Error).message);
+      setText(body);
+      setPending(attachments);
+    }
+  };
+
+  const title = conversationTitle(conversation, meId);
+
+  return (
+    <section className="flex flex-1 flex-col">
+      <header className="flex shrink-0 items-center gap-3 border-b px-5 py-3">
+        <Avatar className="size-9">
+          <AvatarFallback className={groupAvatarClass(conversation.type)}>
+            {isGroup ? <IconUsersGroup className="size-4" /> : initials(title)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">{title}</div>
+          <div className="truncate text-xs text-muted-foreground">
+            {isGroup
+              ? conversation.participants
+                  .map((p) => p.name.split(/\s+/)[0])
+                  .join(", ")
+              : "Direct message"}
+          </div>
+        </div>
+        {isGroup && (
+          <GroupMembersSheet conversation={conversation} meId={meId} />
+        )}
+      </header>
+
+      <div className="relative min-h-0 flex-1 overflow-hidden text-foreground">
+        <ChatDoodleBg />
+        <div className="absolute inset-0 flex flex-col gap-1 overflow-y-auto p-5 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {messages.map((m, i) => {
+            const mine = m.senderId === meId;
+            const prev = messages[i - 1];
+            const newDay =
+              !prev || dayKey(prev.createdAt) !== dayKey(m.createdAt);
+            // Group consecutive messages from the same sender: only the first
+            // shows the sender's name + the squared "tail" corner.
+            const startOfGroup =
+              newDay || !prev || prev.senderId !== m.senderId;
+            const seen =
+              mine &&
+              conversation.participants.some(
+                (p) =>
+                  p.userId !== meId &&
+                  p.lastReadAt &&
+                  p.lastReadAt >= m.createdAt,
+              );
+            return (
+              <div key={m.id}>
+                {newDay && (
+                  <div className="my-3 flex justify-center">
+                    <span className="rounded-md bg-background/80 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
+                      {dayLabel(m.createdAt)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    "flex w-full flex-col gap-1",
+                    mine ? "items-end" : "items-start",
+                    startOfGroup ? "mt-2" : "mt-0.5",
+                  )}
+                >
+                  {startOfGroup && isGroup && !mine && (
+                    <span className="px-1 text-xs text-muted-foreground">
+                      {m.senderName}
+                    </span>
+                  )}
+                  <div
+                    className={cn(
+                      "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      mine
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground",
+                      startOfGroup &&
+                        (mine ? "rounded-tr-sm" : "rounded-tl-sm"),
+                    )}
+                  >
+                    {m.deletedAt ? (
+                      <em className="opacity-70">Message deleted</em>
+                    ) : (
+                      <>
+                        {m.attachments.map((a) => (
+                          <Attachment
+                            key={a.key}
+                            attachment={a}
+                            onOpen={setViewerDoc}
+                          />
+                        ))}
+                        {m.body && (
+                          <span className="whitespace-pre-wrap break-words">
+                            {m.body}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <span className="flex items-center gap-1 px-1 text-[11px] text-muted-foreground">
+                    {m.editedAt ? "edited · " : ""}
+                    {formatTime(m.createdAt)}
+                    {mine &&
+                      !m.deletedAt &&
+                      (seen ? (
+                        <IconChecks className="size-3.5 text-primary" />
+                      ) : (
+                        <IconCheck className="size-3.5" />
+                      ))}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {typingNames.length > 0 && (
+            <div className="mt-2 flex justify-start">
+              <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-xs italic text-muted-foreground">
+                {typingNames.join(", ")}{" "}
+                {typingNames.length === 1 ? "is" : "are"} typing…
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {pending.length > 0 && (
+        <div className="flex flex-wrap gap-2 border-t px-4 py-3">
+          {pending.map((a) => {
+            const isImage = a.mime.startsWith("image/");
+            const TypeIcon = attachmentIcon(a.mime, a.name);
+            return (
+              <div
+                key={a.key}
+                className="flex max-w-64 items-center gap-2.5 rounded-lg border bg-muted/40 py-1.5 pl-1.5 pr-2"
+              >
+                <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background">
+                  {isImage ? (
+                    <img
+                      src={a.url}
+                      alt={a.name}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <TypeIcon className="size-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-xs font-medium">{a.name}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {a.size > 0
+                      ? formatBytes(a.size)
+                      : a.mime.split("/")[1]?.toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="ml-1 shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  title="Remove"
+                  onClick={() =>
+                    setPending((prev) => prev.filter((x) => x.key !== a.key))
+                  }
+                >
+                  <IconX className="size-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2 border-t bg-background px-4 py-3">
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden"
+          multiple
+          onChange={(e) => void pickFiles(e.target.files)}
+        />
+        <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-2">
+          <EmojiPicker onPick={insertEmoji} />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 rounded-full"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploadAttachment.isPending}
+          >
+            <IconPaperclip className="size-4" />
+          </Button>
+          <Textarea
+            ref={composerRef}
+            value={text}
+            onChange={(e) => handleTyping(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+            placeholder="Type a message…"
+            className="max-h-32 min-h-9 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1 py-1.5 leading-snug shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+            rows={1}
+          />
+          <Button
+            type="button"
+            size="icon"
+            className="size-9 shrink-0 rounded-full"
+            onClick={() => void send()}
+            disabled={sendMessage.isPending}
+          >
+            <IconSend className="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      <DocumentViewerDrawer
+        open={viewerDoc !== null}
+        onOpenChange={(v) => !v && setViewerDoc(null)}
+        document={viewerDoc}
+      />
+    </section>
+  );
+}
+
+function GroupMembersSheet({
+  conversation,
+  meId,
+}: Readonly<{ conversation: ChatConversationItem; meId?: string }>) {
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const addMembers = useAddMembers(conversation.id);
+  const removeMember = useRemoveMember(conversation.id);
+  const deleteGroup = useDeleteGroup(conversation.id);
+  const onlineUserIds = useChatStore((s) => s.onlineUserIds);
+  const isTeam = conversation.isTeam;
+  const isCreator = !!meId && conversation.createdBy === meId;
+  const members = conversation.participants;
+  const memberIds = members.map((m) => m.userId);
+
+  const add = async (user: PickUser) => {
+    try {
+      await addMembers.mutateAsync([user.id]);
+      setAdding(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const remove = async (userId: string, self: boolean) => {
+    try {
+      await removeMember.mutateAsync(userId);
+      if (self) setOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const destroy = async () => {
+    if (!globalThis.confirm("Delete this group for everyone? This can't be undone."))
+      return;
+    try {
+      await deleteGroup.mutateAsync();
+      setOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setAdding(false);
+      }}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        title="Group info"
+        onClick={() => setOpen(true)}
+      >
+        <IconUsers className="size-5" />
+      </Button>
+      <SheetContent
+        side="right"
+        className="w-3/4 gap-0 p-0 sm:w-1/4 sm:max-w-none"
+      >
+        {/* Group identity */}
+        <SheetHeader className="items-center gap-2 border-b bg-muted/30 py-6 text-center">
+          <Avatar className="size-20">
+            <AvatarFallback className="text-2xl">
+              {initials(conversation.name ?? "Group")}
+            </AvatarFallback>
+          </Avatar>
+          <SheetTitle className="text-lg">
+            {conversation.name ?? "Group"}
+          </SheetTitle>
+          <span className="text-xs text-muted-foreground">
+            {isTeam ? "RABOTKA GROUP · " : "Group · "}
+            {members.length} members
+          </span>
+        </SheetHeader>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* Add members */}
+          {!isTeam && (
+            <div className="border-b p-4">
+              {adding ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Add members</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setAdding(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  <UserSearch
+                    meId={meId}
+                    selectedIds={[]}
+                    excludeIds={memberIds}
+                    onPick={add}
+                  />
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setAdding(true)}
+                >
+                  <IconUserPlus className="size-4" />
+                  Add member
+                </Button>
+              )}
+            </div>
+          )}
+
+          {isTeam && (
+            <p className="border-b bg-muted/20 px-4 py-5 text-xs leading-relaxed text-muted-foreground">
+              This is the company-wide RABOTKA GROUP — everyone on the team is
+              here by default. Its members stay in sync automatically as
+              teammates are added or removed, so the list can’t be edited by
+              hand.
+            </p>
+          )}
+
+          {/* Members list */}
+          <div className="p-2">
+            <p className="px-2 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {members.length} members
+            </p>
+            <div className="space-y-0.5">
+              {members.map((m) => {
+                const self = m.userId === meId;
+                const online = self || onlineUserIds.includes(m.userId);
+                return (
+                  <div
+                    key={m.userId}
+                    className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60"
+                  >
+                    <div className="relative shrink-0">
+                      <Avatar className="size-10">
+                        <AvatarFallback>{initials(m.name)}</AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={cn(
+                          "absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background",
+                          online ? "bg-green-500" : "bg-muted-foreground/40",
+                        )}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium">
+                        {m.name}
+                        {self && (
+                          <span className="text-muted-foreground"> (You)</span>
+                        )}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {m.role}
+                        {online && (
+                          <span className="text-green-600 dark:text-green-500">
+                            {" · Online"}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {!isTeam && isCreator && !self && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        title={`Remove ${m.name}`}
+                        disabled={removeMember.isPending}
+                        onClick={() => void remove(m.userId, false)}
+                      >
+                        <IconUserMinus className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Delete (creator) / Leave (members) */}
+        {!isTeam && (
+          <div className="border-t p-4">
+            {isCreator ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={deleteGroup.isPending}
+                onClick={() => void destroy()}
+              >
+                <IconTrash className="size-4" />
+                Delete group
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={removeMember.isPending}
+                onClick={() => meId && void remove(meId, true)}
+              >
+                <IconLogout className="size-4" />
+                Leave group
+              </Button>
+            )}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function Attachment({
+  attachment,
+  onOpen,
+}: Readonly<{
+  attachment: ChatAttachment;
+  onOpen: (doc: ViewerDocument) => void;
+}>) {
+  const isImage = attachment.mime.startsWith("image/");
+  const TypeIcon = attachmentIcon(attachment.mime, attachment.name);
+  const open = () => onOpen(attachmentToViewerDoc(attachment));
+
+  if (isImage) {
+    return (
+      <button type="button" onClick={open} className="block">
+        <img
+          src={attachment.url}
+          alt={attachment.name}
+          className="mt-1 max-h-48 rounded-md"
+        />
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className="mt-1 flex max-w-64 items-center gap-2.5 rounded-md bg-background/15 py-1.5 pl-1.5 pr-3 text-left transition-colors hover:bg-background/25"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background/40">
+        <TypeIcon className="size-5" />
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate text-sm">{attachment.name}</span>
+        {attachment.size > 0 && (
+          <span className="text-[11px] opacity-70">
+            {formatBytes(attachment.size)}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
