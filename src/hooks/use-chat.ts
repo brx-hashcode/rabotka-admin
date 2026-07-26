@@ -3,6 +3,7 @@ import {
   addConversationMembers,
   createDirectConversation,
   createGroupConversation,
+  deleteConversation,
   getChatMessages,
   listChatUsers,
   listConversations,
@@ -123,6 +124,19 @@ export function useRemoveMember(conversationId: string) {
       removeConversationMember(conversationId, userId),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: chatKeys.conversations }),
+  });
+}
+
+export function useDeleteGroup(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteConversation(conversationId),
+    onSuccess: () => {
+      qc.setQueryData<ChatConversationItem[]>(
+        chatKeys.conversations,
+        (prev) => prev?.filter((c) => c.id !== conversationId),
+      );
+    },
   });
 }
 

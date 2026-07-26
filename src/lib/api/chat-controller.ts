@@ -34,6 +34,7 @@ export type ChatConversationItem = {
   type: ChatConversationType;
   name: string | null;
   isTeam: boolean;
+  createdBy: string | null;
   updatedAt: string;
   participants: ChatParticipantItem[];
   lastMessage: ChatMessageItem | null;
@@ -100,6 +101,16 @@ export class AdminChatController extends AdminBaseController {
       new URLSearchParams(),
     );
     return this.delete<ChatConversationItem>(url);
+  }
+
+  async deleteConversation(
+    conversationId: string,
+  ): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}`,
+      new URLSearchParams(),
+    );
+    return this.delete<{ success: boolean }>(url);
   }
 
   async getMessages(
@@ -173,6 +184,8 @@ export const createGroupConversation = controller.createGroup.bind(controller);
 export const addConversationMembers = controller.addMembers.bind(controller);
 export const removeConversationMember =
   controller.removeMember.bind(controller);
+export const deleteConversation =
+  controller.deleteConversation.bind(controller);
 export const getChatMessages = controller.getMessages.bind(controller);
 export const sendChatMessage = controller.sendMessage.bind(controller);
 export const markConversationRead = controller.markRead.bind(controller);
