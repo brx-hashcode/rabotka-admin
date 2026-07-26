@@ -121,6 +121,17 @@ class AdminDocumentsController extends AdminBaseController {
     const url = this.createURL(`/admin/documents/${id}`, new URLSearchParams());
     return this.delete<{ success: boolean }>(url);
   }
+
+  async replaceDocumentFile(
+    id: string,
+    payload: { file_url: string; mime_type: string },
+  ): Promise<AdminDocumentItem> {
+    const url = this.createURL(
+      `/admin/documents/${id}/file`,
+      new URLSearchParams(),
+    );
+    return this.put<AdminDocumentItem>(url, payload);
+  }
 }
 
 const controller = new AdminDocumentsController();
@@ -130,3 +141,5 @@ export const createDocumentFromUpload =
   controller.createFromUpload.bind(controller);
 export const updateDocument = controller.updateDocument.bind(controller);
 export const deleteDocument = controller.deleteDocument.bind(controller);
+export const replaceDocumentFile =
+  controller.replaceDocumentFile.bind(controller);
