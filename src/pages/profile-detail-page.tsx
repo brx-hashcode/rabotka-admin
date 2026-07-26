@@ -113,6 +113,9 @@ export default function ProfileDetailPage({
     lastName: string;
     address: string;
     description: string;
+    email: string;
+    phone: string;
+    profileType: string;
   }) => {
     await submitUpdate(data);
   };
