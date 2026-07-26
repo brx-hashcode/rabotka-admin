@@ -24,6 +24,7 @@ type FormData = {
   phone: string;
   address: string;
   description: string;
+  profileType: string;
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -47,6 +48,7 @@ type ProfileFormProps = {
     description: string;
     email: string;
     phone: string;
+    profileType: string;
   }) => Promise<void>;
   isSaving: boolean;
   onAvatarChange?: (file: File) => Promise<unknown>;
@@ -69,6 +71,7 @@ export function ProfileForm({
     phone: "",
     address: "",
     description: "",
+    profileType: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +98,7 @@ export function ProfileForm({
       phone: profile.phone ?? "",
       address: profile.address ?? "",
       description: profile.description ?? "",
+      profileType: profile.profileType ?? "",
     };
     setForm(data);
     setInitialForm(data);
@@ -116,6 +120,7 @@ export function ProfileForm({
       description: form.description,
       email: form.email,
       phone: form.phone,
+      profileType: form.profileType,
     });
     setInitialForm(form);
   };
@@ -239,7 +244,11 @@ export function ProfileForm({
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           <div className="space-y-1.5">
             <FieldLabel>Profile Type</FieldLabel>
-            <Select value={profile.profileType} disabled>
+            <Select
+              value={form.profileType}
+              onValueChange={(v) => updateField("profileType", v)}
+              disabled={readOnly}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

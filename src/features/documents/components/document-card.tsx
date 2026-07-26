@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MoreHorizontal, Eye, Pencil, Trash2, Download } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Pencil,
+  Trash2,
+  Download,
+  RefreshCw,
+} from "lucide-react";
 import { appConfig } from "#/config";
 import {
   IconFileTypePdf,
@@ -46,6 +53,7 @@ const CATEGORY_BADGE_CLASS: Record<DocumentCategory, string> = {
 };
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import { RenameDocumentModal } from "./rename-document-modal";
+import { ReplaceDocumentFileModal } from "./replace-document-file-modal";
 import { useRole } from "#/hooks/use-role";
 
 function DocIcon({ mimeType }: Readonly<{ mimeType: string }>) {
@@ -80,6 +88,7 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
   const { canManageContent } = useRole();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
 
   const { mutate: doDelete, isPending: isDeleting } = useMutation({
@@ -163,6 +172,12 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
                     Rename
                   </DropdownMenuItem>
                 )}
+                {canManageContent && (
+                  <DropdownMenuItem onClick={() => setReplaceOpen(true)}>
+                    <RefreshCw className="size-4" />
+                    Replace file
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleDownload()}>
                   <Download className="size-4" />
                   Download
@@ -243,6 +258,12 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
       <RenameDocumentModal
         open={renameOpen}
         onOpenChange={setRenameOpen}
+        document={document}
+      />
+
+      <ReplaceDocumentFileModal
+        open={replaceOpen}
+        onOpenChange={setReplaceOpen}
         document={document}
       />
     </>
