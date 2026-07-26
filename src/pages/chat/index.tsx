@@ -612,6 +612,7 @@ function GroupMembersSheet({
   const [adding, setAdding] = useState(false);
   const addMembers = useAddMembers(conversation.id);
   const removeMember = useRemoveMember(conversation.id);
+  const onlineUserIds = useChatStore((s) => s.onlineUserIds);
   const isTeam = conversation.isTeam;
   const members = conversation.participants;
   const memberIds = members.map((m) => m.userId);
@@ -726,14 +727,23 @@ function GroupMembersSheet({
             <div className="space-y-0.5">
               {members.map((m) => {
                 const self = m.userId === meId;
+                const online = self || onlineUserIds.includes(m.userId);
                 return (
                   <div
                     key={m.userId}
                     className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60"
                   >
-                    <Avatar className="size-10 shrink-0">
-                      <AvatarFallback>{initials(m.name)}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative shrink-0">
+                      <Avatar className="size-10">
+                        <AvatarFallback>{initials(m.name)}</AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={cn(
+                          "absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background",
+                          online ? "bg-green-500" : "bg-muted-foreground/40",
+                        )}
+                      />
+                    </div>
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium">
                         {m.name}
@@ -743,6 +753,11 @@ function GroupMembersSheet({
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
                         {m.role}
+                        {online && (
+                          <span className="text-green-600 dark:text-green-500">
+                            {" · Online"}
+                          </span>
+                        )}
                       </span>
                     </div>
                     {!isTeam && !self && (
