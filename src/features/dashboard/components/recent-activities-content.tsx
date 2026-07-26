@@ -37,7 +37,7 @@ export const RecentActivitiesContent = () => {
       onValueChange={(value) => setActiveTab(value as RecentActivitiesTab)}
       className="w-full flex-col justify-start gap-6"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
