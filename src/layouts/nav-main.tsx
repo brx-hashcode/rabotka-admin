@@ -17,6 +17,7 @@ export const NavMain = ({
     title: string;
     url: string;
     icon?: Icon;
+    badge?: number;
   }>;
 }>) => {
   const routerState = useRouterState();
@@ -47,6 +48,11 @@ export const NavMain = ({
                   <Link to={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
+                    {item.badge != null && item.badge > 0 && (
+                      <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

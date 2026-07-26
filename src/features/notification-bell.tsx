@@ -86,7 +86,7 @@ export function NotificationBell() {
       {isOpen && (
         <div
           ref={panelRef}
-          className="absolute right-0 top-full mt-2 z-50 w-[380px] rounded-xl border bg-popover text-popover-foreground shadow-lg"
+          className="fixed inset-x-2 top-14 z-50 rounded-xl border bg-popover text-popover-foreground shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px]"
         >
           <div className="flex items-center justify-between border-b px-4 py-3">
             <h3 className="text-sm font-semibold">Notifications</h3>

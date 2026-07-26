@@ -12,15 +12,15 @@ export default function DashboardPage() {
       <SectionCards />
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold uppercase">Job activity</h2>
           <ChartAreaFilter />
         </div>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-9">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8 xl:col-span-9">
             <ChartAreaInteractive />
           </div>
-          <div className="col-span-3">
+          <div className="lg:col-span-4 xl:col-span-3">
             <ChartJobStatusPie />
           </div>
         </div>
