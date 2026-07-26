@@ -195,7 +195,7 @@ export default function ChatPage() {
     <div className="flex min-h-0 flex-1 overflow-hidden">
       {/* Left: conversation list */}
       <aside className="flex w-72 shrink-0 flex-col border-r">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex items-center justify-between border-b px-4 py-3.5">
           <div className="min-w-0">
             <div className="font-semibold leading-tight">Chat</div>
             <div className="truncate text-xs text-muted-foreground">
