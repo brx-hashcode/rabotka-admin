@@ -249,6 +249,11 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
   const [zoom, setZoom] = useState(1);
 
   const pdfFile = useMemo(() => {
+    // blob:/data: URLs are browser-local references — the server-side proxy
+    // can't fetch them, so load them directly.
+    if (/^(blob:|data:)/i.test(url.trim())) {
+      return { url };
+    }
     // Load through the same-origin file proxy: storage URLs are cross-origin and
     // usually lack CORS headers, so react-pdf's fetch is blocked when pointed at
     // them directly (unlike <img>, which isn't CORS-gated). The proxy is

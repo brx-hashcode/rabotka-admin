@@ -75,6 +75,10 @@ export type AdminUpdateProfileParams = {
   lastName?: string;
   description?: string;
   address?: string;
+  email?: string;
+  phone?: string;
+  /** Changing this re-indexes the profile into the other vector collection. */
+  profileType?: string;
 };
 
 export type AdminVerifyProfileParams = {
