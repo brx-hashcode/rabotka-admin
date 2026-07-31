@@ -87,12 +87,31 @@ export class AdminPaymentRequestsController extends AdminBaseController {
     );
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestore(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/payment-requests/bulk-restore",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurge(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/payment-requests/bulk-purge",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminPaymentRequestsController();
 export const getPaymentRequestsList = controller.getList.bind(controller);
 export const bulkDeletePaymentRequests =
   controller.bulkDelete.bind(controller);
+export const bulkRestorePaymentRequests =
+  controller.bulkRestore.bind(controller);
+export const bulkPurgePaymentRequests = controller.bulkPurge.bind(controller);
 export const createPaymentLink = controller.createPaymentLink.bind(controller);
 export const approvePaymentRequest = controller.approve.bind(controller);
 export const rejectPaymentRequest = controller.reject.bind(controller);

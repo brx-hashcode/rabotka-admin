@@ -11,17 +11,24 @@ import { CreatePenaltyDialog } from "#/features/penalties/components/create-pena
 import { usePenaltiesList } from "#/hooks/use-penalties-list";
 import { Button } from "#/components/ui/button";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
 } from "#/components/table/deleted-filter";
-import { bulkDeletePenalties } from "#/lib/api/penalties-controller";
+import {
+  bulkDeletePenalties,
+  bulkPurgePenalties,
+  bulkRestorePenalties,
+} from "#/lib/api/penalties-controller";
 import { useRole } from "#/hooks/use-role";
 
 function PenaltiesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Penalty> }>) {
-  const { canManageContent } = useRole();
+  const { canPurge, canEditArea } = useRole();
+  const canEdit = canEditArea("/penalties");
   const deletedView = useIsDeletedView();
   return (
     <TableHeader>
@@ -38,13 +45,32 @@ function PenaltiesTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeletePenalties}
-          queryKey={["admin", "penalties"]}
-          entityLabel="penalty"
-          disabled={!canManageContent || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestorePenalties}
+              queryKey={["admin", "penalties"]}
+              entityLabel="penalty"
+              disabled={!canEdit}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgePenalties}
+              queryKey={["admin", "penalties"]}
+              entityLabel="penalty"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeletePenalties}
+            queryKey={["admin", "penalties"]}
+            entityLabel="penalty"
+            disabled={!canEdit}
+          />
+        )}
       </TableHeaderToolbar>
     </TableHeader>
   );

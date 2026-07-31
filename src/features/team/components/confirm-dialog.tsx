@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { IconLoader2 } from "@tabler/icons-react";
 
 import {
@@ -15,7 +16,11 @@ type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  /**
+   * Plain text for the common case. Rich nodes are allowed so a dialog can
+   * explain itself with structure (e.g. a list of what blocks the action).
+   */
+  description: ReactNode;
   actionLabel: string;
   onConfirm: () => void;
   isPending?: boolean;
@@ -37,7 +42,14 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          {/*
+            Radix renders the description as a <p>. `asChild` hands that role to
+            the caller's own element instead, so rich content (lists, divs) does
+            not end up illegally nested inside a paragraph.
+          */}
+          <AlertDialogDescription asChild={typeof description !== "string"}>
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>

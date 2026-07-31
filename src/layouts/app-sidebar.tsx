@@ -18,6 +18,7 @@ import {
   IconSpeakerphone,
   IconGridDots,
   IconMessage,
+  IconTopologyStar3,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -47,19 +48,58 @@ export type NavItem = {
   badge?: number;
 };
 
+
+const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
+
 const navMain: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: IconGridDots },
-  { title: "Profiles", url: "/profiles", icon: IconUser },
-  { title: "Job Offers", url: "/jobs", icon: IconBriefcase },
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: IconGridDots,
+    roles: [...LADDER, "FINANCE"],
+  },
+  {
+    title: "Profiles",
+    url: "/profiles",
+    icon: IconUser,
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    title: "Job Offers",
+    url: "/jobs",
+    icon: IconBriefcase,
+    roles: [...LADDER, "SUPPORT"],
+  },
   {
     title: "Domains",
     url: "/job-categories",
     icon: IconTag,
     roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
-  { title: "Applications", url: "/applications", icon: IconFileText },
-  { title: "Chat", url: "/chat", icon: IconMessage },
-  { title: "Penalties", url: "/penalties", icon: IconAlertTriangle },
+  {
+    title: "Applications",
+    url: "/applications",
+    icon: IconFileText,
+    roles: [...LADDER, "SUPPORT"],
+  },
+  {
+    title: "Chat",
+    url: "/chat",
+    icon: IconMessage,
+    roles: [...LADDER, "SUPPORT"],
+  },
+  {
+    title: "Penalties",
+    url: "/penalties",
+    icon: IconAlertTriangle,
+    roles: [...LADDER, "FINANCE"],
+  },
+  {
+    title: "Network",
+    url: "/network",
+    icon: IconTopologyStar3,
+    roles: [...LADDER],
+  },
   {
     title: "Team",
     url: "/team",
@@ -83,9 +123,14 @@ const documents: NavItem[] = [
     title: "Wallet",
     url: "/wallet",
     icon: IconWallet,
-    roles: ["SUPER_ADMIN", "ADMIN"],
+    roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
   },
-  { title: "Claims", url: "/claim", icon: IconReport },
+  {
+    title: "Claims",
+    url: "/claim",
+    icon: IconReport,
+    roles: [...LADDER, "SUPPORT"],
+  },
   {
     title: "Events",
     url: "/events",
