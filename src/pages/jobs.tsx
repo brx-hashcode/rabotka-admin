@@ -2,6 +2,8 @@ import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
@@ -13,13 +15,17 @@ import {
   type JobOffer,
 } from "#/features/jobs";
 import { useJobsList } from "#/hooks/use-jobs-list";
-import { bulkDeleteJobOffers } from "#/lib/api/jobs-controller";
+import {
+  bulkDeleteJobOffers,
+  bulkPurgeJobOffers,
+  bulkRestoreJobOffers,
+} from "#/lib/api/jobs-controller";
 import { useRole } from "#/hooks/use-role";
 
 function JobsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<JobOffer> }>) {
-  const { canManageContent } = useRole();
+  const { canManageContent, canPurge } = useRole();
   const deletedView = useIsDeletedView();
   return (
     <TableHeader>
@@ -32,13 +38,32 @@ function JobsTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeleteJobOffers}
-          queryKey={["admin", "jobs"]}
-          entityLabel="job offer"
-          disabled={!canManageContent || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestoreJobOffers}
+              queryKey={["admin", "jobs"]}
+              entityLabel="job offer"
+              disabled={!canManageContent}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgeJobOffers}
+              queryKey={["admin", "jobs"]}
+              entityLabel="job offer"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeleteJobOffers}
+            queryKey={["admin", "jobs"]}
+            entityLabel="job offer"
+            disabled={!canManageContent}
+          />
+        )}
         <JobExportMenu />
       </TableHeaderToolbar>
     </TableHeader>

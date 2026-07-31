@@ -5,6 +5,8 @@ import { Button } from "#/components/ui/button";
 import { SheetTrigger } from "#/components/ui/sheet";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
@@ -12,7 +14,11 @@ import {
 import { Tabs, TabsContent } from "#/components/ui/tabs";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
 import { useRole } from "#/hooks/use-role";
-import { bulkDeleteWalletTransactions } from "#/lib/api/wallet-controller";
+import {
+  bulkDeleteWalletTransactions,
+  bulkPurgeWalletTransactions,
+  bulkRestoreWalletTransactions,
+} from "#/lib/api/wallet-controller";
 import {
   WalletInfoCard,
   WalletTabsList,
@@ -56,7 +62,8 @@ const PAYMENT_STATUS_OPTIONS = [
 function TransactionsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<AdminWalletTransactionItem> }>) {
-  const { canManageTeam } = useRole();
+  const { canPurge, canEditArea } = useRole();
+  const canEdit = canEditArea("/wallet");
   const deletedView = useIsDeletedView();
   const [createdFrom, setCreatedFrom] = useQueryState(
     "created_from",
@@ -81,13 +88,32 @@ function TransactionsTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeleteWalletTransactions}
-          queryKey={["admin", "wallet", "transactions"]}
-          entityLabel="transaction"
-          disabled={!canManageTeam || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestoreWalletTransactions}
+              queryKey={["admin", "wallet", "transactions"]}
+              entityLabel="transaction"
+              disabled={!canEdit}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgeWalletTransactions}
+              queryKey={["admin", "wallet", "transactions"]}
+              entityLabel="transaction"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeleteWalletTransactions}
+            queryKey={["admin", "wallet", "transactions"]}
+            entityLabel="transaction"
+            disabled={!canEdit}
+          />
+        )}
         <DateRangePicker
           from={createdFrom}
           to={createdTo}

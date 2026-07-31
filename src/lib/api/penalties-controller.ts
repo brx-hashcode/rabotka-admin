@@ -99,11 +99,29 @@ export class AdminPenaltiesController extends AdminBaseController {
     );
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestore(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/penalties/bulk-restore",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurge(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/penalties/bulk-purge",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminPenaltiesController();
 export const getPenaltiesList = controller.getList.bind(controller);
 export const bulkDeletePenalties = controller.bulkDelete.bind(controller);
+export const bulkRestorePenalties = controller.bulkRestore.bind(controller);
+export const bulkPurgePenalties = controller.bulkPurge.bind(controller);
 export const getPenaltyById = controller.getById.bind(controller);
 export const confirmPenaltyPayment = controller.confirmPayment.bind(controller);
 export const deletePenalty = controller.deletePenalty.bind(controller);
