@@ -64,6 +64,15 @@ const ADMIN_ROLES = [
     value: "MODERATOR",
     label: "MODERATOR",
   },
+  // Lateral roles — they own one area rather than a rung of the ladder.
+  {
+    value: "FINANCE",
+    label: "FINANCE",
+  },
+  {
+    value: "SUPPORT",
+    label: "SUPPORT",
+  },
 ] as const;
 
 type UserFormValues = z.infer<typeof userFormSchema>;

@@ -1,7 +1,20 @@
 import { AdminBaseController } from "./base-controller";
 
 
-export type AdminRole = "ADMIN" | "SUPER_ADMIN" | "MANAGER" | "MODERATOR";
+/** Seniority ladder: each one implies everything below it. */
+export type HierarchicalRole =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "MANAGER"
+  | "MODERATOR";
+
+/**
+ * Roles outside the ladder. They are not "more" or "less" than a MODERATOR —
+ * they own a specific area of the product and nothing else.
+ */
+export type LateralRole = "FINANCE" | "SUPPORT";
+
+export type AdminRole = HierarchicalRole | LateralRole;
 
 export type Admin = {
   id: string;

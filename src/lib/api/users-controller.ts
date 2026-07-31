@@ -87,11 +87,23 @@ export class AdminUsersController extends AdminBaseController {
     const url = this.createURL("/user/bulk-delete", new URLSearchParams());
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestore(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL("/user/bulk-restore", new URLSearchParams());
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurge(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL("/user/bulk-purge", new URLSearchParams());
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminUsersController();
 export const getUsersList = controller.getList.bind(controller);
 export const bulkDeleteUsers = controller.bulkDelete.bind(controller);
+export const bulkRestoreUsers = controller.bulkRestore.bind(controller);
+export const bulkPurgeUsers = controller.bulkPurge.bind(controller);
 export const createAdminUser = controller.create.bind(controller);
 export const updateAdminUser = (id: string, data: UpdateAdminUserParams) =>
   controller.update(id, data);

@@ -7,11 +7,17 @@ import {
 import { usePaymentRequestsList } from "#/hooks/use-payment-requests-list";
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
 } from "#/components/table/deleted-filter";
-import { bulkDeletePaymentRequests } from "#/lib/api/payment-requests-controller";
+import {
+  bulkDeletePaymentRequests,
+  bulkPurgePaymentRequests,
+  bulkRestorePaymentRequests,
+} from "#/lib/api/payment-requests-controller";
 import { useRole } from "#/hooks/use-role";
 
 const STATUS_OPTIONS = [
@@ -24,7 +30,8 @@ const STATUS_OPTIONS = [
 function PaymentRequestsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<PaymentRequest> }>) {
-  const { canManageContent } = useRole();
+  const { canPurge, canEditArea } = useRole();
+  const canEdit = canEditArea("/payment-requests");
   const deletedView = useIsDeletedView();
   return (
     <TableHeader>
@@ -41,13 +48,32 @@ function PaymentRequestsTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeletePaymentRequests}
-          queryKey={["admin", "payment-requests"]}
-          entityLabel="payment request"
-          disabled={!canManageContent || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestorePaymentRequests}
+              queryKey={["admin", "payment-requests"]}
+              entityLabel="payment request"
+              disabled={!canEdit}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgePaymentRequests}
+              queryKey={["admin", "payment-requests"]}
+              entityLabel="payment request"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeletePaymentRequests}
+            queryKey={["admin", "payment-requests"]}
+            entityLabel="payment request"
+            disabled={!canEdit}
+          />
+        )}
       </TableHeaderToolbar>
     </TableHeader>
   );

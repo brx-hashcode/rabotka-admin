@@ -18,6 +18,10 @@ function getRoleBadgeClass(role: string): string {
       return "bg-amber-500 text-white border-transparent hover:bg-amber-600";
     case "MODERATOR":
       return "bg-teal-500 text-white border-transparent hover:bg-teal-600";
+    case "FINANCE":
+      return "bg-emerald-600 text-white border-transparent hover:bg-emerald-700";
+    case "SUPPORT":
+      return "bg-sky-600 text-white border-transparent hover:bg-sky-700";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
