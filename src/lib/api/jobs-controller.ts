@@ -131,11 +131,29 @@ export class AdminJobOffersController extends AdminBaseController {
     );
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestore(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/job-offers/bulk-restore",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurge(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/job-offers/bulk-purge",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminJobOffersController();
 export const getJobOffersList = controller.getList.bind(controller);
 export const bulkDeleteJobOffers = controller.bulkDelete.bind(controller);
+export const bulkRestoreJobOffers = controller.bulkRestore.bind(controller);
+export const bulkPurgeJobOffers = controller.bulkPurge.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 

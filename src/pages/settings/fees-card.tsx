@@ -14,6 +14,7 @@ type FormState = {
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
   "fees.max_concurrent_applications": string;
+  "fees.max_daily_applications": string;
   "fees.contact_unlock_fee_employer": string;
   "fees.contact_unlock_fee_worker": string;
   "fees.contact_unlock_expiry_hours": string;
@@ -36,6 +37,7 @@ const EMPTY: FormState = {
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
   "fees.max_concurrent_applications": "",
+  "fees.max_daily_applications": "",
   "fees.contact_unlock_fee_employer": "",
   "fees.contact_unlock_fee_worker": "",
   "fees.contact_unlock_expiry_hours": "",
@@ -153,7 +155,7 @@ export function FeesCard() {
         <p className="pt-6 text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
           Worker – late cancellation
         </p>
-        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
             <FieldLabel>Financial penalty</FieldLabel>
             <NumericInput
@@ -178,11 +180,32 @@ export function FeesCard() {
               suffix="h"
             />
           </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Application limits
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Both caps gate a worker applying, and whichever is lower is what they
+          actually hit — the app shows the tighter of the two as their remaining
+          count. Concurrent counts still-open applications (pending or accepted)
+          on offers that haven&apos;t closed; daily resets at midnight.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div className="space-y-1.5">
             <FieldLabel>Max concurrent applications</FieldLabel>
             <NumericInput
               value={form["fees.max_concurrent_applications"]}
               onChange={(v) => set("fees.max_concurrent_applications", v)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max applications per day</FieldLabel>
+            <NumericInput
+              value={form["fees.max_daily_applications"]}
+              onChange={(v) => set("fees.max_daily_applications", v)}
             />
           </div>
         </div>

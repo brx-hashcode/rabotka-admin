@@ -6,13 +6,19 @@ import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Button } from "#/components/ui/button";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
 } from "#/components/table/deleted-filter";
 import { useUsersList } from "#/hooks/use-users-list";
 import { useRole } from "#/hooks/use-role";
-import { bulkDeleteUsers } from "#/lib/api/users-controller";
+import {
+  bulkDeleteUsers,
+  bulkPurgeUsers,
+  bulkRestoreUsers,
+} from "#/lib/api/users-controller";
 import {
   userColumns,
   userRoleOptions,
@@ -25,11 +31,13 @@ function UsersTableHeader({
   onCreateClick,
   canManageTeam,
   canDeleteTeam,
+  canPurge,
 }: Readonly<{
   table: TableInstance<AdminUser>;
   onCreateClick: () => void;
   canManageTeam: boolean;
   canDeleteTeam: boolean;
+  canPurge: boolean;
 }>) {
   const deletedView = useIsDeletedView();
   return (
@@ -43,13 +51,32 @@ function UsersTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeleteUsers}
-          queryKey={["admin", "users"]}
-          entityLabel="user"
-          disabled={!canDeleteTeam || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestoreUsers}
+              queryKey={["admin", "users"]}
+              entityLabel="user"
+              disabled={!canDeleteTeam}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgeUsers}
+              queryKey={["admin", "users"]}
+              entityLabel="user"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeleteUsers}
+            queryKey={["admin", "users"]}
+            entityLabel="user"
+            disabled={!canDeleteTeam}
+          />
+        )}
         {canManageTeam && (
           <Button size="sm" onClick={onCreateClick}>
             <IconPlus className="mr-1.5 size-4" />
@@ -63,7 +90,7 @@ function UsersTableHeader({
 
 export default function TeamPage() {
   const { data, total, isLoading } = useUsersList();
-  const { canManageTeam, canDeleteTeam } = useRole();
+  const { canManageTeam, canDeleteTeam, canPurge } = useRole();
   const [createOpen, setCreateOpen] = useState(false);
 
   function renderHeader(table: TableInstance<AdminUser>) {
@@ -73,6 +100,7 @@ export default function TeamPage() {
         onCreateClick={() => setCreateOpen(true)}
         canManageTeam={canManageTeam}
         canDeleteTeam={canDeleteTeam}
+        canPurge={canPurge}
       />
     );
   }
