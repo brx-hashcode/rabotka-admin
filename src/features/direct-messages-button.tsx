@@ -18,6 +18,7 @@ import {
 import { ProfileCombobox } from "#/components/profile-combobox";
 import { IconSend } from "@tabler/icons-react";
 import { useRole } from "#/hooks/use-role";
+import { QuickMessagePicker } from "#/components/quick-message-picker";
 
 type Channel = "WHATSAPP" | "EMAIL";
 
@@ -53,6 +54,11 @@ export const DirectMessagesButton = ({
   });
 
   const canSend = !!selectedProfile && text.trim().length > 0 && !isPending;
+
+  /** Appends the template so an already-typed message is never lost. */
+  const applyTemplate = (message: string) => {
+    setText((prev) => (prev.trim() ? `${prev.trimEnd()}\n\n${message}` : message));
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) send();
@@ -128,18 +134,26 @@ export const DirectMessagesButton = ({
 
             {/* Message textarea */}
             <div className="flex flex-col gap-1.5 flex-1">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <label htmlFor={messageId} className="text-sm font-medium">
                   Message
                 </label>
-                <span className="text-[11px] text-muted-foreground hidden sm:block">
-                  Ctrl+Enter to send
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground hidden sm:block">
+                    Ctrl+Enter to send
+                  </span>
+                  <QuickMessagePicker
+                    profileType={selectedProfile?.profileType}
+                    firstName={selectedProfile?.firstName}
+                    onPick={applyTemplate}
+                    disabled={isPending}
+                  />
+                </div>
               </div>
-              <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-1 flex-1 min-h-[120px]">
+              <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-2 py-1 flex-1 min-h-65">
                 <Textarea
                   id={messageId}
-                  className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1 min-h-[100px] p-1"
+                  className="resize-y border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-1 min-h-60 p-1"
                   placeholder="Write a message…"
                   value={text}
                   onChange={(e) => setText(e.target.value)}

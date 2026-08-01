@@ -97,12 +97,30 @@ export class AdminApplicationsController extends AdminBaseController {
     );
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestore(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/applications/bulk-restore",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurge(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/applications/bulk-purge",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminApplicationsController();
 export const getApplicationsList = controller.getList.bind(controller);
 export const getApplicationById = controller.getById.bind(controller);
 export const bulkDeleteApplications = controller.bulkDelete.bind(controller);
+export const bulkRestoreApplications = controller.bulkRestore.bind(controller);
+export const bulkPurgeApplications = controller.bulkPurge.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 
