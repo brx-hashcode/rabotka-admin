@@ -105,6 +105,8 @@ function getChannelBadgeClass(channel: string): string {
       return "bg-sky-500 text-white border-transparent";
     case "WHATSAPP":
       return "bg-green-600 text-white border-transparent";
+    case "IN_APP":
+      return "bg-amber-500 text-white border-transparent";
     default:
       return "bg-zinc-500 text-white border-transparent";
   }
