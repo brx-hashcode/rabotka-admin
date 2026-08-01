@@ -11,10 +11,16 @@ import {
 } from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
-import { IconMail, IconBrandWhatsapp, IconDownload } from "@tabler/icons-react";
+import {
+  IconMail,
+  IconBrandWhatsapp,
+  IconDeviceMobile,
+  IconDownload,
+  IconX,
+} from "@tabler/icons-react";
 import type { Advertisement } from "#/lib/api/advertisements-controller";
 
-type Channel = "EMAIL" | "WHATSAPP";
+type Channel = "EMAIL" | "WHATSAPP" | "IN_APP";
 
 type Props = {
   open: boolean;
@@ -22,9 +28,14 @@ type Props = {
   advertisement: Advertisement;
 };
 
-function getDefaultChannel(hasEmail: boolean, hasWhatsApp: boolean): Channel {
+function getDefaultChannel(
+  hasEmail: boolean,
+  hasWhatsApp: boolean,
+  hasInApp: boolean,
+): Channel {
   if (hasEmail) return "EMAIL";
   if (hasWhatsApp) return "WHATSAPP";
+  if (hasInApp) return "IN_APP";
   return "EMAIL";
 }
 
@@ -251,6 +262,99 @@ function WhatsAppPreview({ ad }: Readonly<{ ad: Advertisement }>) {
   );
 }
 
+/**
+ * Mirrors the client's in-app popup (rabotka-client `features/ads/ad-popup`):
+ * near-fullscreen card over a dimmed backdrop, plain-text body (the client does
+ * not render markdown there) and the deliberately off-brand blue CTA.
+ */
+function InAppPreview({ ad }: Readonly<{ ad: Advertisement }>) {
+  const callToAction = ad.call_to_action ?? "En savoir plus";
+  const image = ad.banner_url ?? ad.image_urls?.[0];
+  const tags = ad.tags ?? [];
+
+  return (
+    <div className="mx-auto w-full max-w-[320px]">
+      <div className="relative h-150 overflow-hidden rounded-[2rem] bg-zinc-900 p-2 shadow-xl">
+        {/* App screen behind the ad */}
+        <div className="relative h-full w-full overflow-hidden rounded-[1.6rem] bg-zinc-100">
+          <div className="space-y-2 p-3">
+            <div className="h-9 rounded-full bg-white" />
+            <div className="h-16 rounded-xl bg-white" />
+            <div className="h-24 rounded-xl bg-white" />
+            <div className="h-24 rounded-xl bg-white" />
+          </div>
+
+          {/* Popup */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-2">
+            <div className="relative flex h-[92%] w-full flex-col overflow-hidden rounded-2xl bg-white">
+              <div className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1.5 text-zinc-700">
+                <IconX className="size-4" />
+              </div>
+
+              {image && (
+                <div className="relative min-h-0 flex-1">
+                  <img
+                    src={image}
+                    alt={ad.title}
+                    className="size-full object-cover"
+                  />
+                  <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white">
+                    Publicité
+                  </span>
+                </div>
+              )}
+
+              <div className="flex max-h-[58%] min-h-0 shrink-0 flex-col gap-1.5 p-4 pb-3">
+                {!image && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Publicité
+                  </span>
+                )}
+                <p className="shrink-0 text-lg font-bold leading-tight text-zinc-900">
+                  {ad.title}
+                </p>
+                <p className="min-h-0 flex-1 overflow-hidden text-sm leading-relaxed text-zinc-500">
+                  {ad.description}
+                </p>
+                {tags.length > 0 && (
+                  <ul className="flex shrink-0 flex-wrap gap-1">
+                    {tags.map((t) => (
+                      <li
+                        key={t}
+                        className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500"
+                      >
+                        #{t}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {ad.cta_url && (
+                <div className="shrink-0 px-4 pb-4">
+                  {/* Matches the client's `outline` button: flat green tint. */}
+                  <div className="flex h-11 w-full items-center justify-center rounded-md bg-whatsapp/10 text-sm font-semibold text-whatsapp">
+                    {callToAction}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChannelPreview({
+  channel,
+  ad,
+}: Readonly<{ channel: Channel; ad: Advertisement }>) {
+  if (channel === "EMAIL") return <EmailPreview ad={ad} />;
+  if (channel === "WHATSAPP") return <WhatsAppPreview ad={ad} />;
+  return <InAppPreview ad={ad} />;
+}
+
 export function AdvertisementPreviewDialog({
   open,
   onOpenChange,
@@ -259,8 +363,9 @@ export function AdvertisementPreviewDialog({
   const channels = advertisement.bundle?.allowed_channels ?? [];
   const hasEmail = channels.some((c) => c === "EMAIL" || c === "BOTH");
   const hasWhatsApp = channels.some((c) => c === "WHATSAPP" || c === "BOTH");
+  const hasInApp = channels.includes("IN_APP");
 
-  const defaultChannel = getDefaultChannel(hasEmail, hasWhatsApp);
+  const defaultChannel = getDefaultChannel(hasEmail, hasWhatsApp, hasInApp);
 
   const [activeChannel, setActiveChannel] = useState<Channel>(defaultChannel);
   const [isSaving, setIsSaving] = useState(false);
@@ -319,6 +424,18 @@ export function AdvertisementPreviewDialog({
               WhatsApp
             </Button>
           )}
+          {(hasInApp || channels.length === 0) && (
+            <Button
+              type="button"
+              size="sm"
+              variant={activeChannel === "IN_APP" ? "default" : "outline"}
+              onClick={() => setActiveChannel("IN_APP")}
+              className="gap-1.5"
+            >
+              <IconDeviceMobile className="size-4" />
+              In-app
+            </Button>
+          )}
           <div className="ml-auto flex items-center gap-2">
             <Badge variant="outline" className="self-center text-[10px]">
               Preview only — placeholder recipient
@@ -339,11 +456,7 @@ export function AdvertisementPreviewDialog({
 
         <div className="overflow-y-auto px-6 py-5 flex-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div ref={previewRef}>
-            {activeChannel === "EMAIL" ? (
-              <EmailPreview ad={advertisement} />
-            ) : (
-              <WhatsAppPreview ad={advertisement} />
-            )}
+            <ChannelPreview channel={activeChannel} ad={advertisement} />
           </div>
         </div>
       </DialogContent>
