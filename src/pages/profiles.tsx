@@ -2,6 +2,8 @@ import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
@@ -16,13 +18,17 @@ import {
   type Profile,
 } from "#/features/applications";
 import { useProfilesList } from "#/hooks/use-profiles-list";
-import { bulkDeleteProfiles } from "#/lib/api/profiles-controller";
+import {
+  bulkDeleteProfiles,
+  bulkPurgeProfiles,
+  bulkRestoreProfiles,
+} from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
 
 function ProfilesTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Profile> }>) {
-  const { canManageContent } = useRole();
+  const { canManageContent, canPurge } = useRole();
   const deletedView = useIsDeletedView();
   return (
     <TableHeader>
@@ -50,13 +56,32 @@ function ProfilesTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeleteProfiles}
-          queryKey={["admin", "profiles"]}
-          entityLabel="profile"
-          disabled={!canManageContent || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestoreProfiles}
+              queryKey={["admin", "profiles"]}
+              entityLabel="profile"
+              disabled={!canManageContent}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgeProfiles}
+              queryKey={["admin", "profiles"]}
+              entityLabel="profile"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeleteProfiles}
+            queryKey={["admin", "profiles"]}
+            entityLabel="profile"
+            disabled={!canManageContent}
+          />
+        )}
         <ProfileExportMenu />
       </TableHeaderToolbar>
     </TableHeader>

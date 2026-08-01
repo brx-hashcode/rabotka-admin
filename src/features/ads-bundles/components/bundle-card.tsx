@@ -46,6 +46,8 @@ function channelBadgeClass(channel: string): string {
       return "text-[10px] py-0 px-1.5 bg-sky-500 text-white border-transparent";
     case "WHATSAPP":
       return "text-[10px] py-0 px-1.5 bg-green-600 text-white border-transparent";
+    case "IN_APP":
+      return "text-[10px] py-0 px-1.5 bg-amber-500 text-white border-transparent";
     case "BOTH":
       return "text-[10px] py-0 px-1.5 bg-violet-500 text-white border-transparent";
     default:

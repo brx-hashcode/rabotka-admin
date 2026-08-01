@@ -11,15 +11,30 @@ import { Input } from "#/components/ui/input";
 import { toast } from "sonner";
 import { reindexMatching } from "#/lib/api/matching-controller";
 
+type FormState = {
+  useEmbeddings: boolean;
+  recommendationsEnabled: boolean;
+  minNotificationScore: string;
+  maxNotificationWorkers: string;
+  notificationCooldownMinutes: string;
+  recommendationMinScore: string;
+};
+
+const EMPTY: FormState = {
+  useEmbeddings: false,
+  recommendationsEnabled: true,
+  minNotificationScore: "0.55",
+  maxNotificationWorkers: "20",
+  notificationCooldownMinutes: "60",
+  recommendationMinScore: "0.3",
+};
+
 export function MatchingCard() {
   const { configs, isLoading, saveChanges, isSaving } =
     useSystemConfigCategory("MATCHING");
 
-  const [useEmbeddings, setUseEmbeddings] = useState(false);
-  const [recommendationsEnabled, setRecommendationsEnabled] = useState(true);
-  const [minNotificationScore, setMinNotificationScore] = useState("0.55");
-  const [maxNotificationWorkers, setMaxNotificationWorkers] = useState("20");
-  const [notificationCooldownMinutes, setNotificationCooldownMinutes] = useState("60");
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [initial, setInitial] = useState<FormState>(EMPTY);
 
   const reindexMutation = useMutation({
     mutationFn: reindexMatching,
@@ -28,55 +43,72 @@ export function MatchingCard() {
   });
 
   useEffect(() => {
+    if (configs.length === 0) return;
+    const data = { ...EMPTY };
     for (const item of configs) {
-      if (item.key === "matching.use_embeddings") setUseEmbeddings(item.value === "true");
-      if (item.key === "matching.recommendations_enabled") setRecommendationsEnabled(item.value === "true");
-      if (item.key === "matching.min_notification_score") setMinNotificationScore(item.value);
-      if (item.key === "matching.max_notification_workers") setMaxNotificationWorkers(item.value);
-      if (item.key === "matching.notification_cooldown_minutes") setNotificationCooldownMinutes(item.value);
+      if (item.key === "matching.use_embeddings")
+        data.useEmbeddings = item.value === "true";
+      if (item.key === "matching.recommendations_enabled")
+        data.recommendationsEnabled = item.value === "true";
+      if (item.key === "matching.min_notification_score")
+        data.minNotificationScore = item.value;
+      if (item.key === "matching.max_notification_workers")
+        data.maxNotificationWorkers = item.value;
+      if (item.key === "matching.notification_cooldown_minutes")
+        data.notificationCooldownMinutes = item.value;
+      if (item.key === "matching.recommendation_min_score")
+        data.recommendationMinScore = item.value;
     }
+    setForm(data);
+    setInitial(data);
   }, [configs]);
 
-  async function handleToggle(checked: boolean) {
-    setUseEmbeddings(checked);
-    await saveChanges({ "matching.use_embeddings": String(checked) });
+  const isDirty = (Object.keys(form) as (keyof FormState)[]).some(
+    (k) => form[k] !== initial[k],
+  );
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleRecommendationsToggle(checked: boolean) {
-    setRecommendationsEnabled(checked);
-    await saveChanges({ "matching.recommendations_enabled": String(checked) });
-  }
-
-  async function handleScoreBlur() {
-    const n = parseFloat(minNotificationScore);
-    if (isNaN(n) || n < 0 || n > 1) {
-      toast.error("Score must be between 0 and 1");
+  async function handleSave() {
+    const score = parseFloat(form.minNotificationScore);
+    if (isNaN(score) || score < 0 || score > 1) {
+      toast.error("Le score de notification doit être entre 0 et 1");
       return;
     }
-    await saveChanges({ "matching.min_notification_score": String(n) });
-  }
-
-  async function handleMaxWorkersBlur() {
-    const n = parseInt(maxNotificationWorkers, 10);
-    if (isNaN(n) || n < 1) {
-      toast.error("Value must be at least 1");
+    const recoScore = parseFloat(form.recommendationMinScore);
+    if (isNaN(recoScore) || recoScore < 0 || recoScore > 1) {
+      toast.error("Le score de recommandation doit être entre 0 et 1");
       return;
     }
-    await saveChanges({ "matching.max_notification_workers": String(n) });
-  }
-
-  async function handleCooldownBlur() {
-    const n = parseInt(notificationCooldownMinutes, 10);
-    if (isNaN(n) || n < 0) {
-      toast.error("Cooldown must be 0 or greater");
+    const maxWorkers = parseInt(form.maxNotificationWorkers, 10);
+    if (isNaN(maxWorkers) || maxWorkers < 1) {
+      toast.error("Le nombre de travailleurs doit être au moins 1");
       return;
     }
-    await saveChanges({ "matching.notification_cooldown_minutes": String(n) });
+    const cooldown = parseInt(form.notificationCooldownMinutes, 10);
+    if (isNaN(cooldown) || cooldown < 0) {
+      toast.error("Le délai doit être 0 ou plus");
+      return;
+    }
+
+    await saveChanges({
+      "matching.use_embeddings": String(form.useEmbeddings),
+      "matching.recommendations_enabled": String(form.recommendationsEnabled),
+      "matching.min_notification_score": String(score),
+      "matching.max_notification_workers": String(maxWorkers),
+      "matching.notification_cooldown_minutes": String(cooldown),
+      "matching.recommendation_min_score": String(recoScore),
+    });
+    setInitial(form);
   }
+
+  const disabled = isLoading || isSaving;
 
   return (
     <Card>
-      <CardHeader className="space-y-0 pb-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
             <IconBrain className="size-5" />
@@ -90,6 +122,13 @@ export function MatchingCard() {
             </p>
           </div>
         </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={!isDirty || disabled}
+        >
+          {isSaving ? "Saving…" : "Save"}
+        </Button>
       </CardHeader>
 
       <Separator />
@@ -108,9 +147,9 @@ export function MatchingCard() {
           </div>
           <Switch
             id="use-embeddings"
-            checked={useEmbeddings}
-            onCheckedChange={handleToggle}
-            disabled={isLoading || isSaving}
+            checked={form.useEmbeddings}
+            onCheckedChange={(v) => set("useEmbeddings", v)}
+            disabled={disabled}
           />
         </div>
 
@@ -118,7 +157,10 @@ export function MatchingCard() {
 
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <Label htmlFor="recommendations-enabled" className="text-sm font-medium">
+            <Label
+              htmlFor="recommendations-enabled"
+              className="text-sm font-medium"
+            >
               Job recommendation notifications
             </Label>
             <p className="text-muted-foreground text-xs">
@@ -129,9 +171,9 @@ export function MatchingCard() {
           </div>
           <Switch
             id="recommendations-enabled"
-            checked={recommendationsEnabled}
-            onCheckedChange={handleRecommendationsToggle}
-            disabled={isLoading || isSaving}
+            checked={form.recommendationsEnabled}
+            onCheckedChange={(v) => set("recommendationsEnabled", v)}
+            disabled={disabled}
           />
         </div>
 
@@ -139,7 +181,10 @@ export function MatchingCard() {
 
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <Label htmlFor="min-notification-score" className="text-sm font-medium">
+            <Label
+              htmlFor="min-notification-score"
+              className="text-sm font-medium"
+            >
               Minimum notification score
             </Label>
             <p className="text-muted-foreground text-xs">
@@ -154,10 +199,9 @@ export function MatchingCard() {
             min={0}
             max={1}
             step={0.05}
-            value={minNotificationScore}
-            onChange={(e) => setMinNotificationScore(e.target.value)}
-            onBlur={handleScoreBlur}
-            disabled={isLoading || isSaving}
+            value={form.minNotificationScore}
+            onChange={(e) => set("minNotificationScore", e.target.value)}
+            disabled={disabled}
             className="w-24 text-right"
           />
         </div>
@@ -166,12 +210,43 @@ export function MatchingCard() {
 
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <Label htmlFor="max-notification-workers" className="text-sm font-medium">
+            <Label
+              htmlFor="recommendation-min-score"
+              className="text-sm font-medium"
+            >
+              Employer feed minimum score
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Minimum match score (0–1) for the employer "recommended profiles"
+              home feed. Lower values surface more nearby matches. Default: 0.3.
+            </p>
+          </div>
+          <Input
+            id="recommendation-min-score"
+            type="number"
+            min={0}
+            max={1}
+            step={0.05}
+            value={form.recommendationMinScore}
+            onChange={(e) => set("recommendationMinScore", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label
+              htmlFor="max-notification-workers"
+              className="text-sm font-medium"
+            >
               Max notified workers per offer
             </Label>
             <p className="text-muted-foreground text-xs">
-              Maximum number of workers who receive a WhatsApp notification when a new
-              job offer is published. Default: 20.
+              Maximum number of workers who receive a WhatsApp notification when
+              a new job offer is published. Default: 20.
             </p>
           </div>
           <Input
@@ -179,10 +254,9 @@ export function MatchingCard() {
             type="number"
             min={1}
             step={1}
-            value={maxNotificationWorkers}
-            onChange={(e) => setMaxNotificationWorkers(e.target.value)}
-            onBlur={handleMaxWorkersBlur}
-            disabled={isLoading || isSaving}
+            value={form.maxNotificationWorkers}
+            onChange={(e) => set("maxNotificationWorkers", e.target.value)}
+            disabled={disabled}
             className="w-24 text-right"
           />
         </div>
@@ -195,8 +269,8 @@ export function MatchingCard() {
               Minimum cooldown between notifications (minutes)
             </Label>
             <p className="text-muted-foreground text-xs">
-              Prevents sending multiple recommendation notifications to the same worker
-              in quick succession. Set to 0 to disable. Default: 60 min.
+              Prevents sending multiple recommendation notifications to the same
+              worker in quick succession. Set to 0 to disable. Default: 60 min.
             </p>
           </div>
           <Input
@@ -204,10 +278,9 @@ export function MatchingCard() {
             type="number"
             min={0}
             step={5}
-            value={notificationCooldownMinutes}
-            onChange={(e) => setNotificationCooldownMinutes(e.target.value)}
-            onBlur={handleCooldownBlur}
-            disabled={isLoading || isSaving}
+            value={form.notificationCooldownMinutes}
+            onChange={(e) => set("notificationCooldownMinutes", e.target.value)}
+            disabled={disabled}
             className="w-24 text-right"
           />
         </div>
@@ -229,7 +302,9 @@ export function MatchingCard() {
             onClick={() => reindexMutation.mutate()}
             disabled={reindexMutation.isPending}
           >
-            <IconRefresh className={`size-4 mr-2 ${reindexMutation.isPending ? "animate-spin" : ""}`} />
+            <IconRefresh
+              className={`size-4 mr-2 ${reindexMutation.isPending ? "animate-spin" : ""}`}
+            />
             {reindexMutation.isPending ? "Starting..." : "Re-index"}
           </Button>
         </div>

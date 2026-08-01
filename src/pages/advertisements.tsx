@@ -28,6 +28,7 @@ const AUDIENCE_LABELS: Record<string, string> = {
 const CHANNEL_LABELS: Record<string, string> = {
   EMAIL: "Email",
   WHATSAPP: "WhatsApp",
+  IN_APP: "In-app",
 };
 
 export default function AdvertisementsPage() {

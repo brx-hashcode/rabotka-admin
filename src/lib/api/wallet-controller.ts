@@ -235,11 +235,31 @@ class AdminWalletController extends AdminBaseController {
     );
     return this.post<{ count: number }>(url, { ids });
   }
+
+  async bulkRestoreTransactions(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/wallet/transactions/bulk-restore",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
+
+  async bulkPurgeTransactions(ids: string[]): Promise<{ count: number }> {
+    const url = this.createURL(
+      "/admin/wallet/transactions/bulk-purge",
+      new URLSearchParams(),
+    );
+    return this.post<{ count: number }>(url, { ids });
+  }
 }
 
 const controller = new AdminWalletController();
 export const bulkDeleteWalletTransactions =
   controller.bulkDeleteTransactions.bind(controller);
+export const bulkRestoreWalletTransactions =
+  controller.bulkRestoreTransactions.bind(controller);
+export const bulkPurgeWalletTransactions =
+  controller.bulkPurgeTransactions.bind(controller);
 export const getWalletInfo = controller.getInfo.bind(controller);
 export const getWalletTransactions = controller.getTransactions.bind(controller);
 export const getWalletPayments = controller.getPayments.bind(controller);

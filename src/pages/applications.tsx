@@ -2,6 +2,8 @@ import type { Table as TableInstance } from "@tanstack/react-table";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
+import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
+import { BulkRestoreButton } from "#/components/table/bulk-restore-button";
 import {
   deletedFilterOptions,
   useIsDeletedView,
@@ -14,13 +16,17 @@ import {
   type Application,
 } from "#/features/applications-admin";
 import { useApplicationsList } from "#/hooks/use-applications-list";
-import { bulkDeleteApplications } from "#/lib/api/applications-controller";
+import {
+  bulkDeleteApplications,
+  bulkPurgeApplications,
+  bulkRestoreApplications,
+} from "#/lib/api/applications-controller";
 import { useRole } from "#/hooks/use-role";
 
 function ApplicationsTableHeader({
   table,
 }: Readonly<{ table: TableInstance<Application> }>) {
-  const { canManageContent } = useRole();
+  const { canManageContent, canPurge } = useRole();
   const deletedView = useIsDeletedView();
   return (
     <TableHeader>
@@ -42,13 +48,32 @@ function ApplicationsTableHeader({
         ]}
         table={table}
       >
-        <BulkDeleteButton
-          table={table}
-          deleteFn={bulkDeleteApplications}
-          queryKey={["admin", "applications"]}
-          entityLabel="application"
-          disabled={!canManageContent || deletedView}
-        />
+        {deletedView ? (
+          <>
+            <BulkRestoreButton
+              table={table}
+              restoreFn={bulkRestoreApplications}
+              queryKey={["admin", "applications"]}
+              entityLabel="application"
+              disabled={!canManageContent}
+            />
+            <BulkPurgeButton
+              table={table}
+              purgeFn={bulkPurgeApplications}
+              queryKey={["admin", "applications"]}
+              entityLabel="application"
+              disabled={!canPurge}
+            />
+          </>
+        ) : (
+          <BulkDeleteButton
+            table={table}
+            deleteFn={bulkDeleteApplications}
+            queryKey={["admin", "applications"]}
+            entityLabel="application"
+            disabled={!canManageContent}
+          />
+        )}
         <ApplicationExportMenu />
       </TableHeaderToolbar>
     </TableHeader>
