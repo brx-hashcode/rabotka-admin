@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
@@ -41,9 +42,9 @@ const schema = z.object({
   maxReach: z.coerce.number().int().min(1, "Max reach must be >= 1"),
   maxFrequencyPerWeek: z.coerce.number().int().min(1, "Frequency must be >= 1"),
   maxDurationDays: z.coerce.number().int().min(1, "Duration must be >= 1 day"),
-  channel: z.enum(["EMAIL", "WHATSAPP", "BOTH"], {
-    message: "Select a channel",
-  }),
+  channels: z
+    .array(z.enum(["EMAIL", "WHATSAPP", "IN_APP"]))
+    .min(1, "Select at least one channel"),
   targetAudience: z.enum(["WORKER", "EMPLOYER", "BOTH"], {
     message: "Select a target audience",
   }),
@@ -52,11 +53,20 @@ const schema = z.object({
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
 
-function resolveChannel(channels: string[]): "EMAIL" | "WHATSAPP" | "BOTH" {
-  const has = (v: string) => channels.includes(v);
-  if (has("EMAIL") && has("WHATSAPP")) return "BOTH";
-  if (has("WHATSAPP")) return "WHATSAPP";
-  return "EMAIL";
+const CHANNEL_OPTIONS = [
+  { value: "EMAIL", label: "Email" },
+  { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "IN_APP", label: "In-app popup" },
+] as const;
+
+type BundleChannel = (typeof CHANNEL_OPTIONS)[number]["value"];
+
+/** Legacy bundles stored the catch-all "ALL", which meant email + WhatsApp. */
+function resolveChannels(channels: string[]): BundleChannel[] {
+  if (channels.includes("ALL")) return ["EMAIL", "WHATSAPP"];
+  return CHANNEL_OPTIONS.map((o) => o.value).filter((v) =>
+    channels.includes(v),
+  );
 }
 
 function submitLabel(isPending: boolean, isEdit: boolean): string {
@@ -92,7 +102,7 @@ export function BundleDialog({
       maxReach: 100,
       maxFrequencyPerWeek: 1,
       maxDurationDays: 7,
-      channel: undefined,
+      channels: [],
       targetAudience: undefined,
     },
   });
@@ -108,7 +118,7 @@ export function BundleDialog({
               maxReach: bundle.max_reach,
               maxFrequencyPerWeek: bundle.max_frequency_per_week,
               maxDurationDays: bundle.max_duration_days,
-              channel: resolveChannel(bundle.allowed_channels),
+              channels: resolveChannels(bundle.allowed_channels),
               targetAudience: bundle.target_audience,
             }
           : {
@@ -118,7 +128,7 @@ export function BundleDialog({
               maxReach: 100,
               maxFrequencyPerWeek: 1,
               maxDurationDays: 7,
-              channel: undefined,
+              channels: [],
               targetAudience: undefined,
             },
       );
@@ -135,7 +145,7 @@ export function BundleDialog({
         maxReach: values.maxReach,
         maxFrequencyPerWeek: values.maxFrequencyPerWeek,
         maxDurationDays: values.maxDurationDays,
-        allowedChannels: [values.channel],
+        allowedChannels: values.channels,
         targetAudience: values.targetAudience,
         isActive: true,
       };
@@ -277,28 +287,39 @@ export function BundleDialog({
 
               <FormField
                 control={form.control}
-                name="channel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Channel</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value ?? ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a channel" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="EMAIL">EMAIL</SelectItem>
-                        <SelectItem value="WHATSAPP">WHATSAPP</SelectItem>
-                        <SelectItem value="BOTH">BOTH</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="channels"
+                render={({ field }) => {
+                  const selected = field.value ?? [];
+                  const toggle = (value: BundleChannel, checked: boolean) =>
+                    field.onChange(
+                      checked
+                        ? [...selected, value]
+                        : selected.filter((v) => v !== value),
+                    );
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Channels</FormLabel>
+                      <div className="flex flex-col gap-2 rounded-lg bg-muted/40 p-3">
+                        {CHANNEL_OPTIONS.map((option) => (
+                          <label
+                            key={option.value}
+                            className="flex cursor-pointer items-center gap-2 text-sm"
+                          >
+                            <Checkbox
+                              checked={selected.includes(option.value)}
+                              onCheckedChange={(checked) =>
+                                toggle(option.value, checked === true)
+                              }
+                            />
+                            {option.label}
+                          </label>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               <FormField
