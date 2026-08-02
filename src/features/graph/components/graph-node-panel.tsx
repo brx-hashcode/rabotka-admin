@@ -15,6 +15,21 @@ type Props = Readonly<{
 }>;
 
 /** Details for the selected profile, plus who it is actually connected to. */
+/** Shortest honest label for a link: mission > paid contact > application. */
+function describeEdge(edge: {
+  collaborations: number;
+  applications: number;
+  contacts: number;
+}): string {
+  if (edge.collaborations > 0) {
+    return `${edge.collaborations} mission${edge.collaborations === 1 ? "" : "s"}`;
+  }
+  if (edge.contacts > 0) {
+    return `${edge.contacts} contact${edge.contacts === 1 ? "" : "s"}`;
+  }
+  return `${edge.applications} cand.`;
+}
+
 export function GraphNodePanel({ node, edges, nodesById, onClose }: Props) {
   const connections = edges
     .filter((e) => e.source === node.id || e.target === node.id)
@@ -50,10 +65,11 @@ export function GraphNodePanel({ node, edges, nodesById, onClose }: Props) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-4 gap-2 text-center">
         <Stat label="Connexions" value={node.degree} />
         <Stat label="Missions" value={node.collaborations} />
         <Stat label="Candidatures" value={node.applications} />
+        <Stat label="Contacts" value={node.contacts} />
       </div>
 
       <Link
@@ -77,9 +93,7 @@ export function GraphNodePanel({ node, edges, nodesById, onClose }: Props) {
             >
               <span className="truncate">{other.name}</span>
               <span className="text-muted-foreground shrink-0">
-                {edge.collaborations > 0
-                  ? `${edge.collaborations} mission${edge.collaborations === 1 ? "" : "s"}`
-                  : `${edge.applications} cand.`}
+                {describeEdge(edge)}
               </span>
             </li>
           ))}
