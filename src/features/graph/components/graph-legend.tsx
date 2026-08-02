@@ -17,6 +17,10 @@ export function GraphLegend() {
         <span className="h-0 w-6 border-t border-dashed border-[#cbd5e1]" />
         Candidature sans suite
       </span>
+      <span className="flex items-center gap-1.5">
+        <span className="h-0 w-6 border-t-2 border-dotted border-[#f59e0b]" />
+        Contact payé
+      </span>
       <span className="text-muted-foreground">
         Taille = nombre de connexions
       </span>
