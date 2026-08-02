@@ -44,6 +44,8 @@ const EMPLOYER_COLOR = "#6366f1";
 const WORKER_COLOR = "#10b981";
 const COLLAB_LINK = "#94a3b8";
 const APPLICATION_LINK = "#cbd5e1";
+// Paid contacts get their own hue: money changed hands, but no mission (yet).
+const CONTACT_LINK = "#f59e0b";
 
 const MIN_RADIUS = 10;
 const MAX_RADIUS = 30;
@@ -141,16 +143,26 @@ export function CollaborationGraphCanvas({
     // Links first so nodes sit on top.
     for (const e of simEdgesRef.current) {
       const real = e.collaborations > 0;
+      // A paid contact outranks a bare application: the recruiter put money on
+      // reaching this worker, even if no mission followed.
+      const paidContact = !real && e.contacts > 0;
       const involved = !searching || matches(e.source) || matches(e.target);
       ctx.beginPath();
       ctx.moveTo(e.source.x, e.source.y);
       ctx.lineTo(e.target.x, e.target.y);
-      ctx.strokeStyle = real ? COLLAB_LINK : APPLICATION_LINK;
-      ctx.globalAlpha = involved ? (real ? 0.7 : 0.25) : 0.05;
+      if (real) ctx.strokeStyle = COLLAB_LINK;
+      else if (paidContact) ctx.strokeStyle = CONTACT_LINK;
+      else ctx.strokeStyle = APPLICATION_LINK;
+      let alpha = 0.25;
+      if (real) alpha = 0.7;
+      else if (paidContact) alpha = 0.5;
+      ctx.globalAlpha = involved ? alpha : 0.05;
       // Real collaborations thicken with repeat work; applications stay hairline
       // so a spammy applicant never looks like a strong relationship.
-      ctx.lineWidth = real ? Math.min(1 + e.collaborations * 0.6, 6) : 0.75;
-      if (!real) ctx.setLineDash([4, 4]);
+      if (real) ctx.lineWidth = Math.min(1 + e.collaborations * 0.6, 6);
+      else ctx.lineWidth = paidContact ? 1.25 : 0.75;
+      if (paidContact) ctx.setLineDash([1, 3]);
+      else if (!real) ctx.setLineDash([4, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -605,7 +617,8 @@ export function CollaborationGraphCanvas({
           <p className="text-muted-foreground">
             {hovered.collaborations} mission
             {hovered.collaborations === 1 ? "" : "s"} · {hovered.applications}{" "}
-            candidature{hovered.applications === 1 ? "" : "s"}
+            candidature{hovered.applications === 1 ? "" : "s"} ·{" "}
+            {hovered.contacts} contact{hovered.contacts === 1 ? "" : "s"}
           </p>
         </div>
       )}

@@ -9,6 +9,8 @@ export type GraphNode = {
   collaborations: number;
   /** Applications that never became a mission. */
   applications: number;
+  /** Contacts the recruiter paid to unlock. */
+  contacts: number;
   /** Distinct counterparties — what the node is sized by. */
   degree: number;
 };
@@ -18,6 +20,7 @@ export type GraphEdge = {
   target: string;
   collaborations: number;
   applications: number;
+  contacts: number;
 };
 
 export type CollaborationGraph = {
@@ -28,6 +31,7 @@ export type CollaborationGraph = {
     edges: number;
     collaborations: number;
     applications: number;
+    contacts: number;
     truncated: boolean;
   };
 };
@@ -35,6 +39,7 @@ export type CollaborationGraph = {
 export type GraphFilters = {
   minCollaborations?: number;
   includeApplications?: boolean;
+  includeContacts?: boolean;
   limit?: number;
 };
 
@@ -46,6 +51,9 @@ class AdminCollaborationGraphController extends AdminBaseController {
     }
     if (filters.includeApplications != null) {
       params.set("includeApplications", String(filters.includeApplications));
+    }
+    if (filters.includeContacts != null) {
+      params.set("includeContacts", String(filters.includeContacts));
     }
     if (filters.limit != null) params.set("limit", String(filters.limit));
 
