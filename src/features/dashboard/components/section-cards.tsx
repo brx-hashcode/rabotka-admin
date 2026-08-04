@@ -11,12 +11,16 @@ import {
 function buildCards(m: DashboardMetrics): DashboardMetricCard[] {
   return [
     {
-      id: "assignments",
-      title: "Assignments made",
-      value: m.assignmentsCount.toLocaleString(),
-      trend: m.assignmentsTrend != null ? (m.assignmentsTrend >= 0 ? "up" : "down") : null,
-      trendPercentage: m.assignmentsTrend != null ? Math.abs(m.assignmentsTrend) : null,
-      description: "Total employer-worker placements confirmed on the platform.",
+      // Leads the row because it is the first thing that actually moves: a
+      // platform has paid connections long before it has confirmed placements,
+      // so "Assignments made" sat at 0 while the Network graph already showed
+      // relationships. Same source as that graph, deliberately.
+      id: "connections",
+      title: "Connections made",
+      value: m.connectionsCount.toLocaleString(),
+      trend: m.connectionsTrend != null ? (m.connectionsTrend >= 0 ? "up" : "down") : null,
+      trendPercentage: m.connectionsTrend != null ? Math.abs(m.connectionsTrend) : null,
+      description: "Employer-worker contacts paid for and unlocked.",
     },
     {
       id: "profiles",
