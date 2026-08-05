@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { Checkbox } from "#/components/ui/checkbox";
+import { GeoCombobox } from "#/components/geo-combobox";
+import { useCities, useCountries } from "#/hooks/use-geo";
 
 import type {
   AdminJobOfferDetailResponse,
@@ -24,6 +27,11 @@ type FormData = {
   amount: string;
   paymentFlow: string;
   address: string;
+  /** "1" or "" — this form keeps every field a string so `isDirty` can compare. */
+  isRemote: string;
+  countryCode: string;
+  countryName: string;
+  city: string;
   note: string;
   quantity: string;
 };
@@ -74,6 +82,10 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     amount: "",
     paymentFlow: "",
     address: "",
+    isRemote: "",
+    countryCode: "",
+    countryName: "",
+    city: "",
     note: "",
     quantity: "",
   });
@@ -88,6 +100,10 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
       address: job.address ?? "",
+      isRemote: job.isRemote ? "1" : "",
+      countryCode: job.countryCode ?? "",
+      countryName: job.countryName ?? "",
+      city: job.city ?? "",
       note: job.note ?? "",
       quantity: String(job.quantity ?? 1),
     };
@@ -100,6 +116,29 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   const isDirty = (Object.keys(form) as (keyof FormData)[]).some(
     (k) => form[k] !== initialForm[k],
   );
+
+  const countries = useCountries();
+  const cities = useCities(form.countryCode || null);
+
+  const countryOptions = (countries.data ?? []).map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
+  const cityOptions = (cities.data ?? []).map((name) => ({
+    value: name,
+    label: name,
+  }));
+
+  /** Changing the country always clears the city; see profile-form.tsx. */
+  const handleCountryChange = (code: string | null) => {
+    const country = countries.data?.find((c) => c.code === code);
+    setForm((prev) => ({
+      ...prev,
+      countryCode: country?.code ?? "",
+      countryName: country?.name ?? "",
+      city: "",
+    }));
+  };
 
   const updateField = (field: keyof FormData, value: string) => {
     if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
@@ -123,7 +162,18 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
       params.description = form.description;
     if (form.scheduledAt !== initialForm.scheduledAt)
       params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.address !== initialForm.address) params.address = form.address;
+    const isRemote = form.isRemote === "1";
+    if (form.isRemote !== initialForm.isRemote) params.isRemote = isRemote;
+    // A remote job sends no location: the server clears the columns, and
+    // sending a stale address alongside isRemote would only be discarded.
+    if (!isRemote) {
+      if (form.address !== initialForm.address) params.address = form.address;
+      if (form.countryCode !== initialForm.countryCode) {
+        params.countryCode = form.countryCode;
+        params.countryName = form.countryName;
+      }
+      if (form.city !== initialForm.city) params.city = form.city;
+    }
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
@@ -190,14 +240,67 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
             </div>
           </div>
 
-          <div className="space-y-1.5 col-span-2">
-            <FieldLabel>Address</FieldLabel>
-            <Input
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
+          <div className="col-span-2 flex items-center gap-2">
+            <Checkbox
+              id="job-is-remote"
+              checked={form.isRemote === "1"}
+              onCheckedChange={(checked) => {
+                const remote = checked === true;
+                setForm((prev) => ({
+                  ...prev,
+                  isRemote: remote ? "1" : "",
+                  // Cleared, not merely hidden: an address left in state would
+                  // be sent again the moment someone unticked the box.
+                  ...(remote
+                    ? { address: "", countryCode: "", countryName: "", city: "" }
+                    : {}),
+                }));
+              }}
               disabled={disabled}
             />
+            <label htmlFor="job-is-remote" className="cursor-pointer text-sm">
+              Remote job — done from anywhere, no address
+            </label>
           </div>
+
+          {/* The whole location block disappears for a remote job: there is no
+              site, so a greyed-out address field is a question with no answer. */}
+          {form.isRemote !== "1" && (
+            <>
+              <div className="space-y-1.5">
+                <FieldLabel>Country</FieldLabel>
+                <GeoCombobox
+                  options={countryOptions}
+                  value={form.countryCode || null}
+                  onChange={handleCountryChange}
+                  placeholder="Select a country"
+                  searchPlaceholder="Search countries…"
+                  disabled={disabled || countries.isPending}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel>City</FieldLabel>
+                <GeoCombobox
+                  options={cityOptions}
+                  value={form.city || null}
+                  onChange={(city) => updateField("city", city ?? "")}
+                  placeholder={
+                    form.countryCode ? "Select a city" : "Select a country first"
+                  }
+                  searchPlaceholder="Search cities…"
+                  disabled={disabled || !form.countryCode || cities.isPending}
+                />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <FieldLabel>Address</FieldLabel>
+                <Input
+                  value={form.address}
+                  onChange={(e) => updateField("address", e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            </>
+          )}
 
           <div className="space-y-1.5">
             <FieldLabel>Scheduled At</FieldLabel>

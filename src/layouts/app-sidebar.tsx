@@ -120,7 +120,10 @@ const navSecondary: NavItem[] = [
 
 const documents: NavItem[] = [
   {
-    title: "Wallet",
+    // "Finance" rather than "Wallet": the section covers revenue, payments,
+    // penalties and invoices, of which the wallet is one part — and it is the
+    // area the FINANCE role owns.
+    title: "Finance",
     url: "/wallet",
     icon: IconWallet,
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],

@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { GeoCombobox } from "#/components/geo-combobox";
+import { useCities, useCountries } from "#/hooks/use-geo";
 
 type FormData = {
   firstName: string;
@@ -23,6 +25,9 @@ type FormData = {
   email: string;
   phone: string;
   address: string;
+  countryCode: string;
+  countryName: string;
+  city: string;
   description: string;
   profileType: string;
 };
@@ -45,6 +50,9 @@ type ProfileFormProps = {
     firstName: string;
     lastName: string;
     address: string;
+    countryCode: string;
+    countryName: string;
+    city: string;
     description: string;
     email: string;
     phone: string;
@@ -70,6 +78,9 @@ export function ProfileForm({
     email: "",
     phone: "",
     address: "",
+    countryCode: "",
+    countryName: "",
+    city: "",
     description: "",
     profileType: "",
   });
@@ -97,6 +108,9 @@ export function ProfileForm({
       email: profile.email ?? "",
       phone: profile.phone ?? "",
       address: profile.address ?? "",
+      countryCode: profile.countryCode ?? "",
+      countryName: profile.countryName ?? "",
+      city: profile.city ?? "",
       description: profile.description ?? "",
       profileType: profile.profileType ?? "",
     };
@@ -112,11 +126,41 @@ export function ProfileForm({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const countries = useCountries();
+  const cities = useCities(form.countryCode || null);
+
+  const countryOptions = (countries.data ?? []).map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
+  const cityOptions = (cities.data ?? []).map((name) => ({
+    value: name,
+    label: name,
+  }));
+
+  /**
+   * Changing the country ALWAYS clears the city. A city held over from the
+   * previous country is stored against a country it does not belong to —
+   * invisible here, and wrong in every filter that later groups by city.
+   */
+  const handleCountryChange = (code: string | null) => {
+    const country = countries.data?.find((c) => c.code === code);
+    setForm((prev) => ({
+      ...prev,
+      countryCode: country?.code ?? "",
+      countryName: country?.name ?? "",
+      city: "",
+    }));
+  };
+
   const handleSave = async () => {
     await onSave({
       firstName: form.firstName,
       lastName: form.lastName,
       address: form.address,
+      countryCode: form.countryCode,
+      countryName: form.countryName,
+      city: form.city,
       description: form.description,
       email: form.email,
       phone: form.phone,
@@ -220,6 +264,30 @@ export function ProfileForm({
               type="tel"
               value={form.phone}
               onChange={(e) => updateField("phone", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Country</FieldLabel>
+            <GeoCombobox
+              options={countryOptions}
+              value={form.countryCode || null}
+              onChange={handleCountryChange}
+              placeholder="Select a country"
+              searchPlaceholder="Search countries…"
+              disabled={readOnly || countries.isPending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>City</FieldLabel>
+            <GeoCombobox
+              options={cityOptions}
+              value={form.city || null}
+              onChange={(city) => updateField("city", city ?? "")}
+              placeholder={
+                form.countryCode ? "Select a city" : "Select a country first"
+              }
+              searchPlaceholder="Search cities…"
+              disabled={readOnly || !form.countryCode || cities.isPending}
             />
           </div>
           <div className="col-span-2 space-y-1.5">

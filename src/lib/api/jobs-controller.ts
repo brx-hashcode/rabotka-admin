@@ -9,7 +9,12 @@ export type AdminJobOfferListItem = {
   scheduledAt: string;
   amount: number | null;
   paymentFlow: string | null;
-  address: string;
+  /** Null for a remote job — render `isRemote` instead. */
+  address: string | null;
+  isRemote: boolean;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
   note: string | null;
   quantity: number;
   status: string;
@@ -58,6 +63,10 @@ export type AdminUpdateJobOfferParams = {
   paymentFlow?: string | null;
   categoryId?: string | null;
   address?: string;
+  isRemote?: boolean;
+  countryCode?: string;
+  countryName?: string;
+  city?: string;
   note?: string;
   quantity?: number;
 };
