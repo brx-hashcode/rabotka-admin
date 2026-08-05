@@ -7,6 +7,12 @@ export type JobActivityDataPoint = {
 };
 
 export type DashboardMetrics = {
+  /**
+   * Distinct employer↔worker pairs where the employer paid to make contact —
+   * the same figure the Network graph draws as a "Contact payé" edge.
+   */
+  connectionsCount: number;
+  connectionsTrend: number | null;
   assignmentsCount: number;
   assignmentsTrend: number | null;
   profilesCount: number;
