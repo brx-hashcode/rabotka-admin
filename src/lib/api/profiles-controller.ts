@@ -21,6 +21,9 @@ export type AdminProfileListItem = {
   email: string;
   phone: string;
   address: string;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
   description: string;
   status: string;
   profileType: string;
@@ -75,6 +78,9 @@ export type AdminUpdateProfileParams = {
   lastName?: string;
   description?: string;
   address?: string;
+  countryCode?: string;
+  countryName?: string;
+  city?: string;
   email?: string;
   phone?: string;
   /** Changing this re-indexes the profile into the other vector collection. */
