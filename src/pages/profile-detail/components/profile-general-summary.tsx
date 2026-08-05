@@ -74,6 +74,23 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
           </CardContent>
         </Card>
 
+        {/* One card, not two: city and country are read together, and a profile
+            predating the country backfill would otherwise show an empty card. */}
+        <Card className="col-span-2 gap-2 py-4">
+          <CardContent className="px-4">
+            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              Location
+            </p>
+            <p className="mt-1 text-sm font-medium">
+              {[profile.city, profile.countryName].filter(Boolean).join(", ") ||
+                "—"}
+            </p>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {profile.address}
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="col-span-2 gap-2 py-4">
           <CardContent className="px-4 flex items-center justify-between">
             <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
