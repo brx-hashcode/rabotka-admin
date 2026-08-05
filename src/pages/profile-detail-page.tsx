@@ -112,6 +112,9 @@ export default function ProfileDetailPage({
     firstName: string;
     lastName: string;
     address: string;
+    countryCode: string;
+    countryName: string;
+    city: string;
     description: string;
     email: string;
     phone: string;
