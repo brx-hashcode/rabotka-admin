@@ -9,18 +9,23 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   sendProfileMessage,
+  getProfileWhatsAppWindow,
   type AdminProfileListItem,
+  type MessageChannel,
 } from "#/lib/api/profiles-controller";
 import { ProfileCombobox } from "#/components/profile-combobox";
 import { IconSend } from "@tabler/icons-react";
 import { useRole } from "#/hooks/use-role";
 import { QuickMessagePicker } from "#/components/quick-message-picker";
-
-type Channel = "WHATSAPP" | "EMAIL";
+import { WhatsAppWindowBadge } from "#/components/whatsapp-window-badge";
+import {
+  flattenForTemplateVariable,
+  ADMIN_MESSAGE_VAR_MAX,
+} from "#/lib/whatsapp-template-text";
 
 export const DirectMessagesButton = ({
   className,
@@ -29,10 +34,29 @@ export const DirectMessagesButton = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] =
     useState<AdminProfileListItem | null>(null);
-  const [channel, setChannel] = useState<Channel>("EMAIL");
+  const [channel, setChannel] = useState<MessageChannel>("EMAIL");
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const messageId = useId();
+
+  const isWhatsApp = channel === "WHATSAPP";
+
+  // Not invalidated after a send: an outbound message does not move the window.
+  const { data: windowState, isLoading: isWindowLoading } = useQuery({
+    queryKey: ["admin", "profiles", selectedProfile?.id, "whatsapp-window"],
+    queryFn: () => getProfileWhatsAppWindow(selectedProfile!.id),
+    enabled: isWhatsApp && !!selectedProfile,
+    staleTime: 60_000,
+  });
+
+  // Outside the 24h window the message travels as a template variable, which
+  // Meta caps and which grows when line breaks are flattened — so the count that
+  // matters is of the flattened text, not what is in the textarea.
+  const isTemplateMode = isWhatsApp && windowState?.mode === "TEMPLATE";
+  const flattenedLength = isTemplateMode
+    ? flattenForTemplateVariable(text).length
+    : 0;
+  const isOverTemplateLimit = flattenedLength > ADMIN_MESSAGE_VAR_MAX;
 
   const { mutate: send, isPending } = useMutation({
     mutationFn: () => {
@@ -44,8 +68,12 @@ export const DirectMessagesButton = ({
         channel === "EMAIL" ? attachments : undefined,
       );
     },
-    onSuccess: () => {
-      toast.success("Message sent successfully.");
+    onSuccess: (result) => {
+      toast.success(
+        result.deliveryMode === "TEMPLATE"
+          ? "Message sent via approved template."
+          : "Message sent successfully.",
+      );
       handleClose();
     },
     onError: (error) => {
@@ -53,7 +81,11 @@ export const DirectMessagesButton = ({
     },
   });
 
-  const canSend = !!selectedProfile && text.trim().length > 0 && !isPending;
+  const canSend =
+    !!selectedProfile &&
+    text.trim().length > 0 &&
+    !isPending &&
+    !isOverTemplateLimit;
 
   /** Appends the template so an already-typed message is never lost. */
   const applyTemplate = (message: string) => {
@@ -108,27 +140,35 @@ export const DirectMessagesButton = ({
             {/* Channel selector */}
             <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0">
               <legend className="text-sm font-medium">Channel</legend>
-              <div className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-1 py-1 text-xs w-fit">
-                <div className="inline-flex rounded-full bg-background p-0.5">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={channel === "WHATSAPP" ? "default" : "ghost"}
-                    className="rounded-full px-3 text-[11px]"
-                    onClick={() => setChannel("WHATSAPP")}
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={channel === "EMAIL" ? "default" : "ghost"}
-                    className="rounded-full px-3 text-[11px]"
-                    onClick={() => setChannel("EMAIL")}
-                  >
-                    Email
-                  </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-1 py-1 text-xs w-fit">
+                  <div className="inline-flex rounded-full bg-background p-0.5">
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant={channel === "WHATSAPP" ? "default" : "ghost"}
+                      className="rounded-full px-3 text-[11px]"
+                      onClick={() => setChannel("WHATSAPP")}
+                    >
+                      WhatsApp
+                    </Button>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant={channel === "EMAIL" ? "default" : "ghost"}
+                      className="rounded-full px-3 text-[11px]"
+                      onClick={() => setChannel("EMAIL")}
+                    >
+                      Email
+                    </Button>
+                  </div>
                 </div>
+                {isWhatsApp && selectedProfile && (
+                  <WhatsAppWindowBadge
+                    state={windowState}
+                    isLoading={isWindowLoading}
+                  />
+                )}
               </div>
             </fieldset>
 
@@ -139,6 +179,18 @@ export const DirectMessagesButton = ({
                   Message
                 </label>
                 <div className="flex items-center gap-2">
+                  {isTemplateMode && (
+                    <span
+                      className={cn(
+                        "text-[11px] tabular-nums",
+                        isOverTemplateLimit
+                          ? "text-destructive"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {flattenedLength}/{ADMIN_MESSAGE_VAR_MAX}
+                    </span>
+                  )}
                   <span className="text-[11px] text-muted-foreground hidden sm:block">
                     Ctrl+Enter to send
                   </span>
