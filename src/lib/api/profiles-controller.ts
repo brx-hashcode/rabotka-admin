@@ -138,6 +138,31 @@ export type AdminProfileMessage = {
   sentByName: string | null;
 };
 
+export type MessageChannel = "WHATSAPP" | "EMAIL";
+
+/** How a WhatsApp message would be delivered right now. */
+export type MessageDeliveryMode = "FREE_FORM" | "TEMPLATE";
+
+/**
+ * State of the profile's 24h WhatsApp customer-service window.
+ *
+ * Advisory: the window can open or lapse between this call and the send, so the
+ * backend recomputes it and is authoritative. Used to tell the admin which mode
+ * their message will go out in, never to block them from sending.
+ */
+export type WhatsAppWindowState = {
+  windowOpen: boolean;
+  lastInboundAt: string | null;
+  mode: MessageDeliveryMode;
+  hasPhone: boolean;
+};
+
+/** `deliveryMode` is null for EMAIL, which has no service window. */
+export type SendMessageResult = {
+  success: boolean;
+  deliveryMode: MessageDeliveryMode | null;
+};
+
 export type AdminLogEntry = {
   id: string;
   action: string;
@@ -280,6 +305,14 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileMessage[]>(url);
   }
 
+  async getWhatsAppWindow(id: string): Promise<WhatsAppWindowState> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/whatsapp-window`,
+      new URLSearchParams(),
+    );
+    return this.get<WhatsAppWindowState>(url);
+  }
+
   async sendVerificationLink(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/profiles/${id}/send-verification-link`,
@@ -290,10 +323,10 @@ export class AdminProfilesController extends AdminBaseController {
 
   async sendMessage(
     id: string,
-    channel: "WHATSAPP" | "EMAIL",
+    channel: MessageChannel,
     message: string,
     files?: File[],
-  ): Promise<{ success: boolean }> {
+  ): Promise<SendMessageResult> {
     const url = this.createURL(
       `/admin/profiles/${id}/messages`,
       new URLSearchParams(),
@@ -303,9 +336,9 @@ export class AdminProfilesController extends AdminBaseController {
       form.append("channel", channel);
       form.append("message", message);
       for (const f of files) form.append("attachments", f);
-      return this.post<{ success: boolean }>(url, form);
+      return this.post<SendMessageResult>(url, form);
     }
-    return this.post<{ success: boolean }>(url, { channel, message });
+    return this.post<SendMessageResult>(url, { channel, message });
   }
 
   async updateAvatar(id: string, file: File): Promise<{ avatarUrl: string }> {
@@ -392,6 +425,8 @@ export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const getProfileWhatsAppWindow =
+  controller.getWhatsAppWindow.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
 export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
