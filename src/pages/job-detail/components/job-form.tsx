@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { Checkbox } from "#/components/ui/checkbox";
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EMPLOYMENT_TYPE_VALUES,
+  type EmploymentTypeValue,
+} from "#/lib/employment-type";
 import { GeoCombobox } from "#/components/geo-combobox";
 import { useCities, useCountries } from "#/hooks/use-geo";
 
@@ -23,6 +28,7 @@ import {
 type FormData = {
   title: string;
   description: string;
+  employmentType: string;
   scheduledAt: string;
   amount: string;
   paymentFlow: string;
@@ -44,7 +50,10 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function toLocalDateTimeValue(isoStr: string): string {
+// An offer with no closing date maps to an empty field, not to the epoch:
+// `new Date(null)` is 1970 and would silently invent a date on every save.
+function toLocalDateTimeValue(isoStr: string | null): string {
+  if (!isoStr) return "";
   const d = new Date(isoStr);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -78,6 +87,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   const [form, setForm] = useState<FormData>({
     title: "",
     description: "",
+    employmentType: "MISSION",
     scheduledAt: "",
     amount: "",
     paymentFlow: "",
@@ -96,6 +106,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     const data: FormData = {
       title: job.title ?? "",
       description: job.description ?? "",
+      employmentType: job.employmentType ?? "MISSION",
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
       amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
@@ -160,8 +171,14 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     if (form.title !== initialForm.title) params.title = form.title;
     if (form.description !== initialForm.description)
       params.description = form.description;
+    if (form.employmentType !== initialForm.employmentType)
+      params.employmentType = form.employmentType as EmploymentTypeValue;
+    // An empty field clears the closing date, which is how a dated offer
+    // becomes an open-ended one. `new Date("")` would throw.
     if (form.scheduledAt !== initialForm.scheduledAt)
-      params.scheduledAt = new Date(form.scheduledAt).toISOString();
+      params.scheduledAt = form.scheduledAt
+        ? new Date(form.scheduledAt).toISOString()
+        : null;
     const isRemote = form.isRemote === "1";
     if (form.isRemote !== initialForm.isRemote) params.isRemote = isRemote;
     // A remote job sends no location: the server clears the columns, and
@@ -303,13 +320,37 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           )}
 
           <div className="space-y-1.5">
-            <FieldLabel>Scheduled At</FieldLabel>
+            <FieldLabel>Employment type</FieldLabel>
+            <Select
+              value={form.employmentType || undefined}
+              onValueChange={(v) => updateField("employmentType", v)}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose…" />
+              </SelectTrigger>
+              <SelectContent>
+                {EMPLOYMENT_TYPE_VALUES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {EMPLOYMENT_TYPE_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <FieldLabel>Closing date</FieldLabel>
             <Input
               type="datetime-local"
               value={form.scheduledAt}
               onChange={(e) => updateField("scheduledAt", e.target.value)}
               disabled={disabled}
             />
+            <p className="text-muted-foreground text-xs">
+              When the offer stops accepting applications. Only a MISSION needs
+              one — clear it for a CDI, CDD or stage.
+            </p>
           </div>
 
           <div className="space-y-1.5">
