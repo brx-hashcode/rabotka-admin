@@ -326,7 +326,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               onValueChange={(v) => updateField("employmentType", v)}
               disabled={disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose…" />
               </SelectTrigger>
               <SelectContent>
