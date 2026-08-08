@@ -1,3 +1,5 @@
+import type { EmploymentTypeValue } from "#/lib/employment-type";
+
 import { AdminBaseController } from "./base-controller";
 
 export type AdminJobOfferListItem = {
@@ -6,7 +8,9 @@ export type AdminJobOfferListItem = {
   title: string;
   category: { id: string; name: string } | null;
   description: string;
-  scheduledAt: string;
+  employmentType: EmploymentTypeValue;
+  /** Null for a CDI, CDD or stage — only a mission has a closing date. */
+  scheduledAt: string | null;
   amount: number | null;
   paymentFlow: string | null;
   /** Null for a remote job — render `isRemote` instead. */
@@ -58,7 +62,9 @@ export type AdminJobOffersResponse = {
 export type AdminUpdateJobOfferParams = {
   title?: string;
   description?: string;
-  scheduledAt?: string;
+  employmentType?: EmploymentTypeValue;
+  /** Explicit null clears the closing date; undefined leaves it alone. */
+  scheduledAt?: string | null;
   amount?: number | null;
   paymentFlow?: string | null;
   categoryId?: string | null;
