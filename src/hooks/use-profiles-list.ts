@@ -24,8 +24,13 @@ export const profilesParsers = {
   deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
+/**
+ * The WhatsApp facet is a multi-select over a boolean, so "Connected and
+ * Disconnected" means the same thing as selecting neither: no filter. Anything
+ * else than a single recognised value is left unfiltered rather than guessing.
+ */
 export function toWhatsappConnected(arr: string[]): boolean | undefined {
-  if (arr.length === 0) return undefined;
+  if (arr.length !== 1) return undefined;
   const v = arr[0]?.toLowerCase();
   if (v === "true" || v === "1") return true;
   if (v === "false" || v === "0") return false;
