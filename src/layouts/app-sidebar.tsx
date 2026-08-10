@@ -13,6 +13,7 @@ import {
   IconFile,
   IconWallet,
   IconCalendar,
+  IconStar,
   IconTag,
   IconPackage,
   IconSpeakerphone,
@@ -133,6 +134,12 @@ const documents: NavItem[] = [
     url: "/claim",
     icon: IconReport,
     roles: [...LADDER, "SUPPORT"],
+  },
+  {
+    title: "Feedback",
+    url: "/feedback",
+    icon: IconStar,
+    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
   },
   {
     title: "Events",
