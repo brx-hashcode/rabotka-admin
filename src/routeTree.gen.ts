@@ -27,6 +27,7 @@ import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
 import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
 import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
+import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback/index'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
@@ -137,6 +138,12 @@ const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
   path: '/help/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedFeedbackIndexRoute =
+  AuthenticatedFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedEventsIndexRoute =
   AuthenticatedEventsIndexRouteImport.update({
     id: '/events/',
@@ -217,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
+  '/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/help/': typeof AuthenticatedHelpIndexRoute
   '/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
@@ -247,6 +255,7 @@ export interface FileRoutesByTo {
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
+  '/feedback': typeof AuthenticatedFeedbackIndexRoute
   '/help': typeof AuthenticatedHelpIndexRoute
   '/job-categories': typeof AuthenticatedJobCategoriesIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
@@ -279,6 +288,7 @@ export interface FileRoutesById {
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
+  '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
   '/_authenticated/job-categories/': typeof AuthenticatedJobCategoriesIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/claim/'
     | '/documents/'
     | '/events/'
+    | '/feedback/'
     | '/help/'
     | '/job-categories/'
     | '/jobs/'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/claim'
     | '/documents'
     | '/events'
+    | '/feedback'
     | '/help'
     | '/job-categories'
     | '/jobs'
@@ -372,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated/claim/'
     | '/_authenticated/documents/'
     | '/_authenticated/events/'
+    | '/_authenticated/feedback/'
     | '/_authenticated/help/'
     | '/_authenticated/job-categories/'
     | '/_authenticated/jobs/'
@@ -522,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/feedback/': {
+      id: '/_authenticated/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof AuthenticatedFeedbackIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/events/': {
       id: '/_authenticated/events/'
       path: '/events'
@@ -615,6 +635,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
+  AuthenticatedFeedbackIndexRoute: typeof AuthenticatedFeedbackIndexRoute
   AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
   AuthenticatedJobCategoriesIndexRoute: typeof AuthenticatedJobCategoriesIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
@@ -644,6 +665,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
+  AuthenticatedFeedbackIndexRoute: AuthenticatedFeedbackIndexRoute,
   AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
   AuthenticatedJobCategoriesIndexRoute: AuthenticatedJobCategoriesIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
