@@ -141,8 +141,9 @@ const documents: NavItem[] = [
     icon: IconStar,
     // Matches the API, which gates on MODERATOR and the hierarchy admits
     // everyone above it — omitting ADMIN here hid the page from a role that
-    // could call the endpoint perfectly well.
-    roles: [...LADDER],
+    // could call the endpoint perfectly well. SUPPORT reaches it laterally
+    // (read-only) because feedback is context for the claim beside it.
+    roles: [...LADDER, "SUPPORT"],
   },
   {
     title: "Events",
