@@ -139,7 +139,10 @@ const documents: NavItem[] = [
     title: "Feedback",
     url: "/feedback",
     icon: IconStar,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    // Matches the API, which gates on MODERATOR and the hierarchy admits
+    // everyone above it — omitting ADMIN here hid the page from a role that
+    // could call the endpoint perfectly well.
+    roles: [...LADDER],
   },
   {
     title: "Events",
