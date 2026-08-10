@@ -56,11 +56,18 @@ const columns: ColumnDef<AdminJobOfferListItem>[] = [
     id: "amount",
     accessorKey: "amount",
     header: "Amount",
-    cell: ({ row }) => (
-      <span className="text-sm font-medium">
-        {row.original.amount.toLocaleString()} FCFA
-      </span>
-    ),
+    cell: ({ row }) => {
+      const amount = row.original.amount;
+      // Same rule as the jobs table: the field is optional at creation, and
+      // 0 means "no price set" rather than "pays nothing".
+      if (amount == null || amount === 0) return "—";
+
+      return (
+        <span className="text-sm font-medium">
+          {amount.toLocaleString()} FCFA
+        </span>
+      );
+    },
   },
   {
     id: "scheduledAt",
