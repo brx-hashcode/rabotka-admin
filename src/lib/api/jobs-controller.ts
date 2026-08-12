@@ -82,6 +82,11 @@ export type AdminJobOffersListParams = {
   limit?: number;
   q?: string;
   status?: string[];
+  employment_type?: string[];
+  payment_flow?: string[];
+  /** Inclusive. Either bound may stand alone. */
+  amount_min?: number;
+  amount_max?: number;
   deleted?: boolean;
 };
 
@@ -94,6 +99,13 @@ export class AdminJobOffersController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.q) searchParams.q = params.q;
     if (params.status?.length) searchParams.status = params.status;
+    if (params.employment_type?.length)
+      searchParams.employment_type = params.employment_type;
+    if (params.payment_flow?.length)
+      searchParams.payment_flow = params.payment_flow;
+    // Not `if (amount)` — 0 is a legitimate bound and truthiness would drop it.
+    if (params.amount_min != null) searchParams.amount_min = params.amount_min;
+    if (params.amount_max != null) searchParams.amount_max = params.amount_max;
     if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);
