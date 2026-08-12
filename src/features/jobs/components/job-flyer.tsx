@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 import type { EmploymentTypeValue } from "#/lib/employment-type";
 
@@ -44,15 +45,6 @@ export const JobFlyer = forwardRef<
   HTMLDivElement,
   {
     job: JobFlyerData;
-    /**
-     * The logo as a data URL.
-     *
-     * Not an imported asset path: `html-to-image` has to fetch every `src` it
-     * finds and inline it, and when that fetch does not resolve in time the
-     * image is dropped silently — which is exactly how the first version
-     * produced a flyer with an empty white circle where the logo belongs. A
-     * data URL is already inline, so there is nothing left to fail.
-     */
     logoDataUrl: string | null;
   }
 >(function JobFlyer({ job, logoDataUrl }, ref) {
@@ -280,10 +272,18 @@ export const JobFlyer = forwardRef<
               gap: 16,
             }}
           >
+            {/* Allowed to shrink and ellipsize. The CTA is the one thing on the
+                flyer that must never be clipped, so it keeps its width and this
+                gives ground instead — "24 places disponibles" alongside the
+                longer label would otherwise push the button past the card. */}
             <span
               style={{
+                flex: "0 1 auto",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                fontSize: 20,
+                fontSize: 18,
                 color: "#7A7A7A",
               }}
             >
@@ -291,17 +291,22 @@ export const JobFlyer = forwardRef<
             </span>
             <div
               style={{
+                display: "flex",
+                flex: "none",
+                alignItems: "center",
+                gap: 10,
                 borderRadius: 9999,
                 background: "linear-gradient(135deg,#00D957,#00EE62)",
-                padding: "18px 44px",
-                fontSize: 22,
+                padding: "16px 30px",
+                fontSize: 20,
                 fontWeight: 700,
                 color: "#fff",
                 whiteSpace: "nowrap",
                 boxShadow: "0 8px 30px rgba(0,238,98,0.35)",
               }}
             >
-              Postuler
+              <IconBrandWhatsapp size={24} stroke={2} />
+              Postuler sur Rabotka
             </div>
           </div>
         </div>
