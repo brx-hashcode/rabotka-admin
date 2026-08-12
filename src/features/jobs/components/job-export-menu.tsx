@@ -35,6 +35,12 @@ export function JobExportMenu() {
   const filters = {
     ...(qs.q ? { q: qs.q } : {}),
     ...(qs.status?.length ? { status: qs.status } : {}),
+    ...(qs.employment_type?.length
+      ? { employment_type: qs.employment_type }
+      : {}),
+    ...(qs.payment_flow?.length ? { payment_flow: qs.payment_flow } : {}),
+    ...(qs.amount_min != null ? { amount_min: qs.amount_min } : {}),
+    ...(qs.amount_max != null ? { amount_max: qs.amount_max } : {}),
     ...(qs.deleted?.includes("true") ? { deleted: true } : {}),
   };
 

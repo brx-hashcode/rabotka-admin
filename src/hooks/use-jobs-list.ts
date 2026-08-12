@@ -16,7 +16,12 @@ export const jobsParsers = {
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  employment_type: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   payment_flow: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  // Nullable rather than defaulted: absent has to stay distinguishable from 0,
+  // which is a bound someone can legitimately set.
+  amount_min: parseAsInteger,
+  amount_max: parseAsInteger,
   deleted: parseAsArrayOf(parseAsString).withDefault([] as string[]),
 };
 
@@ -25,7 +30,15 @@ export function useJobsList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, status, payment_flow, deleted } = queryState;
+  const {
+    q,
+    status,
+    employment_type,
+    payment_flow,
+    amount_min,
+    amount_max,
+    deleted,
+  } = queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -33,15 +46,33 @@ export function useJobsList() {
       return;
     }
     setPage(1);
-  }, [q, status, payment_flow, deleted, setPage]);
+  }, [
+    q,
+    status,
+    employment_type,
+    payment_flow,
+    amount_min,
+    amount_max,
+    deleted,
+    setPage,
+  ]);
 
   const params = {
     page: queryState.page,
     limit: queryState.limit,
     ...(queryState.q ? { q: queryState.q } : {}),
     ...(queryState.status?.length ? { status: queryState.status } : {}),
+    ...(queryState.employment_type?.length
+      ? { employment_type: queryState.employment_type }
+      : {}),
     ...(queryState.payment_flow?.length
       ? { payment_flow: queryState.payment_flow }
+      : {}),
+    ...(queryState.amount_min != null
+      ? { amount_min: queryState.amount_min }
+      : {}),
+    ...(queryState.amount_max != null
+      ? { amount_max: queryState.amount_max }
       : {}),
     ...(queryState.deleted?.includes("true") ? { deleted: true } : {}),
   };
