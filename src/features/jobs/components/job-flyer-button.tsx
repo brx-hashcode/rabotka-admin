@@ -28,14 +28,20 @@ type Format = "png" | "jpg";
 const PIXEL_RATIO = 2;
 
 /**
- * Rendered at twice the 44px avatar so it stays sharp at PIXEL_RATIO, and fully
- * rounded to match the circular frame it sits in.
+ * The brand mark, rendered at twice the 44px avatar so it stays sharp at
+ * PIXEL_RATIO, and fully rounded to match the circular frame it sits in.
  *
- * Served from `public/` rather than imported: the file is 339KB, and importing
- * it just to inline it would put ~440KB of base64 into the bundle for a 44px
- * circle. This fetches it once, at runtime, and only on this page.
+ * This is the mark from `job-card/uploads/`, downscaled from its 2048px original
+ * to 256px — the flyer never draws it larger than 88px, so the rest was 70KB of
+ * detail nobody sees. Deliberately not `rabotka-logo.png`: that one is a speech
+ * bubble on a transparent background, and cropping a bubble-with-a-tail into a
+ * circular 44px frame cuts the tail off and leaves white wedges in the corners.
+ * This version is a full-bleed square, so it fills the circle edge to edge.
+ *
+ * Served from `public/` rather than imported so it stays out of the bundle: it is
+ * fetched once, at runtime, and only by this page.
  */
-const LOGO_SRC = "/rabotka-logo.png";
+const LOGO_SRC = "/rabotka-mark.png";
 const LOGO_SIZE = 88;
 
 /** `Nettoyage vitres` + `RBT-NG688` -> `nettoyage-vitres-RBT-NG688`. */
