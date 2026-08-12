@@ -32,6 +32,19 @@ export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {
   EXPIRED: "Expired",
 } as const;
 
+/**
+ * How an offer pays. Mirrors the backend `PaymentFlow` enum exactly — the
+ * Payment column renders a badge for `FIXED` too, but that value is not in the
+ * enum and cannot come back from the API, so it is deliberately not offered as
+ * a filter option: a filter that can only ever return nothing is worse than no
+ * filter at all.
+ */
+export const PAYMENT_FLOW_LABELS: Record<string, string> = {
+  HOURLY: "Hourly",
+  DAILY: "Daily",
+  MONTHLY: "Monthly",
+} as const;
+
 export const APPLICATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   ACCEPTED: "Accepted",

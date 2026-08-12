@@ -40,6 +40,14 @@ export type TableHeaderToolbarProps<TData = unknown> = Readonly<{
   filters?: readonly TableHeaderToolbarFilter[];
   table?: TableInstance<TData>;
   children?: ReactNode;
+  /**
+   * Filters that are not a multi-select over a fixed option list — a date or
+   * amount range, say. Rendered in the filter group, after the dropdowns and
+   * before Reset, so they read as part of the same row rather than drifting
+   * past the View button. Pair with `extraFiltersActive` so Reset knows about
+   * them and `onResetExtras` so it can clear them.
+   */
+  extraFilters?: ReactNode;
   extraFiltersActive?: boolean;
   onResetExtras?: () => void;
 }>;
@@ -50,6 +58,7 @@ export function TableHeaderToolbar<TData = unknown>({
   filters = [],
   table,
   children,
+  extraFilters,
   extraFiltersActive = false,
   onResetExtras,
 }: TableHeaderToolbarProps<TData>) {
@@ -149,6 +158,7 @@ export function TableHeaderToolbar<TData = unknown>({
               }
             />
           ))}
+        {extraFilters}
         {hasActiveFilters && (
           <Button
             type="button"
