@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
+import { JobFlyerButton } from "#/features/jobs/components/job-flyer-button";
 
 import { JobForm } from "./job-detail/components/job-form";
 import { JobSummary } from "./job-detail/components/job-summary";
@@ -126,8 +127,12 @@ export default function JobDetailPage({
         <div>
           <h2 className="text-2xl font-bold">{job.title}</h2>
         </div>
-        {canManageContent && (
-          <DropdownMenu>
+        <div className="flex items-center gap-2">
+          {/* Outside `canManageContent`: generating a visual reads nothing a
+              viewer of this page cannot already see, and changes nothing. */}
+          <JobFlyerButton job={job} />
+          {canManageContent && (
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
                 Actions
@@ -165,8 +170,9 @@ export default function JobDetailPage({
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
