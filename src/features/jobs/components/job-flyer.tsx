@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBrandWhatsapp, IconBriefcase } from "@tabler/icons-react";
 
 import type { EmploymentTypeValue } from "#/lib/employment-type";
 
@@ -176,18 +176,11 @@ export const JobFlyer = forwardRef<
                 color: "#00EE62",
               }}
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-              </svg>
+              {/* The design had a bookmark here, which is an action the reader
+                  of a flyer cannot take — there is nothing to save on a PNG.
+                  A briefcase says what the card is instead, and it is the same
+                  icon the sidebar uses for Job Offers. */}
+              <IconBriefcase size={24} stroke={2} />
             </div>
           </div>
 
