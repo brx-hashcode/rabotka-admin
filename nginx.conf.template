@@ -1,0 +1,80 @@
+# Rendered at container start by the nginx image's entrypoint, which runs
+# envsubst over /etc/nginx/templates/*.template. Only names present in the
+# environment are substituted, so nginx's own $uri / $http_upgrade survive.
+#
+# Requires at runtime: VITE_PORT, VITE_BACKEND_URL (both come from .env).
+# VITE_BACKEND_URL must be an origin with no trailing slash and no path
+# (https://api.example.com) — a trailing slash turns the proxy_pass below into
+# a path rewrite and every API call 404s.
+
+server {
+    listen ${VITE_PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # proxy_pass with a variable is resolved per request rather than once at
+    # startup, which is what we want — the backend can be redeployed on a new IP
+    # without this container needing a restart — but it makes `resolver`
+    # mandatory. NGINX_LOCAL_RESOLVERS is exported by the image's own
+    # 15-local-resolvers.envsh from /etc/resolv.conf, so this tracks whatever
+    # DNS the container actually has. Don't hardcode Docker's 127.0.0.11: that
+    # address only exists on user-defined networks, and every lookup fails with
+    # "connection refused" anywhere else.
+    resolver ${NGINX_LOCAL_RESOLVERS} ipv6=off valid=30s;
+
+    # index.html must never be cached: it references the current hashed asset
+    # filenames. If the browser caches it, a new deploy emits new chunk names
+    # but the stale index keeps pointing at the old ones — so new code never
+    # loads until a hard refresh.
+    #
+    # The header has to live here, not only in a `location = /index.html`
+    # block: try_files serves the fallback *within this location*, so a hit on
+    # `/` or a deep route like /profiles/:id never enters that block and would
+    # otherwise go out with no cache headers at all — leaving the browser to
+    # apply heuristic caching to the one file that must never be cached. The
+    # hashed-asset regex below is a regex location, so it still wins for real
+    # files and they keep their immutable caching.
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+    }
+
+    # The SPA calls the API same-origin (/api/...), so this origin has to
+    # forward it. No URI part after the variable means the request URI is
+    # passed through untouched — matching the dev/preview Vite proxy, which
+    # forwards /api/* without a rewrite.
+    location /api/ {
+        set $api_backend "${VITE_BACKEND_URL}";
+        proxy_pass $api_backend;
+        proxy_ssl_server_name on;
+        proxy_http_version 1.1;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+
+    location /socket.io/ {
+        set $ws_backend "${VITE_BACKEND_URL}";
+        proxy_pass $ws_backend;
+        proxy_ssl_server_name on;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 7d;
+        proxy_send_timeout 7d;
+    }
+
+    gzip on;
+    gzip_vary on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
+    gzip_min_length 1024;
+}
