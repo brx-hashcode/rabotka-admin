@@ -71,6 +71,11 @@ export type AdminProfileDetailResponse = AdminProfileListItem & {
   kycDocuments: AdminKycDocumentItem[];
   verificationImages: AdminVerificationImageItem[];
   vectorIndexedAt: string | null;
+  /** Why the account is suspended right now; null unless it is. */
+  suspensionReason: string | null;
+  suspendedAt: string | null;
+  /** Last successful sign-in. Null for a profile that has never logged in. */
+  lastLoginAt: string | null;
 };
 
 export type AdminUpdateProfileParams = {

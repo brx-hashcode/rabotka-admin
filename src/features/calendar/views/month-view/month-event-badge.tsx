@@ -1,6 +1,7 @@
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { endOfDay, isSameDay, parseISO, startOfDay } from "date-fns";
+import { Repeat } from "lucide-react";
 import { cn } from "#/lib/utils";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
@@ -99,6 +100,11 @@ export function MonthEventBadge({
   const badgeButton = (
     <button type="button" className={eventBadgeClasses}>
       <div className="flex items-center gap-1.5 truncate">
+        {/* So a series is recognisable without opening it — otherwise the only
+            hint that dragging this will ask a question is the question. */}
+        {event.seriesId && (
+          <Repeat className="size-3 shrink-0 opacity-70" aria-label="Repeats" />
+        )}
         {renderBadgeText && (
           <p className="flex-1 truncate font-semibold">
             {eventCurrentDay && (

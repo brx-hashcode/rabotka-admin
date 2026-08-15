@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { useUpdateEvent } from "#/features/calendar/hooks/use-calendar-events";
 import type { IEvent } from "#/features/calendar/interfaces";
+import type { TEventEditScope } from "#/features/calendar/types";
+import { RecurringScopeDialog } from "#/features/calendar/dialogs/recurring-scope-dialog";
 
 interface DragDropContextType {
   draggedEvent: IEvent | null;
@@ -109,24 +111,45 @@ export function DndProvider({ children }: DndProviderProps) {
     [dragState, calculateNewDates, isSamePosition, endDrag],
   );
 
-  // Default event update handler
-  const handleEventUpdate = useCallback(
-    (event: IEvent, newStartDate: Date, newEndDate: Date) => {
-      const updatedEvent = {
-        ...event,
-        startDate: newStartDate.toISOString(),
-        endDate: newEndDate.toISOString(),
-      };
-      updateEvent(updatedEvent);
+  /** A drop on a series member, waiting for the user to say what it should move. */
+  const [pendingDrop, setPendingDrop] = useState<{
+    event: IEvent;
+    startDate: string;
+    endDate: string;
+  } | null>(null);
+
+  const persistMove = useCallback(
+    (event: IEvent, startDate: string, endDate: string, scope?: TEventEditScope) => {
       persistUpdate(
-        { id: event.id, data: { startDate: newStartDate.toISOString(), endDate: newEndDate.toISOString() } },
+        { id: event.id, data: { startDate, endDate, scope } },
         {
           onSuccess: () => toast.success("Event updated"),
           onError: () => toast.error("Failed to update event"),
         },
       );
     },
-    [updateEvent, persistUpdate],
+    [persistUpdate],
+  );
+
+  // Default event update handler
+  const handleEventUpdate = useCallback(
+    (event: IEvent, newStartDate: Date, newEndDate: Date) => {
+      const startDate = newStartDate.toISOString();
+      const endDate = newEndDate.toISOString();
+
+      // A series member cannot move optimistically: until the user picks a
+      // scope we do not know whether one occurrence moves or all of them, and
+      // showing the wrong answer then correcting it is worse than a short wait.
+      // Nothing was applied, so cancelling needs no undo.
+      if (event.seriesId) {
+        setPendingDrop({ event, startDate, endDate });
+        return;
+      }
+
+      updateEvent({ ...event, startDate, endDate });
+      persistMove(event, startDate, endDate);
+    },
+    [updateEvent, persistMove],
   );
 
   // Set default callback
@@ -148,6 +171,17 @@ export function DndProvider({ children }: DndProviderProps) {
   return (
     <DragDropContext.Provider value={contextValue}>
       {children}
+      <RecurringScopeDialog
+        open={pendingDrop !== null}
+        onOpenChange={(open) => !open && setPendingDrop(null)}
+        mode="edit"
+        onConfirm={(scope) => {
+          if (!pendingDrop) return;
+          const { event, startDate, endDate } = pendingDrop;
+          setPendingDrop(null);
+          persistMove(event, startDate, endDate, scope);
+        }}
+      />
     </DragDropContext.Provider>
   );
 }

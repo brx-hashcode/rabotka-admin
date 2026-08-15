@@ -1,8 +1,10 @@
 
 
 import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "#/features/calendar/hooks";
+import { getVisibleRange } from "#/features/calendar/helpers";
+import { useCalendarEvents } from "#/features/calendar/hooks/use-calendar-events";
 import type { IEvent, IUser } from "#/features/calendar/interfaces";
 import type { TCalendarView, TEventColor } from "#/features/calendar/types";
 
@@ -24,6 +26,7 @@ interface ICalendarContext {
   filterEventsBySelectedUser: (userId: IUser["id"] | "all") => void;
   users: IUser[];
   events: IEvent[];
+  isLoading: boolean;
   addEvent: (event: IEvent) => void;
   updateEvent: (event: IEvent) => void;
   removeEvent: (eventId: number) => void;
@@ -46,19 +49,23 @@ const DEFAULT_SETTINGS: CalendarSettings = {
 
 const CalendarContext = createContext({} as ICalendarContext);
 
+/**
+ * Owns the calendar's view state *and* its data.
+ *
+ * The fetch lives here rather than in `Calendar` because the window to fetch is
+ * derived from `selectedDate` + `currentView`, which are declared below — when
+ * the query sat above the provider it had no way to see them, so it asked for
+ * every event in the table.
+ */
 export function CalendarProvider({
   children,
-  users,
-  events,
   badge = "colored",
   view = "day",
-}: {
+}: Readonly<{
   children: React.ReactNode;
-  users: IUser[];
-  events: IEvent[];
   view?: TCalendarView;
   badge?: "dot" | "colored";
-}) {
+}>) {
   const [settings, setSettings] = useLocalStorage<CalendarSettings>(
     "calendar-settings",
     {
@@ -87,15 +94,49 @@ export function CalendarProvider({
   );
   const [selectedColors, setSelectedColors] = useState<TEventColor[]>([]);
 
-  const [allEvents, setAllEvents] = useState<IEvent[]>(events || []);
-  const [filteredEvents, setFilteredEvents] = useState<IEvent[]>(events || []);
+  const visibleRange = useMemo(
+    () => getVisibleRange(currentView, selectedDate),
+    [currentView, selectedDate],
+  );
+  const { data: fetchedEvents, isLoading } = useCalendarEvents(visibleRange);
+
+  // Local mirror of the fetched window, so the drag/resize handlers can move an
+  // event optimistically before the PATCH comes back.
+  const [allEvents, setAllEvents] = useState<IEvent[]>([]);
 
   useEffect(() => {
-    setAllEvents(events || []);
-    setFilteredEvents(events || []);
-    setSelectedColors([]);
-    setSelectedUserId("all");
-  }, [events]);
+    setAllEvents(fetchedEvents ?? []);
+    // Deliberately no filter reset here. This effect used to clear the colour
+    // and user filters whenever `events` changed — harmless when that happened
+    // only on invalidation, but now the identity changes every time the user
+    // pages to another month, which would drop their filters mid-browse.
+  }, [fetchedEvents]);
+
+  const users = useMemo((): IUser[] => {
+    const map = new Map<string, IUser>();
+    for (const event of allEvents) {
+      for (const u of event.assignedUsers) {
+        if (!map.has(u.id)) map.set(u.id, u);
+      }
+    }
+    return Array.from(map.values());
+  }, [allEvents]);
+
+  // Derived, not stored. As two pieces of state they overwrote each other:
+  // picking a colour recomputed from `allEvents` ignoring the selected user,
+  // and vice versa, so only the most recent filter ever applied.
+  const filteredEvents = useMemo(
+    () =>
+      allEvents.filter((event) => {
+        const colorMatches =
+          selectedColors.length === 0 ||
+          selectedColors.includes(event.color || "blue");
+        const userMatches =
+          selectedUserId === "all" || event.user.id === selectedUserId;
+        return colorMatches && userMatches;
+      }),
+    [allEvents, selectedColors, selectedUserId],
+  );
 
   const updateSettings = (newPartialSettings: Partial<CalendarSettings>) => {
     setSettings({
@@ -125,33 +166,18 @@ export function CalendarProvider({
     updateSettings({ agendaModeGroupBy: groupBy });
   };
 
+  // Both filters only move state now — `filteredEvents` above recomputes from
+  // whichever combination is selected, so they compose instead of clobbering.
   const filterEventsBySelectedColors = (color: TEventColor) => {
-    const isColorSelected = selectedColors.includes(color);
-    const newColors = isColorSelected
-      ? selectedColors.filter((c) => c !== color)
-      : [...selectedColors, color];
-
-    if (newColors.length > 0) {
-      const filtered = allEvents.filter((event) => {
-        const eventColor = event.color || "blue";
-        return newColors.includes(eventColor);
-      });
-      setFilteredEvents(filtered);
-    } else {
-      setFilteredEvents(allEvents);
-    }
-
-    setSelectedColors(newColors);
+    setSelectedColors((prev) =>
+      prev.includes(color)
+        ? prev.filter((c) => c !== color)
+        : [...prev, color],
+    );
   };
 
   const filterEventsBySelectedUser = (userId: IUser["id"] | "all") => {
     setSelectedUserId(userId);
-    if (userId === "all") {
-      setFilteredEvents(allEvents);
-    } else {
-      const filtered = allEvents.filter((event) => event.user.id === userId);
-      setFilteredEvents(filtered);
-    }
   };
 
   const handleSelectDate = (date: Date | undefined) => {
@@ -161,7 +187,6 @@ export function CalendarProvider({
 
   const addEvent = (event: IEvent) => {
     setAllEvents((prev) => [...prev, event]);
-    setFilteredEvents((prev) => [...prev, event]);
   };
 
   const updateEvent = (event: IEvent) => {
@@ -172,18 +197,13 @@ export function CalendarProvider({
     };
 
     setAllEvents((prev) => prev.map((e) => (e.id === event.id ? updated : e)));
-    setFilteredEvents((prev) =>
-      prev.map((e) => (e.id === event.id ? updated : e)),
-    );
   };
 
   const removeEvent = (eventId: number) => {
     setAllEvents((prev) => prev.filter((e) => e.id !== eventId));
-    setFilteredEvents((prev) => prev.filter((e) => e.id !== eventId));
   };
 
   const clearFilter = () => {
-    setFilteredEvents(allEvents);
     setSelectedColors([]);
     setSelectedUserId("all");
   };
@@ -200,6 +220,7 @@ export function CalendarProvider({
     filterEventsBySelectedColors,
     filterEventsBySelectedUser,
     events: filteredEvents,
+    isLoading,
     view: currentView,
     use24HourFormat,
     toggleTimeFormat,

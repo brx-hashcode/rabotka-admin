@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "#/lib/utils";
+import { fold } from "#/lib/search";
 import {
   Command,
   CommandEmpty,
@@ -133,13 +134,4 @@ export function GeoCombobox({
       </PopoverContent>
     </Popover>
   );
-}
-
-/** Lower-cased and stripped of diacritics, so "Bethune" matches "Béthune". */
-function fold(value: string): string {
-  return value
-    .trim()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 }
