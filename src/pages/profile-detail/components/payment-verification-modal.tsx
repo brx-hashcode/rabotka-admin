@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
-import { Textarea } from "#/components/ui/textarea";
+import { ReasonField } from "#/components/reason-field";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,15 @@ import {
   DialogFooter,
   DialogDescription,
 } from "#/components/ui/dialog";
-import { cn } from "#/lib/utils";
+import type { ReasonTemplateScope } from "#/lib/reason-templates";
+
+const REASON_SCOPE_BY_DECISION: Record<
+  "ACCEPTED" | "REJECTED",
+  ReasonTemplateScope
+> = {
+  ACCEPTED: "PAYMENT_ACCEPT",
+  REJECTED: "PAYMENT_REJECT",
+};
 
 type PaymentVerificationModalProps = {
   open: boolean;
@@ -92,35 +100,23 @@ export function PaymentVerificationModal({
             </Button>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Reason{" "}
-              {decision === "REJECTED" ? (
-                <span className="text-destructive">*</span>
-              ) : (
-                "(optional)"
-              )}
-            </label>
-            <Textarea
-              placeholder={
-                decision === "REJECTED"
-                  ? "Provide a reason for rejection..."
-                  : "Add a comment..."
-              }
-              value={reason}
-              rows={3}
-              onChange={(e) => {
-                setReason(e.target.value);
-                if (e.target.value.trim()) setReasonError(false);
-              }}
-              className={cn("resize-none", reasonError && "border-destructive")}
-            />
-            {reasonError && (
-              <p className="text-destructive text-xs">
-                A reason is required when rejecting.
-              </p>
-            )}
-          </div>
+          <ReasonField
+            value={reason}
+            onChange={(value) => {
+              setReason(value);
+              if (value.trim()) setReasonError(false);
+            }}
+            templateScope={decision ? REASON_SCOPE_BY_DECISION[decision] : null}
+            placeholder={
+              decision === "REJECTED"
+                ? "Provide a reason for rejection..."
+                : "Add a comment..."
+            }
+            required={decision === "REJECTED"}
+            error={reasonError}
+            errorMessage="A reason is required when rejecting."
+            disabled={isPending}
+          />
         </div>
 
         <DialogFooter>
