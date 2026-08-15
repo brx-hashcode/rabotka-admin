@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import { MAX_OCCURRENCE_COUNT } from "#/features/calendar/constants";
+import {
+	DEFAULT_EVENT_DURATION_MINUTES,
+	REPEAT_PERIOD_LABEL,
+	durationToMs,
+	repeatIntervalMs,
+} from "#/features/calendar/utils/event-window";
 
 export const eventSchema = z
 	.object({
@@ -9,7 +15,16 @@ export const eventSchema = z
 		// `error`, not `required_error`: this is zod 4, where the old key is
 		// silently ignored — so these messages never actually appeared.
 		startDate: z.date({ error: "Start date is required" }),
-		endDate: z.date({ error: "End date is required" }),
+		// How long one occurrence runs, rather than the date it ends on. The end
+		// date was the field people reached for to mean "this event never ends",
+		// and an occurrence stretching years ahead is drawn on every day it
+		// covers — a repeating one then stacks a fresh copy on top each period.
+		durationValue: z
+			.number({ error: "Duration is required" })
+			.int()
+			.min(1, "Duration must be at least 1")
+			.default(DEFAULT_EVENT_DURATION_MINUTES),
+		durationUnit: z.enum(["minutes", "hours", "days"]).default("minutes"),
 		color: z.enum(["blue", "green", "red", "yellow", "purple", "orange"]),
 		channel: z.enum(["EMAIL", "WHATSAPP", "ALL"]),
 		location: z.string().optional(),
@@ -26,17 +41,25 @@ export const eventSchema = z
 		repeatCount: z.number().int().min(1).max(MAX_OCCURRENCE_COUNT).optional(),
 	})
 	.superRefine((values, ctx) => {
-		if (values.endDate < values.startDate) {
-			ctx.addIssue({
-				path: ["endDate"],
-				code: "custom",
-				message: "End date must be after the start date",
-			});
-		}
-
 		// The repeat fields stay in the form state when the user switches back to
 		// "Does not repeat", so they are only worth validating when they apply.
 		if (values.repeatFrequency === "NONE") return;
+
+		// An occurrence still running when the next one starts overlaps it, and
+		// the overlap accumulates: forty weeks into a weekly series whose events
+		// each last a year, every day of the calendar carries forty bars. The
+		// server rejects this too — catching it here says which field to change.
+		const duration = durationToMs({
+			value: values.durationValue,
+			unit: values.durationUnit,
+		});
+		if (duration >= repeatIntervalMs(values.startDate, values.repeatFrequency)) {
+			ctx.addIssue({
+				path: ["durationValue"],
+				code: "custom",
+				message: `An event repeating ${values.repeatFrequency.toLowerCase()} must be shorter than ${REPEAT_PERIOD_LABEL[values.repeatFrequency]}.`,
+			});
+		}
 
 		if (values.repeatEndMode === "until") {
 			if (!values.repeatUntil) {
