@@ -26,6 +26,18 @@ export function formatDate(dateStr: string | null | undefined): string {
   });
 }
 
+/**
+ * Date and time, for values where the hour is the point — a last login two
+ * hours ago and one at 3am read very differently, and `formatDate` drops that.
+ */
+export function formatDateTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function docCategoryLabel(category: string): string {
   return category === "SELFIE" ? "Selfie" : "Identity Document";
 }
