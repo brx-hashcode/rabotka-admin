@@ -10,6 +10,16 @@ export type TDeliveryChannel = "EMAIL" | "WHATSAPP" | "ALL";
 
 export type TRecurrenceFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
+/**
+ * How an event's length is entered.
+ *
+ * A duration rather than a second date, so that "this never ends" has nowhere
+ * to be typed: an occurrence lasting years is what stacks a repeating event on
+ * every day of the calendar, and the repeat's own end condition is the only
+ * thing that can be open-ended.
+ */
+export type TDurationUnit = "minutes" | "hours" | "days";
+
 /** What the form's "Repeat" dropdown offers — the frequencies, plus off. */
 export type TRepeatPreset = "NONE" | TRecurrenceFrequency;
 
