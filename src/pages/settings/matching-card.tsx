@@ -246,7 +246,10 @@ export function MatchingCard() {
             </Label>
             <p className="text-muted-foreground text-xs">
               Maximum number of workers who receive a WhatsApp notification when
-              a new job offer is published. Default: 20.
+              a new job offer is published. Each one is a paid message to
+              someone who did not ask for it, so raise this in steps and watch
+              the WhatsApp quality rating. The cooldown below caps how often any
+              single worker can be reached, whatever this is set to. Default: 5.
             </p>
           </div>
           <Input
