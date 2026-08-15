@@ -1,38 +1,39 @@
-import { useMemo } from "react";
 import { CalendarBody } from "#/features/calendar/calendar-body";
-import { CalendarProvider } from "#/features/calendar/contexts/calendar-context";
+import {
+  CalendarProvider,
+  useCalendar,
+} from "#/features/calendar/contexts/calendar-context";
 import { DndProvider } from "#/features/calendar/contexts/dnd-context";
 import { CalendarHeader } from "#/features/calendar/header/calendar-header";
-import { useCalendarEvents } from "#/features/calendar/hooks/use-calendar-events";
 import { CalendarSkeleton } from "#/features/calendar/skeletons/calendar-skeleton";
-import type { IUser } from "#/features/calendar/interfaces";
 
 export function Calendar() {
-  const { data: events = [], isLoading } = useCalendarEvents();
+  return (
+    <CalendarProvider view="month">
+      <CalendarShell />
+    </CalendarProvider>
+  );
+}
 
-  // Derive unique users from events already fetched — no extra API call needed
-  const users = useMemo((): IUser[] => {
-    const map = new Map<string, IUser>();
-    for (const event of events) {
-      for (const u of event.assignedUsers) {
-        if (!map.has(u.id)) map.set(u.id, u);
-      }
-    }
-    return Array.from(map.values());
-  }, [events]);
+/**
+ * Split from `Calendar` only so it can sit *inside* the provider and read
+ * `isLoading` from it — the fetch moved down there, because the window it asks
+ * for depends on the provider's own `selectedDate` and `view`.
+ *
+ * Only the first load reaches the skeleton: paging to another month keeps the
+ * previous window on screen (`placeholderData` in `useCalendarEvents`).
+ */
+function CalendarShell() {
+  const { isLoading } = useCalendar();
 
-  if (isLoading) {
-    return <CalendarSkeleton />;
-  }
+  if (isLoading) return <CalendarSkeleton />;
 
   return (
-    <CalendarProvider events={events} users={users} view="month">
-      <DndProvider>
-        <div className="w-full border rounded-xl">
-          <CalendarHeader />
-          <CalendarBody />
-        </div>
-      </DndProvider>
-    </CalendarProvider>
+    <DndProvider>
+      <div className="w-full border rounded-xl">
+        <CalendarHeader />
+        <CalendarBody />
+      </div>
+    </DndProvider>
   );
 }

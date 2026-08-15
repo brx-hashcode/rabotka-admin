@@ -1,4 +1,15 @@
-import type { TEventColor, TDeliveryChannel } from "#/features/calendar/types";
+import type {
+	TEventColor,
+	TDeliveryChannel,
+	TRecurrenceFrequency,
+} from "#/features/calendar/types";
+
+export interface IEventRecurrence {
+	frequency: TRecurrenceFrequency;
+	/** ISO 8601. Null when the series ends by count, or never. */
+	until: string | null;
+	count: number | null;
+}
 
 export interface IUser {
 	id: string;
@@ -24,6 +35,10 @@ export interface IEvent {
 	location: string | null;
 	profiles: ICalendarProfile[];
 	assignedUsers: IUser[];
+	/** Null on a one-off event. Non-null means this is one occurrence of a series. */
+	seriesId: string | null;
+	occurrenceIndex: number | null;
+	recurrence: IEventRecurrence | null;
 }
 
 export interface ICalendarCell {
