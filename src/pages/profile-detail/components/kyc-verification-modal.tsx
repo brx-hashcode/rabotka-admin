@@ -5,10 +5,11 @@ import { X } from "lucide-react";
 import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import type { ReasonTemplateScope } from "#/lib/reason-templates";
 
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
-import { Textarea } from "#/components/ui/textarea";
+import { ReasonField } from "#/components/reason-field";
 import {
   Dialog,
   DialogClose,
@@ -39,39 +40,13 @@ type KycVerificationModalProps = {
 const REASON_PLACEHOLDER =
   "Enter the reason for your decision (required for approve and reject)…";
 
-const KYC_REASON_FIELD_ID = "kyc-verification-reason";
-
-function ReasonField({
-  reason,
-  reasonError,
-  onReasonChange,
-}: Readonly<{
-  reason: string;
-  reasonError: boolean;
-  onReasonChange: (value: string) => void;
-}>) {
-  return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={KYC_REASON_FIELD_ID}
-        className="text-muted-foreground text-xs font-medium uppercase tracking-wide"
-      >
-        Reason <span className="text-destructive">*</span>
-      </label>
-      <Textarea
-        id={KYC_REASON_FIELD_ID}
-        placeholder={REASON_PLACEHOLDER}
-        value={reason}
-        rows={3}
-        onChange={(e) => onReasonChange(e.target.value)}
-        className={cn("resize-none", reasonError && "border-destructive")}
-      />
-      {reasonError && (
-        <p className="text-destructive text-xs">A reason is required.</p>
-      )}
-    </div>
-  );
-}
+const REASON_SCOPE_BY_DECISION: Record<
+  "VERIFIED" | "REJECTED",
+  ReasonTemplateScope
+> = {
+  VERIFIED: "KYC_APPROVE",
+  REJECTED: "KYC_REJECT",
+};
 
 export function KycVerificationModal({
   open,
@@ -112,6 +87,9 @@ export function KycVerificationModal({
 
   const canSubmit =
     decision != null && reason.trim().length > 0 && !reasonError;
+
+  /** Reason suggestions follow the decision; none until one is picked. */
+  const reasonScope = decision ? REASON_SCOPE_BY_DECISION[decision] : null;
 
   const addFiles = (newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -166,7 +144,10 @@ export function KycVerificationModal({
                   ? "border-red-500 bg-red-500/15 text-red-500"
                   : "border-border hover:border-red-500/50 hover:text-red-500",
               )}
-              onClick={() => setDecision("REJECTED")}
+              onClick={() => {
+                setDecision("REJECTED");
+                setReasonError(false);
+              }}
             >
               <IconX className="size-6" />
               <span>Reject</span>
@@ -252,12 +233,16 @@ export function KycVerificationModal({
           )}
 
           <ReasonField
-            reason={reason}
-            reasonError={reasonError}
-            onReasonChange={(value) => {
+            value={reason}
+            onChange={(value) => {
               setReason(value);
               if (value.trim()) setReasonError(false);
             }}
+            templateScope={reasonScope}
+            placeholder={REASON_PLACEHOLDER}
+            required
+            error={reasonError}
+            disabled={isPending}
           />
         </div>
 
