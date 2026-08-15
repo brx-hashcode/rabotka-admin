@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import { Button } from "#/components/ui/button";
-import { Textarea } from "#/components/ui/textarea";
+import { ReasonField } from "#/components/reason-field";
 import {
   Dialog,
   DialogContent,
@@ -61,34 +61,23 @@ export function StatusVerificationModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Reason{" "}
-              {isSuspending ? (
-                <span className="text-destructive">*</span>
-              ) : (
-                "(optional)"
-              )}
-            </label>
-            <Textarea
-              placeholder={
-                isSuspending
-                  ? "Provide a reason for suspension..."
-                  : "Add a comment..."
-              }
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                if (e.target.value.trim()) setReasonError(false);
-              }}
-              className={reasonError ? "border-destructive" : ""}
-            />
-            {reasonError && (
-              <p className="text-destructive text-xs">
-                A reason is required when suspending.
-              </p>
-            )}
-          </div>
+          <ReasonField
+            value={reason}
+            onChange={(value) => {
+              setReason(value);
+              if (value.trim()) setReasonError(false);
+            }}
+            templateScope={isSuspending ? "ACCOUNT_SUSPEND" : "ACCOUNT_ACTIVATE"}
+            placeholder={
+              isSuspending
+                ? "Provide a reason for suspension..."
+                : "Add a comment..."
+            }
+            required={isSuspending}
+            error={reasonError}
+            errorMessage="A reason is required when suspending."
+            disabled={isPending}
+          />
         </div>
 
         <DialogFooter>
