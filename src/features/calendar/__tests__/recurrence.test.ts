@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { eventSchema } from "#/features/calendar/schemas";
 import {
+  msToDuration,
+  resolveEventEnd,
+} from "#/features/calendar/utils/event-window";
+import {
   describeRecurrence,
   fromRecurrence,
   toRecurrenceParams,
@@ -113,7 +117,8 @@ describe("eventSchema repeat validation", () => {
     title: "Standup",
     description: "Daily standup",
     startDate: new Date("2026-09-07T09:00:00"),
-    endDate: new Date("2026-09-07T09:15:00"),
+    durationValue: 15,
+    durationUnit: "minutes" as const,
     color: "blue" as const,
     channel: "EMAIL" as const,
     profileIds: [],
@@ -148,10 +153,10 @@ describe("eventSchema repeat validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects an event that ends before it starts", () => {
+  it("rejects a duration of zero", () => {
     const result = eventSchema.safeParse({
       ...base,
-      endDate: new Date("2026-09-07T08:00:00"),
+      durationValue: 0,
       repeatFrequency: "NONE",
       repeatEndMode: "never",
     });
@@ -166,5 +171,99 @@ describe("eventSchema repeat validation", () => {
       repeatUntil: new Date("2026-12-31T23:59:00"),
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("msToDuration", () => {
+  const MINUTE = 60_000;
+
+  it("picks the largest unit that divides the span evenly", () => {
+    // What the form shows when an existing event is opened: a stored 3-day
+    // event has to come back as "3 days", not "4320 minutes".
+    expect(msToDuration(3 * 24 * 60 * MINUTE)).toEqual({
+      value: 3,
+      unit: "days",
+    });
+    expect(msToDuration(2 * 60 * MINUTE)).toEqual({ value: 2, unit: "hours" });
+    expect(msToDuration(90 * MINUTE)).toEqual({ value: 90, unit: "minutes" });
+  });
+
+  it("never yields a zero-length event", () => {
+    // A row whose end equals its start would otherwise open the form on a
+    // duration the schema rejects.
+    expect(msToDuration(0)).toEqual({ value: 1, unit: "minutes" });
+  });
+
+  it("round-trips through the end date the API stores", () => {
+    const start = new Date("2026-09-07T13:00:00");
+    const end = new Date("2026-09-10T13:00:00");
+
+    expect(resolveEventEnd(start, msToDuration(end.getTime() - start.getTime()))).toEqual(
+      end,
+    );
+  });
+});
+
+describe("eventSchema — a duration instead of an end date", () => {
+  const base = {
+    title: "Lunch",
+    description: "Lunch",
+    startDate: new Date("2026-09-07T13:00:00"),
+    color: "blue" as const,
+    channel: "EMAIL" as const,
+    profileIds: [],
+    userIds: [],
+  };
+
+  it("falls back to the default length when nothing is entered", () => {
+    // There is no field that can say "this occurrence never ends" any more —
+    // that idea only exists on the repeat, as "Ends: Never".
+    const result = eventSchema.safeParse({
+      ...base,
+      repeatFrequency: "DAILY",
+      repeatEndMode: "never",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({
+      durationValue: 30,
+      durationUnit: "minutes",
+    });
+  });
+
+  const parse = (
+    durationValue: number,
+    durationUnit: string,
+    repeatFrequency: string,
+  ) =>
+    eventSchema.safeParse({
+      ...base,
+      durationValue,
+      durationUnit,
+      repeatFrequency,
+      repeatEndMode: "never",
+    });
+
+  it("rejects a weekly event that runs for years", () => {
+    // The shape behind "the calendar duplicates my event on every day": each
+    // occurrence is still running when the next forty begin.
+    const result = parse(365, "days", "WEEKLY");
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["durationValue"]);
+    expect(result.error?.issues[0].message).toContain("shorter than a week");
+  });
+
+  it("rejects a daily event lasting exactly a day", () => {
+    // Touching ends still put two occurrences on the same day, every day.
+    expect(parse(24, "hours", "DAILY").success).toBe(false);
+  });
+
+  it("accepts a multi-day event that still fits its weekly interval", () => {
+    expect(parse(3, "days", "WEEKLY").success).toBe(true);
+  });
+
+  it("leaves a one-off event alone however long it runs", () => {
+    expect(parse(365, "days", "NONE").success).toBe(true);
   });
 });
