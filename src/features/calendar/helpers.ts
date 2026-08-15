@@ -6,6 +6,7 @@ import {
 	differenceInDays,
 	differenceInMinutes,
 	eachDayOfInterval,
+	endOfDay,
 	endOfMonth,
 	endOfWeek,
 	endOfYear,
@@ -439,3 +440,46 @@ export const toCapitalize = (str: string): string => {
 	if (!str) return "";
 	return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+/**
+ * The window the server should return events for, given what is on screen.
+ *
+ * Padded on both ends because a view renders more than its nominal range:
+ * `getCalendarCells` fills the month grid with trailing days of the previous
+ * month and leading days of the next, and `getEventsForDay` is called for those
+ * cells too — an unpadded range would leave them visibly empty.
+ *
+ * Bounds are the day's edges rather than the raw date so the range never
+ * depends on the time of day the user happens to open the page.
+ */
+export function getVisibleRange(
+	view: TCalendarView,
+	date: Date,
+): { from: string; to: string } {
+	let start: Date;
+	let end: Date;
+
+	switch (view) {
+		case "week":
+			start = subDays(startOfWeek(date), 1);
+			end = addDays(endOfWeek(date), 1);
+			break;
+		case "day":
+			start = subDays(date, 1);
+			end = addDays(date, 1);
+			break;
+		case "year":
+			start = startOfYear(date);
+			end = endOfYear(date);
+			break;
+		// month, agenda, and anything added later: the padded month window.
+		default:
+			start = subDays(startOfMonth(date), 7);
+			end = addDays(endOfMonth(date), 7);
+	}
+
+	return {
+		from: startOfDay(start).toISOString(),
+		to: endOfDay(end).toISOString(),
+	};
+}

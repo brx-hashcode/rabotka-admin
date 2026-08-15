@@ -31,7 +31,15 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
-import { COLORS } from "#/features/calendar/constants";
+import {
+  COLORS,
+  MAX_OCCURRENCE_COUNT,
+  RECURRENCE_END_MODES,
+  REPEAT_PRESETS,
+} from "#/features/calendar/constants";
+import { RecurringScopeDialog } from "./recurring-scope-dialog";
+import type { TEventEditScope } from "#/features/calendar/types";
+import type { UpdateEventParams } from "#/lib/api/events-controller";
 import { useDisclosure } from "#/features/calendar/hooks";
 import {
   useCreateEvent,
@@ -47,7 +55,13 @@ import type {
   IUser,
 } from "#/features/calendar/interfaces";
 import { eventSchema, type TEventFormData } from "#/features/calendar/schemas";
-import { dateToInputValue, timeToInputValue, mergeDateAndTime } from "../utils";
+import {
+  dateToInputValue,
+  fromRecurrence,
+  mergeDateAndTime,
+  timeToInputValue,
+  toRecurrenceParams,
+} from "../utils";
 
 type IProps = {
   readonly children: ReactNode;
@@ -118,6 +132,7 @@ export function AddEditEventDialog({
       location: event?.location ?? "",
       profileIds: getProfileIds(),
       userIds: getUserIds(),
+      ...fromRecurrence(event?.recurrence),
     },
   });
 
@@ -133,11 +148,29 @@ export function AddEditEventDialog({
         location: event?.location ?? "",
         profileIds: getProfileIds(),
         userIds: getUserIds(),
+        ...fromRecurrence(event?.recurrence),
       });
       resetProfiles(event?.profiles ?? []);
       resetUsers(event?.assignedUsers ?? []);
     }
   }, [isOpen, event?.id]);
+
+  /** Held between the submit and the scope choice, for a series edit. */
+  const [pendingEdit, setPendingEdit] = useState<UpdateEventParams | null>(null);
+
+  const submitUpdate = (data: UpdateEventParams) => {
+    update(
+      { id: event!.id, data },
+      {
+        onSuccess: () => {
+          toast.success("Event updated successfully");
+          onClose();
+          form.reset();
+        },
+        onError: () => toast.error("Failed to update event"),
+      },
+    );
+  };
 
   const onSubmit: SubmitHandler<TEventFormData> = (values) => {
     const payload = {
@@ -150,21 +183,10 @@ export function AddEditEventDialog({
       location: values.location || undefined,
       profileIds: getProfileIds(),
       userIds: getUserIds(),
+      recurrence: toRecurrenceParams(values),
     };
 
-    if (isEditing) {
-      update(
-        { id: event.id, data: payload },
-        {
-          onSuccess: () => {
-            toast.success("Event updated successfully");
-            onClose();
-            form.reset();
-          },
-          onError: () => toast.error("Failed to update event"),
-        },
-      );
-    } else {
+    if (!isEditing) {
       create(payload, {
         onSuccess: () => {
           toast.success("Event created successfully");
@@ -173,11 +195,26 @@ export function AddEditEventDialog({
         },
         onError: () => toast.error("Failed to create event"),
       });
+      return;
     }
+
+    // Editing one occurrence of a series: ask what it should reach before
+    // sending anything, the way Google does.
+    if (event.seriesId) {
+      setPendingEdit(payload);
+      return;
+    }
+
+    submitUpdate(payload);
   };
 
   const [profileSearchOpen, setProfileSearchOpen] = useState(false);
   const [userSearchOpen, setUserSearchOpen] = useState(false);
+
+  // Watched so the end-condition fields appear and disappear with the choice
+  // above them.
+  const repeats = form.watch("repeatFrequency") !== "NONE";
+  const endMode = form.watch("repeatEndMode");
 
   const handleProfileToggle = (item: ICalendarProfile) => {
     toggleProfile(item);
@@ -212,6 +249,23 @@ export function AddEditEventDialog({
         onOpenChange={setUserSearchOpen}
         selected={selectedUsers}
         onToggle={handleUserToggle}
+      />
+
+      <RecurringScopeDialog
+        open={pendingEdit !== null}
+        onOpenChange={(open) => !open && setPendingEdit(null)}
+        mode="edit"
+        onConfirm={(scope: TEventEditScope) => {
+          if (!pendingEdit) return;
+          // A single occurrence has no rule of its own, so a repeat change
+          // scoped to it would be silently dropped by the server.
+          const data =
+            scope === "THIS"
+              ? { ...pendingEdit, recurrence: undefined }
+              : pendingEdit;
+          setPendingEdit(null);
+          submitUpdate({ ...data, scope });
+        }}
       />
 
       <Dialog open={isOpen} onOpenChange={onToggle}>
@@ -427,6 +481,132 @@ export function AddEditEventDialog({
                     )}
                   />
                 </div>
+
+                {/* Repeat */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="repeatFrequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Repeat</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Does not repeat" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {REPEAT_PRESETS.map((preset) => (
+                                <SelectItem
+                                  value={preset.value}
+                                  key={preset.value}
+                                >
+                                  {preset.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Only meaningful once something repeats — an end condition
+                      for a one-off event is a question with no answer. */}
+                  {repeats && (
+                    <FormField
+                      // @ts-expect-error - form.control is not typed correctly
+                      control={form.control}
+                      name="repeatEndMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ends</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Never" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {RECURRENCE_END_MODES.map((mode) => (
+                                  <SelectItem value={mode.value} key={mode.value}>
+                                    {mode.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+                {repeats && endMode === "until" && (
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="repeatUntil"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel>Repeat until</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            value={dateToInputValue(field.value)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? mergeDateAndTime(e.target.value, "23:59")
+                                  : undefined,
+                              )
+                            }
+                            className={fieldState.invalid ? "border-red-500" : ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {repeats && endMode === "count" && (
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="repeatCount"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel>Number of occurrences</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={MAX_OCCURRENCE_COUNT}
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? Number(e.target.value)
+                                  : undefined,
+                              )
+                            }
+                            className={fieldState.invalid ? "border-red-500" : ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Profiles */}
                 <FormField
