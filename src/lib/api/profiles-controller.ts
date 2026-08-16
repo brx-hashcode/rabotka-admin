@@ -24,6 +24,9 @@ export type AdminProfileListItem = {
   countryCode: string | null;
   countryName: string | null;
   city: string | null;
+  /** Null unless geocoding succeeded; it is fire-and-forget, so gaps are normal. */
+  latitude: number | null;
+  longitude: number | null;
   description: string;
   status: string;
   profileType: string;
@@ -38,6 +41,26 @@ export type AdminProfileListItem = {
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Every trade this profile works in — a worker may have several. */
+  categoryIds: string[];
+  categoryNames: string[];
+  ratingAvg: number | null;
+  ratingCount: number;
+  billingStatus: string;
+  suspensionReason: string | null;
+  suspendedAt: string | null;
+  lastLoginAt: string | null;
+  /** First time the account became usable. Not a sign-in — activation mints no session. */
+  activatedAt: string | null;
+  firstLogin: boolean;
+  readAndApprovedPolicies: boolean;
+  portfolioSlug: string | null;
+  /** When this profile last reached the vector index; null means never. */
+  vectorIndexedAt: string | null;
+  jobOffersCount: number;
+  applicationsCount: number;
+  penaltiesCount: number;
+  unpaidPenaltiesCount: number;
 };
 
 export type AdminKycDocumentItem = {
@@ -60,22 +83,11 @@ export type AdminVerificationImageItem = {
 };
 
 export type AdminProfileDetailResponse = AdminProfileListItem & {
+  /** Legacy single category, superseded by `categoryIds`/`categoryNames`. */
   categoryId: string | null;
   categoryName: string | null;
-  categoryIds: string[];
-  categoryNames: string[];
-  jobOffersCount: number;
-  applicationsCount: number;
-  penaltiesCount: number;
-  unpaidPenaltiesCount: number;
   kycDocuments: AdminKycDocumentItem[];
   verificationImages: AdminVerificationImageItem[];
-  vectorIndexedAt: string | null;
-  /** Why the account is suspended right now; null unless it is. */
-  suspensionReason: string | null;
-  suspendedAt: string | null;
-  /** Last successful sign-in. Null for a profile that has never logged in. */
-  lastLoginAt: string | null;
 };
 
 export type AdminUpdateProfileParams = {
