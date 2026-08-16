@@ -100,12 +100,18 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 hour ago" and "at 3am" are different answers to whether the
                 account is still in use, and a profile that has never signed in
                 should say so rather than show an em dash. */}
+            {/* "Never signed in" on its own reads as a dead account, which for
+                someone who activated and then used the bot is simply wrong — so
+                when there is no login the activation date answers the real
+                question, which is whether anyone was ever here. */}
             <Row label="Last login">
               {profile.lastLoginAt ? (
                 formatDateTime(profile.lastLoginAt)
               ) : (
                 <span className="text-muted-foreground font-normal">
-                  Never signed in
+                  {profile.activatedAt
+                    ? `Activated ${formatDate(profile.activatedAt)}`
+                    : "Never signed in"}
                 </span>
               )}
             </Row>

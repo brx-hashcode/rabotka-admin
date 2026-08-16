@@ -50,6 +50,8 @@ export type AdminProfileListItem = {
   suspensionReason: string | null;
   suspendedAt: string | null;
   lastLoginAt: string | null;
+  /** First time the account became usable. Not a sign-in — activation mints no session. */
+  activatedAt: string | null;
   firstLogin: boolean;
   readAndApprovedPolicies: boolean;
   portfolioSlug: string | null;
