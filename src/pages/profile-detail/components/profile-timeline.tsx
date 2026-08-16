@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   IconShieldCheck,
   IconShieldX,
@@ -20,6 +20,7 @@ import type { AdminLogEntry } from "#/lib/api/profiles-controller";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { Skeleton } from "#/components/ui/skeleton";
+import { groupByDay } from "#/lib/date-grouping";
 
 type Props = {
   logs: AdminLogEntry[];
@@ -117,43 +118,6 @@ function toStringOrNull(value: unknown): string | null {
   return null;
 }
 
-/**
- * "Today" / "Yesterday" / a date — the heading each group sits under.
- *
- * Five status changes in a row is the common shape here, and undated they read
- * as one event repeated. Grouping is what makes them a sequence.
- */
-function dayHeading(date: Date): string {
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
-  return format(date, "EEEE, d MMMM yyyy");
-}
-
-function groupByDay(logs: AdminLogEntry[]) {
-  const groups = new Map<string, { heading: string; logs: AdminLogEntry[] }>();
-  for (const log of logs) {
-    const date = new Date(log.createdAt);
-    if (Number.isNaN(date.getTime())) continue;
-    const key = format(date, "yyyy-MM-dd");
-    const existing = groups.get(key);
-    if (existing) {
-      existing.logs.push(log);
-    } else {
-      groups.set(key, { heading: dayHeading(date), logs: [log] });
-    }
-  }
-  return [...groups.values()];
-}
-
-/**
- * The detail that makes an entry worth reading.
- *
- * Every branch is keyed on an action name the API actually emits. The old
- * `PROFILE_UPDATED` branch returned an empty string rather than a node, which
- * React renders as nothing — the work it did to collect changed field names was
- * discarded. It now lists them, which is the only thing that distinguishes one
- * "Profile updated" from the next.
- */
 type Meta = Record<string, unknown>;
 
 const Note = ({ children }: Readonly<{ children: React.ReactNode }>) => (
@@ -258,18 +222,9 @@ function TimelineShell({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 export function ProfileTimeline({ logs, isLoading }: Readonly<Props>) {
-  // Sorted here rather than trusting the API's order, so the grouping below
-  // cannot produce a day heading that repeats further down the list.
-  const groups = useMemo(
-    () =>
-      groupByDay(
-        [...logs].sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        ),
-      ),
-    [logs],
-  );
+  // Sorting and bucketing live in the shared helper, so all three history
+  // panels group identically rather than each drifting its own way.
+  const groups = useMemo(() => groupByDay(logs, (log) => log.createdAt), [logs]);
 
   if (isLoading) {
     return (
@@ -303,7 +258,7 @@ export function ProfileTimeline({ logs, isLoading }: Readonly<Props>) {
     <TimelineShell>
       <div className="max-h-96 space-y-5 overflow-y-auto pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {groups.map((group) => (
-          <section key={group.heading}>
+          <section key={group.key}>
             {/* Sticky so the date stays answerable while scrolling a long run
                 of same-day events, which is the usual shape here. */}
             <h3 className="bg-card text-muted-foreground sticky top-0 z-20 py-1 text-xs font-medium">
@@ -314,7 +269,7 @@ export function ProfileTimeline({ logs, isLoading }: Readonly<Props>) {
               <div className="bg-border absolute top-2 bottom-2 left-4 w-px" />
 
               <div className="space-y-4">
-                {group.logs.map((log) => {
+                {group.items.map((log) => {
                   const config = getActionConfig(log.action);
                   const Icon = config.icon;
                   const date = new Date(log.createdAt);

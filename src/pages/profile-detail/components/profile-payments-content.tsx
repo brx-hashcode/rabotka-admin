@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   IconWallet,
   IconGavel,
@@ -35,6 +35,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { toast } from "sonner";
+import { groupByDay } from "#/lib/date-grouping";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   WELCOME_CREDIT: "Welcome credit",
@@ -79,50 +80,12 @@ function txTypeIcon(type: string, credit: boolean): ComponentType<IconProps> {
   return TX_TYPE_ICONS[type] ?? (credit ? IconArrowDownLeft : IconArrowUpRight);
 }
 
-/** "Today" / "Yesterday" / a date — the heading each run of rows sits under. */
-function dayHeading(date: Date): string {
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
-  return format(date, "EEEE, d MMMM yyyy");
-}
-
-/**
- * Groups movements by day and totals each one.
- *
- * The daily net is the number someone is actually looking for when a balance
- * moved and they want to know why — reading it off a column of individual
- * amounts is arithmetic the screen can do instead.
- */
-function groupTransactionsByDay(
-  transactions: AdminProfileWalletTransaction[],
-): { key: string; heading: string; net: number; txs: AdminProfileWalletTransaction[] }[] {
-  const groups = new Map<
-    string,
-    { key: string; heading: string; net: number; txs: AdminProfileWalletTransaction[] }
-  >();
-
-  for (const tx of [...transactions].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  )) {
-    const date = new Date(tx.createdAt);
-    if (Number.isNaN(date.getTime())) continue;
-    const key = format(date, "yyyy-MM-dd");
-    const signed = isCredit(tx.type) ? tx.amount : -tx.amount;
-    const existing = groups.get(key);
-    if (existing) {
-      existing.txs.push(tx);
-      existing.net += signed;
-    } else {
-      groups.set(key, {
-        key,
-        heading: dayHeading(date),
-        net: signed,
-        txs: [tx],
-      });
-    }
-  }
-  return [...groups.values()];
+/** A day's signed total — the number someone wants when a balance moved. */
+function netOf(txs: AdminProfileWalletTransaction[]): number {
+  return txs.reduce(
+    (sum, tx) => sum + (isCredit(tx.type) ? tx.amount : -tx.amount),
+    0,
+  );
 }
 
 function formatAmount(amount: number) {
@@ -353,7 +316,7 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
             </div>
           ) : (
             <div>
-              {groupTransactionsByDay(transactions).map((group) => (
+              {groupByDay(transactions, (tx) => tx.createdAt).map((group) => (
                 <section key={group.key}>
                   {/* Sticky, so the day stays answerable while scrolling a long
                       run of same-day movements. The net is what someone wants
@@ -362,19 +325,23 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
                     <span>{group.heading}</span>
                     <span
                       className={`tabular-nums ${
-                        group.net > 0
+                        netOf(group.items) > 0
                           ? "text-emerald-500"
-                          : group.net < 0
+                          : netOf(group.items) < 0
                             ? "text-rose-500"
                             : ""
                       }`}
                     >
-                      {group.net > 0 ? "+" : group.net < 0 ? "−" : ""}
-                      {formatAmount(Math.abs(group.net))}
+                      {netOf(group.items) > 0
+                        ? "+"
+                        : netOf(group.items) < 0
+                          ? "−"
+                          : ""}
+                      {formatAmount(Math.abs(netOf(group.items)))}
                     </span>
                   </div>
                   <div className="divide-y">
-                    {group.txs.map((tx) => (
+                    {group.items.map((tx) => (
                       <TransactionRow key={tx.id} tx={tx} />
                     ))}
                   </div>
