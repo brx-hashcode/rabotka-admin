@@ -7,6 +7,14 @@ export type AdminJobCategory = {
   description: string | null;
   icon: string | null;
   created_at: string;
+  /** Open and closed offers posted in this domain. */
+  jobOffersCount: number;
+  /**
+   * Distinct workers who list this domain, counted across both the legacy
+   * single-category column and the many-to-many join, so nobody on both is
+   * counted twice.
+   */
+  workersCount: number;
 };
 
 export type CreateJobCategoryPayload = {
