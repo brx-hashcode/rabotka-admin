@@ -20,6 +20,7 @@ import {
   flattenForTemplateVariable,
   ADMIN_MESSAGE_VAR_MAX,
 } from "#/lib/whatsapp-template-text";
+import { MessageExportMenu } from "#/features/profiles/components/message-export-menu";
 import { ChatDoodleBg } from "./chat-doodle-bg";
 
 type Props = {
@@ -214,6 +215,7 @@ export function ProfileMessagesContent({
         <span className="text-muted-foreground text-xs ml-auto">
           {messages.length} message{messages.length === 1 ? "" : "s"}
         </span>
+        <MessageExportMenu messages={messages} profileName={profileName} />
       </div>
 
       {/* Chat area */}
