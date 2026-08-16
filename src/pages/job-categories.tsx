@@ -6,6 +6,7 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { CategoryCard } from "#/features/job-categories/components/category-card";
+import { CategoryExportMenu } from "#/features/job-categories/components/category-export-menu";
 import { CreateCategoryModal } from "#/features/job-categories/components/create-category-modal";
 import { listJobCategories } from "#/lib/api/job-categories-controller";
 import { matchesSearch } from "#/lib/search";
@@ -95,10 +96,15 @@ export default function JobCategoriesPage() {
         title="Domains"
         description="Manage job domains for workers and job offers."
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Add category
-          </Button>
+          <>
+            {/* Exports what the search is showing, not the whole table — the
+                filtering is client-side, so `filtered` IS what is on screen. */}
+            <CategoryExportMenu categories={filtered} disabled={isLoading} />
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              Add category
+            </Button>
+          </>
         }
       />
 
