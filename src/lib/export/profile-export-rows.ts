@@ -53,6 +53,7 @@ export const PROFILE_EXPORT_HEADERS = [
   // Engagement
   "WhatsApp",
   "Last login (ISO)",
+  "Activated at (ISO)",
   "First login pending",
   "Policies accepted",
   // Links
@@ -112,6 +113,7 @@ export function profileItemsToStringRows(
     String(p.unpaidPenaltiesCount ?? 0),
     p.whatsappConnected ? "Connected" : "Disconnected",
     p.lastLoginAt ?? "",
+    p.activatedAt ?? "",
     yesNo(p.firstLogin),
     yesNo(p.readAndApprovedPolicies),
     p.portfolioSlug ?? "",
@@ -165,6 +167,7 @@ export function profileItemsToTypedRows(
     p.unpaidPenaltiesCount ?? 0,
     p.whatsappConnected ? "Connected" : "Disconnected",
     p.lastLoginAt ?? "",
+    p.activatedAt ?? "",
     yesNo(p.firstLogin),
     yesNo(p.readAndApprovedPolicies),
     p.portfolioSlug ?? "",

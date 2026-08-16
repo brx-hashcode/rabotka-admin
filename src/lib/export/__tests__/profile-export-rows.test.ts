@@ -44,6 +44,7 @@ const full: AdminProfileListItem = {
   suspensionReason: null,
   suspendedAt: null,
   lastLoginAt: "2026-08-15T09:00:00.000Z",
+  activatedAt: "2026-07-12T18:30:00.000Z",
   firstLogin: false,
   readAndApprovedPolicies: true,
   portfolioSlug: "pregavi-nziozziami-bazy-eca442",
@@ -74,6 +75,7 @@ const sparse: AdminProfileListItem = {
   suspensionReason: null,
   suspendedAt: null,
   lastLoginAt: null,
+  activatedAt: null,
   portfolioSlug: null,
   vectorIndexedAt: null,
 };
@@ -139,6 +141,20 @@ describe("profile export rows", () => {
     expect(cell(sparseRow, "Rating average")).toBeNull();
     expect(cell(sparseRow, "Reliability score")).toBeNull();
     expect(cell(sparseRow, "Latitude")).toBeNull();
+  });
+
+  /**
+   * Activation and sign-in are different events: the verification link mints no
+   * session, so a profile can be activated and never have signed in. Both
+   * columns exist so that case is legible instead of reading as a dead account.
+   */
+  it("exports activation separately from last login", () => {
+    const row = profileItemsToStringRows([full])[0];
+    expect(cell(row, "Activated at (ISO)")).toBe("2026-07-12T18:30:00.000Z");
+    expect(cell(row, "Last login (ISO)")).toBe("2026-08-15T09:00:00.000Z");
+
+    const sparseRow = profileItemsToStringRows([sparse])[0];
+    expect(cell(sparseRow, "Activated at (ISO)")).toBe("");
   });
 
   it("has no duplicate header names", () => {
