@@ -21,6 +21,7 @@ export type JobFlyerData = {
   readonly title: string;
   readonly reference: string;
   readonly employmentType: EmploymentTypeValue;
+  readonly amount: number | null;
   readonly address: string | null;
   readonly city: string | null;
   readonly isRemote: boolean;
@@ -28,10 +29,71 @@ export type JobFlyerData = {
   readonly createdAt: string;
 };
 
+const XAF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+
+/**
+ * The pay, or null when there is none to show.
+ *
+ * 0 means "no price set", not "pays nothing" — the same rule the Missions
+ * table applies, and what the client renders as «À négocier». A flyer has no
+ * room to explain that, so an unpriced offer falls back to the location.
+ */
+function payLabel(amount: number | null): string | null {
+  if (amount == null || amount <= 0) return null;
+  return `${XAF.format(amount)} XAF`;
+}
+
 function locationLabel(job: JobFlyerData): string {
   if (job.isRemote) return "À distance";
   const parts = [job.address, job.city].filter(Boolean);
   return parts.length ? parts.join(", ") : "Lieu à préciser";
+}
+
+/**
+ * The flyer is a fixed 980×735 raster: no scrollbar, no reflow, and the card
+ * is centred so anything that grows overflows top and bottom equally. A single
+ * font size therefore has to serve a 20-character title and a 120-character
+ * one, and clamping every title at 46px silently ate the tail of the long ones.
+ *
+ * Stepping the size down as the title grows lets the whole title land in the
+ * box in almost every real case. Line budgets are set so the tallest option
+ * (4 × 32px) is no taller than the old 3 × 46px, keeping the card height —
+ * and the vertical centring — where it already was.
+ */
+const TITLE_STEPS = [
+  { maxChars: 42, fontSize: 46, lines: 3 },
+  { maxChars: 72, fontSize: 38, lines: 3 },
+  { maxChars: 110, fontSize: 32, lines: 4 },
+  { maxChars: Number.POSITIVE_INFINITY, fontSize: 28, lines: 4 },
+] as const;
+
+/** Past this the title stops being readable at any size the card allows. */
+const TITLE_HARD_LIMIT = 150;
+
+function fitTitle(raw: string) {
+  // Titles come from employer free text, so a stray newline or run of spaces
+  // would otherwise blow out the line count before a single word is dropped.
+  const title = raw.replace(/\s+/g, " ").trim();
+  const step =
+    TITLE_STEPS.find((s) => title.length <= s.maxChars) ?? TITLE_STEPS.at(-1)!;
+
+  if (title.length <= TITLE_HARD_LIMIT) {
+    return { text: title, fontSize: step.fontSize, lines: step.lines };
+  }
+
+  // Cut on a word boundary and append a real ellipsis rather than leaning on
+  // -webkit-line-clamp: the flyer is rasterised through an SVG foreignObject,
+  // which does not reliably paint the clamp's ellipsis — that is why long
+  // titles were coming out cut mid-phrase with no visible sign of it.
+  const cut = title.slice(0, TITLE_HARD_LIMIT);
+  const lastSpace = cut.lastIndexOf(" ");
+  const trimmed = lastSpace > 0 ? cut.slice(0, lastSpace) : cut;
+
+  return {
+    text: `${trimmed.replace(/[,;:.\s]+$/, "")}…`,
+    fontSize: step.fontSize,
+    lines: step.lines,
+  };
 }
 
 function publishedLabel(createdAt: string): string {
@@ -52,6 +114,7 @@ export const JobFlyer = forwardRef<
       job.quantity === 1
         ? "1 place disponible"
         : `${job.quantity} places disponibles`;
+    const title = fitTitle(job.title);
 
     return (
       <div
@@ -187,18 +250,22 @@ export const JobFlyer = forwardRef<
           <h1
             style={{
               margin: "28px 0 0",
-              fontSize: 46,
+              fontSize: title.fontSize,
               fontWeight: 800,
               lineHeight: 1.1,
               letterSpacing: "-0.02em",
               color: "#1A1A1A",
               display: "-webkit-box",
-              WebkitLineClamp: 3,
+              // Kept as a backstop only. fitTitle() already guarantees the
+              // text fits; this catches a title made of unbreakably long words
+              // that defeats the character count.
+              WebkitLineClamp: title.lines,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
+              overflowWrap: "break-word",
             }}
           >
-            {job.title}
+            {title.text}
           </h1>
 
           <div
@@ -210,7 +277,14 @@ export const JobFlyer = forwardRef<
             }}
           >
             <Pill>{FLYER_TYPE_LABELS[job.employmentType] ?? "Mission"}</Pill>
-            <Pill>{locationLabel(job)}</Pill>
+            {/* Pay wins the slot when there is one: it is the strongest hook on
+                a flyer, and the address is often a long unstructured string
+                ("21 rue KINDAMBA moungali Ref ruelle de la commune sur terre
+                jaune, Brazzaville") that wrapped to two lines and crowded the
+                card. Unpriced offers still show where the work is. */}
+            <Pill nowrap={payLabel(job.amount) !== null}>
+              {payLabel(job.amount) ?? locationLabel(job)}
+            </Pill>
           </div>
 
           <div
@@ -308,7 +382,10 @@ export const JobFlyer = forwardRef<
   },
 );
 
-function Pill({ children }: Readonly<{ children: React.ReactNode }>) {
+function Pill({
+  children,
+  nowrap = false,
+}: Readonly<{ children: React.ReactNode; nowrap?: boolean }>) {
   return (
     <span
       style={{
@@ -318,7 +395,10 @@ function Pill({ children }: Readonly<{ children: React.ReactNode }>) {
         fontSize: 18,
         color: "#6B6B6B",
         maxWidth: "100%",
-        overflowWrap: "anywhere",
+        // An address may break anywhere; an amount must not — "110 000 XAF"
+        // splitting across two lines would read as two numbers.
+        overflowWrap: nowrap ? "normal" : "anywhere",
+        whiteSpace: nowrap ? "nowrap" : undefined,
       }}
     >
       {children}
