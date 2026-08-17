@@ -31,6 +31,32 @@ export type AdminJobOfferListItem = {
   createdAt: string;
   updatedAt: string;
   vectorIndexedAt: string | null;
+
+  /**
+   * What became of the offer, aggregated server-side. The Missions table shows
+   * none of it; the export and the analytics dashboard are what these are for.
+   */
+  applicationsPending: number;
+  applicationsAccepted: number;
+  applicationsRejected: number;
+  applicationsCancelled: number;
+  hiredCount: number;
+  completedCount: number;
+  cancelledAssignmentsCount: number;
+  noShowCount: number;
+  /** Workers assigned to the offer, in assignment order. */
+  workerNames: string[];
+  unlockAttempts: number;
+  unlocksCompleted: number;
+  unlockEmployerPaid: number;
+  unlockWorkerPaid: number;
+  unlockRevenue: number;
+  employerUnlockPaid: boolean;
+  penaltiesCount: number;
+  unpaidPenaltiesCount: number;
+  penaltiesAmount: number;
+  ratingAvg: number | null;
+  ratingCount: number;
 };
 
 export type AdminJobApplicationItem = {
