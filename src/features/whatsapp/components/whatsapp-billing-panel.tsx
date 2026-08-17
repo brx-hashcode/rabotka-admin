@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconExternalLink, IconInfoCircle } from "@tabler/icons-react";
 
 import {
   Card,
@@ -124,12 +124,43 @@ function Notice({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 /**
+ * Where Meta reports the live balance, for a business that has one.
+ *
+ * Built from the business id we resolve off the WABA rather than hardcoded, so
+ * it stays correct if the account is ever moved.
+ */
+function billingHubUrl(businessId: string | null): string {
+  return businessId
+    ? `https://business.facebook.com/billing_hub/accounts?business_id=${businessId}`
+    : "https://business.facebook.com/billing_hub/accounts";
+}
+
+function BusinessManagerLink({
+  businessId,
+}: Readonly<{ businessId: string | null }>) {
+  return (
+    <a
+      href={billingHubUrl(businessId)}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="text-primary mt-2 inline-flex items-center gap-1 text-xs hover:underline"
+    >
+      Open Business Manager billing
+      <IconExternalLink className="size-3" aria-hidden />
+    </a>
+  );
+}
+
+/**
  * What is currently owed, from the business node.
  *
  * Three genuinely different states, and collapsing any two of them would
- * mislead: we cannot read it (missing scope), we read it and there is no
- * credit line (a card-billed account — Meta reports the balance in Business
- * Manager only), or we have a figure.
+ * mislead: we cannot read it (the app has no business-level use case), we read
+ * it and there is no credit line, or we have a figure.
+ *
+ * The first two both end in the same place — Business Manager — so both link
+ * there. An admin who opens this card wants the number, and the honest answer
+ * today is "one click away, not here".
  */
 function OutstandingCard({
   billing,
@@ -140,15 +171,15 @@ function OutstandingCard({
         <CardHeader>
           <CardDescription>Outstanding balance</CardDescription>
           <CardTitle className="text-muted-foreground text-2xl font-bold">
-            permission needed
+            in Business Manager
           </CardTitle>
           <p className="text-muted-foreground pt-1 text-xs">
-            The balance and invoice endpoints exist but the access token does
-            not carry the{" "}
-            <code className="font-mono">{billing.permissionMissing}</code>{" "}
-            scope. Grant it to the system user in Business Settings and this
-            fills in — no code change needed.
+            Meta gates the balance behind{" "}
+            <code className="font-mono">{billing.permissionMissing}</code>,
+            which needs a business-level use case on the app — the WhatsApp app
+            cannot request it. The live figure is one click away.
           </p>
+          <BusinessManagerLink businessId={billing.businessId} />
         </CardHeader>
       </Card>
     );
@@ -162,13 +193,13 @@ function OutstandingCard({
         <CardHeader>
           <CardDescription>Outstanding balance</CardDescription>
           <CardTitle className="text-muted-foreground text-2xl font-bold">
-            not on a credit line
+            in Business Manager
           </CardTitle>
           <p className="text-muted-foreground pt-1 text-xs">
             This account pays by card, so Meta charges it automatically and
-            reports no credit-line balance through the API. The live figure is
-            in Business Manager → Billing &amp; payments.
+            reports no credit-line balance through the API.
           </p>
+          <BusinessManagerLink businessId={billing?.businessId ?? null} />
         </CardHeader>
       </Card>
     );
@@ -197,7 +228,24 @@ function OutstandingCard({
 function InvoicesCard({
   billing,
 }: Readonly<{ billing: WhatsappBusinessBilling }>) {
-  if (billing.permissionMissing) return null;
+  // Rendered even without the scope. Hiding it entirely was worse: an admin
+  // looking for receipts got no answer at all, rather than being told where
+  // they actually are.
+  if (billing.permissionMissing) {
+    return (
+      <Card className="@container/card">
+        <CardHeader>
+          <CardTitle>Invoices &amp; payment history</CardTitle>
+          <CardDescription>
+            Meta issues invoices to businesses on monthly invoicing. This
+            account pays by card, so each charge is a payment rather than an
+            invoice, and the receipts are downloadable from Business Manager.
+          </CardDescription>
+          <BusinessManagerLink businessId={billing.businessId} />
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="@container/card">
