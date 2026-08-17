@@ -24,6 +24,10 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/payment-requests": "full",
     "/penalties": "full",
     "/profiles": "read",
+    // WhatsApp is a real line item on the Meta invoice. Read only — the
+    // delivery log carries message bodies and recipient numbers, and retrying
+    // a dead-lettered send is operational, not financial.
+    "/whatsapp": "read",
   },
   SUPPORT: {
     "/claim": "full",
@@ -31,6 +35,9 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/profiles": "read",
     "/applications": "read",
     "/jobs": "read",
+    // "Did the customer actually get the message?" is the first question on
+    // half of all support tickets.
+    "/whatsapp": "read",
   },
 };
 
