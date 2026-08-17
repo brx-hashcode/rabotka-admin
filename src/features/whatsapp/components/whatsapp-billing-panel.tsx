@@ -1,14 +1,20 @@
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { IconExternalLink, IconInfoCircle } from "@tabler/icons-react";
+import {
+  IconExternalLink,
+  IconInfoCircle,
+  IconRefresh,
+} from "@tabler/icons-react";
 
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "#/components/ui/card";
+import { describeRange, WhatsappRangeToggle } from "./whatsapp-range-toggle";
 import {
   ChartContainer,
   ChartTooltip,
@@ -24,10 +30,8 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type {
-  WhatsappBilling,
-  WhatsappBusinessBilling,
-} from "#/lib/api/whatsapp-controller";
+import { Button } from "#/components/ui/button";
+import type { WhatsappBilling } from "#/lib/api/whatsapp-controller";
 import {
   useWhatsappBilling,
   useWhatsappRange,
@@ -160,112 +164,26 @@ function BusinessManagerLink({
  * stat tile is worse than none: it takes the same space as a real number and
  * reads as one until you get close enough to read the caption.
  *
- * The balance is a click away from the invoices card below, which is where
- * someone looking for what is owed will already be heading.
+ * There is no invoices table either. Meta issues invoices to businesses on
+ * monthly invoicing; this account pays by card, so every charge is a payment
+ * rather than an invoice and the table was permanently empty. The receipts,
+ * like the balance, are one click away in Business Manager.
  */
-
-/** Invoices, when the account has any and the token can read them. */
-function InvoicesCard({
-  billing,
-}: Readonly<{ billing: WhatsappBusinessBilling }>) {
-  // Rendered even without the scope. Hiding it entirely was worse: an admin
-  // looking for receipts got no answer at all, rather than being told where
-  // they actually are.
-  if (billing.permissionMissing) {
-    return (
-      <Card className="@container/card">
-        <CardHeader>
-          <CardTitle>Invoices &amp; payment history</CardTitle>
-          <CardDescription>
-            Meta issues invoices to businesses on monthly invoicing. This
-            account pays by card, so each charge is a payment rather than an
-            invoice, and the receipts are downloadable from Business Manager.
-          </CardDescription>
-          <BusinessManagerLink businessId={billing.businessId} />
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardTitle>Invoices</CardTitle>
-        <CardDescription>
-          Issued by Meta for this business. Card-billed accounts are charged
-          automatically and may have none here — the receipts live in Business
-          Manager instead.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead>Issued</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {billing.invoices.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-muted-foreground py-8 text-center text-sm"
-                  >
-                    No invoices issued for this business.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                billing.invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="text-sm">
-                      {invoice.billingPeriod ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {invoice.invoiceDate ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {invoice.dueDate ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {invoice.paymentStatus ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {invoice.amountDue
-                        ? formatMoney(
-                            Number(invoice.amountDue),
-                            invoice.currency,
-                          )
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function WhatsappBillingPanel({
   enabled = true,
 }: Readonly<{ enabled?: boolean }>) {
-  const { data, isLoading, isError, error } = useWhatsappBilling(enabled);
+  const { data, isLoading, isError, error, refetch } =
+    useWhatsappBilling(enabled);
   const range = useWhatsappRange();
 
   // The window goes IN the label. Without it a currency figure on a dashboard
   // reads as a standing balance, which is the misreading this panel exists to
   // prevent.
-  const windowLabel =
-    range.created_from || range.created_to
-      ? `${range.created_from || "start"} → ${range.created_to || "today"}`
-      : "last 30 days";
+  const windowLabel = describeRange(
+    range.created_from ?? "",
+    range.created_to ?? "",
+  );
 
   const days = useMemo(() => rollUpByDay(data?.pricing ?? []), [data]);
   const categories = useMemo(
@@ -286,16 +204,37 @@ export function WhatsappBillingPanel({
     );
   }
 
+  // Two ways this can be unreachable: the request itself failed, or it
+  // succeeded and the backend reported that Graph was down. The second is the
+  // common one — a blip at Meta is now data rather than a 500, so the rest of
+  // the page keeps working — and both deserve the same offer of a retry.
+  let requestError: string | null = null;
   if (isError) {
+    requestError =
+      error instanceof Error
+        ? error.message
+        : "Could not reach the WhatsApp Business Account.";
+  }
+  const unreachable = data?.unavailable ?? requestError;
+
+  if (unreachable) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Consumption unavailable</CardTitle>
           <CardDescription>
-            {error instanceof Error
-              ? error.message
-              : "Could not reach the WhatsApp Business Account."}
+            Meta&rsquo;s figures could not be loaded. Delivery statistics on the
+            other tabs come from our own database and are unaffected.
           </CardDescription>
+          <p className="text-muted-foreground pt-2 font-mono text-xs">
+            {unreachable}
+          </p>
+          <div className="pt-3">
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              <IconRefresh className="size-4" aria-hidden />
+              Try again
+            </Button>
+          </div>
         </CardHeader>
       </Card>
     );
@@ -336,7 +275,7 @@ export function WhatsappBillingPanel({
         </Card>
       </div>
 
-      {data?.billing ? <InvoicesCard billing={data.billing} /> : null}
+      <BusinessManagerLink businessId={data?.billing?.businessId ?? null} />
 
       <Card className="@container/card">
         <CardHeader>
@@ -344,6 +283,12 @@ export function WhatsappBillingPanel({
           <CardDescription>
             Messages Meta counted as billable, per day.
           </CardDescription>
+          {/* The preset toggle moves the window for the whole tab, not just
+              this chart — the cards above carry the window in their labels, so
+              the link is visible rather than surprising. */}
+          <CardAction>
+            <WhatsappRangeToggle />
+          </CardAction>
         </CardHeader>
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
           <ChartContainer

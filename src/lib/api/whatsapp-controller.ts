@@ -107,6 +107,14 @@ export type WhatsappBilling = {
   messaging: { start: number; end: number; sent: number; delivered: number }[];
   costUnavailableReason: string | null;
   /**
+   * Why the lookup failed, when it did. Null on success.
+   *
+   * Graph being briefly unreachable arrives as data rather than as a 500, so
+   * the rest of the page — delivery statistics, which come from our own
+   * database — keeps rendering through a blip at Meta.
+   */
+  unavailable: string | null;
+  /**
    * What has been CHARGED, as opposed to what was consumed above. Separate on
    * purpose — a usage total is not an amount owed, and reading one as the
    * other overstates the bill by everything already paid.

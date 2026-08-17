@@ -2,11 +2,13 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "#/components/ui/card";
+import { WhatsappRangeToggle } from "./whatsapp-range-toggle";
 import {
   ChartContainer,
   ChartLegend,
@@ -53,6 +55,9 @@ export function WhatsappDeliveryChart({
           Each line counts the messages that reached that stage. They are
           nested, not additive — every delivered message was also sent.
         </CardDescription>
+        <CardAction>
+          <WhatsappRangeToggle />
+        </CardAction>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
