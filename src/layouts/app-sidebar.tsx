@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   IconAlertTriangle,
+  IconBrandWhatsapp,
   IconBriefcase,
   IconFileText,
   IconFileWord,
@@ -150,6 +151,16 @@ const documents: NavItem[] = [
     url: "/events",
     icon: IconCalendar,
     roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+  },
+  {
+    title: "WhatsApp",
+    url: "/whatsapp",
+    icon: IconBrandWhatsapp,
+    // The whole LADDER, plus both lateral roles: SUPPORT opens this to answer
+    // "did the customer get the message?", and FINANCE for the consumption
+    // figures, which are a real line item on the Meta invoice. Both are
+    // read-only server-side — see LATERAL_ACCESS in the backend.
+    roles: [...LADDER, "SUPPORT", "FINANCE"],
   },
   {
     title: "Logs",
