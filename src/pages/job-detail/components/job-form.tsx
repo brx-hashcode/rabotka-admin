@@ -100,7 +100,6 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     quantity: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
-  const [paymentFlowError, setPaymentFlowError] = useState(false);
 
   useEffect(() => {
     const data: FormData = {
@@ -122,6 +121,12 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     setInitialForm(data);
   }, [job]);
 
+  // Drives what gets sent, not what is allowed: the frequency is optional
+  // everywhere it matters. The DTO marks it @IsOptional(), the service writes
+  // `payment_flow = dto.paymentFlow ?? null`, and the client renders the label
+  // as `PAYMENT_FLOW_LABELS[flow] ?? ""` — so an amount with no frequency
+  // simply prints without a period. Requiring it here blocked saves on records
+  // the rest of the stack accepts.
   const hasAmount = form.amount.trim() !== "" && Number(form.amount) > 0;
 
   const isDirty = (Object.keys(form) as (keyof FormData)[]).some(
@@ -152,21 +157,16 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   };
 
   const updateField = (field: keyof FormData, value: string) => {
+    // Clearing the price clears the frequency with it — a cadence attached to
+    // no number is meaningless, and the Payment Flow select unmounts anyway.
     if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
       setForm((prev) => ({ ...prev, amount: value, paymentFlow: "" }));
-      setPaymentFlowError(false);
     } else {
       setForm((prev) => ({ ...prev, [field]: value }));
     }
   };
 
   const handleSave = async () => {
-    if (hasAmount && !form.paymentFlow) {
-      setPaymentFlowError(true);
-      return;
-    }
-    setPaymentFlowError(false);
-
     const params: AdminUpdateJobOfferParams = {};
     if (form.title !== initialForm.title) params.title = form.title;
     if (form.description !== initialForm.description)
@@ -384,10 +384,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               <FieldLabel>Payment Flow</FieldLabel>
               <Select
                 value={form.paymentFlow}
-                onValueChange={(v) => {
-                  updateField("paymentFlow", v);
-                  setPaymentFlowError(false);
-                }}
+                onValueChange={(v) => updateField("paymentFlow", v)}
                 disabled={disabled}
               >
                 <SelectTrigger className="w-full">
@@ -399,11 +396,9 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
                 </SelectContent>
               </Select>
-              {paymentFlowError && (
-                <p className="text-[11px] text-destructive">
-                  Select a payment frequency
-                </p>
-              )}
+              <p className="text-muted-foreground text-[11px]">
+                Optional — leave empty to show the amount without a period
+              </p>
             </div>
           ) : (
             <div />
