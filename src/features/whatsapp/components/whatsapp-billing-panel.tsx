@@ -152,77 +152,17 @@ function BusinessManagerLink({
 }
 
 /**
- * What is currently owed, from the business node.
+ * There is deliberately no "outstanding balance" card.
  *
- * Three genuinely different states, and collapsing any two of them would
- * mislead: we cannot read it (the app has no business-level use case), we read
- * it and there is no credit line, or we have a figure.
+ * Meta gates the balance behind `business_management`, which needs a
+ * business-level use case on the app — the WhatsApp app cannot request it, so
+ * the card could never show a figure for this account. A permanently empty
+ * stat tile is worse than none: it takes the same space as a real number and
+ * reads as one until you get close enough to read the caption.
  *
- * The first two both end in the same place — Business Manager — so both link
- * there. An admin who opens this card wants the number, and the honest answer
- * today is "one click away, not here".
+ * The balance is a click away from the invoices card below, which is where
+ * someone looking for what is owed will already be heading.
  */
-function OutstandingCard({
-  billing,
-}: Readonly<{ billing: WhatsappBusinessBilling | undefined }>) {
-  if (billing?.permissionMissing) {
-    return (
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Outstanding balance</CardDescription>
-          <CardTitle className="text-muted-foreground text-2xl font-bold">
-            in Business Manager
-          </CardTitle>
-          <p className="text-muted-foreground pt-1 text-xs">
-            Meta gates the balance behind{" "}
-            <code className="font-mono">{billing.permissionMissing}</code>,
-            which needs a business-level use case on the app — the WhatsApp app
-            cannot request it. The live figure is one click away.
-          </p>
-          <BusinessManagerLink businessId={billing.businessId} />
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  const line = billing?.creditLines?.[0];
-
-  if (!line) {
-    return (
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Outstanding balance</CardDescription>
-          <CardTitle className="text-muted-foreground text-2xl font-bold">
-            in Business Manager
-          </CardTitle>
-          <p className="text-muted-foreground pt-1 text-xs">
-            This account pays by card, so Meta charges it automatically and
-            reports no credit-line balance through the API.
-          </p>
-          <BusinessManagerLink businessId={billing?.businessId ?? null} />
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>Outstanding balance</CardDescription>
-        <CardTitle className="text-4xl font-bold tabular-nums">
-          {line.balance
-            ? formatMoney(Number(line.balance), line.currency)
-            : "—"}
-        </CardTitle>
-        <p className="text-muted-foreground pt-1 text-xs">
-          {line.creditAvailable
-            ? `${formatMoney(Number(line.creditAvailable), line.currency)} still available`
-            : "Accrued and not yet charged."}
-        </p>
-      </CardHeader>
-    </Card>
-  );
-}
 
 /** Invoices, when the account has any and the token can read them. */
 function InvoicesCard({
@@ -367,7 +307,7 @@ export function WhatsappBillingPanel({
         <Notice>{data.costUnavailableReason}</Notice>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2">
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Consumed · {windowLabel}</CardDescription>
@@ -382,8 +322,6 @@ export function WhatsappBillingPanel({
             </p>
           </CardHeader>
         </Card>
-
-        <OutstandingCard billing={data?.billing} />
 
         <Card className="@container/card">
           <CardHeader>
