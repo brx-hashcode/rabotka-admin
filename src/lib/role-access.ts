@@ -18,9 +18,10 @@ export type AreaAccess = "full" | "read";
  * a button that would come back 403. Keep the two in step.
  */
 const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
-  // Finance is broad, not narrow: everything an admin can reach EXCEPT team
-  // management and settings. Written as "all areas minus two" to match
-  // LATERAL_ACCESS on the server.
+  // FINANCE is ADMIN with one thing taken away: team management. Every route
+  // below is one an ADMIN also reaches. `/settings` is absent, but that is not
+  // a second restriction — it is SUPER_ADMIN-only for everyone, ADMIN included,
+  // which is why the sidebar gates it that way too.
   FINANCE: {
     // Every area is "full": finance acts, it does not only look. Several of
     // these expose no write action today (dashboard, network, logs), so it
