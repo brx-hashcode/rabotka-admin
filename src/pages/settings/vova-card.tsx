@@ -14,6 +14,8 @@ type FormState = {
   shadowMode: boolean;
   rolloutPercent: string;
   timeoutMs: string;
+  anonymousEnabled: boolean;
+  anonDailyLimit: string;
 };
 
 const EMPTY: FormState = {
@@ -21,6 +23,8 @@ const EMPTY: FormState = {
   shadowMode: true,
   rolloutPercent: "0",
   timeoutMs: "25000",
+  anonymousEnabled: false,
+  anonDailyLimit: "10",
 };
 
 /**
@@ -74,6 +78,10 @@ export function VovaCard() {
         data.shadowMode = item.value === "true";
       if (item.key === "vova.rollout_percent") data.rolloutPercent = item.value;
       if (item.key === "vova.timeout_ms") data.timeoutMs = item.value;
+      if (item.key === "vova.anonymous_enabled")
+        data.anonymousEnabled = item.value === "true";
+      if (item.key === "vova.anon_daily_limit")
+        data.anonDailyLimit = item.value;
     }
     setForm(data);
     setInitial(data);
@@ -101,11 +109,19 @@ export function VovaCard() {
       return;
     }
 
+    const anonLimit = parseInt(form.anonDailyLimit, 10);
+    if (isNaN(anonLimit) || anonLimit < 0 || anonLimit > 200) {
+      toast.error("La limite par numéro non inscrit doit être entre 0 et 200");
+      return;
+    }
+
     await saveChanges({
       "vova.enabled": String(form.enabled),
       "vova.shadow_mode": String(form.shadowMode),
       "vova.rollout_percent": String(percent),
       "vova.timeout_ms": String(timeout),
+      "vova.anonymous_enabled": String(form.anonymousEnabled),
+      "vova.anon_daily_limit": String(anonLimit),
     });
     setInitial(form);
   }
@@ -146,6 +162,13 @@ export function VovaCard() {
           }
         >
           {state.text}
+          {form.enabled && form.anonymousEnabled && (
+            <span className="block pt-1">
+              Unregistered numbers are answered too — up to{" "}
+              {form.anonDailyLimit} replies a day each. This is unaffected by
+              observation mode and by the rollout percentage.
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-4">
@@ -240,6 +263,55 @@ export function VovaCard() {
             onChange={(e) => set("timeoutMs", e.target.value)}
             disabled={disabled}
             className="w-28"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="vova-anonymous" className="text-sm font-medium">
+              Answer unregistered numbers
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Lets a number with no account ask what Rabotka is and how it
+              works. They get no personal data and no app card — only answers
+              from the documentation, and <code>/compte</code> when they want to
+              sign up. Needs the master switch as well. Observation mode and the
+              rollout percentage do not apply: both key off a profile, and these
+              callers have none.
+            </p>
+          </div>
+          <Switch
+            id="vova-anonymous"
+            checked={form.anonymousEnabled}
+            onCheckedChange={(v) => set("anonymousEnabled", v)}
+            disabled={disabled}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="vova-anon-limit" className="text-sm font-medium">
+              Daily replies per unregistered number
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              This is the only path where someone who never signed up can spend
+              tokens, so it is metered. Past the limit the number gets the
+              signup card for the rest of the day. Set to 0 to answer none.
+            </p>
+          </div>
+          <Input
+            id="vova-anon-limit"
+            type="number"
+            min={0}
+            max={200}
+            value={form.anonDailyLimit}
+            onChange={(e) => set("anonDailyLimit", e.target.value)}
+            disabled={disabled || !form.anonymousEnabled}
+            className="w-24"
           />
         </div>
       </CardContent>
