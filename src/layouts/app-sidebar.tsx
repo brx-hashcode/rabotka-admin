@@ -53,6 +53,12 @@ export type NavItem = {
 
 const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
 
+/**
+ * The ladder without MODERATOR, for areas a moderator has no business in:
+ * money, the WhatsApp delivery log, the audit trail and the document library.
+ */
+const MANAGER_UP: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
+
 const navMain: NavItem[] = [
   {
     title: "Dashboard",
@@ -78,7 +84,7 @@ const navMain: NavItem[] = [
     icon: IconTag,
     // admin/job-categories resolves to MANAGER+, and editing a domain
     // re-buckets the whole marketplace.
-    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "FINANCE"],
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Applications",
@@ -154,20 +160,20 @@ const documents: NavItem[] = [
     title: "WhatsApp",
     url: "/whatsapp",
     icon: IconBrandWhatsapp,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
   },
   {
     title: "Logs",
     url: "/logs",
     icon: IconFileWord,
     // The audit log is every admin action on every record; MANAGER+.
-    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "FINANCE"],
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Documents",
     url: "/documents",
     icon: IconFile,
-    roles: [...LADDER, "FINANCE"],
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Ad Bundles",
