@@ -72,8 +72,14 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
 
   const canSendVerifLink = !profile.whatsappConnected;
 
+  // Same rule as the profile detail page: verifying KYC already sets the
+  // account ACTIVE (ProfileService does it in the same transaction as the
+  // decision), so activating an unverified profile is either redundant or it
+  // opens an account nobody has checked the identity of.
   const canActivate =
-    profile.status !== "ACTIVE" && profile.status !== "BANNED";
+    profile.status !== "ACTIVE" &&
+    profile.status !== "BANNED" &&
+    profile.verificationStatus === "VERIFIED";
   const canDeactivate = profile.status === "ACTIVE";
 
   const isWhatsappConnected = profile.whatsappConnected;
