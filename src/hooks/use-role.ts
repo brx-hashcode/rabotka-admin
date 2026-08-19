@@ -27,13 +27,13 @@ export function useRole() {
     canManageTeam: role === "ADMIN" || role === "SUPER_ADMIN",
     canDeleteTeam: role === "SUPER_ADMIN",
     /**
-     * Permanent deletion cascades into financial records. SUPER_ADMIN, plus
-     * FINANCE in the areas it owns — it reaches everything an admin does except
-     * team and settings, and the server enforces the same.
+     * Permanent deletion cascades into financial records, so it is SUPER_ADMIN
+     * and nobody else. FINANCE used to be included here; it is not any more,
+     * because FINANCE is level with ADMIN and an ADMIN cannot purge. The
+     * server's `LATERAL_CEILING` refuses it now, so leaving the button enabled
+     * would only produce a 403.
      */
-    canPurge:
-      role === "SUPER_ADMIN" ||
-      (role === "FINANCE" && canEditArea(role, pathname)),
+    canPurge: role === "SUPER_ADMIN",
     isLateral: isLateralRole(role),
     /**
      * Write access for a named area, e.g. `canEditArea("/penalties")`. Prefer
