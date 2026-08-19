@@ -382,6 +382,8 @@ export default function ProfileDetailPage({
           <ProfileMessagesContent
             profileId={profileId}
             profileName={`${profile.firstName} ${profile.lastName}`}
+            profileType={profile.profileType}
+            firstName={profile.firstName}
           />
         </TabsContent>
 

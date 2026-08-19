@@ -22,8 +22,11 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
   // management and settings. Written as "all areas minus two" to match
   // LATERAL_ACCESS on the server.
   FINANCE: {
-    // The landing page — everyone's, not a finance area.
-    "/": "read",
+    // Every area is "full": finance acts, it does not only look. Several of
+    // these expose no write action today (dashboard, network, logs), so it
+    // makes no practical difference there — but stating the policy keeps this
+    // in step with LATERAL_ACCESS on the server, which says the same.
+    "/": "full",
     "/wallet": "full",
     "/payment-requests": "full",
     "/penalties": "full",
@@ -38,9 +41,9 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/ads-bundles": "full",
     "/advertisements": "full",
     "/whatsapp": "full",
-    "/network": "read",
-    "/feedback": "read",
-    "/logs": "read",
+    "/network": "full",
+    "/feedback": "full",
+    "/logs": "full",
     // NOT PRESENT, deliberately: /team and /settings.
   },
   // Support is not a narrow badge here — it is the team that runs the platform

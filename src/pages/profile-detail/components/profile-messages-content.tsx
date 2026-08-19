@@ -22,10 +22,15 @@ import {
 } from "#/lib/whatsapp-template-text";
 import { MessageExportMenu } from "#/features/profiles/components/message-export-menu";
 import { ChatDoodleBg } from "./chat-doodle-bg";
+import { QuickMessagePicker } from "#/components/quick-message-picker";
 
 type Props = {
   profileId: string;
   profileName: string;
+  /** Narrows the template list to the ones that fit this recipient. */
+  profileType?: string | null;
+  /** Fills `{{prenom}}` in a picked template. */
+  firstName?: string | null;
 };
 
 function formatTime(v: string) {
@@ -42,6 +47,8 @@ function formatTime(v: string) {
 export function ProfileMessagesContent({
   profileId,
   profileName,
+  profileType,
+  firstName,
 }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const { data: adminMe } = useAdminMe();
@@ -161,7 +168,18 @@ export function ProfileMessagesContent({
         </div>
       </div>
       {canManageContent && (
-        <div className="mt-1 flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+        <div className="mt-1 space-y-2">
+          <div className="flex justify-end">
+            {/* Same templates as the header's quick message, so the wording a
+                worker receives does not depend on where the admin started. */}
+            <QuickMessagePicker
+              profileType={profileType}
+              firstName={firstName}
+              onPick={setText}
+              disabled={isPending}
+            />
+          </div>
+          <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
           <Textarea
             className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[72px]"
             placeholder="Write a message…"
@@ -178,6 +196,7 @@ export function ProfileMessagesContent({
           >
             <IconSend className="size-4" />
           </Button>
+          </div>
         </div>
       )}
     </div>
