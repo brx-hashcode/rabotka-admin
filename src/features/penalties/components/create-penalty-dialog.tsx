@@ -27,6 +27,8 @@ import {
 } from "#/components/ui/select";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
+import { ReasonTemplatePicker } from "#/components/reason-template-picker";
+import { appendReason } from "#/lib/reason-templates";
 import { Button } from "#/components/ui/button";
 import { ProfileCombobox } from "#/components/profile-combobox";
 import { getApplicationsList } from "#/lib/api/applications-controller";
@@ -181,7 +183,17 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Raison</FormLabel>
+                  <div className="flex items-center justify-between gap-2">
+                    <FormLabel>Raison</FormLabel>
+                    {/* Appends rather than replaces, so an admin can stack two
+                        snippets or add a detail after picking one. */}
+                    <ReasonTemplatePicker
+                      scope="PENALTY"
+                      onPick={(body) =>
+                        field.onChange(appendReason(field.value, body))
+                      }
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Ex: Absence non justifiée au poste."

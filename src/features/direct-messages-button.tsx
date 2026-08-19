@@ -30,7 +30,7 @@ import {
 export const DirectMessagesButton = ({
   className,
 }: Readonly<{ className?: string }>) => {
-  const { canManageContent } = useRole();
+  const { canEditArea } = useRole();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] =
     useState<AdminProfileListItem | null>(null);
@@ -104,7 +104,12 @@ export const DirectMessagesButton = ({
     setAttachments([]);
   };
 
-  if (!canManageContent) return null;
+  // Ask about the area this button ACTS on, not the page it happens to sit on.
+  // It sends a message to a profile (POST admin/profiles/:id/messages), so
+  // `/profiles` is the question. Keyed off the current page it disappeared on
+  // the dashboard and the audit log — pages nobody writes to — for every role
+  // whose write access is decided per area rather than by seniority.
+  if (!canEditArea("/profiles")) return null;
 
   return (
     <>
