@@ -53,12 +53,18 @@ export type NavItem = {
 
 const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
 
+/**
+ * The ladder without MODERATOR, for areas a moderator has no business in:
+ * money, the WhatsApp delivery log, the audit trail and the document library.
+ */
+const MANAGER_UP: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
+
 const navMain: NavItem[] = [
   {
     title: "Dashboard",
     url: "/",
     icon: IconGridDots,
-    roles: [...LADDER, "FINANCE"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Profiles",
@@ -70,43 +76,48 @@ const navMain: NavItem[] = [
     title: "Job Offers",
     url: "/jobs",
     icon: IconBriefcase,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Domains",
     url: "/job-categories",
     icon: IconTag,
-    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+    // admin/job-categories resolves to MANAGER+, and editing a domain
+    // re-buckets the whole marketplace.
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Applications",
     url: "/applications",
     icon: IconFileText,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Chat",
     url: "/chat",
     icon: IconMessage,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Penalties",
     url: "/penalties",
     icon: IconAlertTriangle,
-    roles: [...LADDER, "FINANCE"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Network",
     url: "/network",
     icon: IconTopologyStar3,
-    roles: [...LADDER],
+    // The collaboration graph is neither a finance nor a support surface.
+    roles: [...LADDER, "FINANCE"],
   },
   {
     title: "Team",
     url: "/team",
     icon: IconUsers,
-    roles: ["ADMIN", "SUPER_ADMIN"],
+    // Team management is served by the `user` controller, which no lateral
+    // role may reach at all — the list itself 403s, not just the mutations.
+    roles: [...LADDER],
   },
 ];
 
@@ -122,9 +133,6 @@ const navSecondary: NavItem[] = [
 
 const documents: NavItem[] = [
   {
-    // "Finance" rather than "Wallet": the section covers revenue, payments,
-    // penalties and invoices, of which the wallet is one part — and it is the
-    // area the FINANCE role owns.
     title: "Finance",
     url: "/wallet",
     icon: IconWallet,
@@ -134,57 +142,50 @@ const documents: NavItem[] = [
     title: "Claims",
     url: "/claim",
     icon: IconReport,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Feedback",
     url: "/feedback",
     icon: IconStar,
-    // Matches the API, which gates on MODERATOR and the hierarchy admits
-    // everyone above it — omitting ADMIN here hid the page from a role that
-    // could call the endpoint perfectly well. SUPPORT reaches it laterally
-    // (read-only) because feedback is context for the claim beside it.
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Events",
     url: "/events",
     icon: IconCalendar,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
   },
   {
     title: "WhatsApp",
     url: "/whatsapp",
     icon: IconBrandWhatsapp,
-    // The whole LADDER, plus both lateral roles: SUPPORT opens this to answer
-    // "did the customer get the message?", and FINANCE for the consumption
-    // figures, which are a real line item on the Meta invoice. Both are
-    // read-only server-side — see LATERAL_ACCESS in the backend.
-    roles: [...LADDER, "SUPPORT", "FINANCE"],
+    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
   },
   {
     title: "Logs",
     url: "/logs",
     icon: IconFileWord,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    // The audit log is every admin action on every record; MANAGER+.
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Documents",
     url: "/documents",
     icon: IconFile,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Ad Bundles",
     url: "/ads-bundles",
     icon: IconPackage,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
   },
   {
     title: "Advertisements",
     url: "/advertisements",
     icon: IconSpeakerphone,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
   },
 ];
 

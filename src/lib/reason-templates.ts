@@ -32,7 +32,8 @@ export type ReasonTemplateScope =
   | "KYC_APPROVE"
   | "KYC_REJECT"
   | "PAYMENT_ACCEPT"
-  | "PAYMENT_REJECT";
+  | "PAYMENT_REJECT"
+  | "PENALTY";
 
 export type ReasonTemplate = {
   id: string;
@@ -47,6 +48,60 @@ export type ReasonTemplate = {
 };
 
 export const REASON_TEMPLATES: readonly ReasonTemplate[] = [
+  // ── Penalty ───────────────────────────────────────────────────────────────
+  // These reach the worker: the reason is shown on the penalty and repeated in
+  // the WhatsApp notice, so they state what happened and nothing else. Amounts
+  // are never written here — the amount is its own field, and a figure typed
+  // into the prose goes stale the moment somebody edits it.
+  {
+    id: "penalty-no-show",
+    label: "Absence non justifiée",
+    category: "Présence",
+    scopes: ["PENALTY"],
+    body: "Absence non justifiée au poste : la mission n'a pas été assurée et aucun motif n'a été communiqué avant l'heure de début.",
+  },
+  {
+    id: "penalty-late",
+    label: "Retard",
+    category: "Présence",
+    scopes: ["PENALTY"],
+    body: "Retard supérieur à [durée] sur une mission confirmée, sans prévenir l'employeur.",
+  },
+  {
+    id: "penalty-late-cancel",
+    label: "Annulation tardive",
+    category: "Présence",
+    scopes: ["PENALTY"],
+    body: "Annulation à moins de [délai] du début de la mission, alors que la candidature avait été acceptée.",
+  },
+  {
+    id: "penalty-abandon",
+    label: "Mission abandonnée",
+    category: "Exécution",
+    scopes: ["PENALTY"],
+    body: "Mission quittée avant son terme sans accord de l'employeur.",
+  },
+  {
+    id: "penalty-quality",
+    label: "Travail non conforme",
+    category: "Exécution",
+    scopes: ["PENALTY"],
+    body: "Travail non conforme à ce qui avait été convenu, constaté et documenté par l'employeur.",
+  },
+  {
+    id: "penalty-bypass",
+    label: "Contournement de la plateforme",
+    category: "Conduite",
+    scopes: ["PENALTY"],
+    body: "Arrangement conclu en dehors de la plateforme après une mise en relation payée.",
+  },
+  {
+    id: "penalty-behaviour",
+    label: "Comportement inapproprié",
+    category: "Conduite",
+    scopes: ["PENALTY"],
+    body: "Comportement inapproprié signalé et vérifié : propos ou attitude incompatibles avec les règles de la plateforme.",
+  },
   // ── KYC rejected ──────────────────────────────────────────────────────────
   {
     id: "kyc-reject-unreadable",
