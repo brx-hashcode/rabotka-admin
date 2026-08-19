@@ -8,12 +8,16 @@ import {
 } from "nuqs";
 import { useQuery } from "@tanstack/react-query";
 import { getWhatsappMessages } from "#/lib/api/whatsapp-controller";
+import { appConfig } from "#/config";
 
-const defaultLimit = 20;
+// Has to be the same default the table footer paginates with
+// (`appConfig.defaultPaginationLimit`): when the two disagree, the page
+// numbers and the "showing X-Y of N" range describe a page size the request
+// never used.
 
 const whatsappMessagesParsers = {
   page: parseAsInteger.withDefault(1),
-  limit: parseAsInteger.withDefault(defaultLimit),
+  limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   template_key: parseAsArrayOf(parseAsString).withDefault([] as string[]),
@@ -73,7 +77,7 @@ export function useWhatsappMessagesList() {
     data: query.data?.data ?? [],
     total: query.data?.total ?? 0,
     page: query.data?.page ?? 1,
-    limit: query.data?.limit ?? defaultLimit,
+    limit: query.data?.limit ?? appConfig.defaultPaginationLimit,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
