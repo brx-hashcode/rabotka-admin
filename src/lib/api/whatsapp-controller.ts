@@ -239,3 +239,28 @@ export const getWhatsappStats = controller.getStats.bind(controller);
 export const getWhatsappBilling = controller.getBilling.bind(controller);
 export const getWhatsappQueue = controller.getQueue.bind(controller);
 export const retryWhatsappDlqJob = controller.retryDlqJob.bind(controller);
+
+/**
+ * The list DTO caps `limit` at 100 server-side, so this is the ceiling rather
+ * than a tuning choice — asking for more is a 400.
+ */
+const EXPORT_PAGE_SIZE = 100;
+
+/** Fetch every message matching the given filters, paging through the list. */
+export async function fetchAllWhatsappMessages(
+  filters: Omit<WhatsappMessagesListParams, "page" | "limit">,
+): Promise<WhatsappMessageItem[]> {
+  const all: WhatsappMessageItem[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await getWhatsappMessages({
+      ...filters,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length < EXPORT_PAGE_SIZE) break;
+    page += 1;
+  }
+  return all;
+}
