@@ -15,6 +15,7 @@ import {
   WhatsappErrorTable,
   WhatsappBillingPanel,
   WhatsappQueuePanel,
+  WhatsappExportMenu,
   whatsappStatusOptions,
 } from "#/features/whatsapp";
 import { useWhatsappMessagesList } from "#/hooks/use-whatsapp-messages-list";
@@ -82,30 +83,37 @@ function MessagesTableHeader({
 
   return (
     <TableHeader>
-      <div className="flex flex-wrap items-center gap-2">
-        <TableHeaderToolbar
-          searchParamKey="q"
-          searchPlaceholder="Search phone, content, template, message id..."
-          filters={[
-            { id: "status", label: "Status", options: whatsappStatusOptions },
-            { id: "kind", label: "Type", options: kindOptions },
-            ...(templateOptions.length > 0
-              ? [
-                  {
-                    id: "template_key",
-                    label: "Template",
-                    options: templateOptions,
-                  },
-                ]
-              : []),
-            { id: "provider", label: "Provider", options: providerOptions },
-          ]}
-          table={table}
-          extraFiltersActive={extraFiltersActive}
-          onResetExtras={handleResetExtras}
-        />
-        <WhatsappDateRange />
-      </div>
+      {/*
+        The date range goes through `extraFilters` rather than sitting beside
+        the toolbar: the page already passed `extraFiltersActive` and
+        `onResetExtras`, so Reset was clearing a control the toolbar did not
+        render. Passing it here also keeps Export at the far right, next to
+        View, where every other table puts it.
+      */}
+      <TableHeaderToolbar
+        searchParamKey="q"
+        searchPlaceholder="Search phone, content, template, message id..."
+        filters={[
+          { id: "status", label: "Status", options: whatsappStatusOptions },
+          { id: "kind", label: "Type", options: kindOptions },
+          ...(templateOptions.length > 0
+            ? [
+                {
+                  id: "template_key",
+                  label: "Template",
+                  options: templateOptions,
+                },
+              ]
+            : []),
+          { id: "provider", label: "Provider", options: providerOptions },
+        ]}
+        table={table}
+        extraFilters={<WhatsappDateRange />}
+        extraFiltersActive={extraFiltersActive}
+        onResetExtras={handleResetExtras}
+      >
+        <WhatsappExportMenu />
+      </TableHeaderToolbar>
     </TableHeader>
   );
 }
