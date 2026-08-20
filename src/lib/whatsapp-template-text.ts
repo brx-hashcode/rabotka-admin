@@ -2,7 +2,7 @@
  * Mirror of the backend's template-variable flattening.
  *
  * SOURCE OF TRUTH:
- *   rabotka-backend/src/modules/whatsapp/templates/admin-message.ts
+ *   rabotka-backend/src/common/utils/whatsapp-template-text.util.ts
  *
  * Duplicated here for one reason only: the composer shows a live character count
  * against the same limit the backend enforces, and counting the raw textarea
