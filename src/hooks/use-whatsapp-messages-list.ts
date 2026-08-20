@@ -15,7 +15,7 @@ import { appConfig } from "#/config";
 // numbers and the "showing X-Y of N" range describe a page size the request
 // never used.
 
-const whatsappMessagesParsers = {
+export const whatsappMessagesParsers = {
   page: parseAsInteger.withDefault(1),
   limit: parseAsInteger.withDefault(appConfig.defaultPaginationLimit),
   q: parseAsString.withDefault(""),
