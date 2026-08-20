@@ -1,10 +1,32 @@
 import * as XLSX from "xlsx";
 
+/**
+ * Characters Excel and Sheets treat as the start of a formula.
+ *
+ * `+` is the one that bites in practice: every phone number we export is E.164,
+ * so `+242065219464` was being opened as the number 242065219464 with the plus
+ * silently gone — on the column an admin is most likely to copy into a ticket.
+ * `-` catches negative-looking values and `=`/`@` catch the injection case,
+ * which is not hypothetical now that inbound WhatsApp bodies are exportable:
+ * those are written by whoever messaged us.
+ */
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
+
+/**
+ * The apostrophe is the standard fix and it is a real trade-off: Excel and
+ * Sheets consume it and show the original text, while a plain-text reader shows
+ * it literally. A visible quote in `cat` beats a corrupted phone number in the
+ * tool people actually open these with.
+ *
+ * XLSX needs none of this — `aoa_to_sheet` types a string as a text cell, never
+ * a formula — so this guard is deliberately CSV-only.
+ */
 function csvEscapeCell(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replaceAll('"', '""')}"`;
+  const guarded = FORMULA_LEAD.test(value) ? `'${value}` : value;
+  if (/[",\n\r]/.test(guarded)) {
+    return `"${guarded.replaceAll('"', '""')}"`;
   }
-  return value;
+  return guarded;
 }
 
 /** UTF-8 BOM so Excel recognizes encoding. */
