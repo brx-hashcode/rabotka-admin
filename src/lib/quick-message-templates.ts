@@ -34,9 +34,7 @@ export const QUICK_MESSAGE_TEMPLATES: readonly QuickMessageTemplate[] = [
 Pour finaliser la vérification de votre compte Rabotka, il nous manque encore : [document(s) manquant(s)].
 
 Vous pouvez les ajouter depuis votre profil, rubrique « Vérification d'identité ». Dès réception, votre dossier est traité sous 48 h.
-
-Merci,
-L'équipe Rabotka`,
+`,
   },
   {
     id: "kyc-document-unreadable",
@@ -49,7 +47,7 @@ Le document que vous avez envoyé n'est pas exploitable (photo floue, coins coup
 
 Merci de le renvoyer en photographiant le document entier, à plat et bien éclairé. Nous relançons la vérification dès réception.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "kyc-reminder",
@@ -62,7 +60,7 @@ Votre compte Rabotka est créé mais la vérification d'identité n'est pas enco
 
 Cela ne prend que quelques minutes depuis votre profil.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "kyc-approved",
@@ -73,8 +71,7 @@ L'équipe Rabotka`,
 
 Bonne nouvelle : votre identité a été vérifiée et votre compte Rabotka est maintenant pleinement actif. Votre badge « Vérifié » est visible par les autres membres.
 
-Bienvenue et bonne continuation,
-L'équipe Rabotka`,
+`,
   },
   {
     id: "verification-call",
@@ -87,7 +84,7 @@ Dans le cadre de la vérification de votre compte, nous souhaitons échanger bri
 
 Êtes-vous disponible le [date] vers [heure] ? Si ce créneau ne convient pas, proposez-nous simplement un autre moment.
 
-L'équipe Rabotka`,
+`,
   },
 
   // ── Profile & account ─────────────────────────────────────────────────────
@@ -102,7 +99,7 @@ Votre profil Rabotka est incomplet : il manque [photo / description / catégorie
 
 Les profils complets reçoivent nettement plus de [propositions de mission / candidatures]. Quelques minutes suffisent pour le mettre à jour.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "contact-details-check",
@@ -115,7 +112,7 @@ Nous n'arrivons pas à vous joindre sur le numéro enregistré dans votre compte
 
 Pouvez-vous confirmer votre numéro WhatsApp et votre adresse e-mail, ou les corriger directement depuis votre profil ? C'est par ce canal que passent toutes les notifications importantes.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "account-warning",
@@ -130,7 +127,7 @@ Nous vous invitons à respecter les règles de la plateforme : ponctualité, res
 
 Si vous souhaitez nous donner votre version, répondez à ce message.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "account-reactivated",
@@ -142,7 +139,7 @@ L'équipe Rabotka`,
 Votre compte Rabotka a été réactivé et vous pouvez de nouveau [postuler / publier vos offres].
 
 Merci d'avoir régularisé la situation,
-L'équipe Rabotka`,
+`,
   },
 
   // ── Missions (workers) ────────────────────────────────────────────────────
@@ -157,7 +154,7 @@ Une mission correspondant à votre profil vient d'être publiée : [intitulé] �
 
 Si cela vous intéresse, postulez rapidement depuis l'application — les places partent vite.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "worker-employer-waiting",
@@ -170,7 +167,7 @@ L'employeur de la mission « [intitulé] » attend votre réponse depuis [durée
 
 Merci de confirmer ou de décliner directement dans l'application, afin qu'il puisse s'organiser.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "worker-mission-reminder",
@@ -183,7 +180,7 @@ Petit rappel : votre mission « [intitulé] » commence le [date] à [heure], à
 
 Merci d'arriver 10 minutes en avance. En cas d'imprévu, prévenez l'employeur au plus tôt via l'application.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "worker-no-show",
@@ -196,7 +193,7 @@ L'employeur nous a signalé votre absence à la mission « [intitulé] » du [da
 
 Les absences non signalées affectent votre score de fiabilité et peuvent entraîner une pénalité. Pouvez-vous nous expliquer ce qu'il s'est passé ?
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "worker-reliability-low",
@@ -210,7 +207,7 @@ Votre score de fiabilité a baissé à la suite de [annulations tardives / absen
 Un score faible réduit fortement votre visibilité auprès des employeurs. Il remonte dès que vos prochaines missions se déroulent bien.
 
 Nous restons disponibles si vous rencontrez des difficultés,
-L'équipe Rabotka`,
+`,
   },
 
   // ── Recruitment (employers) ───────────────────────────────────────────────
@@ -225,7 +222,7 @@ Votre offre « [intitulé] » a reçu [nombre] candidature(s) en attente de rép
 
 Les candidats se désengagent après quelques jours sans nouvelles : un passage rapide dans l'application suffit pour accepter ou décliner.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "employer-offer-incomplete",
@@ -238,7 +235,7 @@ Votre offre « [intitulé] » manque de précisions sur [rémunération / horair
 
 En complétant ces informations, vous recevrez des candidatures plus nombreuses et mieux ciblées.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "employer-offer-expiring",
@@ -251,7 +248,7 @@ Votre offre « [intitulé] » expire le [date] et n'est pas encore pourvue.
 
 Vous pouvez la prolonger ou l'ajuster (date, rémunération, zone) depuis votre espace pour toucher davantage de candidats.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "employer-offer-rejected",
@@ -264,7 +261,7 @@ Votre offre « [intitulé] » n'a pas été publiée car elle ne respecte pas no
 
 Vous pouvez la modifier et la soumettre à nouveau ; nous la réexaminons dans la foulée.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "employer-confirm-completion",
@@ -277,7 +274,7 @@ La mission « [intitulé] » du [date] est-elle bien terminée ?
 
 Merci de la clôturer dans l'application et de laisser une évaluation au travailleur : cela conditionne son score de fiabilité et le suivi de votre dossier.
 
-L'équipe Rabotka`,
+`,
   },
 
   // ── Payments & penalties ──────────────────────────────────────────────────
@@ -292,7 +289,7 @@ Une pénalité de [montant] reste impayée sur votre compte, suite à [motif] du
 
 Merci de la régler depuis l'application afin de retrouver un accès complet à la plateforme. Si vous contestez cette pénalité, répondez à ce message.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "payment-received",
@@ -303,8 +300,7 @@ L'équipe Rabotka`,
 
 Nous confirmons la réception de votre paiement de [montant]. Votre compte est à jour, rien d'autre n'est requis de votre part.
 
-Merci,
-L'équipe Rabotka`,
+`,
   },
   {
     id: "payment-failed",
@@ -317,7 +313,7 @@ Votre paiement de [montant] n'a pas abouti ([motif]).
 
 Vous pouvez réessayer depuis l'application, ou nous indiquer le moyen de paiement que vous souhaitez utiliser.
 
-L'équipe Rabotka`,
+`,
   },
 
   // ── Support ───────────────────────────────────────────────────────────────
@@ -330,8 +326,7 @@ L'équipe Rabotka`,
 
 Nous avons bien reçu votre demande et elle est en cours de traitement. Nous revenons vers vous sous [délai] avec une réponse.
 
-Merci de votre patience,
-L'équipe Rabotka`,
+`,
   },
   {
     id: "support-need-info",
@@ -344,7 +339,7 @@ Pour avancer sur votre dossier, nous avons besoin de précisions : [informations
 
 Vous pouvez répondre directement à ce message, en joignant une capture d'écran si besoin.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "support-resolved",
@@ -357,7 +352,7 @@ Le problème que vous nous avez signalé est résolu : [résumé].
 
 N'hésitez pas à nous réécrire si vous constatez encore un souci.
 
-L'équipe Rabotka`,
+`,
   },
   {
     id: "support-feedback",
@@ -370,8 +365,7 @@ Vous avez récemment utilisé Rabotka pour [mission / recrutement]. Comment cela
 
 Vos retours, positifs comme négatifs, nous aident à améliorer la plateforme. Répondez simplement à ce message.
 
-Merci,
-L'équipe Rabotka`,
+`,
   },
 ] as const;
 
