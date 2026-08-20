@@ -9,6 +9,7 @@ export {
 export { WhatsappBillingPanel } from "./components/whatsapp-billing-panel";
 export { WhatsappRangeToggle } from "./components/whatsapp-range-toggle";
 export { WhatsappQueuePanel } from "./components/whatsapp-queue-panel";
+export { WhatsappExportMenu } from "./components/whatsapp-export-menu";
 export {
   WhatsappStatusBadge,
   WhatsappCategoryBadge,
