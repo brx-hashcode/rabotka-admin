@@ -1,8 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Keep the browser from machine-translating this page.
+
+      The UI is English and the team browsing it is French-speaking, so Chrome
+      offers a translation on every visit. Accepting it swaps React-managed text
+      nodes for Google's own <font> wrappers; the next render then tries to
+      remove a node that is no longer where React left it, and the whole route
+      dies with "NotFoundError: Failed to execute 'removeChild' on 'Node'".
+
+      `translate="no"` on <html> is the standard signal; the meta is the older
+      Google-specific form, kept because not every Chrome build honours the
+      attribute alone. The durable fix is to ship the admin in French so there
+      is nothing to translate -- this only removes the crash.
+    -->
+    <meta name="google" content="notranslate" />
     <meta name="theme-color" content="#0F172A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
