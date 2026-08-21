@@ -120,6 +120,27 @@ export type WhatsappBilling = {
    * other overstates the bill by everything already paid.
    */
   billing: WhatsappBusinessBilling;
+  /**
+   * AED → XAF for the consumption card, or null when the rate could not be
+   * established — or when Meta did not bill in AED at all, in which case the
+   * card must not render rather than converting the wrong currency.
+   *
+   * Never a fallback rate. See the backend's currency-conversion.util.ts for
+   * why only one leg of this conversion is actually fetched.
+   */
+  fx: WhatsappFxQuote | null;
+};
+
+export type WhatsappFxQuote = {
+  base: "AED";
+  target: "XAF";
+  /** XAF per 1 AED. */
+  rate: number;
+  /** The floating leg, surfaced so a reader can check the figure by hand. */
+  eurUsd: number;
+  /** ECB reference date — not "now"; the ECB publishes once per working day. */
+  asOf: string;
+  source: string;
 };
 
 export type WhatsappBusinessBilling = {
