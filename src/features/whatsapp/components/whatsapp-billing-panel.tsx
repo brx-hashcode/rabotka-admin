@@ -31,6 +31,7 @@ import {
 } from "#/components/ui/table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Button } from "#/components/ui/button";
+import { cn, formatXAF } from "#/lib/utils";
 import type { WhatsappBilling } from "#/lib/api/whatsapp-controller";
 import {
   useWhatsappBilling,
@@ -139,35 +140,79 @@ function billingHubUrl(businessId: string | null): string {
     : "https://business.facebook.com/billing_hub/accounts";
 }
 
+/**
+ * How to read an UNBILLED figure off a page that only knows consumption.
+ *
+ * This account is billed by card, which means postpaid automatic charges: Meta
+ * charges when spend crosses the billing threshold or at month end, whichever
+ * comes first. So "what we owe" is real, but it is only ever "what has accrued
+ * since the last charge" — and it drops back to zero every time a charge lands.
+ *
+ * There is NO API for it. Checked against the node references: the WhatsApp
+ * Business Account exposes no billing, transaction or balance edge (its
+ * `payment_configuration` is WhatsApp Pay — taking payments FROM customers),
+ * and the Business node offers only `business_invoices` and `extendedcredits`,
+ * which are monthly-invoicing constructs that stay empty for a card-billed
+ * business. Granting `business_management` does not change this; the data has
+ * no endpoint. Charges exist only as a page in Business Manager.
+ *
+ * What the reader CAN do is bound the window themselves, which is why this note
+ * exists rather than a card. A stored "last charged on" date was considered and
+ * rejected: it is correct only while somebody remembers to update it after
+ * every charge, and a money figure that goes quietly stale is worse than a
+ * sentence telling you how to work it out.
+ */
+function UnbilledHint() {
+  return (
+    <p className="text-muted-foreground mt-2 text-xs">
+      Meta does not expose charges to the API, so this page cannot show what is
+      still unpaid. To read it yourself, set <span className="font-medium">From</span>{" "}
+      to the date of your last charge — Consumed is then what has accrued since.
+    </p>
+  );
+}
+
 function BusinessManagerLink({
   businessId,
 }: Readonly<{ businessId: string | null }>) {
   return (
-    <a
-      href={billingHubUrl(businessId)}
-      target="_blank"
-      rel="noreferrer noopener"
-      className="text-primary mt-2 inline-flex items-center gap-1 text-xs hover:underline"
-    >
-      Open Business Manager billing
-      <IconExternalLink className="size-3" aria-hidden />
-    </a>
+    <div>
+      <a
+        href={billingHubUrl(businessId)}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-primary mt-2 inline-flex items-center gap-1 text-xs hover:underline"
+      >
+        Open Business Manager billing
+        <IconExternalLink className="size-3" aria-hidden />
+      </a>
+      <UnbilledHint />
+    </div>
   );
 }
 
 /**
  * There is deliberately no "outstanding balance" card.
  *
- * Meta gates the balance behind `business_management`, which needs a
- * business-level use case on the app — the WhatsApp app cannot request it, so
- * the card could never show a figure for this account. A permanently empty
- * stat tile is worse than none: it takes the same space as a real number and
- * reads as one until you get close enough to read the caption.
+ * Two independent reasons, and the second is the one that settles it:
  *
- * There is no invoices table either. Meta issues invoices to businesses on
- * monthly invoicing; this account pays by card, so every charge is a payment
- * rather than an invoice and the table was permanently empty. The receipts,
- * like the balance, are one click away in Business Manager.
+ * 1. Meta gates the balance behind `business_management`, which needs a
+ *    business-level use case on the app — the WhatsApp app cannot request it.
+ * 2. Even WITH that scope there would be nothing to show. `extendedcredits`
+ *    and `business_invoices` are monthly-invoicing constructs; this account
+ *    pays by CARD, which is postpaid automatic charging, so it has no credit
+ *    line and receives no invoices. Both edges return empty by construction.
+ *
+ * So the amount owed is not a permissions problem waiting on an approval — it
+ * has no endpoint. The WhatsApp Business Account node carries no billing,
+ * transaction or balance edge at all (its `payment_configuration` is WhatsApp
+ * Pay, i.e. taking payments FROM customers), and the Business node offers only
+ * the two credit-line edges above. Charge history exists solely as a page in
+ * Business Manager, which is what `BusinessManagerLink` is for.
+ *
+ * A permanently empty stat tile is worse than none: it takes the same space as
+ * a real number and reads as one until you get close enough to read the
+ * caption. `UnbilledHint` says what the reader can actually do instead.
  */
 
 export function WhatsappBillingPanel({
@@ -194,6 +239,19 @@ export function WhatsappBillingPanel({
   const totalCost = days.reduce((sum, day) => sum + day.cost, 0);
   const totalVolume = days.reduce((sum, day) => sum + day.volume, 0);
   const costReported = categories.some((row) => row.hasCost);
+
+  /**
+   * Meta bills this account in dirhams and the people reading this page reason
+   * in francs, so the same total is shown twice.
+   *
+   * Keyed off the CURRENCY, not off `fx` being present: when Meta reports AED
+   * but the rate could not be fetched, the card still renders and says so. A
+   * card that quietly vanishes reads as "there is nothing to convert", which is
+   * a different and wrong statement. The backend already withholds `fx`
+   * entirely for any other currency, so this never converts the wrong one.
+   */
+  const fx = data?.fx ?? null;
+  const showConversion = data?.currency === "AED";
 
   if (isLoading) {
     return (
@@ -246,7 +304,14 @@ export function WhatsappBillingPanel({
         <Notice>{data.costUnavailableReason}</Notice>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4 @xl/main:grid-cols-2",
+          // Only step to three when the conversion card is actually there —
+          // otherwise a third empty column stretches the other two.
+          showConversion && "@5xl/main:grid-cols-3",
+        )}
+      >
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Consumed · {windowLabel}</CardDescription>
@@ -261,6 +326,33 @@ export function WhatsappBillingPanel({
             </p>
           </CardHeader>
         </Card>
+
+        {showConversion ? (
+          <Card className="@container/card">
+            <CardHeader>
+              <CardDescription>In XAF · {windowLabel}</CardDescription>
+              <CardTitle className="text-4xl font-bold tabular-nums">
+                {/* `formatXAF`, not the local `formatMoney`: it is how every
+                    other franc figure in the admin is rendered (fr-CM, and XAF
+                    is a zero-decimal currency, so no phantom centimes). */}
+                {costReported && fx
+                  ? formatXAF(totalCost * fx.rate)
+                  : "rate unavailable"}
+              </CardTitle>
+              {/*
+                The provenance is not decoration. A converted figure the reader
+                cannot audit is barely better than no figure, so the card states
+                the rate it used, the day the ECB published it, and the fact
+                that two of the three legs are fixed pegs rather than quotes.
+              */}
+              <p className="text-muted-foreground pt-1 text-xs">
+                {fx
+                  ? `1 AED = ${fx.rate.toFixed(1)} XAF · ECB ${fx.asOf} · XAF/EUR and AED/USD are fixed pegs`
+                  : "The exchange rate could not be fetched, so this window is shown in dirhams only."}
+              </p>
+            </CardHeader>
+          </Card>
+        ) : null}
 
         <Card className="@container/card">
           <CardHeader>
