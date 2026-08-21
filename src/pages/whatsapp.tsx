@@ -16,10 +16,15 @@ import {
   WhatsappBillingPanel,
   WhatsappQueuePanel,
   WhatsappExportMenu,
+  WhatsappRangeToggle,
+  describeRange,
   whatsappStatusOptions,
 } from "#/features/whatsapp";
 import { useWhatsappMessagesList } from "#/hooks/use-whatsapp-messages-list";
-import { useWhatsappStats } from "#/hooks/use-whatsapp-analytics";
+import {
+  useWhatsappRange,
+  useWhatsappStats,
+} from "#/hooks/use-whatsapp-analytics";
 import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
 
 const kindOptions = [
@@ -127,6 +132,12 @@ export default function WhatsappPage() {
   const { data: stats, isLoading: statsLoading } = useWhatsappStats();
   const [selected, setSelected] = useState<WhatsappMessageItem | null>(null);
 
+  const range = useWhatsappRange();
+  const windowLabel = describeRange(
+    range.created_from ?? "",
+    range.created_to ?? "",
+  );
+
   const handleView = useCallback((message: WhatsappMessageItem) => {
     setSelected(message);
   }, []);
@@ -158,9 +169,27 @@ export default function WhatsappPage() {
   return (
     <>
       <div className="flex flex-col gap-4 pt-6">
+        {/*
+          The preset toggle writes the SAME `created_from`/`created_to` params
+          `useWhatsappStats` already reads, so it moves the cards below and the
+          Analytics and Consumption tabs together — one window for the whole
+          page rather than a second control that can disagree with the first.
+
+          The label beside it is not redundant with the buttons: after picking
+          custom dates in a tab's date picker no preset is highlighted, and
+          without it the cards would state no window at all.
+        */}
         <PageListHeader
           title="WhatsApp"
           description="Every message sent, who it went to, what it said, and whether it arrived."
+          actions={
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground hidden text-xs sm:inline">
+                {windowLabel}
+              </span>
+              <WhatsappRangeToggle />
+            </div>
+          }
         />
 
         <WhatsappStatCards stats={stats} isLoading={statsLoading} />
