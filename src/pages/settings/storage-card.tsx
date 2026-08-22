@@ -22,10 +22,11 @@ const DRIVER_LABELS: Record<StorageDriver, string> = {
   VERCEL_BLOB: "Vercel Blob",
 };
 
-const FULL_WIDTH_KEYS = new Set([
-  "storage.cloudflare.public_base_url",
-  "storage.s3.endpoint",
-]);
+// Nothing spans both columns any more. `public_base_url` used to, which meant
+// it could never share a row: it wrapped to a line of its own and left the
+// secret key stranded beside it. The labels are long but the values are short,
+// so half width is enough for all of them.
+const FULL_WIDTH_KEYS = new Set<string>([]);
 
 const DRIVER_KEYS: Record<StorageDriver, string[]> = {
   S3: [
@@ -38,6 +39,7 @@ const DRIVER_KEYS: Record<StorageDriver, string[]> = {
   CLOUDFLARE: [
     "storage.cloudflare.account_id",
     "storage.cloudflare.bucket_name",
+    "storage.cloudflare.kyc_bucket_name",
     "storage.cloudflare.access_key_id",
     "storage.cloudflare.secret_access_key",
     "storage.cloudflare.public_base_url",
@@ -48,6 +50,14 @@ const DRIVER_KEYS: Record<StorageDriver, string[]> = {
     "storage.cloudinary.api_secret",
   ],
   VERCEL_BLOB: ["storage.vercel_blob.token"],
+};
+
+// Only for fields where a wrong value has a consequence you cannot see from
+// the form itself. The KYC bucket is the one: pointing it at the public bucket
+// leaves identity documents world-readable, and everything keeps working.
+const HINTS: Record<string, string> = {
+  "storage.cloudflare.kyc_bucket_name":
+    "Doit être un bucket DIFFÉRENT du précédent, et jamais exposé publiquement. Il ne contient que les pièces d'identité et les selfies de vérification, servis par des liens signés valables 1 heure. Vide = les envois KYC échouent (volontairement) plutôt que de repartir dans le bucket public.",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -173,7 +183,7 @@ export function StorageCard() {
       <Separator />
 
       <CardContent>
-        <div className="mb-6 max-w-xs space-y-1.5 pt-6">
+        <div className="mb-6 space-y-1.5 pt-6">
           <FieldLabel>Provider</FieldLabel>
           <Select
             value={driver}
@@ -213,6 +223,11 @@ export function StorageCard() {
                     onChange={(e) => set(key, e.target.value)}
                   />
                 )}
+                {HINTS[key] ? (
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    {HINTS[key]}
+                  </p>
+                ) : null}
               </div>
             );
           })}
