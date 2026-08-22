@@ -39,6 +39,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { docCategoryLabel, docTypeLabel, formatDate } from "../helpers";
 import { appConfig } from "#/config";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 
 export { isLikelyImageAsset };
 
@@ -182,7 +183,7 @@ function DocFallback({
         </Button>
         <Button
           onClick={() =>
-            downloadViaProxy(url, url.split("/").pop() ?? "document")
+            downloadViaProxy(url, fileNameFromUrl(url))
           }
         >
           <Download className="size-4" />
@@ -390,7 +391,7 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
                 onClick={() =>
                   onDownload
                     ? onDownload()
-                    : downloadViaProxy(url, url.split("/").pop() ?? "document")
+                    : downloadViaProxy(url, fileNameFromUrl(url))
                 }
               >
                 <Download className="size-3.5" />
@@ -523,7 +524,7 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             size="sm"
             className="h-8 gap-1.5"
             onClick={() =>
-              downloadViaProxy(url, url.split("/").pop() ?? "image")
+              downloadViaProxy(url, fileNameFromUrl(url, "image"))
             }
           >
             <Download className="size-3.5" />
@@ -608,7 +609,7 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             onClick={() =>
               downloadViaProxy(
                 url,
-                title || (url.split("/").pop() ?? "document"),
+                title || fileNameFromUrl(url),
               )
             }
           >
@@ -742,7 +743,7 @@ function MarkdownViewer({
             onClick={() =>
               downloadViaProxy(
                 url,
-                title || (url.split("/").pop() ?? "document"),
+                title || fileNameFromUrl(url),
               )
             }
           >

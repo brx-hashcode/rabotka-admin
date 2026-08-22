@@ -39,6 +39,7 @@ import { getUsersList } from "#/lib/api/users-controller";
 import { ProfileCell } from "#/components/table";
 import { ClaimComments } from "./claim-comments";
 import { useRole } from "#/hooks/use-role";
+import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "CREATED", label: "CREATED" },
@@ -221,11 +222,11 @@ export function ClaimDetailSheet({
                         key={url}
                         onClick={() => setSelectedImageUrl(url)}
                         className="group relative block w-16 h-16 rounded-md overflow-hidden border bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                        title={url.split("/").pop()}
+                        title={fileNameFromUrl(url, "image")}
                       >
                         <img
                           src={url}
-                          alt={url.split("/").pop()}
+                          alt={fileNameFromUrl(url, "image")}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (
@@ -256,7 +257,7 @@ export function ClaimDetailSheet({
                             />
                           </svg>
                           <span className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2 break-all">
-                            {url.split("/").pop()}
+                            {fileNameFromUrl(url, "image")}
                           </span>
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
@@ -386,12 +387,12 @@ export function ClaimDetailSheet({
         <DialogContent className="w-full max-w-4xl p-0 border-0 bg-black/90">
           <DialogHeader className="px-4 py-3 border-b border-white/10 shrink-0">
             <DialogTitle className="text-white text-sm">
-              {selectedImageUrl?.split("/").pop()}
+              {fileNameFromUrl(selectedImageUrl, "image")}
             </DialogTitle>
             {selectedImageUrl && (
               <a
                 href={`${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(selectedImageUrl)}`}
-                download={selectedImageUrl.split("/").pop() ?? "image"}
+                download={fileNameFromUrl(selectedImageUrl, "image")}
                 className="absolute right-12 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 title="Download"
               >
