@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 import type { ReasonTemplateScope } from "#/lib/reason-templates";
 
 import { Button } from "#/components/ui/button";
@@ -273,7 +274,7 @@ export function KycVerificationModal({
         >
           <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3">
             <DialogTitle className="text-sm text-white">
-              {documentPreviewUrl?.split("/").pop()}
+              {fileNameFromUrl(documentPreviewUrl)}
             </DialogTitle>
             <DialogClose asChild>
               <button
