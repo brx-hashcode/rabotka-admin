@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
+import { kycDocumentRawUrl } from "#/lib/api/profiles-controller";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { Button } from "#/components/ui/button";
@@ -57,7 +58,15 @@ function pdfDocumentUrl(fileUrl: string): string {
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 async function downloadViaProxy(fileUrl: string, filename: string) {
-  const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
+  // A KYC document is served from our own api, authenticated by the session
+  // cookie, so it is fetched directly. Sending it through `/file/proxy` would
+  // hand that endpoint a relative path it cannot resolve, and routing identity
+  // documents through a caller-supplied-url fetcher is not something to do
+  // even when it works.
+  const isOwnApi = fileUrl.startsWith(`${appConfig.apiUrl}/`);
+  const proxyUrl = isOwnApi
+    ? fileUrl
+    : `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
   const res = await fetch(proxyUrl, { credentials: "include" });
   if (!res.ok) throw new Error("Download failed");
   const blob = await res.blob();
@@ -223,13 +232,20 @@ export type ViewerDocument = {
   onDownload?: () => void;
 };
 
-export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
-  const inferred = isLikelyImageAsset(doc.documentUrl) ? "image" : undefined;
+export function toKycViewerDoc(
+  profileId: string,
+  doc: AdminKycDocumentItem,
+): ViewerDocument {
+  // `contentKind` comes from the server. The stream url has no extension, so
+  // sniffing it the way this used to would answer "not an image" every time.
   return {
-    url: doc.documentUrl ?? "",
+    url: kycDocumentRawUrl(profileId, doc.id),
     title: docCategoryLabel(doc.documentCategory),
     description: `${docTypeLabel(doc.documentType)} — Uploaded ${formatDate(doc.createdAt)}`,
-    fileType: inferred,
+    // "other" carries no information the viewer can act on; "pdf" does, and
+    // without it a pdf falls through to the unsupported branch, since the
+    // stream url has no `.pdf` for the viewer to notice.
+    fileType: doc.contentKind === "other" ? undefined : doc.contentKind,
   };
 }
 
