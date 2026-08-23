@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { IconFileText } from "@tabler/icons-react";
 
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
@@ -17,8 +18,16 @@ type Props = {
 };
 
 export function KycDocumentCard({ doc, onPreview }: Props) {
+  // A KYC url can be present and still not resolve: it is signed, it expires
+  // within the hour, and a reviewer opening a profile the morning after it was
+  // submitted gets a 403. Without this the browser paints its own broken-image
+  // glyph and the card says nothing, which reads as "the document is missing"
+  // rather than "the link went stale". `ImageViewer` in the drawer already
+  // tracks this; the card was the one place that did not.
+  const [failed, setFailed] = useState(false);
+
   const hasUrl = !!doc.documentUrl;
-  const isImage = hasUrl && isLikelyImageAsset(doc.documentUrl);
+  const isImage = hasUrl && !failed && isLikelyImageAsset(doc.documentUrl);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
@@ -28,11 +37,12 @@ export function KycDocumentCard({ doc, onPreview }: Props) {
             src={doc.documentUrl ?? ""}
             alt={docCategoryLabel(doc.documentCategory)}
             className="h-full w-full object-cover"
+            onError={() => setFailed(true)}
           />
         ) : (
           <div className="flex flex-col items-center gap-1">
             <IconFileText className="text-muted-foreground size-12" />
-            {!hasUrl && (
+            {(!hasUrl || failed) && (
               <span className="text-muted-foreground text-[10px]">
                 Fichier indisponible
               </span>
