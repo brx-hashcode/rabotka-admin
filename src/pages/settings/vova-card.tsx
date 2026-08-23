@@ -16,6 +16,7 @@ type FormState = {
   timeoutMs: string;
   anonymousEnabled: boolean;
   anonDailyLimit: string;
+  walledDailyLimit: string;
 };
 
 const EMPTY: FormState = {
@@ -25,6 +26,7 @@ const EMPTY: FormState = {
   timeoutMs: "25000",
   anonymousEnabled: false,
   anonDailyLimit: "10",
+  walledDailyLimit: "10",
 };
 
 /**
@@ -82,6 +84,8 @@ export function VovaCard() {
         data.anonymousEnabled = item.value === "true";
       if (item.key === "vova.anon_daily_limit")
         data.anonDailyLimit = item.value;
+      if (item.key === "vova.walled_daily_limit")
+        data.walledDailyLimit = item.value;
     }
     setForm(data);
     setInitial(data);
@@ -115,6 +119,12 @@ export function VovaCard() {
       return;
     }
 
+    const walledLimit = parseInt(form.walledDailyLimit, 10);
+    if (isNaN(walledLimit) || walledLimit < 0 || walledLimit > 200) {
+      toast.error("La limite par compte bloqué doit être entre 0 et 200");
+      return;
+    }
+
     await saveChanges({
       "vova.enabled": String(form.enabled),
       "vova.shadow_mode": String(form.shadowMode),
@@ -122,6 +132,7 @@ export function VovaCard() {
       "vova.timeout_ms": String(timeout),
       "vova.anonymous_enabled": String(form.anonymousEnabled),
       "vova.anon_daily_limit": String(anonLimit),
+      "vova.walled_daily_limit": String(walledLimit),
     });
     setInitial(form);
   }
@@ -311,6 +322,36 @@ export function VovaCard() {
             value={form.anonDailyLimit}
             onChange={(e) => set("anonDailyLimit", e.target.value)}
             disabled={disabled || !form.anonymousEnabled}
+            className="w-24"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="vova-walled-limit" className="text-sm font-medium">
+              Daily replies per blocked account
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              A suspended account, or one whose identity check is under review
+              or was refused. These people have no menu, so the assistant is
+              their only way to ask anything — and the one most likely to ask it
+              twenty times, while earning nothing until they are unblocked.
+              Past the limit they get the card that opens the app, for the rest
+              of the day. Unlike unregistered numbers, they do go through
+              observation mode and the rollout percentage, because they have a
+              profile. Set to 0 to answer none.
+            </p>
+          </div>
+          <Input
+            id="vova-walled-limit"
+            type="number"
+            min={0}
+            max={200}
+            value={form.walledDailyLimit}
+            onChange={(e) => set("walledDailyLimit", e.target.value)}
+            disabled={disabled}
             className="w-24"
           />
         </div>
