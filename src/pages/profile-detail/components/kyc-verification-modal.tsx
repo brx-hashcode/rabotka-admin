@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { IconCheck, IconFileText, IconX } from "@tabler/icons-react";
 import { X } from "lucide-react";
 
-import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
+import type {
+  AdminKycDocumentItem,
+  AdminProfileDetailResponse,
+} from "#/lib/api/profiles-controller";
+import { kycDocumentRawUrl } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
-import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
-import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 import type { ReasonTemplateScope } from "#/lib/reason-templates";
 
 import { Button } from "#/components/ui/button";
@@ -63,7 +65,7 @@ export function KycVerificationModal({
   const [reasonError, setReasonError] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(
+  const [previewDoc, setPreviewDoc] = useState<AdminKycDocumentItem | null>(
     null,
   );
 
@@ -82,7 +84,7 @@ export function KycVerificationModal({
       setReasonError(false);
       setFiles([]);
       setPreviews([]);
-      setDocumentPreviewUrl(null);
+      setPreviewDoc(null);
     }
   }, [open]);
 
@@ -174,21 +176,20 @@ export function KycVerificationModal({
                   <button
                     type="button"
                     title={
-                      doc.documentUrl
+                      doc.fileAvailable
                         ? "Preview document"
                         : "Document file is missing"
                     }
                     onClick={() =>
-                      doc.documentUrl &&
-                      setDocumentPreviewUrl(doc.documentUrl)
+                      doc.fileAvailable && setPreviewDoc(doc)
                     }
-                    disabled={!doc.documentUrl}
+                    disabled={!doc.fileAvailable}
                     className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {doc.documentUrl && isLikelyImageAsset(doc.documentUrl) ? (
+                    {doc.fileAvailable && doc.contentKind === "image" ? (
                       <>
                         <img
-                          src={doc.documentUrl}
+                          src={kycDocumentRawUrl(profile.id, doc.id)}
                           alt=""
                           className="h-full w-full object-cover"
                           onError={(e) => {
@@ -263,9 +264,9 @@ export function KycVerificationModal({
 
       {/* Nested viewer: same pattern as claim detail — keeps KYC dialog open underneath */}
       <Dialog
-        open={documentPreviewUrl != null}
+        open={previewDoc != null}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setDocumentPreviewUrl(null);
+          if (!isOpen) setPreviewDoc(null);
         }}
       >
         <DialogContent
@@ -274,7 +275,7 @@ export function KycVerificationModal({
         >
           <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3">
             <DialogTitle className="text-sm text-white">
-              {fileNameFromUrl(documentPreviewUrl)}
+              {previewDoc ? docCategoryLabel(previewDoc.documentCategory) : ""}
             </DialogTitle>
             <DialogClose asChild>
               <button
@@ -287,21 +288,19 @@ export function KycVerificationModal({
             </DialogClose>
           </DialogHeader>
           <div className="flex min-h-96 items-center justify-center bg-black/50 p-4">
-            {documentPreviewUrl != null &&
-              isLikelyImageAsset(documentPreviewUrl) && (
-                <img
-                  src={documentPreviewUrl}
-                  alt="KYC document"
-                  className="max-h-[70vh] max-w-full rounded object-contain"
-                />
-              )}
-            {documentPreviewUrl != null &&
-              !isLikelyImageAsset(documentPreviewUrl) && (
-                <p className="text-muted-foreground text-sm">
-                  Preview is only available for image URLs. Open the document from
-                  the KYC tab for full viewer.
-                </p>
-              )}
+            {previewDoc?.contentKind === "image" && (
+              <img
+                src={kycDocumentRawUrl(profile.id, previewDoc.id)}
+                alt="KYC document"
+                className="max-h-[70vh] max-w-full rounded object-contain"
+              />
+            )}
+            {previewDoc != null && previewDoc.contentKind !== "image" && (
+              <p className="text-muted-foreground text-sm">
+                Preview is only available for images. Open the document from the
+                KYC tab for the full viewer.
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
