@@ -4,6 +4,7 @@ import type {
   AdminProfileDetailResponse,
   AdminVerificationImageItem,
 } from "#/lib/api/profiles-controller";
+import { kycVerificationImageRawUrl } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
 
 import { Badge } from "#/components/ui/badge";
@@ -15,7 +16,6 @@ import { getVerificationStatusBadgeClass } from "#/features/applications/compone
 import { KycDocumentCard } from "./kyc-document-card";
 import type { ViewerDocument } from "./document-viewer-drawer";
 import { toKycViewerDoc } from "./document-viewer-drawer";
-import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 
 type Props = {
   profile: AdminProfileDetailResponse;
@@ -112,8 +112,9 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
             {profile.kycDocuments.map((doc) => (
               <KycDocumentCard
                 key={doc.id}
+                profileId={profile.id}
                 doc={doc}
-                onPreview={() => onPreviewDoc(toKycViewerDoc(doc))}
+                onPreview={() => onPreviewDoc(toKycViewerDoc(profile.id, doc))}
               />
             ))}
           </div>
@@ -130,11 +131,12 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
             {profile.verificationImages.map((img, index) => (
               <VerificationImageCard
                 key={img.id}
+                profileId={profile.id}
                 image={img}
                 index={index}
                 onPreview={() =>
                   onPreviewDoc({
-                    url: img.imageUrl,
+                    url: kycVerificationImageRawUrl(profile.id, img.id),
                     title: `Verification Image ${index + 1}`,
                     description: `Uploaded by ${img.uploadedBy ?? "Admin"} — ${formatDate(img.createdAt)}`,
                     fileType: "image",
@@ -150,22 +152,24 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
 }
 
 function VerificationImageCard({
+  profileId,
   image,
   index,
   onPreview,
 }: Readonly<{
+  profileId: string;
   image: AdminVerificationImageItem;
   index: number;
   onPreview: () => void;
 }>) {
-  const isImage = isLikelyImageAsset(image.imageUrl);
+  const isImage = image.fileAvailable && image.contentKind === "image";
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <div className="bg-muted relative flex h-36 items-center justify-center">
         {isImage ? (
           <img
-            src={image.imageUrl}
+            src={kycVerificationImageRawUrl(profileId, image.id)}
             alt={`Verification ${index + 1}`}
             className="h-full w-full object-cover"
           />

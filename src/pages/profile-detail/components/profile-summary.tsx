@@ -175,6 +175,7 @@ export function ProfileSummary({ profile, onPreviewDoc }: Props) {
             {profile.kycDocuments.map((doc) => (
               <KycDocumentCard
                 key={doc.id}
+                profileId={profile.id}
                 doc={doc}
                 onPreview={() => onPreviewDoc(doc)}
               />
