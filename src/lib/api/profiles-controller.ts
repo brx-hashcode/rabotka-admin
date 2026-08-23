@@ -63,11 +63,22 @@ export type AdminProfileListItem = {
   unpaidPenaltiesCount: number;
 };
 
+/** What the bytes are, decided server-side. The stream url has no extension,
+ *  so there is nothing here to sniff. */
+export type KycContentKind = "image" | "pdf" | "other";
+
 export type AdminKycDocumentItem = {
   id: string;
   documentType: string | null;
   documentCategory: string;
-  documentUrl: string | null;
+  /**
+   * No url. `documentUrl` used to sit here and was either a signed url that
+   * died within the hour — which is why documents rendered as broken images —
+   * or a permanent public link to somebody's ID card. The bytes now come from
+   * `kycDocumentRawUrl()`, behind the admin session.
+   */
+  fileAvailable: boolean;
+  contentKind: KycContentKind;
   verificationStatus: string;
   verifiedAt: string | null;
   verifiedBy: string | null;
@@ -77,10 +88,25 @@ export type AdminKycDocumentItem = {
 
 export type AdminVerificationImageItem = {
   id: string;
-  imageUrl: string;
+  fileAvailable: boolean;
+  contentKind: KycContentKind;
   uploadedBy: string | null;
   createdAt: string;
 };
+
+/**
+ * Where to fetch a KYC document's bytes.
+ *
+ * Same-origin under `appConfig.apiUrl`, so the session cookie rides along on a
+ * bare `<img src>` with no token in the query string and nothing to leak.
+ */
+export function kycDocumentRawUrl(profileId: string, documentId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/kyc-documents/${documentId}/raw`;
+}
+
+export function kycVerificationImageRawUrl(profileId: string, imageId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/verification-images/${imageId}/raw`;
+}
 
 export type AdminProfileDetailResponse = AdminProfileListItem & {
   /** Legacy single category, superseded by `categoryIds`/`categoryNames`. */
