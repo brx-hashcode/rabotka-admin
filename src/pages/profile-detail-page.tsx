@@ -41,6 +41,7 @@ import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
 } from "#/lib/api/profiles-controller";
+import type { AdminVerifyDocumentRef } from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
 
 type ProfileTab =
@@ -126,9 +127,9 @@ export default function ProfileDetailPage({
   const handleKycSubmit = async (
     decision: "VERIFIED" | "REJECTED",
     reason: string,
-    files?: File[],
+    documents?: AdminVerifyDocumentRef[],
   ) => {
-    await submitVerify({ decision, reason, files });
+    await submitVerify({ decision, reason, documents });
     setKycModalOpen(false);
   };
 
