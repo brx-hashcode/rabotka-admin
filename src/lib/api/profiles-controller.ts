@@ -130,10 +130,25 @@ export type AdminUpdateProfileParams = {
   profileType?: string;
 };
 
+/**
+ * One supporting image, already uploaded via `uploadVerificationImage`.
+ *
+ * `url` is a signed preview that expires within the hour; the API never stores
+ * it and reads it only to re-derive the key. `key` is the durable half.
+ */
+export type AdminVerifyDocumentRef = {
+  key: string;
+  url?: string;
+};
+
 export type AdminVerifyProfileParams = {
   decision: "VERIFIED" | "REJECTED";
   reason: string;
-  files?: File[];
+  /**
+   * Descriptors, not bytes. Send EXACTLY `{ key, url }` per item — the API runs
+   * `forbidNonWhitelisted`, so an extra property is a 400 for the whole request.
+   */
+  documents?: AdminVerifyDocumentRef[];
 };
 
 export type AdminUpdateStatusParams = {
@@ -282,15 +297,34 @@ export class AdminProfilesController extends AdminBaseController {
       `/admin/profiles/${id}/verify`,
       new URLSearchParams(),
     );
+    // JSON, not multipart. The images went up one at a time through
+    // `uploadVerificationImage` while the admin was reviewing, so this request
+    // is a few hundred bytes regardless of how many were attached.
+    return this.patch<AdminProfileDetailResponse>(
+      url,
+      data as unknown as Record<string, unknown>,
+    );
+  }
+
+  /**
+   * Upload one KYC verification image and get its descriptor back.
+   *
+   * Mirrors the client's onboarding `POST /profile/kyc-upload`: the file goes up
+   * as the admin picks it, and the verify call afterwards carries only keys.
+   * That is what makes a single failed photograph retryable on its own instead
+   * of taking the whole review down with it.
+   */
+  async uploadVerificationImage(
+    profileId: string,
+    file: File,
+  ): Promise<AdminVerifyDocumentRef & { url: string }> {
+    const url = this.createURL(
+      `/admin/profiles/${profileId}/verification-images`,
+      new URLSearchParams(),
+    );
     const formData = new FormData();
-    formData.append("decision", data.decision);
-    formData.append("reason", data.reason);
-    if (data.files) {
-      for (const file of data.files) {
-        formData.append("files", file);
-      }
-    }
-    return this.patch<AdminProfileDetailResponse>(url, formData);
+    formData.append("file", file);
+    return this.post<AdminVerifyDocumentRef & { url: string }>(url, formData);
   }
 
   async updateProfileStatus(
@@ -462,6 +496,8 @@ export async function fetchAllProfiles(
 export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
+export const uploadKycVerificationImage =
+  controller.uploadVerificationImage.bind(controller);
 export const updateProfileStatus =
   controller.updateProfileStatus.bind(controller);
 export const getProfileLogs = controller.getLogs.bind(controller);
