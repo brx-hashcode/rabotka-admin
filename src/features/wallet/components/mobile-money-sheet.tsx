@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -38,17 +44,41 @@ import {
 import {
   getMobileMoneyBalance,
   getMobileMoneyTransactions,
+  getPaymentGateways,
   recordMobileMoneyWithdrawal,
   type AdminMobileMoneyTransactionItem,
+  type PaymentGatewayMetadata,
 } from "#/lib/api/wallet-controller";
 
 const LIMIT = 12;
 
-const GATEWAY_LABELS: Record<string, string> = {
-  MONETBIL: "Monetbil",
-  MTN_MOMO: "MTN MoMo",
+/**
+ * Written by the backend when a transaction carries no gateway, so it is ours
+ * to name rather than the registry's.
+ */
+const UNKNOWN_GATEWAY_LABEL: Record<string, string> = {
   UNKNOWN_GATEWAY: "Unknown",
+  UNKNOWN_OPERATOR: "Unknown",
 };
+
+/**
+ * Names for gateways and operators come from the backend registry, so a new
+ * provider is labelled here without this file being touched. An unrecognised
+ * key still renders — historical rows can name a gateway the current build no
+ * longer ships, and showing the raw key beats showing nothing.
+ */
+export function buildLabelLookup(
+  gateways: PaymentGatewayMetadata[] | undefined,
+): (key: string | null | undefined) => string {
+  const labels: Record<string, string> = { ...UNKNOWN_GATEWAY_LABEL };
+  for (const gateway of gateways ?? []) {
+    labels[gateway.key] = gateway.label;
+    for (const operator of gateway.operators) {
+      labels[operator.code] = operator.label;
+    }
+  }
+  return (key) => (key ? (labels[key] ?? key) : "—");
+}
 
 function formatDate(v: string | null | undefined) {
   if (!v) return "—";
@@ -62,7 +92,9 @@ function formatDate(v: string | null | undefined) {
   }
 }
 
-const mmColumns: ColumnDef<AdminMobileMoneyTransactionItem, unknown>[] = [
+const buildMmColumns = (
+  labelFor: (key: string | null | undefined) => string,
+): ColumnDef<AdminMobileMoneyTransactionItem, unknown>[] => [
   {
     id: "type",
     accessorKey: "type",
@@ -98,9 +130,7 @@ const mmColumns: ColumnDef<AdminMobileMoneyTransactionItem, unknown>[] = [
     header: "Gateway",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {GATEWAY_LABELS[row.original.gateway ?? ""] ??
-          row.original.gateway ??
-          "—"}
+        {labelFor(row.original.gateway)}
       </span>
     ),
   },
@@ -204,6 +234,15 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
     enabled: open,
   });
 
+  // The registry only changes on a backend deploy, so it does not need
+  // refetching alongside the balance and transaction queries.
+  const gatewaysQuery = useQuery({
+    queryKey: ["payment-gateways"],
+    queryFn: getPaymentGateways,
+    enabled: open,
+    staleTime: Infinity,
+  });
+
   const txQuery = useQuery({
     queryKey: [
       "admin",
@@ -225,6 +264,16 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
   const transactionCount = balanceQuery.data?.transactionCount ?? 0;
   const byOperator = balanceQuery.data?.byOperator ?? {};
   const byGateway = balanceQuery.data?.byGateway ?? {};
+
+  const labelFor = useMemo(
+    () => buildLabelLookup(gatewaysQuery.data?.gateways),
+    [gatewaysQuery.data],
+  );
+  const mmColumns = useMemo(() => buildMmColumns(labelFor), [labelFor]);
+
+  // Driven by what actually has transactions rather than by the registry: a
+  // gateway this deployment never used is noise in the filter bar, and one it
+  // has since moved off still needs to be filterable.
   const gatewayKeys = Object.keys(byGateway);
 
   const txData = txQuery.data?.data ?? [];
@@ -302,7 +351,9 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
                     key={op}
                     className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs"
                   >
-                    <span className="text-muted-foreground">{op}</span>
+                    <span className="text-muted-foreground">
+                      {labelFor(op)}
+                    </span>
                     <span className="font-semibold">
                       {amount.toLocaleString()} FCFA
                     </span>
@@ -329,7 +380,7 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
                     className="h-7 text-xs rounded-full"
                     onClick={() => setGateway(gw)}
                   >
-                    {GATEWAY_LABELS[gw] ?? gw}
+                    {labelFor(gw)}
                     <span className="ml-1 text-[10px] opacity-70">
                       {byGateway[gw]?.toLocaleString()} FCFA
                     </span>
@@ -436,7 +487,7 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
                 <SelectContent>
                   {gatewayKeys.map((gw) => (
                     <SelectItem key={gw} value={gw}>
-                      {GATEWAY_LABELS[gw] ?? gw} —{" "}
+                      {labelFor(gw)} —{" "}
                       {byGateway[gw]?.toLocaleString()} FCFA
                     </SelectItem>
                   ))}
