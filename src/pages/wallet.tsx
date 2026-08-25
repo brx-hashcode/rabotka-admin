@@ -45,6 +45,7 @@ const TX_TYPE_OPTIONS = [
   { value: "CREDIT_COMMISSION", label: "Commission" },
   { value: "CONTACT_UNLOCK_PAYMENT", label: "Contact Unlock" },
   { value: "WELCOME_CREDIT", label: "Welcome Credit" },
+  { value: "REFERRAL_CREDIT", label: "Referral Credit" },
 ];
 
 const PAYMENT_TYPE_OPTIONS = [
