@@ -13,6 +13,7 @@ import {
   type Icon,
   IconFile,
   IconWallet,
+  IconGift,
   IconCalendar,
   IconStar,
   IconTag,
@@ -137,6 +138,14 @@ const documents: NavItem[] = [
     url: "/wallet",
     icon: IconWallet,
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
+  },
+  {
+    // MANAGER+, matching the endpoint's @Roles. This is support-desk data —
+    // "why was my parrainage not paid?" — rather than revenue.
+    title: "Parrainage",
+    url: "/referrals",
+    icon: IconGift,
+    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
   },
   {
     title: "Claims",
