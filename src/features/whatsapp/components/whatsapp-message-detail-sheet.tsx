@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { Link } from "@tanstack/react-router";
 import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
 import {
   Sheet,
@@ -187,7 +188,26 @@ export function WhatsappMessageDetailSheet({
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               <Field label="Recipient" value={message.toPhone} />
-              <Field label="Profile" value={message.profileName ?? "—"} />
+              {/* Linked when we know who it is. The question this panel raises
+                  most often is "who is this and what else happened to them",
+                  and the answer is one page away — but only if the id resolved:
+                  a message to a number with no profile has nowhere to go. */}
+              <Field
+                label="Profile"
+                value={
+                  message.profileId && message.profileName ? (
+                    <Link
+                      to="/profiles/$profileId"
+                      params={{ profileId: message.profileId }}
+                      className="hover:underline"
+                    >
+                      {message.profileName}
+                    </Link>
+                  ) : (
+                    (message.profileName ?? "—")
+                  )
+                }
+              />
               <Field label="Kind" value={message.kind} />
               <Field label="Template" value={message.templateKey ?? "—"} />
               <Field

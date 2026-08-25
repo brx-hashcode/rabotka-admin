@@ -29,6 +29,7 @@ import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
+import { ProfileReferralsContent } from "./profile-detail/components/profile-referrals-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
 import { ProfilePortfolioContent } from "./profile-detail/components/profile-portfolio-content";
@@ -49,6 +50,7 @@ type ProfileTab =
   | "kyc"
   | "payments"
   | "invoices"
+  | "referrals"
   | "messages"
   | "portfolio";
 
@@ -57,6 +59,7 @@ const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "KYC Information", value: "kyc" },
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
+  { label: "Parrainage", value: "referrals" },
   { label: "Messages", value: "messages" },
   { label: "Portfolio", value: "portfolio" },
 ];
@@ -373,6 +376,10 @@ export default function ProfileDetailPage({
 
         <TabsContent value="payments">
           <ProfilePaymentsContent profileId={profileId} />
+        </TabsContent>
+
+        <TabsContent value="referrals">
+          <ProfileReferralsContent profileId={profileId} />
         </TabsContent>
 
         <TabsContent value="invoices">
