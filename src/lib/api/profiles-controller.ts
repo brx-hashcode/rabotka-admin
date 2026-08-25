@@ -14,6 +14,32 @@ export type AdminInvoiceItem = {
   createdAt: string;
 };
 
+export type ReferralStatus =
+  | "PENDING"
+  | "QUALIFIED_ON_HOLD"
+  | "REWARDED"
+  | "CAPPED"
+  | "FORFEITED";
+
+export type ReferralSource = "LINK" | "MANUAL_CODE" | "BOT" | "ADMIN";
+
+/**
+ * Who invited a profile. Read off the Referral relation rather than a column on
+ * the profile, so this and the payout logic cannot disagree about it.
+ */
+export type AdminProfileReferredBy = {
+  profileId: string;
+  firstName: string;
+  lastName: string;
+  code: string;
+  source: ReferralSource;
+  status: ReferralStatus;
+  rewardedAt: string | null;
+  referrerAmount: number | null;
+  /** Why nothing was paid, when the status says nothing was. */
+  settlementNote: string | null;
+};
+
 export type AdminProfileListItem = {
   id: string;
   firstName: string;
@@ -114,6 +140,14 @@ export type AdminProfileDetailResponse = AdminProfileListItem & {
   categoryName: string | null;
   kycDocuments: AdminKycDocumentItem[];
   verificationImages: AdminVerificationImageItem[];
+  /**
+   * Parrainage. Detail-only: the list endpoint does not join the Referral
+   * relation, so putting these on AdminProfileListItem would promise every
+   * table row a field the API never sends.
+   */
+  referredBy: AdminProfileReferredBy | null;
+  /** How many people this profile has invited, in any payout state. */
+  referralsMadeCount: number;
 };
 
 export type AdminUpdateProfileParams = {

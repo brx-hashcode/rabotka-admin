@@ -9,6 +9,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
   CREDIT_JOB_POSTING: "Job Posting",
   CREDIT_COMMISSION: "Commission",
   WELCOME_CREDIT: "Welcome Credit",
+  REFERRAL_CREDIT: "Referral Credit",
   CONTACT_UNLOCK_DEBIT: "Contact Unlock",
   CONTACT_UNLOCK_CREDIT: "Contact Unlock Refund",
   CONTACT_UNLOCK_CREDIT_CONVERSION: "Unlock Expired",

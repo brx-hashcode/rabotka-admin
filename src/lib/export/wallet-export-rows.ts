@@ -31,6 +31,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
   CREDIT_COMMISSION: "Commission",
   CONTACT_UNLOCK_PAYMENT: "Contact Unlock",
   WELCOME_CREDIT: "Welcome Credit",
+  REFERRAL_CREDIT: "Referral Credit",
 };
 
 function isoOrEmpty(v: string | null | undefined): string {
