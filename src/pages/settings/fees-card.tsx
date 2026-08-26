@@ -13,6 +13,10 @@ type FormState = {
   "fees.reliability_score_min": string;
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
+  "fees.penalty_suspension_threshold": string;
+  "fees.penalty_hard_block_days": string;
+  "fees.penalty_max_notifications": string;
+  "fees.penalty_notification_interval_hours": string;
   "fees.max_concurrent_applications": string;
   "fees.max_daily_applications": string;
   "fees.contact_unlock_fee_employer": string;
@@ -21,6 +25,9 @@ type FormState = {
   "fees.contact_recommendation_fee_employer": string;
   "fees.welcome_credit_worker": string;
   "fees.welcome_credit_employer": string;
+  "fees.referral_credit_referrer": string;
+  "fees.referral_credit_referee": string;
+  "fees.referral_max_rewarded_per_referrer": string;
   "fees.completion_score_reward": string;
   "fees.rating_score_delta_1": string;
   "fees.rating_score_delta_2": string;
@@ -36,6 +43,10 @@ const EMPTY: FormState = {
   "fees.reliability_score_min": "",
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
+  "fees.penalty_suspension_threshold": "",
+  "fees.penalty_hard_block_days": "",
+  "fees.penalty_max_notifications": "",
+  "fees.penalty_notification_interval_hours": "",
   "fees.max_concurrent_applications": "",
   "fees.max_daily_applications": "",
   "fees.contact_unlock_fee_employer": "",
@@ -44,6 +55,9 @@ const EMPTY: FormState = {
   "fees.contact_recommendation_fee_employer": "",
   "fees.welcome_credit_worker": "",
   "fees.welcome_credit_employer": "",
+  "fees.referral_credit_referrer": "",
+  "fees.referral_credit_referee": "",
+  "fees.referral_max_rewarded_per_referrer": "",
   "fees.completion_score_reward": "",
   "fees.rating_score_delta_1": "",
   "fees.rating_score_delta_2": "",
@@ -51,6 +65,37 @@ const EMPTY: FormState = {
   "fees.rating_score_delta_4": "",
   "fees.rating_score_delta_5": "",
 };
+
+/**
+ * The parrainage payout floor — derived, never stored.
+ *
+ * There is no `fees.referral_minimum` key to edit, on purpose: the backend
+ * refuses to pay out more than the payment that triggered it, so the floor IS
+ * the two credits added together. A separate editable key would be a second
+ * number that could disagree with the one actually enforced.
+ *
+ * It is shown here because the consequence is otherwise invisible: raise the
+ * credits past a fee and that payment type silently stops rewarding anyone.
+ */
+function ReferralFloorNote({
+  referrer,
+  referee,
+}: Readonly<{ referrer: string; referee: string }>) {
+  const total = Number(referrer || 0) + Number(referee || 0);
+  if (!Number.isFinite(total) || total <= 0) return null;
+
+  return (
+    <div className="bg-muted mb-6 rounded-lg p-3">
+      <p className="text-xs">
+        <strong>Payout floor: {total.toLocaleString("fr-FR")} FCFA.</strong>{" "}
+        A referral pays out only when the referred user&apos;s first connection
+        payment reaches this amount — the program never pays out more than the
+        payment that triggered it. Keep it at or below the connection fees above,
+        or those payments will stop rewarding anyone.
+      </p>
+    </div>
+  );
+}
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -296,24 +341,136 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Platform thresholds
+          Parrainage
         </p>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+        <p className="text-muted-foreground mb-4 text-xs">
+          Paid when a referred user makes their <strong>first mobile-money
+          payment for a connection</strong> — never at signup, which would be
+          farmable with throwaway accounts.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <FieldLabel>Minimum reliability score</FieldLabel>
+            <FieldLabel>Referral credit – Referrer</FieldLabel>
             <NumericInput
-              value={form["fees.reliability_score_min"]}
-              onChange={(v) => set("fees.reliability_score_min", v)}
-              suffix="pts"
+              value={form["fees.referral_credit_referrer"]}
+              onChange={(v) => set("fees.referral_credit_referrer", v)}
+              suffix="FCFA"
             />
           </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Referral credit – Referee</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_credit_referee"]}
+              onChange={(v) => set("fees.referral_credit_referee", v)}
+              suffix="FCFA"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max rewarded per referrer</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_max_rewarded_per_referrer"]}
+              onChange={(v) =>
+                set("fees.referral_max_rewarded_per_referrer", v)
+              }
+              suffix="0 = unlimited"
+            />
+          </div>
+        </div>
+        <ReferralFloorNote
+          referrer={form["fees.referral_credit_referrer"]}
+          referee={form["fees.referral_credit_referee"]}
+        />
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Unpaid penalties – escalation
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Three steps, applied in order. <strong>Block</strong> flips the billing
+          status and diverts the WhatsApp conversation to the payment prompt.{" "}
+          <strong>Suspend</strong> disables the account — it is the harsher of
+          the two, so it is clamped to never fire before the block. The{" "}
+          <strong>hard block</strong> is time-based rather than count-based: one
+          penalty left unpaid this long stops the account applying, publishing
+          or unlocking a contact, and drops it out of the recommendation
+          fan-out.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
             <FieldLabel>Unpaid penalties before block</FieldLabel>
             <NumericInput
               value={form["fees.billing_block_threshold"]}
               onChange={(v) => set("fees.billing_block_threshold", v)}
+              min={1}
             />
           </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Unpaid penalties before suspension</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_suspension_threshold"]}
+              onChange={(v) => set("fees.penalty_suspension_threshold", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Hard block after</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_hard_block_days"]}
+              onChange={(v) => set("fees.penalty_hard_block_days", v)}
+              suffix="days"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Unpaid penalties – reminders
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          WhatsApp reminders for an unpaid penalty. The run stops at the hard
+          block above — past that the block itself is the message — so raising
+          the reminder count beyond that window has no effect. Keep the interval
+          just under 24h so a daily reminder does not drift later each day.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <FieldLabel>Max reminders per penalty</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_max_notifications"]}
+              onChange={(v) => set("fees.penalty_max_notifications", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Minimum gap between reminders</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_notification_interval_hours"]}
+              onChange={(v) =>
+                set("fees.penalty_notification_interval_hours", v)
+              }
+              suffix="h"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Platform thresholds
+        </p>
+        {/* No grid: this section has one field, and a two-column grid around a
+            single item just leaves half the row empty. */}
+        <div className="space-y-1.5">
+          <FieldLabel>Minimum reliability score</FieldLabel>
+          <NumericInput
+            value={form["fees.reliability_score_min"]}
+            onChange={(v) => set("fees.reliability_score_min", v)}
+            suffix="pts"
+          />
         </div>
 
         <Separator className="my-6" />

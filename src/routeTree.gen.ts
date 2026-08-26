@@ -18,6 +18,7 @@ import { Route as AuthenticatedWhatsappIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
 import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedReferralsIndexRouteImport } from './routes/_authenticated/referrals/index'
 import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
@@ -86,6 +87,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReferralsIndexRoute =
+  AuthenticatedReferralsIndexRouteImport.update({
+    id: '/referrals/',
+    path: '/referrals/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedProfilesIndexRoute =
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/profiles/': typeof AuthenticatedProfilesIndexRoute
+  '/referrals/': typeof AuthenticatedReferralsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/team/': typeof AuthenticatedTeamIndexRoute
   '/wallet/': typeof AuthenticatedWalletIndexRoute
@@ -274,6 +282,7 @@ export interface FileRoutesByTo {
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/profiles': typeof AuthenticatedProfilesIndexRoute
+  '/referrals': typeof AuthenticatedReferralsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/team': typeof AuthenticatedTeamIndexRoute
   '/wallet': typeof AuthenticatedWalletIndexRoute
@@ -308,6 +317,7 @@ export interface FileRoutesById {
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/profiles/': typeof AuthenticatedProfilesIndexRoute
+  '/_authenticated/referrals/': typeof AuthenticatedReferralsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
   '/_authenticated/wallet/': typeof AuthenticatedWalletIndexRoute
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/penalties/'
     | '/profile/'
     | '/profiles/'
+    | '/referrals/'
     | '/settings/'
     | '/team/'
     | '/wallet/'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/penalties'
     | '/profile'
     | '/profiles'
+    | '/referrals'
     | '/settings'
     | '/team'
     | '/wallet'
@@ -407,6 +419,7 @@ export interface FileRouteTypes {
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
     | '/_authenticated/profiles/'
+    | '/_authenticated/referrals/'
     | '/_authenticated/settings/'
     | '/_authenticated/team/'
     | '/_authenticated/wallet/'
@@ -483,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/referrals/': {
+      id: '/_authenticated/referrals/'
+      path: '/referrals'
+      fullPath: '/referrals/'
+      preLoaderRoute: typeof AuthenticatedReferralsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profiles/': {
@@ -666,6 +686,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
   AuthenticatedProfilesIndexRoute: typeof AuthenticatedProfilesIndexRoute
+  AuthenticatedReferralsIndexRoute: typeof AuthenticatedReferralsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
   AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
@@ -698,6 +719,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
   AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
   AuthenticatedProfilesIndexRoute: AuthenticatedProfilesIndexRoute,
+  AuthenticatedReferralsIndexRoute: AuthenticatedReferralsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
   AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
