@@ -7,6 +7,7 @@ import {
   IconLock,
   IconPlus,
   IconGift,
+  IconUsers,
   IconUserPlus,
   IconDeviceMobile,
   IconArrowBackUp,
@@ -39,6 +40,7 @@ import { groupByDay } from "#/lib/date-grouping";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   WELCOME_CREDIT: "Welcome credit",
+  REFERRAL_CREDIT: "Referral credit",
   MANUAL_CREDIT: "Manual credit (admin)",
   CONTACT_UNLOCK_DEBIT: "Contact unlock",
   CONTACT_UNLOCK_CREDIT: "Contact unlock refund",
@@ -63,6 +65,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
  */
 const TX_TYPE_ICONS: Record<string, ComponentType<IconProps>> = {
   WELCOME_CREDIT: IconGift,
+  REFERRAL_CREDIT: IconUsers,
   MANUAL_CREDIT: IconUserPlus,
   CONTACT_UNLOCK_DEBIT: IconLock,
   CONTACT_UNLOCK_CREDIT: IconArrowBackUp,
@@ -104,6 +107,7 @@ function isCredit(type: string): boolean {
     type === "CONTACT_UNLOCK_CREDIT_CONVERSION" ||
     type === "MOBILE_MONEY_TOPUP" ||
     type === "TOP_UP_CREDIT" ||
+    type === "REFERRAL_CREDIT" ||
     type === "CREDIT"
   );
 }

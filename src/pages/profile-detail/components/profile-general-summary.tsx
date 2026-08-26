@@ -2,7 +2,9 @@ import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
 import {
   getAccountStatusLabel,
   getVerificationStatusLabel,
+  getReferralStatusBadgeClass,
   PENALTY_PAYMENT_STATUS_LABELS,
+  REFERRAL_STATUS_LABELS,
 } from "#/lib/status-labels";
 
 import { Badge } from "#/components/ui/badge";
@@ -95,6 +97,47 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
         <CardContent>
           <div className="space-y-4 text-sm">
             <Row label="Member since">{formatDate(profile.createdAt)}</Row>
+
+            {/* Who brought this person in, and whether that parrainage ever
+                paid. The status matters as much as the name: "referred by X"
+                with nothing paid is the shape of both an honest pending
+                referral and a farm, and the badge is what separates them. */}
+            <Row label="Referred by">
+              {profile.referredBy ? (
+                <span className="flex flex-col items-end gap-1">
+                  <Link
+                    to="/profiles/$profileId"
+                    params={{ profileId: profile.referredBy.profileId }}
+                    className="hover:underline"
+                  >
+                    {profile.referredBy.firstName} {profile.referredBy.lastName}
+                  </Link>
+                  <span className="flex items-center gap-2">
+                    <Badge
+                      className={getReferralStatusBadgeClass(
+                        profile.referredBy.status,
+                      )}
+                    >
+                      {REFERRAL_STATUS_LABELS[profile.referredBy.status]}
+                    </Badge>
+                    <span className="text-muted-foreground font-mono text-xs font-normal">
+                      {profile.referredBy.code}
+                    </span>
+                  </span>
+                  {profile.referredBy.settlementNote && (
+                    <span className="text-muted-foreground max-w-[16rem] text-xs font-normal">
+                      {profile.referredBy.settlementNote}
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-muted-foreground font-normal">—</span>
+              )}
+            </Row>
+
+            {profile.referralsMadeCount > 0 && (
+              <Row label="Referrals made">{profile.referralsMadeCount}</Row>
+            )}
 
             {/* With the time, and never both a dash and an explanation: "an
                 hour ago" and "at 3am" are different answers to whether the
