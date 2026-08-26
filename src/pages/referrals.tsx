@@ -128,7 +128,10 @@ export default function ReferralsPage() {
   const { data, total, isLoading } = useReferrals();
 
   return (
-    <div className="space-y-6">
+    // pt-6 to clear the breadcrumb, matching wallet.tsx and penalties.tsx —
+    // the Layout does not pad its own content, so a page without it sits flush
+    // against the header.
+    <div className="flex flex-col gap-6 pt-6">
       <ReferralStats />
       <DataTable
         isPaginated
