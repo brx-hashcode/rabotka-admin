@@ -33,7 +33,7 @@ import {
   useSidebar,
 } from "#/components/ui/sidebar";
 import { logout } from "#/lib/api/auth-controller";
-import { getQueryClient } from "#/app/providers";
+import { signOut } from "#/lib/auth/session";
 import { useNavigate } from "@tanstack/react-router";
 
 type NavUserProps = {
@@ -50,9 +50,15 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleLogout = async () => {
+    // Keep the server call — unlike an expiry, the cookie is still valid here
+    // and revoking it is the entire point.
     await logout().catch(() => null);
-    getQueryClient().removeQueries({ queryKey: ["admin", "me"] });
-    await navigate({ to: "/auth/login", search: { redirect: "" } });
+    // Then the same teardown an expiry performs, and a HARD navigation. The
+    // soft navigate this used to do left all four socket namespaces connected
+    // and the whole query cache except ["admin","me"] alive into the next
+    // session — on a shared workstation the next admin rendered the previous
+    // admin's data.
+    signOut();
   };
 
   return (

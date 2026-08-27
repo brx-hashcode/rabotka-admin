@@ -41,6 +41,7 @@ import { docCategoryLabel, docTypeLabel, formatDate } from "../helpers";
 import { appConfig } from "#/config";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
 import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
+import { guardResponse } from "#/lib/auth/session";
 
 export { isLikelyImageAsset };
 
@@ -67,7 +68,12 @@ async function downloadViaProxy(fileUrl: string, filename: string) {
   const proxyUrl = isOwnApi
     ? fileUrl
     : `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
-  const res = await fetch(proxyUrl, { credentials: "include" });
+  // Guarded: a raw media fetch bypasses the controller, so a 401 here would
+  // otherwise never reach the session interceptor.
+  const res = guardResponse(
+    proxyUrl,
+    await fetch(proxyUrl, { credentials: "include" }),
+  );
   if (!res.ok) throw new Error("Download failed");
   const blob = await res.blob();
   const objectUrl = URL.createObjectURL(blob);
@@ -724,8 +730,9 @@ function MarkdownViewer({
     const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(url)}`;
     fetch(proxyUrl, { credentials: "include" })
       .then((r) => {
-        if (!r.ok) throw new Error("fetch failed");
-        return r.text();
+        const res = guardResponse(proxyUrl, r);
+        if (!res.ok) throw new Error("fetch failed");
+        return res.text();
       })
       .then(setContent)
       .catch(() => setError(true));
