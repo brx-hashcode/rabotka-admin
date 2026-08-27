@@ -3,6 +3,7 @@ import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 import { IconDeviceMobile } from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
 import { SheetTrigger } from "#/components/ui/sheet";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
 import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
@@ -219,6 +220,10 @@ export default function WalletPage() {
 
   return (
     <div className="flex flex-col gap-6 pt-6">
+      <PageListHeader
+        title="Finance"
+        description="Revenue, payments and wallet movements across the platform."
+      />
       <WalletInfoCard />
       <div className="grid grid-cols-12 items-stretch gap-4">
         <div className="col-span-12 min-h-0 lg:col-span-9">

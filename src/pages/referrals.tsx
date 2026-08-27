@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { DateRangePicker } from "#/components/ui/date-range-picker";
 import { referralColumns } from "#/features/referral/components/referral-columns";
@@ -132,6 +133,10 @@ export default function ReferralsPage() {
     // the Layout does not pad its own content, so a page without it sits flush
     // against the header.
     <div className="flex flex-col gap-6 pt-6">
+      <PageListHeader
+        title="Parrainage"
+        description="Referrals, their payout state and the reason when nothing was paid."
+      />
       <ReferralStats />
       <DataTable
         isPaginated
