@@ -23,6 +23,7 @@ import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
+import { Route as AuthenticatedOauthAppsIndexRouteImport } from './routes/_authenticated/oauth-apps/index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedNetworkIndexRouteImport } from './routes/_authenticated/network/index'
 import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
@@ -117,6 +118,12 @@ const AuthenticatedPaymentRequestsIndexRoute =
   AuthenticatedPaymentRequestsIndexRouteImport.update({
     id: '/payment-requests/',
     path: '/payment-requests/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedOauthAppsIndexRoute =
+  AuthenticatedOauthAppsIndexRouteImport.update({
+    id: '/oauth-apps/',
+    path: '/oauth-apps/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedNotificationsIndexRoute =
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/logs/': typeof AuthenticatedLogsIndexRoute
   '/network/': typeof AuthenticatedNetworkIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -278,6 +286,7 @@ export interface FileRoutesByTo {
   '/logs': typeof AuthenticatedLogsIndexRoute
   '/network': typeof AuthenticatedNetworkIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
+  '/oauth-apps': typeof AuthenticatedOauthAppsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
   '/_authenticated/network/': typeof AuthenticatedNetworkIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/_authenticated/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/logs/'
     | '/network/'
     | '/notifications/'
+    | '/oauth-apps/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/network'
     | '/notifications'
+    | '/oauth-apps'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/logs/'
     | '/_authenticated/network/'
     | '/_authenticated/notifications/'
+    | '/_authenticated/oauth-apps/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -531,6 +544,13 @@ declare module '@tanstack/react-router' {
       path: '/payment-requests'
       fullPath: '/payment-requests/'
       preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/oauth-apps/': {
+      id: '/_authenticated/oauth-apps/'
+      path: '/oauth-apps'
+      fullPath: '/oauth-apps/'
+      preLoaderRoute: typeof AuthenticatedOauthAppsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notifications/': {
@@ -682,6 +702,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
   AuthenticatedNetworkIndexRoute: typeof AuthenticatedNetworkIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
+  AuthenticatedOauthAppsIndexRoute: typeof AuthenticatedOauthAppsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -714,6 +735,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
   AuthenticatedNetworkIndexRoute: AuthenticatedNetworkIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
+  AuthenticatedOauthAppsIndexRoute: AuthenticatedOauthAppsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
