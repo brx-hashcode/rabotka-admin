@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
   DndContext,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -15,6 +17,7 @@ import type {
 } from "#/lib/api/claims-controller";
 import { useClaimsBoard } from "#/hooks/use-claims-board";
 import { ClaimColumn } from "./claim-column";
+import { ClaimCardOverlay } from "./claim-card";
 
 type ClaimBoardProps = {
   onViewDetail: (claim: AdminClaimItem) => void;
@@ -26,6 +29,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   const [localOverrides, setLocalOverrides] = useState<
     Record<string, AdminClaimStatus>
   >({});
+  const [activeClaim, setActiveClaim] = useState<AdminClaimItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -47,8 +51,13 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     },
   });
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveClaim((event.active.data.current?.claim as AdminClaimItem) ?? null);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveClaim(null);
     if (!over) return;
 
     const claimId = active.id as string;
@@ -81,7 +90,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
 
   if (isLoading) {
     return (
-      <div className="flex gap-4">
+      <div className="flex min-h-0 flex-1 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
@@ -93,8 +102,13 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4">
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveClaim(null)}
+    >
+      <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-1">
         {allStatuses.map((status) => (
           <ClaimColumn
             key={status}
@@ -104,6 +118,12 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
           />
         ))}
       </div>
+
+      {/* Rendered outside the columns, so the card in flight is never clipped
+          by the panel it is leaving nor painted under the one it is entering. */}
+      <DragOverlay dropAnimation={null}>
+        {activeClaim ? <ClaimCardOverlay claim={activeClaim} /> : null}
+      </DragOverlay>
     </DndContext>
   );
 }
