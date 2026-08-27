@@ -64,6 +64,8 @@ export function Layout({
     return null;
   }
 
+  const pageHeader = renderPageHeader();
+
   return (
     <SidebarProvider style={SIDEBAR_STYLE}>
       <AppSidebar variant="inset" />
@@ -118,8 +120,20 @@ export function Layout({
               !fullBleed && "px-4 lg:px-6",
             )}
           >
-            {renderPageHeader()}
-            <div className={cn(fullBleed ? "flex min-h-0 flex-1 flex-col" : "pb-6")}>
+            {pageHeader}
+            <div
+              className={cn(
+                fullBleed ? "flex min-h-0 flex-1 flex-col" : "pb-6",
+                // `renderPageHeader` returns null for the commonest shape in
+                // this app — breadcrumbs, no description — and the content then
+                // sat flush against the breadcrumb bar's border. Every such page
+                // (job categories, settings, referrals, feedback, ads…) was
+                // missing its top margin; the pages that pass a description got
+                // theirs from that paragraph's `py-2` by accident rather than by
+                // design.
+                !fullBleed && pageHeader === null && "pt-4 lg:pt-6",
+              )}
+            >
               {children}
             </div>
           </div>

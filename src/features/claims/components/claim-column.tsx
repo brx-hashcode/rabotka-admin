@@ -1,4 +1,8 @@
 import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { cn } from "#/lib/utils";
 import { Badge } from "#/components/ui/badge";
 import { ClaimCard } from "./claim-card";
@@ -46,9 +50,14 @@ export function ClaimColumn({ status, claims, onViewDetail }: Readonly<ClaimColu
         )}
       >
         <div className="absolute inset-0 flex flex-col gap-2 overflow-y-auto p-2">
-          {claims.map((claim) => (
-            <ClaimCard key={claim.id} claim={claim} onViewDetail={onViewDetail} />
-          ))}
+          <SortableContext
+            items={claims.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {claims.map((claim) => (
+              <ClaimCard key={claim.id} claim={claim} onViewDetail={onViewDetail} />
+            ))}
+          </SortableContext>
         </div>
       </div>
     </div>
