@@ -1,7 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { cn } from "#/lib/utils";
 import type { AdminClaimItem } from "#/lib/api/claims-controller";
 
 type ClaimCardProps = {
@@ -9,17 +9,10 @@ type ClaimCardProps = {
   onViewDetail: (claim: AdminClaimItem) => void;
 };
 
-export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: claim.id,
-    data: { claim },
-  });
+const CARD_CLASS =
+  "bg-card border rounded-lg p-3 shadow-sm select-none";
 
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-  };
-
+function ClaimCardBody({ claim }: Readonly<{ claim: AdminClaimItem }>) {
   const initials = claim.profileName
     ? claim.profileName
         .split(" ")
@@ -30,14 +23,7 @@ export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
     : "?";
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className="bg-card border rounded-lg p-3 shadow-sm cursor-grab active:cursor-grabbing select-none"
-      onClick={() => onViewDetail(claim)}
-    >
+    <>
       <p className="text-sm font-medium line-clamp-2 mb-2">{claim.title}</p>
 
       <div className="flex items-center gap-2 mb-2">
@@ -64,6 +50,42 @@ export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
           {format(new Date(claim.createdAt), "MMM d")}
         </span>
       </div>
+    </>
+  );
+}
+
+export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: claim.id,
+    data: { claim },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      // No transform here: the card that follows the cursor is the DragOverlay
+      // in `claim-board.tsx`. Moving this one instead would put it under the
+      // next column and clip it against its own scrolling panel. What is left
+      // in place is the hole the card came out of.
+      className={cn(
+        CARD_CLASS,
+        "shrink-0 cursor-grab active:cursor-grabbing",
+        isDragging && "opacity-40",
+      )}
+      onClick={() => onViewDetail(claim)}
+    >
+      <ClaimCardBody claim={claim} />
+    </div>
+  );
+}
+
+/** The card as it looks under the cursor: lifted, and above every column. */
+export function ClaimCardOverlay({ claim }: Readonly<{ claim: AdminClaimItem }>) {
+  return (
+    <div className={cn(CARD_CLASS, "cursor-grabbing shadow-lg rotate-2")}>
+      <ClaimCardBody claim={claim} />
     </div>
   );
 }
