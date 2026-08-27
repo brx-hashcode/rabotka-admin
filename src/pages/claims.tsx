@@ -17,7 +17,7 @@ export default function ClaimsPage() {
   const { canManageContent } = useRole();
 
   return (
-    <div className="flex h-full flex-col gap-4 pt-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pt-6 pb-6 lg:px-6">
       <PageListHeader
         title="Expense Claims"
         description="Review and manage worker and employer claims from the board."

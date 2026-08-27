@@ -10,6 +10,11 @@ export const Route = createFileRoute("/_authenticated/claim/")({
         { label: "Dashboard", href: "/" },
         { label: "Expense Claims" },
       ]}
+      // The board owns the height: each column scrolls its own cards, so the
+      // page itself must not grow past the viewport. `fullBleed` is what gives
+      // the page a bounded, flex-able container; the padding it drops is put
+      // back on the page root.
+      fullBleed
     >
       <ClaimsPage />
     </Layout>
