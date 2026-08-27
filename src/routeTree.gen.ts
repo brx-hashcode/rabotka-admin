@@ -11,36 +11,37 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthQrConfirmRouteImport } from './routes/auth/qr-confirm'
-import { Route as AuthPhonePairRouteImport } from './routes/auth/phone-pair'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthenticatedWhatsappIndexRouteImport } from './routes/_authenticated/whatsapp/index'
-import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
-import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedReferralsIndexRouteImport } from './routes/_authenticated/referrals/index'
-import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
-import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
-import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
-import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
-import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
-import { Route as AuthenticatedNetworkIndexRouteImport } from './routes/_authenticated/network/index'
-import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
-import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
-import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
-import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
-import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback/index'
-import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
-import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
-import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
-import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat/index'
-import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
-import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
+import { Route as AuthPhonePairRouteImport } from './routes/auth/phone-pair'
+import { Route as AuthQrConfirmRouteImport } from './routes/auth/qr-confirm'
 import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
-import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
-import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
-import { Route as AuthenticatedJobsJobIdRouteImport } from './routes/_authenticated/jobs/$jobId'
+import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
+import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedApplicationsApplicationIdRouteImport } from './routes/_authenticated/applications/$applicationId'
+import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat/index'
+import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
+import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
+import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
+import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback/index'
+import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help/index'
+import { Route as AuthenticatedJobCategoriesIndexRouteImport } from './routes/_authenticated/job-categories/index'
+import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs/index'
+import { Route as AuthenticatedJobsJobIdRouteImport } from './routes/_authenticated/jobs/$jobId'
+import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authenticated/logs/index'
+import { Route as AuthenticatedNetworkIndexRouteImport } from './routes/_authenticated/network/index'
+import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
+import { Route as AuthenticatedOauthAppsIndexRouteImport } from './routes/_authenticated/oauth-apps/index'
+import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
+import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
+import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
+import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
+import { Route as AuthenticatedProfilesIndexRouteImport } from './routes/_authenticated/profiles/index'
+import { Route as AuthenticatedProfilesProfileIdRouteImport } from './routes/_authenticated/profiles/$profileId'
+import { Route as AuthenticatedReferralsIndexRouteImport } from './routes/_authenticated/referrals/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team/index'
+import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet/index'
+import { Route as AuthenticatedWhatsappIndexRouteImport } from './routes/_authenticated/whatsapp/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -51,9 +52,9 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthQrConfirmRoute = AuthQrConfirmRouteImport.update({
-  id: '/auth/qr-confirm',
-  path: '/auth/qr-confirm',
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthPhonePairRoute = AuthPhonePairRouteImport.update({
@@ -61,129 +62,15 @@ const AuthPhonePairRoute = AuthPhonePairRouteImport.update({
   path: '/auth/phone-pair',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
+const AuthQrConfirmRoute = AuthQrConfirmRouteImport.update({
+  id: '/auth/qr-confirm',
+  path: '/auth/qr-confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWhatsappIndexRoute =
-  AuthenticatedWhatsappIndexRouteImport.update({
-    id: '/whatsapp/',
-    path: '/whatsapp/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedWalletIndexRoute =
-  AuthenticatedWalletIndexRouteImport.update({
-    id: '/wallet/',
-    path: '/wallet/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
-  id: '/team/',
-  path: '/team/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
-    id: '/settings/',
-    path: '/settings/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedReferralsIndexRoute =
-  AuthenticatedReferralsIndexRouteImport.update({
-    id: '/referrals/',
-    path: '/referrals/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedProfilesIndexRoute =
-  AuthenticatedProfilesIndexRouteImport.update({
-    id: '/profiles/',
-    path: '/profiles/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedProfileIndexRoute =
-  AuthenticatedProfileIndexRouteImport.update({
-    id: '/profile/',
-    path: '/profile/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedPenaltiesIndexRoute =
-  AuthenticatedPenaltiesIndexRouteImport.update({
-    id: '/penalties/',
-    path: '/penalties/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedPaymentRequestsIndexRoute =
-  AuthenticatedPaymentRequestsIndexRouteImport.update({
-    id: '/payment-requests/',
-    path: '/payment-requests/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedNotificationsIndexRoute =
-  AuthenticatedNotificationsIndexRouteImport.update({
-    id: '/notifications/',
-    path: '/notifications/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedNetworkIndexRoute =
-  AuthenticatedNetworkIndexRouteImport.update({
-    id: '/network/',
-    path: '/network/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedLogsIndexRoute = AuthenticatedLogsIndexRouteImport.update({
-  id: '/logs/',
-  path: '/logs/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
-  id: '/jobs/',
-  path: '/jobs/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedJobCategoriesIndexRoute =
-  AuthenticatedJobCategoriesIndexRouteImport.update({
-    id: '/job-categories/',
-    path: '/job-categories/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
-  id: '/help/',
-  path: '/help/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFeedbackIndexRoute =
-  AuthenticatedFeedbackIndexRouteImport.update({
-    id: '/feedback/',
-    path: '/feedback/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedEventsIndexRoute =
-  AuthenticatedEventsIndexRouteImport.update({
-    id: '/events/',
-    path: '/events/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedDocumentsIndexRoute =
-  AuthenticatedDocumentsIndexRouteImport.update({
-    id: '/documents/',
-    path: '/documents/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedClaimIndexRoute = AuthenticatedClaimIndexRouteImport.update({
-  id: '/claim/',
-  path: '/claim/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedApplicationsIndexRoute =
-  AuthenticatedApplicationsIndexRouteImport.update({
-    id: '/applications/',
-    path: '/applications/',
+const AuthenticatedAdsBundlesIndexRoute =
+  AuthenticatedAdsBundlesIndexRouteImport.update({
+    id: '/ads-bundles/',
+    path: '/ads-bundles/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdvertisementsIndexRoute =
@@ -192,16 +79,100 @@ const AuthenticatedAdvertisementsIndexRoute =
     path: '/advertisements/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdsBundlesIndexRoute =
-  AuthenticatedAdsBundlesIndexRouteImport.update({
-    id: '/ads-bundles/',
-    path: '/ads-bundles/',
+const AuthenticatedApplicationsIndexRoute =
+  AuthenticatedApplicationsIndexRouteImport.update({
+    id: '/applications/',
+    path: '/applications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedProfilesProfileIdRoute =
-  AuthenticatedProfilesProfileIdRouteImport.update({
-    id: '/profiles/$profileId',
-    path: '/profiles/$profileId',
+const AuthenticatedApplicationsApplicationIdRoute =
+  AuthenticatedApplicationsApplicationIdRouteImport.update({
+    id: '/applications/$applicationId',
+    path: '/applications/$applicationId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
+  id: '/chat/',
+  path: '/chat/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedClaimIndexRoute = AuthenticatedClaimIndexRouteImport.update({
+  id: '/claim/',
+  path: '/claim/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDocumentsIndexRoute =
+  AuthenticatedDocumentsIndexRouteImport.update({
+    id: '/documents/',
+    path: '/documents/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventsIndexRoute =
+  AuthenticatedEventsIndexRouteImport.update({
+    id: '/events/',
+    path: '/events/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFeedbackIndexRoute =
+  AuthenticatedFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedJobCategoriesIndexRoute =
+  AuthenticatedJobCategoriesIndexRouteImport.update({
+    id: '/job-categories/',
+    path: '/job-categories/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedJobsJobIdRoute = AuthenticatedJobsJobIdRouteImport.update({
+  id: '/jobs/$jobId',
+  path: '/jobs/$jobId',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLogsIndexRoute = AuthenticatedLogsIndexRouteImport.update({
+  id: '/logs/',
+  path: '/logs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNetworkIndexRoute =
+  AuthenticatedNetworkIndexRouteImport.update({
+    id: '/network/',
+    path: '/network/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedOauthAppsIndexRoute =
+  AuthenticatedOauthAppsIndexRouteImport.update({
+    id: '/oauth-apps/',
+    path: '/oauth-apps/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPaymentRequestsIndexRoute =
+  AuthenticatedPaymentRequestsIndexRouteImport.update({
+    id: '/payment-requests/',
+    path: '/payment-requests/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPenaltiesIndexRoute =
+  AuthenticatedPenaltiesIndexRouteImport.update({
+    id: '/penalties/',
+    path: '/penalties/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedPenaltiesPenaltyIdRoute =
@@ -210,15 +181,51 @@ const AuthenticatedPenaltiesPenaltyIdRoute =
     path: '/penalties/$penaltyId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedJobsJobIdRoute = AuthenticatedJobsJobIdRouteImport.update({
-  id: '/jobs/$jobId',
-  path: '/jobs/$jobId',
+const AuthenticatedProfileIndexRoute =
+  AuthenticatedProfileIndexRouteImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProfilesIndexRoute =
+  AuthenticatedProfilesIndexRouteImport.update({
+    id: '/profiles/',
+    path: '/profiles/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProfilesProfileIdRoute =
+  AuthenticatedProfilesProfileIdRouteImport.update({
+    id: '/profiles/$profileId',
+    path: '/profiles/$profileId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReferralsIndexRoute =
+  AuthenticatedReferralsIndexRouteImport.update({
+    id: '/referrals/',
+    path: '/referrals/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
+  id: '/team/',
+  path: '/team/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedApplicationsApplicationIdRoute =
-  AuthenticatedApplicationsApplicationIdRouteImport.update({
-    id: '/applications/$applicationId',
-    path: '/applications/$applicationId',
+const AuthenticatedWalletIndexRoute =
+  AuthenticatedWalletIndexRouteImport.update({
+    id: '/wallet/',
+    path: '/wallet/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWhatsappIndexRoute =
+  AuthenticatedWhatsappIndexRouteImport.update({
+    id: '/whatsapp/',
+    path: '/whatsapp/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/logs/': typeof AuthenticatedLogsIndexRoute
   '/network/': typeof AuthenticatedNetworkIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -278,6 +286,7 @@ export interface FileRoutesByTo {
   '/logs': typeof AuthenticatedLogsIndexRoute
   '/network': typeof AuthenticatedNetworkIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
+  '/oauth-apps': typeof AuthenticatedOauthAppsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/logs/': typeof AuthenticatedLogsIndexRoute
   '/_authenticated/network/': typeof AuthenticatedNetworkIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/_authenticated/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/logs/'
     | '/network/'
     | '/notifications/'
+    | '/oauth-apps/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/network'
     | '/notifications'
+    | '/oauth-apps'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/logs/'
     | '/_authenticated/network/'
     | '/_authenticated/notifications/'
+    | '/_authenticated/oauth-apps/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -449,11 +462,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/auth/qr-confirm': {
-      id: '/auth/qr-confirm'
-      path: '/auth/qr-confirm'
-      fullPath: '/auth/qr-confirm'
-      preLoaderRoute: typeof AuthQrConfirmRouteImport
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/phone-pair': {
@@ -463,158 +476,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPhonePairRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
+    '/auth/qr-confirm': {
+      id: '/auth/qr-confirm'
+      path: '/auth/qr-confirm'
+      fullPath: '/auth/qr-confirm'
+      preLoaderRoute: typeof AuthQrConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/whatsapp/': {
-      id: '/_authenticated/whatsapp/'
-      path: '/whatsapp'
-      fullPath: '/whatsapp/'
-      preLoaderRoute: typeof AuthenticatedWhatsappIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/wallet/': {
-      id: '/_authenticated/wallet/'
-      path: '/wallet'
-      fullPath: '/wallet/'
-      preLoaderRoute: typeof AuthenticatedWalletIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/team/': {
-      id: '/_authenticated/team/'
-      path: '/team'
-      fullPath: '/team/'
-      preLoaderRoute: typeof AuthenticatedTeamIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
-      path: '/settings'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/referrals/': {
-      id: '/_authenticated/referrals/'
-      path: '/referrals'
-      fullPath: '/referrals/'
-      preLoaderRoute: typeof AuthenticatedReferralsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/profiles/': {
-      id: '/_authenticated/profiles/'
-      path: '/profiles'
-      fullPath: '/profiles/'
-      preLoaderRoute: typeof AuthenticatedProfilesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/profile/': {
-      id: '/_authenticated/profile/'
-      path: '/profile'
-      fullPath: '/profile/'
-      preLoaderRoute: typeof AuthenticatedProfileIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/penalties/': {
-      id: '/_authenticated/penalties/'
-      path: '/penalties'
-      fullPath: '/penalties/'
-      preLoaderRoute: typeof AuthenticatedPenaltiesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/payment-requests/': {
-      id: '/_authenticated/payment-requests/'
-      path: '/payment-requests'
-      fullPath: '/payment-requests/'
-      preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notifications/': {
-      id: '/_authenticated/notifications/'
-      path: '/notifications'
-      fullPath: '/notifications/'
-      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/network/': {
-      id: '/_authenticated/network/'
-      path: '/network'
-      fullPath: '/network/'
-      preLoaderRoute: typeof AuthenticatedNetworkIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/logs/': {
-      id: '/_authenticated/logs/'
-      path: '/logs'
-      fullPath: '/logs/'
-      preLoaderRoute: typeof AuthenticatedLogsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/jobs/': {
-      id: '/_authenticated/jobs/'
-      path: '/jobs'
-      fullPath: '/jobs/'
-      preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/job-categories/': {
-      id: '/_authenticated/job-categories/'
-      path: '/job-categories'
-      fullPath: '/job-categories/'
-      preLoaderRoute: typeof AuthenticatedJobCategoriesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/help/': {
-      id: '/_authenticated/help/'
-      path: '/help'
-      fullPath: '/help/'
-      preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/feedback/': {
-      id: '/_authenticated/feedback/'
-      path: '/feedback'
-      fullPath: '/feedback/'
-      preLoaderRoute: typeof AuthenticatedFeedbackIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/events/': {
-      id: '/_authenticated/events/'
-      path: '/events'
-      fullPath: '/events/'
-      preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/documents/': {
-      id: '/_authenticated/documents/'
-      path: '/documents'
-      fullPath: '/documents/'
-      preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/claim/': {
-      id: '/_authenticated/claim/'
-      path: '/claim'
-      fullPath: '/claim/'
-      preLoaderRoute: typeof AuthenticatedClaimIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/chat/': {
-      id: '/_authenticated/chat/'
-      path: '/chat'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/applications/': {
-      id: '/_authenticated/applications/'
-      path: '/applications'
-      fullPath: '/applications/'
-      preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
+    '/_authenticated/ads-bundles/': {
+      id: '/_authenticated/ads-bundles/'
+      path: '/ads-bundles'
+      fullPath: '/ads-bundles/'
+      preLoaderRoute: typeof AuthenticatedAdsBundlesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/advertisements/': {
@@ -624,25 +497,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdvertisementsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/ads-bundles/': {
-      id: '/_authenticated/ads-bundles/'
-      path: '/ads-bundles'
-      fullPath: '/ads-bundles/'
-      preLoaderRoute: typeof AuthenticatedAdsBundlesIndexRouteImport
+    '/_authenticated/applications/': {
+      id: '/_authenticated/applications/'
+      path: '/applications'
+      fullPath: '/applications/'
+      preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/profiles/$profileId': {
-      id: '/_authenticated/profiles/$profileId'
-      path: '/profiles/$profileId'
-      fullPath: '/profiles/$profileId'
-      preLoaderRoute: typeof AuthenticatedProfilesProfileIdRouteImport
+    '/_authenticated/applications/$applicationId': {
+      id: '/_authenticated/applications/$applicationId'
+      path: '/applications/$applicationId'
+      fullPath: '/applications/$applicationId'
+      preLoaderRoute: typeof AuthenticatedApplicationsApplicationIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/penalties/$penaltyId': {
-      id: '/_authenticated/penalties/$penaltyId'
-      path: '/penalties/$penaltyId'
-      fullPath: '/penalties/$penaltyId'
-      preLoaderRoute: typeof AuthenticatedPenaltiesPenaltyIdRouteImport
+    '/_authenticated/chat/': {
+      id: '/_authenticated/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/claim/': {
+      id: '/_authenticated/claim/'
+      path: '/claim'
+      fullPath: '/claim/'
+      preLoaderRoute: typeof AuthenticatedClaimIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/documents/': {
+      id: '/_authenticated/documents/'
+      path: '/documents'
+      fullPath: '/documents/'
+      preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/events/': {
+      id: '/_authenticated/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/feedback/': {
+      id: '/_authenticated/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof AuthenticatedFeedbackIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/help/': {
+      id: '/_authenticated/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/job-categories/': {
+      id: '/_authenticated/job-categories/'
+      path: '/job-categories'
+      fullPath: '/job-categories/'
+      preLoaderRoute: typeof AuthenticatedJobCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/jobs/': {
+      id: '/_authenticated/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/jobs/$jobId': {
@@ -652,11 +574,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsJobIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/applications/$applicationId': {
-      id: '/_authenticated/applications/$applicationId'
-      path: '/applications/$applicationId'
-      fullPath: '/applications/$applicationId'
-      preLoaderRoute: typeof AuthenticatedApplicationsApplicationIdRouteImport
+    '/_authenticated/logs/': {
+      id: '/_authenticated/logs/'
+      path: '/logs'
+      fullPath: '/logs/'
+      preLoaderRoute: typeof AuthenticatedLogsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/network/': {
+      id: '/_authenticated/network/'
+      path: '/network'
+      fullPath: '/network/'
+      preLoaderRoute: typeof AuthenticatedNetworkIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/oauth-apps/': {
+      id: '/_authenticated/oauth-apps/'
+      path: '/oauth-apps'
+      fullPath: '/oauth-apps/'
+      preLoaderRoute: typeof AuthenticatedOauthAppsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/payment-requests/': {
+      id: '/_authenticated/payment-requests/'
+      path: '/payment-requests'
+      fullPath: '/payment-requests/'
+      preLoaderRoute: typeof AuthenticatedPaymentRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/penalties/': {
+      id: '/_authenticated/penalties/'
+      path: '/penalties'
+      fullPath: '/penalties/'
+      preLoaderRoute: typeof AuthenticatedPenaltiesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/penalties/$penaltyId': {
+      id: '/_authenticated/penalties/$penaltyId'
+      path: '/penalties/$penaltyId'
+      fullPath: '/penalties/$penaltyId'
+      preLoaderRoute: typeof AuthenticatedPenaltiesPenaltyIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AuthenticatedProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profiles/': {
+      id: '/_authenticated/profiles/'
+      path: '/profiles'
+      fullPath: '/profiles/'
+      preLoaderRoute: typeof AuthenticatedProfilesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profiles/$profileId': {
+      id: '/_authenticated/profiles/$profileId'
+      path: '/profiles/$profileId'
+      fullPath: '/profiles/$profileId'
+      preLoaderRoute: typeof AuthenticatedProfilesProfileIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/referrals/': {
+      id: '/_authenticated/referrals/'
+      path: '/referrals'
+      fullPath: '/referrals/'
+      preLoaderRoute: typeof AuthenticatedReferralsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/team/': {
+      id: '/_authenticated/team/'
+      path: '/team'
+      fullPath: '/team/'
+      preLoaderRoute: typeof AuthenticatedTeamIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/wallet/': {
+      id: '/_authenticated/wallet/'
+      path: '/wallet'
+      fullPath: '/wallet/'
+      preLoaderRoute: typeof AuthenticatedWalletIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/whatsapp/': {
+      id: '/_authenticated/whatsapp/'
+      path: '/whatsapp'
+      fullPath: '/whatsapp/'
+      preLoaderRoute: typeof AuthenticatedWhatsappIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
   }
@@ -682,6 +702,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLogsIndexRoute: typeof AuthenticatedLogsIndexRoute
   AuthenticatedNetworkIndexRoute: typeof AuthenticatedNetworkIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
+  AuthenticatedOauthAppsIndexRoute: typeof AuthenticatedOauthAppsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -714,6 +735,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLogsIndexRoute: AuthenticatedLogsIndexRoute,
   AuthenticatedNetworkIndexRoute: AuthenticatedNetworkIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
+  AuthenticatedOauthAppsIndexRoute: AuthenticatedOauthAppsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,
