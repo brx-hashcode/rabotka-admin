@@ -45,7 +45,12 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/network": "full",
     "/feedback": "full",
     "/logs": "full",
-    // NOT PRESENT, deliberately: /team and /settings.
+    // NOT PRESENT, deliberately: /team, /settings and /oauth-apps.
+    //
+    // /oauth-apps is SUPER_ADMIN-only for everyone, ADMIN included, so leaving
+    // it out keeps FINANCE level with ADMIN rather than above it — the same
+    // reasoning as /settings. It mirrors the backend's LATERAL_ACCESS, where
+    // `admin/oauth-apps` is likewise absent.
   },
   // Support is not a narrow badge here — it is the team that runs the platform
   // day to day: they verify profiles, work claims, moderate listings and answer
