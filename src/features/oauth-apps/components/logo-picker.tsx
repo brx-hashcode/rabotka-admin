@@ -1,5 +1,5 @@
 import { useId, useRef } from "react";
-import { IconCamera, IconX } from "@tabler/icons-react";
+import { IconCamera, IconLoader2, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { cn } from "#/lib/utils";
 
@@ -11,6 +11,8 @@ type LogoPickerProps = {
   preview: string | null;
   onPick: (file: File) => void;
   onClear: () => void;
+  /** True while the picked file is being uploaded. */
+  uploading?: boolean;
   /** Seeds the placeholder initials before a logo is chosen. */
   name?: string;
   disabled?: boolean;
@@ -32,11 +34,13 @@ export function LogoPicker({
   preview,
   onPick,
   onClear,
+  uploading,
   name,
   disabled,
 }: Readonly<LogoPickerProps>) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const locked = disabled || uploading;
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -65,7 +69,7 @@ export function LogoPicker({
           htmlFor={inputId}
           className={cn(
             "bg-muted hover:bg-muted/70 group relative flex size-20 cursor-pointer items-center justify-center overflow-hidden rounded-xl transition-colors",
-            disabled && "pointer-events-none opacity-60",
+            locked && "pointer-events-none opacity-60",
           )}
         >
           {preview ? (
@@ -75,10 +79,18 @@ export function LogoPicker({
                 alt="Logo preview"
                 className="size-full object-cover"
               />
-              {/* Only on hover: the point of the square is to show the logo. */}
-              <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                <IconCamera className="size-5 text-white" />
-              </span>
+              {uploading ? (
+                // Held over the preview rather than replacing it, so the admin
+                // sees the image they picked while it goes up.
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <IconLoader2 className="size-5 animate-spin text-white" />
+                </span>
+              ) : (
+                /* Only on hover: the point of the square is to show the logo. */
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <IconCamera className="size-5 text-white" />
+                </span>
+              )}
             </>
           ) : (
             <span className="text-muted-foreground flex flex-col items-center gap-1">
@@ -93,7 +105,7 @@ export function LogoPicker({
           )}
         </label>
 
-        {preview && !disabled && (
+        {preview && !locked && (
           <button
             type="button"
             aria-label="Remove logo"
@@ -115,7 +127,7 @@ export function LogoPicker({
           type="file"
           accept="image/*"
           className="sr-only"
-          disabled={disabled}
+          disabled={locked}
           onChange={(event) => handleFile(event.target.files?.[0])}
         />
       </div>

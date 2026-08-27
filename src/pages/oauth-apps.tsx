@@ -75,7 +75,7 @@ export default function OAuthAppsPage() {
     <>
       <PageListHeader
         title="Applications"
-        description="Partner apps that can sign users in with Rabotka."
+        description="Applications that can sign users in with Rabotka."
         actions={
           apps.length > 0 ? (
             <Button onClick={() => setCreateOpen(true)}>
