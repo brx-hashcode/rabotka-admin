@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,11 +24,40 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Button } from "#/components/ui/button";
+import { LogoPicker } from "./logo-picker";
+import { appConfig } from "#/config";
+import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import {
   createOAuthApp,
   type MintedSecret,
 } from "#/lib/api/oauth-apps-controller";
 import { SCOPE_LABELS, DEFAULT_SCOPES } from "../scopes";
+
+/**
+ * Uploads the logo and returns the URL Rabotka will serve it from.
+ *
+ * Same endpoint and same shape as the advertisement dialog's `uploadImages`.
+ * Asking an admin to paste a URL instead would mean the consent screen loads
+ * the partner's logo from the partner's own host — a third-party request on
+ * every login, an image the partner can swap after approval, and a broken
+ * consent screen the day their CDN moves.
+ */
+async function uploadLogo(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("files", file);
+
+  const res = await fetchWithCsrfRetry(
+    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
+    { method: "POST", body: formData, credentials: "include" },
+  );
+
+  if (!res.ok) throw new Error("Logo upload failed");
+
+  const json = (await res.json()) as { files: { file_url: string }[] };
+  const url = json.files[0]?.file_url;
+  if (!url) throw new Error("Logo upload returned no URL");
+  return url;
+}
 
 
 /**
@@ -74,7 +104,6 @@ const schema = z.object({
     .min(10, "Describe the app — users read this on the consent screen")
     .max(500),
   contactEmail: z.string().email("A valid contact email is required"),
-  logoUrl: z.string().url("Must be a URL").optional().or(z.literal("")),
   redirectUris: redirectUrisField,
   allowedScopes: z.array(z.string()).min(1, "Select at least one scope"),
 });
@@ -95,31 +124,57 @@ export function CreateAppModal({
 }: Readonly<CreateAppModalProps>) {
   const queryClient = useQueryClient();
 
+  /**
+   * The logo lives outside the form because it is a file, not a value.
+   *
+   * It is uploaded as part of submit rather than the moment it is dropped, so
+   * an admin who picks a logo and then abandons the dialog leaves no orphaned
+   * file behind.
+   */
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
       description: "",
       contactEmail: "",
-      logoUrl: "",
       redirectUris: "",
       allowedScopes: [...DEFAULT_SCOPES],
     },
   });
 
+  function clearLogo() {
+    // Revoking the object URL matters here: the dialog can be opened and
+    // abandoned repeatedly in one session, and each preview holds its blob in
+    // memory until released.
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoFile(null);
+    setLogoPreview(null);
+  }
+
+  function reset() {
+    form.reset();
+    clearLogo();
+  }
+
   const { mutate, isPending } = useMutation({
-    mutationFn: (values: FormValues) =>
-      createOAuthApp({
+    mutationFn: async (values: FormValues) => {
+      const logoUrl = logoFile ? await uploadLogo(logoFile) : undefined;
+
+      return createOAuthApp({
         name: values.name,
         description: values.description,
         contactEmail: values.contactEmail,
-        logoUrl: values.logoUrl || undefined,
+        logoUrl,
         redirectUris: parseRedirectUris(values.redirectUris),
         allowedScopes: values.allowedScopes,
-      }),
+      });
+    },
     onSuccess: (secret) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
-      form.reset();
+      reset();
       onOpenChange(false);
       onCreated(secret);
     },
@@ -130,7 +185,12 @@ export function CreateAppModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      {/*
+        Wider than the default dialog. The redirect-URI box holds full URLs one
+        per line and the scope rows carry a label plus an explanation — at
+        `max-w-lg` both wrapped constantly.
+      */}
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Register an application</DialogTitle>
           <DialogDescription>
@@ -143,6 +203,23 @@ export function CreateAppModal({
             onSubmit={form.handleSubmit((values) => mutate(values))}
             className="space-y-4"
           >
+            {/*
+              At the top, the way a profile screen leads with its photo. The
+              picker seeds its placeholder from the name field, so an app with
+              no logo previews the initials the consent screen will actually
+              fall back to.
+            */}
+            <LogoPicker
+              preview={logoPreview}
+              name={form.watch("name")}
+              disabled={isPending}
+              onPick={(file) => {
+                clearLogo();
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+              }}
+              onClear={clearLogo}
+            />
             <FormField
               control={form.control}
               name="name"
@@ -194,20 +271,6 @@ export function CreateAppModal({
 
             <FormField
               control={form.control}
-              name="logoUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Logo URL (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://partner.com/logo.png" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="redirectUris"
               render={({ field }) => (
                 <FormItem>
@@ -239,7 +302,14 @@ export function CreateAppModal({
                     The ceiling on what this app may request. Anything not
                     checked is refused outright, not silently dropped.
                   </FormDescription>
-                  <div className="space-y-2 pt-1">
+                  {/*
+                    The one two-column block in this form. Six rows of
+                    label-plus-explanation stacked single-file pushed the submit
+                    button off the bottom of the dialog; paired up they fit, and
+                    the scopes read as one set to choose from rather than a
+                    checklist to scroll.
+                  */}
+                  <div className="grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
                     {SCOPE_LABELS.map((scope) => (
                       <label
                         key={scope.value}
