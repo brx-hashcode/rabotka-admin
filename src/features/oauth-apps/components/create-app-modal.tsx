@@ -125,14 +125,52 @@ export function CreateAppModal({
   const queryClient = useQueryClient();
 
   /**
-   * The logo lives outside the form because it is a file, not a value.
+   * The logo is uploaded the moment it is picked, and what we keep is the URL
+   * Rabotka serves it from — not the file.
    *
-   * It is uploaded as part of submit rather than the moment it is dropped, so
-   * an admin who picks a logo and then abandons the dialog leaves no orphaned
-   * file behind.
+   * Uploading at submit instead would mean the admin never finds out the upload
+   * failed until they have filled in the whole form, and would leave "did that
+   * work?" unanswered while they do. Doing it now costs an orphaned file when a
+   * dialog is abandoned, which is the cheaper problem by far.
    */
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  /** Local object URL, shown while the upload is in flight. */
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+
+  /**
+   * Each object URL holds its blob in memory until released, and this dialog
+   * can be opened, filled and abandoned repeatedly in one session.
+   */
+  function revokeLocalPreview() {
+    setLocalPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+  }
+
+  function clearLogo() {
+    revokeLocalPreview();
+    setLogoUrl(null);
+  }
+
+  function reset() {
+    form.reset();
+    clearLogo();
+  }
+
+  const { mutate: doUploadLogo, isPending: isUploadingLogo } = useMutation({
+    mutationFn: uploadLogo,
+    onSuccess: (url) => {
+      // Swap the blob preview for the hosted URL, so what is on screen is what
+      // the consent screen will actually load.
+      setLogoUrl(url);
+      revokeLocalPreview();
+    },
+    onError: () => {
+      clearLogo();
+      toast.error("Logo upload failed — try again");
+    },
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -145,33 +183,17 @@ export function CreateAppModal({
     },
   });
 
-  function clearLogo() {
-    // Revoking the object URL matters here: the dialog can be opened and
-    // abandoned repeatedly in one session, and each preview holds its blob in
-    // memory until released.
-    if (logoPreview) URL.revokeObjectURL(logoPreview);
-    setLogoFile(null);
-    setLogoPreview(null);
-  }
-
-  function reset() {
-    form.reset();
-    clearLogo();
-  }
-
   const { mutate, isPending } = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const logoUrl = logoFile ? await uploadLogo(logoFile) : undefined;
-
-      return createOAuthApp({
+    mutationFn: (values: FormValues) =>
+      createOAuthApp({
         name: values.name,
         description: values.description,
         contactEmail: values.contactEmail,
-        logoUrl,
+        // Already a hosted URL by this point — the upload happened on pick.
+        logoUrl: logoUrl ?? undefined,
         redirectUris: parseRedirectUris(values.redirectUris),
         allowedScopes: values.allowedScopes,
-      });
-    },
+      }),
     onSuccess: (secret) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
       reset();
@@ -210,13 +232,15 @@ export function CreateAppModal({
               fall back to.
             */}
             <LogoPicker
-              preview={logoPreview}
+              // The blob while uploading, the hosted URL once it lands.
+              preview={localPreview ?? logoUrl}
+              uploading={isUploadingLogo}
               name={form.watch("name")}
               disabled={isPending}
               onPick={(file) => {
                 clearLogo();
-                setLogoFile(file);
-                setLogoPreview(URL.createObjectURL(file));
+                setLocalPreview(URL.createObjectURL(file));
+                doUploadLogo(file);
               }}
               onClear={clearLogo}
             />
@@ -346,12 +370,16 @@ export function CreateAppModal({
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
-                variant="ghost"
+                variant="secondary"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              {/*
+                Blocked during the upload too: submitting mid-flight would
+                register the app with no logo and give no hint why.
+              */}
+              <Button type="submit" disabled={isPending || isUploadingLogo}>
                 {isPending ? "Registering…" : "Register"}
               </Button>
             </div>
