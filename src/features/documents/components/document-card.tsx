@@ -55,6 +55,7 @@ import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document
 import { RenameDocumentModal } from "./rename-document-modal";
 import { ReplaceDocumentFileModal } from "./replace-document-file-modal";
 import { useRole } from "#/hooks/use-role";
+import { guardResponse } from "#/lib/auth/session";
 
 function DocIcon({ mimeType }: Readonly<{ mimeType: string }>) {
   if (mimeType === "application/pdf")
@@ -107,7 +108,12 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
         return;
       }
       const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(document.fileUrl)}`;
-      const res = await fetch(proxyUrl, { credentials: "include" });
+      // Guarded: a raw media fetch bypasses the controller, so a 401 here
+      // would otherwise never reach the session interceptor.
+      const res = guardResponse(
+        proxyUrl,
+        await fetch(proxyUrl, { credentials: "include" }),
+      );
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
