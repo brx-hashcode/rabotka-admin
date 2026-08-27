@@ -9,7 +9,6 @@ import {
   Pause,
   Play,
   Trash2,
-  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -178,14 +177,6 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
                 {scopeLabel(scope)}
               </Badge>
             ))}
-        </div>
-
-        <div className="text-muted-foreground flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5">
-            <Users className="size-3.5" />
-            {app.userCount} {app.userCount === 1 ? "user" : "users"}
-          </span>
-          <span>{format(new Date(app.createdAt), "d MMM yyyy")}</span>
         </div>
       </div>
 

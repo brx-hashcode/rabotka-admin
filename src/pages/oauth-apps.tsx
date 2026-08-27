@@ -38,7 +38,7 @@ export default function OAuthAppsPage() {
 
   if (isLoading) {
     listSection = (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={`app-skeleton-${i + 1}`} className="h-64 rounded-lg" />
         ))}
@@ -63,7 +63,7 @@ export default function OAuthAppsPage() {
     );
   } else {
     listSection = (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         {apps.map((app) => (
           <AppCard key={app.id} app={app} onSecretMinted={setMintedSecret} />
         ))}
