@@ -311,6 +311,15 @@ a {
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --shadow-nav-selected: 0 4px 14px -2px hsl(var(--whatsapp) / 0.32);
+  /*
+   * The house card shadow, matching rabotka-client's `--shadow-soft`. Surfaces
+   * here are separated by elevation rather than by a hairline border.
+   *
+   * `shadow-soft` was already in use (feedback-table, the graph panels) with no
+   * token behind it, so Tailwind emitted nothing and those surfaces have been
+   * rendering flat.
+   */
+  --shadow-soft: 0 4px 20px -4px hsl(25 35% 15% / 0.08);
   --color-whatsapp: hsl(var(--whatsapp));
   --color-whatsapp-dark: hsl(var(--whatsapp-dark));
   --color-background: var(--background);

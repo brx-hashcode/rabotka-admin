@@ -22,6 +22,7 @@ import {
   IconGridDots,
   IconMessage,
   IconTopologyStar3,
+  IconKey,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -123,6 +124,16 @@ const navMain: NavItem[] = [
 ];
 
 const navSecondary: NavItem[] = [
+  {
+    // "Login with Rabotka" partner applications. SUPER_ADMIN-only, matching the
+    // endpoint's @Roles — registering an app decides who Rabotka vouches for
+    // its users' identities to, which is the same class of decision as team
+    // management, not an operational one.
+    title: "Applications",
+    url: "/oauth-apps",
+    icon: IconKey,
+    roles: ["SUPER_ADMIN"],
+  },
   {
     title: "Settings",
     url: "/settings",
