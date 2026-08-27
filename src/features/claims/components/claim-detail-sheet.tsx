@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -180,23 +181,50 @@ export function ClaimDetailSheet({
             >
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Profile">
-                  <ProfileCell
-                    name={claim.profileName ?? ""}
-                    email={claim.profileEmail ?? ""}
-                    avatarUrl={claim.profileAvatarUrl}
-                  />
+                  {/* The claim is only half the story — "who is this and what
+                      else is going on with them" is the next question every
+                      time, and the answer is one page away. */}
+                  <Link
+                    to="/profiles/$profileId"
+                    params={{ profileId: claim.profileId }}
+                    onClick={onClose}
+                    className="block rounded-md hover:opacity-80 transition-opacity"
+                  >
+                    <ProfileCell
+                      name={claim.profileName ?? ""}
+                      email={claim.profileEmail ?? ""}
+                      avatarUrl={claim.profileAvatarUrl}
+                    />
+                  </Link>
                 </Field>
 
                 <Field label="Created by">
-                  <ProfileCell
-                    name={
-                      claim.createdByUserName ??
-                      claim.createdByProfileName ??
-                      ""
-                    }
-                    email={claim.createdByUserEmail ?? ""}
-                    avatarUrl={null}
-                  />
+                  {/* Claims raised from the app carry a profile author; ones
+                      opened by an admin carry a user, who has no page here. */}
+                  {claim.createdByProfileId ? (
+                    <Link
+                      to="/profiles/$profileId"
+                      params={{ profileId: claim.createdByProfileId }}
+                      onClick={onClose}
+                      className="block rounded-md hover:opacity-80 transition-opacity"
+                    >
+                      <ProfileCell
+                        name={claim.createdByProfileName ?? ""}
+                        email=""
+                        avatarUrl={null}
+                      />
+                    </Link>
+                  ) : (
+                    <ProfileCell
+                      name={
+                        claim.createdByUserName ??
+                        claim.createdByProfileName ??
+                        ""
+                      }
+                      email={claim.createdByUserEmail ?? ""}
+                      avatarUrl={null}
+                    />
+                  )}
                 </Field>
 
                 <Field label="Created at">
