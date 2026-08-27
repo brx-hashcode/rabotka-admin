@@ -20,6 +20,8 @@ export type AdminClaimItem = {
   createdByUserEmail: string | null;
   createdByProfileId: string | null;
   createdByProfileName: string | null;
+  /** Manual rank within the board column, ascending. Ties break on createdAt desc. */
+  position: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -60,6 +62,12 @@ export type AdminClaimCommentItem = {
   updatedAt: string;
 };
 
+export type ReorderClaimPayload = {
+  status: AdminClaimStatus;
+  /** Slot the claim should occupy in that column once it has landed, counting itself. */
+  index: number;
+};
+
 export type UpdateClaimPayload = {
   status?: AdminClaimStatus;
   title?: string;
@@ -98,6 +106,14 @@ class AdminClaimsController extends AdminBaseController {
     return this.patch<AdminClaimItem>(url, payload);
   }
 
+  async reorderClaim(
+    id: string,
+    payload: ReorderClaimPayload,
+  ): Promise<AdminClaimItem> {
+    const url = this.createURL(`/admin/claims/${id}/position`, new URLSearchParams());
+    return this.patch<AdminClaimItem>(url, payload);
+  }
+
   async deleteClaim(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(`/admin/claims/${id}`, new URLSearchParams());
     return this.delete<{ success: boolean }>(url);
@@ -124,6 +140,7 @@ export const createClaim = controller.createClaim.bind(controller);
 export const listClaims = controller.listClaims.bind(controller);
 export const getClaimById = controller.getClaimById.bind(controller);
 export const updateClaim = controller.updateClaim.bind(controller);
+export const reorderClaim = controller.reorderClaim.bind(controller);
 export const deleteClaim = controller.deleteClaim.bind(controller);
 export const listClaimComments = controller.listComments.bind(controller);
 export const addClaimComment = controller.addComment.bind(controller);

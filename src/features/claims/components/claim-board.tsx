@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   DragOverlay,
+  closestCorners,
   type DragEndEvent,
   type DragStartEvent,
   PointerSensor,
@@ -10,12 +11,13 @@ import {
 } from "@dnd-kit/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { updateClaim } from "#/lib/api/claims-controller";
+import { reorderClaim } from "#/lib/api/claims-controller";
 import type {
   AdminClaimItem,
   AdminClaimStatus,
 } from "#/lib/api/claims-controller";
-import { useClaimsBoard } from "#/hooks/use-claims-board";
+import { useClaimsBoard, type ClaimsByStatus } from "#/hooks/use-claims-board";
+import { resolveDrop } from "../resolve-drop";
 import { ClaimColumn } from "./claim-column";
 import { ClaimCardOverlay } from "./claim-card";
 
@@ -26,28 +28,36 @@ type ClaimBoardProps = {
 export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   const { claimsByStatus, allStatuses, isLoading } = useClaimsBoard();
   const queryClient = useQueryClient();
-  const [localOverrides, setLocalOverrides] = useState<
-    Record<string, AdminClaimStatus>
-  >({});
+
+  // The board renders from this copy, not straight from the query, so a drop
+  // shows where the card landed before the server has answered.
+  const [board, setBoard] = useState<ClaimsByStatus>(claimsByStatus);
   const [activeClaim, setActiveClaim] = useState<AdminClaimItem | null>(null);
+
+  useEffect(() => setBoard(claimsByStatus), [claimsByStatus]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  const { mutate: changeStatus } = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: AdminClaimStatus }) =>
-      updateClaim(id, { status }),
+  const { mutate: persistMove } = useMutation({
+    mutationFn: ({
+      id,
+      status,
+      index,
+    }: {
+      id: string;
+      status: AdminClaimStatus;
+      index: number;
+    }) => reorderClaim(id, { status, index }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "claims", "board"] });
     },
-    onError: (_err, { id }) => {
-      toast.error("Failed to update claim status");
-      setLocalOverrides((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
+    onError: () => {
+      toast.error("Failed to move claim");
+      // Whatever the server actually holds wins; the optimistic board is
+      // dropped rather than guessed back into shape.
+      queryClient.invalidateQueries({ queryKey: ["admin", "claims", "board"] });
     },
   });
 
@@ -60,32 +70,12 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
     setActiveClaim(null);
     if (!over) return;
 
-    const claimId = active.id as string;
-    const newStatus = over.id as AdminClaimStatus;
-    const claim = active.data.current?.claim as AdminClaimItem;
+    const claimId = String(active.id);
+    const drop = resolveDrop(board, allStatuses, claimId, String(over.id));
+    if (!drop) return;
 
-    if (claim.status === newStatus) return;
-
-    setLocalOverrides((prev) => ({ ...prev, [claimId]: newStatus }));
-    changeStatus({ id: claimId, status: newStatus });
-  }
-
-  const effectiveByStatus: Record<AdminClaimStatus, AdminClaimItem[]> = {
-    CREATED: [],
-    IN_PROGRESS: [],
-    COMPLETED: [],
-    REJECTED: [],
-  };
-
-  for (const status of allStatuses) {
-    for (const claim of claimsByStatus[status]) {
-      const override = localOverrides[claim.id];
-      const effectiveStatus = override ?? claim.status;
-      effectiveByStatus[effectiveStatus].push({
-        ...claim,
-        status: effectiveStatus,
-      });
-    }
+    setBoard(drop.board);
+    persistMove({ id: claimId, status: drop.status, index: drop.index });
   }
 
   if (isLoading) {
@@ -104,6 +94,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveClaim(null)}
@@ -113,7 +104,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
           <ClaimColumn
             key={status}
             status={status}
-            claims={effectiveByStatus[status]}
+            claims={board[status]}
             onViewDetail={onViewDetail}
           />
         ))}
