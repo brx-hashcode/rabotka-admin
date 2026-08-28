@@ -20,11 +20,31 @@ export type OAuthApp = {
   redirectUris: string[];
   allowedScopes: string[];
   status: OAuthAppStatus;
+  /**
+   * A sandbox application: it signs in only the two hardcoded Rabotka sandbox
+   * users, with a fixed code, and never a real person. Set once at
+   * registration — there is no endpoint that changes it.
+   */
+  isSandbox: boolean;
   contactEmail: string;
   createdBy: string | null;
-  /** How many Rabotka users have signed in to this application. */
+  /**
+   * How many Rabotka users are currently signed in to this application.
+   *
+   * Live consents only — somebody who has revoked the app is not counted, which
+   * is the number an admin is actually reading this for. Always 0 for a sandbox
+   * app, which writes no consent records at all.
+   */
   userCount: number;
+  /** Most recent token exchange across those consents, or null if never used. */
+  lastUsedAt: string | null;
   createdAt: string;
+};
+
+/** The two sandbox users and their fixed code, as the API publishes them. */
+export type SandboxUsers = {
+  otp: string;
+  users: { phone: string; name: string; rabotkaVerified: boolean }[];
 };
 
 /**
@@ -44,9 +64,17 @@ export type CreateOAuthAppPayload = {
   logoUrl?: string;
   redirectUris: string[];
   allowedScopes?: string[];
+  isSandbox?: boolean;
 };
 
-export type UpdateOAuthAppPayload = Partial<CreateOAuthAppPayload>;
+/**
+ * `isSandbox` is deliberately not updatable. The API rejects a PATCH carrying
+ * it outright, so it is omitted here rather than left to be discovered at
+ * runtime.
+ */
+export type UpdateOAuthAppPayload = Partial<
+  Omit<CreateOAuthAppPayload, "isSandbox">
+>;
 
 class OAuthAppsController extends AdminBaseController {
   async list(): Promise<OAuthApp[]> {
@@ -61,6 +89,15 @@ class OAuthAppsController extends AdminBaseController {
       new URLSearchParams(),
     );
     return this.get<{ scopes: string[] }>(url);
+  }
+
+  /** The sandbox users, served by the API for the same reason as the scopes. */
+  async sandboxUsers(): Promise<SandboxUsers> {
+    const url = this.createURL(
+      "/admin/oauth-apps/sandbox-users",
+      new URLSearchParams(),
+    );
+    return this.get<SandboxUsers>(url);
   }
 
   async create(payload: CreateOAuthAppPayload): Promise<MintedSecret> {
@@ -122,6 +159,7 @@ const controller = new OAuthAppsController();
 
 export const listOAuthApps = controller.list.bind(controller);
 export const listOAuthScopes = controller.scopes.bind(controller);
+export const listSandboxUsers = controller.sandboxUsers.bind(controller);
 export const createOAuthApp = controller.create.bind(controller);
 export const updateOAuthApp = controller.update.bind(controller);
 export const rotateOAuthAppSecret = controller.rotateSecret.bind(controller);
