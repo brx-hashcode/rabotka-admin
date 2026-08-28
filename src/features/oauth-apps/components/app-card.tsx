@@ -90,7 +90,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
 
   return (
     <>
-      <div className="bg-card shadow-soft flex flex-col gap-4 rounded-lg p-5">
+      <div className="bg-card shadow-soft flex h-full flex-col gap-4 rounded-lg p-5">
         <div className="flex items-start gap-3">
           {app.logoUrl ? (
             <img
@@ -189,7 +189,13 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
           </p>
         )}
 
-        <div className="flex flex-wrap gap-1.5">
+        {/*
+          `mt-auto` collects the slack from equal-height cards here, at the
+          bottom. Without it a card with fewer rows than its neighbours spreads
+          that space through `gap-4`, and the scopes float mid-card while the
+          detail rows drift apart from each other.
+        */}
+        <div className="mt-auto flex flex-wrap gap-1.5">
           {app.allowedScopes
             .filter((scope) => scope !== "openid")
             .map((scope) => (
