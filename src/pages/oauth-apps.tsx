@@ -62,8 +62,12 @@ export default function OAuthAppsPage() {
       </div>
     );
   } else {
+    // No `items-start` here, unlike the skeleton above: cards carry optional
+    // rows — a last sign-in, a rotation notice — so letting each size to its
+    // own content leaves a row of ragged bottoms. Stretching is grid's default;
+    // the card fills the cell and pins its scopes to the bottom.
     listSection = (
-      <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {apps.map((app) => (
           <AppCard key={app.id} app={app} onSecretMinted={setMintedSecret} />
         ))}
