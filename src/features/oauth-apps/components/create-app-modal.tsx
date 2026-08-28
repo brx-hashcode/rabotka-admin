@@ -106,6 +106,7 @@ const schema = z.object({
   contactEmail: z.string().email("A valid contact email is required"),
   redirectUris: redirectUrisField,
   allowedScopes: z.array(z.string()).min(1, "Select at least one scope"),
+  isSandbox: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -180,6 +181,7 @@ export function CreateAppModal({
       contactEmail: "",
       redirectUris: "",
       allowedScopes: [...DEFAULT_SCOPES],
+      isSandbox: false,
     },
   });
 
@@ -193,6 +195,7 @@ export function CreateAppModal({
         logoUrl: logoUrl ?? undefined,
         redirectUris: parseRedirectUris(values.redirectUris),
         allowedScopes: values.allowedScopes,
+        isSandbox: values.isSandbox,
       }),
     onSuccess: (secret) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
@@ -362,6 +365,44 @@ export function CreateAppModal({
                       </label>
                     ))}
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/*
+              Last, and on its own, because it is the one answer here that
+              cannot be changed afterwards. Everything above is editable from
+              the card; this is not, and an admin who ticks it by accident has
+              to delete the app and issue new credentials.
+            */}
+            <FormField
+              control={form.control}
+              name="isSandbox"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex items-start gap-2.5 text-sm">
+                    <FormControl>
+                      <Checkbox
+                        className="mt-0.5"
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                    </FormControl>
+                    <span>
+                      <span className="font-medium">Sandbox application</span>
+                      <span className="text-muted-foreground block text-xs">
+                        Signs in only the two Rabotka sandbox users, with a
+                        fixed code and no WhatsApp message — never a real
+                        person. For a partner building their integration.{" "}
+                        <strong className="font-medium">
+                          Cannot be changed after registration.
+                        </strong>
+                      </span>
+                    </span>
+                  </label>
                   <FormMessage />
                 </FormItem>
               )}
