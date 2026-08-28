@@ -9,6 +9,7 @@ import {
   Pause,
   Play,
   Trash2,
+  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -107,6 +108,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
             <div className="flex items-center gap-2">
               <p className="truncate font-medium">{app.name}</p>
               {isSuspended && <Badge variant="destructive">Suspended</Badge>}
+              {app.isSandbox && <Badge variant="secondary">Sandbox</Badge>}
             </div>
             <p className="text-muted-foreground line-clamp-2 text-sm">
               {app.description}
@@ -158,6 +160,24 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
             <span className="text-muted-foreground">Client secret</span>
             <code className="font-mono">••••{app.clientSecretHint}</code>
           </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Connected</span>
+            <span className="flex items-center gap-1.5">
+              <Users className="text-muted-foreground size-3" />
+              <span className={app.userCount === 0 ? "text-muted-foreground" : ""}>
+                {connectedLabel(app)}
+              </span>
+            </span>
+          </div>
+          {app.lastUsedAt && (
+            // Only when it has actually been used. "Never" is already carried
+            // by a connected count of zero, and a second line saying so would
+            // be the same fact twice.
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Last sign-in</span>
+              <span>{format(new Date(app.lastUsedAt), "d MMM, HH:mm")}</span>
+            </div>
+          )}
         </div>
 
         {app.previousSecretExpiresAt && (
@@ -224,6 +244,19 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
       </AlertDialog>
     </>
   );
+}
+
+/**
+ * How many people are signed in to this application.
+ *
+ * A sandbox app is reported as not applicable rather than as zero: it writes no
+ * consent records by design, so "0 people" would read as a failed integration
+ * when it is the expected and only possible answer.
+ */
+function connectedLabel(app: OAuthApp): string {
+  if (app.isSandbox) return "Sandbox users only";
+  if (app.userCount === 0) return "No one yet";
+  return `${app.userCount} ${app.userCount === 1 ? "person" : "people"}`;
 }
 
 function CopyableRow({
