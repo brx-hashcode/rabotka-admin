@@ -17,11 +17,30 @@ const FLYER_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
   STAGE: "Stage",
 };
 
+/**
+ * Pay cadence, in French and in the suffix form that reads after a figure
+ * («7 500 XAF par jour»).
+ *
+ * Deliberately NOT `PAYMENT_FLOW_LABELS` from `#/lib/status-labels`: that map
+ * is English admin chrome ("Daily"), which is right for the Missions table and
+ * wrong here — the flyer is a public, French-language artefact that goes out on
+ * WhatsApp next to «Postuler sur Rabotka» and «1 place disponible».
+ *
+ * Mirrors the client's own suffix map (rabotka-client, employer/config/
+ * job-status.ts) so the two surfaces word the cadence identically.
+ */
+const FLYER_PAYMENT_FLOW_LABELS: Record<string, string> = {
+  HOURLY: "par heure",
+  DAILY: "par jour",
+  MONTHLY: "par mois",
+};
+
 export type JobFlyerData = {
   readonly title: string;
   readonly reference: string;
   readonly employmentType: EmploymentTypeValue;
   readonly amount: number | null;
+  readonly paymentFlow: string | null;
   readonly address: string | null;
   readonly city: string | null;
   readonly isRemote: boolean;
@@ -38,9 +57,14 @@ const XAF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
  * table applies, and what the client renders as «À négocier». A flyer has no
  * room to explain that, so an unpriced offer falls back to the location.
  */
-function payLabel(amount: number | null): string | null {
+function payLabel(amount: number | null, paymentFlow: string | null): string | null {
   if (amount == null || amount <= 0) return null;
-  return `${XAF.format(amount)} XAF`;
+  const figure = `${XAF.format(amount)} XAF`;
+  // «À négocier par mois» is not a rate: the cadence only qualifies a real
+  // figure, so it goes when the figure does. The early return above already
+  // enforces that — this only has to handle an unknown or absent flow.
+  const cadence = paymentFlow ? FLYER_PAYMENT_FLOW_LABELS[paymentFlow] : null;
+  return cadence ? `${figure} ${cadence}` : figure;
 }
 
 function locationLabel(job: JobFlyerData): string {
@@ -282,8 +306,8 @@ export const JobFlyer = forwardRef<
                 ("21 rue KINDAMBA moungali Ref ruelle de la commune sur terre
                 jaune, Brazzaville") that wrapped to two lines and crowded the
                 card. Unpriced offers still show where the work is. */}
-            <Pill nowrap={payLabel(job.amount) !== null}>
-              {payLabel(job.amount) ?? locationLabel(job)}
+            <Pill nowrap={payLabel(job.amount, job.paymentFlow) !== null}>
+              {payLabel(job.amount, job.paymentFlow) ?? locationLabel(job)}
             </Pill>
           </div>
 
