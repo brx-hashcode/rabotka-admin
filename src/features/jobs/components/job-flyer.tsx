@@ -17,11 +17,30 @@ const FLYER_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
   STAGE: "Stage",
 };
 
+/**
+ * Pay cadence, in French and in the suffix form that reads after a figure
+ * («7 500 XAF par jour»).
+ *
+ * Deliberately NOT `PAYMENT_FLOW_LABELS` from `#/lib/status-labels`: that map
+ * is English admin chrome ("Daily"), which is right for the Missions table and
+ * wrong here — the flyer is a public, French-language artefact that goes out on
+ * WhatsApp next to «Postuler sur Rabotka» and «1 place disponible».
+ *
+ * Mirrors the client's own suffix map (rabotka-client, employer/config/
+ * job-status.ts) so the two surfaces word the cadence identically.
+ */
+const FLYER_PAYMENT_FLOW_LABELS: Record<string, string> = {
+  HOURLY: "par heure",
+  DAILY: "par jour",
+  MONTHLY: "par mois",
+};
+
 export type JobFlyerData = {
   readonly title: string;
   readonly reference: string;
   readonly employmentType: EmploymentTypeValue;
   readonly amount: number | null;
+  readonly paymentFlow: string | null;
   readonly address: string | null;
   readonly city: string | null;
   readonly isRemote: boolean;
@@ -31,6 +50,9 @@ export type JobFlyerData = {
 
 const XAF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
+/** Punctuation and whitespace a truncated fragment should not end on. */
+const TRAILING_PUNCTUATION = new Set([",", ";", ":", ".", " ", "\t", "\n", "\r"]);
+
 /**
  * The pay, or null when there is none to show.
  *
@@ -38,15 +60,76 @@ const XAF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
  * table applies, and what the client renders as «À négocier». A flyer has no
  * room to explain that, so an unpriced offer falls back to the location.
  */
-function payLabel(amount: number | null): string | null {
+function payLabel(amount: number | null, paymentFlow: string | null): string | null {
   if (amount == null || amount <= 0) return null;
-  return `${XAF.format(amount)} XAF`;
+  const figure = `${XAF.format(amount)} XAF`;
+  // «À négocier par mois» is not a rate: the cadence only qualifies a real
+  // figure, so it goes when the figure does. The early return above already
+  // enforces that — this only has to handle an unknown or absent flow.
+  const cadence = paymentFlow ? FLYER_PAYMENT_FLOW_LABELS[paymentFlow] : null;
+  return cadence ? `${figure} ${cadence}` : figure;
 }
+
+/**
+ * Cut on a word boundary and append a real ellipsis.
+ *
+ * Shared by the title and the location for the same reason: the flyer is
+ * rasterised through an SVG foreignObject, which does not reliably paint the
+ * ellipsis of `-webkit-line-clamp` or `text-overflow`. Only a literal «…» in
+ * the string is guaranteed to survive to the PNG.
+ */
+function truncateOnWord(text: string, maxChars: number): string {
+  const cut = text.slice(0, maxChars);
+  const lastSpace = cut.lastIndexOf(" ");
+  const trimmed = lastSpace > 0 ? cut.slice(0, lastSpace) : cut;
+
+  // A linear scan rather than /[,;:.\s]+$/: that pattern backtracks
+  // super-linearly on a tail of repeated punctuation, which employer free text
+  // ("Brazzaville....") supplies for free.
+  let end = trimmed.length;
+  while (end > 0 && TRAILING_PUNCTUATION.has(trimmed[end - 1]!)) end--;
+  return trimmed.slice(0, end);
+}
+
+/**
+ * The location pill is one line, always.
+ *
+ * At 18px in a pill roughly 400px wide, about 38 characters fit. Addresses are
+ * employer free text and routinely blow past that — "OCH , moungali vers PSP
+ * Nganga Edouard, rue vers Kabano, Brazzaville" wrapped to two lines and
+ * pushed the card's contents down.
+ *
+ * The city is preserved rather than truncated away with the rest: it is the
+ * part a reader actually navigates by, and it is what tells them at a glance
+ * whether the mission is even in their town. So the street detail absorbs the
+ * cut and the city stays whole — «OCH , moungali vers PSP…, Brazzaville».
+ */
+const LOCATION_MAX_CHARS = 38;
+/** Below this the truncated street is noise; show the city on its own. */
+const MIN_ADDRESS_CHARS = 8;
 
 function locationLabel(job: JobFlyerData): string {
   if (job.isRemote) return "À distance";
-  const parts = [job.address, job.city].filter(Boolean);
-  return parts.length ? parts.join(", ") : "Lieu à préciser";
+
+  const address = job.address?.replace(/\s+/g, " ").trim() ?? "";
+  const city = job.city?.replace(/\s+/g, " ").trim() ?? "";
+
+  if (!address && !city) return "Lieu à préciser";
+  if (!address) return city;
+  if (!city) {
+    return address.length <= LOCATION_MAX_CHARS
+      ? address
+      : `${truncateOnWord(address, LOCATION_MAX_CHARS)}…`;
+  }
+
+  const full = `${address}, ${city}`;
+  if (full.length <= LOCATION_MAX_CHARS) return full;
+
+  // 3 covers the ", " joining the city plus the "…" closing the street.
+  const budget = LOCATION_MAX_CHARS - city.length - 3;
+  if (budget < MIN_ADDRESS_CHARS) return city;
+
+  return `${truncateOnWord(address, budget)}…, ${city}`;
 }
 
 /**
@@ -85,12 +168,8 @@ function fitTitle(raw: string) {
   // -webkit-line-clamp: the flyer is rasterised through an SVG foreignObject,
   // which does not reliably paint the clamp's ellipsis — that is why long
   // titles were coming out cut mid-phrase with no visible sign of it.
-  const cut = title.slice(0, TITLE_HARD_LIMIT);
-  const lastSpace = cut.lastIndexOf(" ");
-  const trimmed = lastSpace > 0 ? cut.slice(0, lastSpace) : cut;
-
   return {
-    text: `${trimmed.replace(/[,;:.\s]+$/, "")}…`,
+    text: `${truncateOnWord(title, TITLE_HARD_LIMIT)}…`,
     fontSize: step.fontSize,
     lines: step.lines,
   };
@@ -278,12 +357,10 @@ export const JobFlyer = forwardRef<
           >
             <Pill>{FLYER_TYPE_LABELS[job.employmentType] ?? "Mission"}</Pill>
             {/* Pay wins the slot when there is one: it is the strongest hook on
-                a flyer, and the address is often a long unstructured string
-                ("21 rue KINDAMBA moungali Ref ruelle de la commune sur terre
-                jaune, Brazzaville") that wrapped to two lines and crowded the
-                card. Unpriced offers still show where the work is. */}
-            <Pill nowrap={payLabel(job.amount) !== null}>
-              {payLabel(job.amount) ?? locationLabel(job)}
+                a flyer. Unpriced offers still show where the work is, and
+                locationLabel() now guarantees that fits on one line. */}
+            <Pill>
+              {payLabel(job.amount, job.paymentFlow) ?? locationLabel(job)}
             </Pill>
           </div>
 
@@ -382,10 +459,7 @@ export const JobFlyer = forwardRef<
   },
 );
 
-function Pill({
-  children,
-  nowrap = false,
-}: Readonly<{ children: React.ReactNode; nowrap?: boolean }>) {
+function Pill({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <span
       style={{
@@ -395,10 +469,13 @@ function Pill({
         fontSize: 18,
         color: "#6B6B6B",
         maxWidth: "100%",
-        // An address may break anywhere; an amount must not — "110 000 XAF"
-        // splitting across two lines would read as two numbers.
-        overflowWrap: nowrap ? "normal" : "anywhere",
-        whiteSpace: nowrap ? "nowrap" : undefined,
+        // Every pill is a single line now: an amount must never split ("110 000
+        // XAF" across two lines reads as two numbers), and the location is
+        // pre-truncated by locationLabel() so it no longer needs to wrap.
+        // `hidden` is a backstop for an unbreakably long single word — the
+        // visible ellipsis is the literal «…» the truncation already added.
+        whiteSpace: "nowrap",
+        overflow: "hidden",
       }}
     >
       {children}
