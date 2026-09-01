@@ -8,6 +8,7 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   JOB_POSTING: "Job Posting",
   PENALTY: "Penalty",
   CONTACT_UNLOCK: "Contact Unlock",
+  WALLET_TOP_UP: "Wallet Top-up",
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
