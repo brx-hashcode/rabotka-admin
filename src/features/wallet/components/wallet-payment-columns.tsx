@@ -35,6 +35,9 @@ const TYPE_BADGE: Record<string, string> = {
   JOB_POSTING: "bg-blue-500 text-white border-transparent",
   PENALTY: "bg-orange-600 text-white border-transparent",
   CONTACT_UNLOCK: "bg-teal-600 text-white border-transparent",
+  // Money coming IN, so it reads green rather than borrowing an outgoing
+  // colour. Without an entry here a top-up fell through to the muted default.
+  WALLET_TOP_UP: "bg-emerald-600 text-white border-transparent",
 };
 
 const METHOD_BADGE: Record<string, string> = {
@@ -49,6 +52,8 @@ const TYPE_LABELS: Record<string, string> = {
   JOB_POSTING: "Job Posting",
   PENALTY: "Penalty",
   CONTACT_UNLOCK: "Contact Unlock",
+  // Missing until now, so a wallet recharge rendered as the raw enum.
+  WALLET_TOP_UP: "Wallet Top-up",
 };
 
 const METHOD_LABELS: Record<string, string> = {
