@@ -24,7 +24,7 @@ const FLYER_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
  * Deliberately NOT `PAYMENT_FLOW_LABELS` from `#/lib/status-labels`: that map
  * is English admin chrome ("Daily"), which is right for the Missions table and
  * wrong here — the flyer is a public, French-language artefact that goes out on
- * WhatsApp next to «Postuler sur Rabotka» and «1 place disponible».
+ * WhatsApp next to «Postuler sur Rabotka».
  *
  * Mirrors the client's own suffix map (rabotka-client, employer/config/
  * job-status.ts) so the two surfaces word the cadence identically.
@@ -189,10 +189,6 @@ export const JobFlyer = forwardRef<
     logoDataUrl: string | null;
   }
 >(function JobFlyer({ job, logoDataUrl }, ref) {
-    const places =
-      job.quantity === 1
-        ? "1 place disponible"
-        : `${job.quantity} places disponibles`;
     const title = fitTitle(job.title);
 
     return (
@@ -412,27 +408,10 @@ export const JobFlyer = forwardRef<
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               gap: 16,
             }}
           >
-            {/* Allowed to shrink and ellipsize. The CTA is the one thing on the
-                flyer that must never be clipped, so it keeps its width and this
-                gives ground instead — "24 places disponibles" alongside the
-                longer label would otherwise push the button past the card. */}
-            <span
-              style={{
-                flex: "0 1 auto",
-                minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: 18,
-                color: "#7A7A7A",
-              }}
-            >
-              {places}
-            </span>
             <div
               style={{
                 display: "flex",
