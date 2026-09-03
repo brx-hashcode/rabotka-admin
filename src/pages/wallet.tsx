@@ -49,9 +49,18 @@ const TX_TYPE_OPTIONS = [
   { value: "REFERRAL_CREDIT", label: "Referral Credit" },
 ];
 
+/**
+ * Every member of the backend's `PaymentType`, not just the two that existed
+ * when this filter was written. Three had drifted out of it — a wallet top-up
+ * could not be filtered for at all, which is a poor way to find out you have
+ * been recording them under the wrong type.
+ */
 const PAYMENT_TYPE_OPTIONS = [
   { value: "PENALTY", label: "Penalty" },
   { value: "CONTACT_UNLOCK", label: "Contact Unlock" },
+  { value: "WALLET_TOP_UP", label: "Wallet Top-up" },
+  { value: "REGISTRATION", label: "Registration" },
+  { value: "JOB_POSTING", label: "Job Posting" },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
