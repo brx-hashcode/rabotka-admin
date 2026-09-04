@@ -93,17 +93,44 @@ export function ClaimDetailSheet({
   const users = usersData?.data ?? [];
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: () =>
-      updateClaim(claim!.id, {
-        status,
-        assigned_user_id: assignedUserId === "none" ? null : assignedUserId,
-      }),
+    // Status only. Assignment commits the moment it is picked — see `assign`
+    // below — so bundling it here would let a stale local value overwrite an
+    // assignment the server already has.
+    mutationFn: () => updateClaim(claim!.id, { status }),
     onSuccess: () => {
       toast.success("Claim updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
     onError: (error) => toast.error(error.message),
+  });
+
+  /**
+   * Assigning commits on change rather than waiting for Save.
+   *
+   * Picking a name in a list reads as the act itself — the previous flow left
+   * the claim unassigned unless you also found the button at the bottom of a
+   * scrolling sheet, which is a silent no-op at exactly the moment someone
+   * thinks they have handed work over.
+   *
+   * Deliberately does NOT close the sheet, unlike Save: you assign a claim in
+   * order to keep reading it.
+   */
+  const { mutate: assign, isPending: isAssigning } = useMutation({
+    mutationFn: (userId: string) =>
+      updateClaim(claim!.id, {
+        assigned_user_id: userId === "none" ? null : userId,
+      }),
+    onSuccess: () => {
+      toast.success("Claim assigned");
+      queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
+    },
+    onError: (error) => {
+      // Put the control back where the server still has it, so the dropdown
+      // never shows an assignment that did not happen.
+      setAssignedUserId(claim?.assignedUserId ?? "none");
+      toast.error(error.message);
+    },
   });
 
   const { mutate: unassign, isPending: isUnassigning } = useMutation({
@@ -126,10 +153,9 @@ export function ClaimDetailSheet({
     onError: (error) => toast.error(error.message),
   });
 
-  const isDirty =
-    claim &&
-    (status !== claim.status ||
-      assignedUserId !== (claim.assignedUserId ?? "none"));
+  // Status only: assignment is no longer pending work, so counting it here
+  // would light up Save for a change that is already committed.
+  const isDirty = claim && status !== claim.status;
 
   const assignedUser = claim?.assignedUserId
     ? users.find((u) => u.id === claim.assignedUserId)
@@ -175,8 +201,12 @@ export function ClaimDetailSheet({
               </div>
             </DialogHeader>
 
+            {/* `min-h-0` is what makes the overflow rule bite: a flex child
+                defaults to min-height:auto, refuses to shrink below its
+                content, and pushes the footer out of the dialog instead of
+                scrolling. */}
             <div
-              className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
+              className="min-h-0 flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
               style={{ scrollbarWidth: "none" }}
             >
               <div className="grid grid-cols-2 gap-4">
@@ -341,7 +371,13 @@ export function ClaimDetailSheet({
                 ) : canManageContent ? (
                   <Select
                     value={assignedUserId}
-                    onValueChange={setAssignedUserId}
+                    disabled={isAssigning}
+                    onValueChange={(value) => {
+                      // Local state first so the trigger updates immediately;
+                      // `onError` puts it back if the write is refused.
+                      setAssignedUserId(value);
+                      assign(value);
+                    }}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue
