@@ -237,7 +237,10 @@ export function CreateClaimModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((v) => mutate(v))}>
-            <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
+            {/* `min-h-0`: without it the flex child keeps min-height:auto,
+                never shrinks below its content, and the overflow rule does
+                nothing. */}
+            <div className="min-h-0 flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Profile</span>
                 <ProfilePicker
