@@ -321,8 +321,13 @@ export function KycVerificationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl">
-        <DialogHeader>
+      {/* Capped to the viewport and laid out as a column so only the middle
+          scrolls. Scrolling the dialog as a whole would push Confirm and Cancel
+          off-screen on a short window — which is what happened here: a profile
+          with three documents plus the reason box outgrew the viewport and the
+          decision buttons became unreachable. */}
+      <DialogContent className="flex max-h-[90vh] w-full max-w-xl flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>KYC Verification</DialogTitle>
           <DialogDescription>
             Approve or reject this profile&apos;s KYC. Supporting uploads are
@@ -330,7 +335,10 @@ export function KycVerificationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {/* `min-h-0` is what actually lets this scroll: a flex child defaults to
+            min-height:auto, which refuses to shrink below its content and pushes
+            the overflow outside the dialog instead of into a scrollbar. */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -468,7 +476,7 @@ export function KycVerificationModal({
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

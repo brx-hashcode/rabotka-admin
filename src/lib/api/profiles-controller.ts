@@ -46,6 +46,12 @@ export type AdminProfileListItem = {
   lastName: string;
   email: string;
   phone: string;
+  /**
+   * Optional second number to be reached on, when the WhatsApp number is not
+   * one the person answers calls on. Selected on the detail read only, so this
+   * is undefined on rows that came from the list endpoint.
+   */
+  directPhone?: string | null;
   address: string;
   countryCode: string | null;
   countryName: string | null;
@@ -160,6 +166,8 @@ export type AdminUpdateProfileParams = {
   city?: string;
   email?: string;
   phone?: string;
+  /** Send "" to clear it. Not unique, never used for login. */
+  directPhone?: string;
   /** Changing this re-indexes the profile into the other vector collection. */
   profileType?: string;
 };

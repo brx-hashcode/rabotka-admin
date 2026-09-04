@@ -2,7 +2,6 @@ import {
   IconMail,
   IconPhone,
   IconMapPin,
-  IconDeviceMobile,
   IconBrandWhatsapp,
   IconHeadset,
   IconExternalLink,
@@ -96,8 +95,6 @@ export default function HelpPage() {
   const email = val("contact.email");
   const phone = val("contact.phone");
   const address = val("contact.address");
-  const orange = val("contact.orange_money_number");
-  const airtel = val("contact.airtel_money_number");
 
   return (
     <div className="space-y-8 pt-6">
@@ -158,18 +155,6 @@ export default function HelpPage() {
               badge="Chat"
             />
             <ContactTile icon={IconMapPin} label="Address" value={address} />
-            <ContactTile
-              icon={IconDeviceMobile}
-              label="Orange Money"
-              value={orange}
-              badge="Orange"
-            />
-            <ContactTile
-              icon={IconDeviceMobile}
-              label="Airtel Money"
-              value={airtel}
-              badge="Airtel"
-            />
           </div>
         )}
       </div>

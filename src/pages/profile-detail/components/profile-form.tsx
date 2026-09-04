@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { IconUser, IconCamera, IconLoader2 } from "@tabler/icons-react";
 
-import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
+import type {
+  AdminProfileDetailResponse,
+  AdminUpdateProfileParams,
+} from "#/lib/api/profiles-controller";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -24,6 +27,7 @@ type FormData = {
   lastName: string;
   email: string;
   phone: string;
+  directPhone: string;
   address: string;
   countryCode: string;
   countryName: string;
@@ -46,18 +50,15 @@ function getInitials(firstName: string, lastName: string): string {
 
 type ProfileFormProps = {
   profile: AdminProfileDetailResponse;
-  onSave: (data: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    countryCode: string;
-    countryName: string;
-    city: string;
-    description: string;
-    email: string;
-    phone: string;
-    profileType: string;
-  }) => Promise<void>;
+  /**
+   * Receives ONLY the fields that actually changed, not the whole form.
+   *
+   * The activity timeline renders one chip per key in the update payload, so
+   * sending everything made every save read as "City, Email, Phone, Address,
+   * Lastname, Firstname, …" no matter what was touched. It also rewrote every
+   * column and re-ran the geocode and Qdrant re-index on each save.
+   */
+  onSave: (data: AdminUpdateProfileParams) => Promise<void>;
   isSaving: boolean;
   onAvatarChange?: (file: File) => Promise<unknown>;
   isUploadingAvatar?: boolean;
@@ -77,6 +78,7 @@ export function ProfileForm({
     lastName: "",
     email: "",
     phone: "",
+    directPhone: "",
     address: "",
     countryCode: "",
     countryName: "",
@@ -107,6 +109,7 @@ export function ProfileForm({
       lastName: profile.lastName ?? "",
       email: profile.email ?? "",
       phone: profile.phone ?? "",
+      directPhone: profile.directPhone ?? "",
       address: profile.address ?? "",
       countryCode: profile.countryCode ?? "",
       countryName: profile.countryName ?? "",
@@ -154,18 +157,18 @@ export function ProfileForm({
   };
 
   const handleSave = async () => {
-    await onSave({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      address: form.address,
-      countryCode: form.countryCode,
-      countryName: form.countryName,
-      city: form.city,
-      description: form.description,
-      email: form.email,
-      phone: form.phone,
-      profileType: form.profileType,
-    });
+    // Same comparison `isDirty` uses, so what gets sent and what enables the
+    // button can never disagree.
+    const changed = (Object.keys(form) as (keyof FormData)[]).reduce<
+      AdminUpdateProfileParams
+    >((acc, key) => {
+      if (form[key] !== initialForm[key]) acc[key] = form[key];
+      return acc;
+    }, {});
+
+    if (Object.keys(changed).length === 0) return;
+
+    await onSave(changed);
     setInitialForm(form);
   };
 
@@ -235,22 +238,27 @@ export function ProfileForm({
 
         <Separator className="mb-6" />
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-          <div className="space-y-1.5">
+        {/* Six columns so each logical row divides evenly: the two names at 3
+            apiece, the three ways to reach someone at 2, then country and city
+            back at 3. A 2-column grid could not do that — it pushed Direct
+            phone onto the same line as Country, splitting one idea across two
+            rows and stranding the other. */}
+        <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
+          <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>First Name</FieldLabel>
             <Input
               value={form.firstName}
               onChange={(e) => updateField("firstName", e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>Last Name</FieldLabel>
             <Input
               value={form.lastName}
               onChange={(e) => updateField("lastName", e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-2">
             <FieldLabel>Email</FieldLabel>
             <Input
               type="email"
@@ -258,15 +266,24 @@ export function ProfileForm({
               onChange={(e) => updateField("email", e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
-            <FieldLabel>Phone</FieldLabel>
+          <div className="space-y-1.5 sm:col-span-2">
+            <FieldLabel>WhatsApp phone</FieldLabel>
             <Input
               type="tel"
               value={form.phone}
               onChange={(e) => updateField("phone", e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-2">
+            <FieldLabel>Direct phone</FieldLabel>
+            <Input
+              type="tel"
+              value={form.directPhone}
+              onChange={(e) => updateField("directPhone", e.target.value)}
+              placeholder="Optional"
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>Country</FieldLabel>
             <GeoCombobox
               options={countryOptions}
@@ -277,7 +294,7 @@ export function ProfileForm({
               disabled={readOnly || countries.isPending}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>City</FieldLabel>
             <GeoCombobox
               options={cityOptions}
@@ -290,14 +307,14 @@ export function ProfileForm({
               disabled={readOnly || !form.countryCode || cities.isPending}
             />
           </div>
-          <div className="col-span-2 space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-6">
             <FieldLabel>Address</FieldLabel>
             <Input
               value={form.address}
               onChange={(e) => updateField("address", e.target.value)}
             />
           </div>
-          <div className="col-span-2 space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-6">
             <FieldLabel>Description</FieldLabel>
             <Textarea
               value={form.description}
