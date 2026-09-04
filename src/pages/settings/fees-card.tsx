@@ -5,6 +5,13 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 
 type FormState = {
   "fees.late_cancellation_penalty_fcfa": string;
@@ -25,9 +32,11 @@ type FormState = {
   "fees.contact_recommendation_fee_employer": string;
   "fees.welcome_credit_worker": string;
   "fees.welcome_credit_employer": string;
+  "fees.referral_commission_type": string;
   "fees.referral_credit_referrer": string;
   "fees.referral_credit_referee": string;
   "fees.referral_max_rewarded_per_referrer": string;
+  "fees.referral_max_payout_per_referral": string;
   "fees.completion_score_reward": string;
   "fees.rating_score_delta_1": string;
   "fees.rating_score_delta_2": string;
@@ -55,9 +64,11 @@ const EMPTY: FormState = {
   "fees.contact_recommendation_fee_employer": "",
   "fees.welcome_credit_worker": "",
   "fees.welcome_credit_employer": "",
+  "fees.referral_commission_type": "FIXED",
   "fees.referral_credit_referrer": "",
   "fees.referral_credit_referee": "",
   "fees.referral_max_rewarded_per_referrer": "",
+  "fees.referral_max_payout_per_referral": "",
   "fees.completion_score_reward": "",
   "fees.rating_score_delta_1": "",
   "fees.rating_score_delta_2": "",
@@ -67,28 +78,51 @@ const EMPTY: FormState = {
 };
 
 /**
- * The parrainage payout floor — derived, never stored.
+ * What the current settings actually pay out, in the mode they are in.
  *
- * There is no `fees.referral_minimum` key to edit, on purpose: the backend
- * refuses to pay out more than the payment that triggered it, so the floor IS
- * the two credits added together. A separate editable key would be a second
- * number that could disagree with the one actually enforced.
- *
- * It is shown here because the consequence is otherwise invisible: raise the
- * credits past a fee and that payment type silently stops rewarding anyone.
+ * The consequence is otherwise invisible in either mode, but for opposite
+ * reasons. In FIXED the two credits are also the payout floor — the backend
+ * never pays out more than the payment that triggered it — so raising them past
+ * a connection fee silently stops that fee rewarding anyone. In PERCENTAGE
+ * there is no floor at all, and the risk moves to the split: the shares must
+ * leave something for the platform.
  */
-function ReferralFloorNote({
+function ReferralPayoutNote({
+  type,
   referrer,
   referee,
-}: Readonly<{ referrer: string; referee: string }>) {
+}: Readonly<{ type: string; referrer: string; referee: string }>) {
   const total = Number(referrer || 0) + Number(referee || 0);
   if (!Number.isFinite(total) || total <= 0) return null;
+
+  if (type === "PERCENTAGE") {
+    const overHundred = total > 100;
+    return (
+      <div className="bg-muted mb-6 rounded-lg p-3">
+        <p className="text-xs">
+          <strong>
+            {total}&nbsp;% of every qualifying payment is paid out
+            {!overHundred && `, ${100 - total} % stays with the platform`}.
+          </strong>{" "}
+          {overHundred ? (
+            <span className="text-destructive font-medium">
+              The two shares add up to more than 100&nbsp;%. This will be
+              rejected on save — a referral can never pay out more than the
+              payment that triggered it.
+            </span>
+          ) : (
+            "There is no minimum payment in this mode: a share fits inside any amount, so small connections reward proportionally rather than not at all."
+          )}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-muted mb-6 rounded-lg p-3">
       <p className="text-xs">
-        <strong>Payout floor: {total.toLocaleString("fr-FR")} FCFA.</strong>{" "}
-        A referral pays out only when the referred user&apos;s first connection
+        <strong>Payout floor: {total.toLocaleString("fr-FR")} FCFA.</strong> A
+        referral pays out only when the referred user&apos;s first connection
         payment reaches this amount — the program never pays out more than the
         payment that triggered it. Keep it at or below the connection fees above,
         or those payments will stop rewarding anyone.
@@ -111,27 +145,39 @@ function NumericInput({
   placeholder,
   suffix,
   min = 0,
+  max,
+  hint,
 }: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** A unit — short enough to sit inside the field. Use `hint` for prose. */
   suffix?: string;
   min?: number;
+  max?: number;
+  /** Sits under the field, so it survives a narrow column. */
+  hint?: string;
 }>) {
   return (
-    <div className="relative flex items-center">
-      <Input
-        type="number"
-        min={min}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={suffix ? "pr-14" : undefined}
-      />
-      {suffix && (
-        <span className="text-muted-foreground pointer-events-none absolute right-3 text-xs font-medium">
-          {suffix}
-        </span>
+    <div>
+      <div className="relative flex items-center">
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={suffix ? "pr-14" : undefined}
+        />
+        {suffix && (
+          <span className="text-muted-foreground pointer-events-none absolute right-3 text-xs font-medium">
+            {suffix}
+          </span>
+        )}
+      </div>
+      {hint && (
+        <p className="text-muted-foreground mt-1 text-[11px]">{hint}</p>
       )}
     </div>
   );
@@ -163,6 +209,9 @@ export function FeesCard() {
   function set(key: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  const isPercentage = form["fees.referral_commission_type"] === "PERCENTAGE";
+  const referralUnit = isPercentage ? "%" : "FCFA";
 
   async function handleSave() {
     await saveChanges(form);
@@ -348,13 +397,32 @@ export function FeesCard() {
           payment for a connection</strong> — never at signup, which would be
           farmable with throwaway accounts.
         </p>
-        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+        {/* Five across on a wide screen, collapsing to two and then one. The
+            commission type leads because it decides the unit of the two fields
+            after it — reading left to right is reading the sentence. */}
+        <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="space-y-1.5">
+            <FieldLabel>Commission type</FieldLabel>
+            <Select
+              value={form["fees.referral_commission_type"] || "FIXED"}
+              onValueChange={(v) => set("fees.referral_commission_type", v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FIXED">Fixed (FCFA)</SelectItem>
+                <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <FieldLabel>Referral credit – Referrer</FieldLabel>
             <NumericInput
               value={form["fees.referral_credit_referrer"]}
               onChange={(v) => set("fees.referral_credit_referrer", v)}
-              suffix="FCFA"
+              suffix={referralUnit}
+              max={isPercentage ? 100 : undefined}
             />
           </div>
           <div className="space-y-1.5">
@@ -362,7 +430,8 @@ export function FeesCard() {
             <NumericInput
               value={form["fees.referral_credit_referee"]}
               onChange={(v) => set("fees.referral_credit_referee", v)}
-              suffix="FCFA"
+              suffix={referralUnit}
+              max={isPercentage ? 100 : undefined}
             />
           </div>
           <div className="space-y-1.5">
@@ -372,11 +441,21 @@ export function FeesCard() {
               onChange={(v) =>
                 set("fees.referral_max_rewarded_per_referrer", v)
               }
-              suffix="0 = unlimited"
+              hint="0 = unlimited"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max payout per referral</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_max_payout_per_referral"]}
+              onChange={(v) => set("fees.referral_max_payout_per_referral", v)}
+              suffix="FCFA"
+              hint="0 = no ceiling"
             />
           </div>
         </div>
-        <ReferralFloorNote
+        <ReferralPayoutNote
+          type={form["fees.referral_commission_type"]}
           referrer={form["fees.referral_credit_referrer"]}
           referee={form["fees.referral_credit_referee"]}
         />
