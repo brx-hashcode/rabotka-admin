@@ -42,7 +42,10 @@ import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
 } from "#/lib/api/profiles-controller";
-import type { AdminVerifyDocumentRef } from "#/lib/api/profiles-controller";
+import type {
+  AdminVerifyDocumentRef,
+  AdminUpdateProfileParams,
+} from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
 
 type ProfileTab =
@@ -112,18 +115,10 @@ export default function ProfileDetailPage({
     },
   });
 
-  const handleSave = async (data: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    countryCode: string;
-    countryName: string;
-    city: string;
-    description: string;
-    email: string;
-    phone: string;
-    profileType: string;
-  }) => {
+  // Only the changed fields — ProfileForm diffs against what it loaded, so the
+  // activity timeline lists what was actually edited rather than every field on
+  // the form.
+  const handleSave = async (data: AdminUpdateProfileParams) => {
     await submitUpdate(data);
   };
 
