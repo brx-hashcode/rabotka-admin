@@ -1,4 +1,6 @@
 import { AdminBaseController } from "./base-controller";
+import { appConfig } from "#/config";
+import { fetchWithCsrfRetry } from "./csrf-token";
 
 /**
  * The WhatsApp delivery log and its analytics.
@@ -235,6 +237,47 @@ export class AdminWhatsappController extends AdminBaseController {
     );
   }
 
+  /**
+   * The consumption report, as a PDF for the current window.
+   *
+   * Raw `fetch` rather than the base controller, which parses every response as
+   * JSON — same route every other blob download in the admin takes (see
+   * `fetchInvoiceBlob`).
+   *
+   * The 503 body carries the reason Meta could not be read, which is the only
+   * useful thing to put in front of the reader when no document comes back.
+   */
+  async getBillingReportPdf(
+    params: WhatsappRangeParams,
+  ): Promise<{ blob: Blob; filename: string }> {
+    const query = this.buildSearchParams(rangeParams(params));
+    const search = query.toString();
+    const response = await fetchWithCsrfRetry(
+      `${appConfig.apiUrl}/admin/whatsapp/billing/report.pdf${
+        search ? `?${search}` : ""
+      }`,
+      { credentials: "include" },
+    );
+    if (!response.ok) {
+      const body: unknown = await response.json().catch(() => null);
+      const message =
+        body && typeof body === "object" && "message" in body
+          ? String((body as { message: unknown }).message)
+          : "The report could not be generated.";
+      throw new Error(message);
+    }
+    return {
+      blob: await response.blob(),
+      // The server already named the file after the window it actually
+      // rendered — which is not always the one asked for, since Meta's
+      // one-year lookback can move the start. Re-deriving the name here would
+      // reintroduce exactly that discrepancy.
+      filename:
+        parseAttachmentFilename(response.headers.get("content-disposition")) ??
+        "whatsapp-consumption.pdf",
+    };
+  }
+
   async getQueue(): Promise<WhatsappQueueSnapshot> {
     // No query string, so no `createURL` — it requires search params.
     return this.get<WhatsappQueueSnapshot>("/admin/whatsapp/queue");
@@ -245,6 +288,13 @@ export class AdminWhatsappController extends AdminBaseController {
       `/admin/whatsapp/queue/dlq/${encodeURIComponent(jobId)}/retry`,
     );
   }
+}
+
+/** Pulls `report.pdf` out of `attachment; filename="report.pdf"`. */
+function parseAttachmentFilename(header: string | null): string | null {
+  if (!header) return null;
+  const match = /filename="?([^";]+)"?/i.exec(header);
+  return match ? match[1].trim() : null;
 }
 
 function rangeParams(params: WhatsappRangeParams): Record<string, unknown> {
@@ -258,6 +308,8 @@ const controller = new AdminWhatsappController();
 export const getWhatsappMessages = controller.getMessages.bind(controller);
 export const getWhatsappStats = controller.getStats.bind(controller);
 export const getWhatsappBilling = controller.getBilling.bind(controller);
+export const getWhatsappBillingReportPdf =
+  controller.getBillingReportPdf.bind(controller);
 export const getWhatsappQueue = controller.getQueue.bind(controller);
 export const retryWhatsappDlqJob = controller.retryDlqJob.bind(controller);
 
