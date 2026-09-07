@@ -7,6 +7,7 @@ export {
   WhatsappErrorTable,
 } from "./components/whatsapp-template-table";
 export { WhatsappBillingPanel } from "./components/whatsapp-billing-panel";
+export { WhatsappBillingDownload } from "./components/whatsapp-billing-download";
 export {
   WhatsappRangeToggle,
   describeRange,

@@ -14,6 +14,7 @@ import {
   WhatsappTemplateTable,
   WhatsappErrorTable,
   WhatsappBillingPanel,
+  WhatsappBillingDownload,
   WhatsappQueuePanel,
   WhatsappExportMenu,
   WhatsappRangeToggle,
@@ -227,8 +228,14 @@ export default function WhatsappPage() {
           </TabsContent>
 
           <TabsContent value="billing" className="flex flex-col gap-4">
+            {/* Download sits on the same row as the window it exports, at the
+                far right — the report covers whatever this picker is showing,
+                so putting the two anywhere else would hide the link. */}
             <div className="flex flex-wrap items-center gap-2">
               <WhatsappDateRange />
+              <div className="ml-auto">
+                <WhatsappBillingDownload />
+              </div>
             </div>
             {/* Mounted lazily: the Graph call is rate-limited upstream, so it
                 should not fire for readers who never open this tab. */}
