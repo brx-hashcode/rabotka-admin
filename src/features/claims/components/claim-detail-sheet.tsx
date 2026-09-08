@@ -43,6 +43,7 @@ import {
   type ViewerDocument,
 } from "#/pages/profile-detail/components/document-viewer-drawer";
 import { useRole } from "#/hooks/use-role";
+import { useAdminMe } from "#/hooks/use-admin-me";
 import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
@@ -77,6 +78,7 @@ export function ClaimDetailSheet({
 }: Readonly<ClaimDetailDialogProps>) {
   const queryClient = useQueryClient();
   const { canManageContent } = useRole();
+  const { data: me } = useAdminMe();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
   // One viewer for the whole sheet — the claim's own attachments and the ones
@@ -167,7 +169,27 @@ export function ClaimDetailSheet({
   const assignedUser = claim?.assignedUserId
     ? users.find((u) => u.id === claim.assignedUserId)
     : null;
-  const canUnassign = canManageContent && status !== "COMPLETED" && status !== "REJECTED";
+  /**
+   * Whoever assigned a claim is the only one who may change that assignment.
+   *
+   * Mirrors the server's rule — this is only the UI half. The server refuses
+   * the write regardless; showing a disabled control just means the admin
+   * learns why before clicking rather than after.
+   *
+   * Null `assignedByUserId` means the assignment predates the column, so it
+   * stays freely editable. SUPER_ADMIN can always override, because otherwise a
+   * claim assigned by someone who has left the team could never be moved on.
+   */
+  const assignmentLockedBy =
+    claim?.assignedUserId && claim.assignedByUserId ? claim.assignedByUserId : null;
+  const canChangeAssignment =
+    canManageContent &&
+    (assignmentLockedBy === null ||
+      assignmentLockedBy === me?.id ||
+      me?.role === "SUPER_ADMIN");
+
+  const canUnassign =
+    canChangeAssignment && status !== "COMPLETED" && status !== "REJECTED";
 
   return (
     <Dialog
@@ -365,7 +387,7 @@ export function ClaimDetailSheet({
                 ) : canManageContent ? (
                   <Select
                     value={assignedUserId}
-                    disabled={isAssigning}
+                    disabled={isAssigning || !canChangeAssignment}
                     onValueChange={(value) => {
                       // Local state first so the trigger updates immediately;
                       // `onError` puts it back if the write is refused.
@@ -390,6 +412,14 @@ export function ClaimDetailSheet({
                   </Select>
                 ) : (
                   <p className="text-sm text-muted-foreground">Unassigned</p>
+                )}
+
+                {assignedUser && !canChangeAssignment && canManageContent && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Assigned by{" "}
+                    {claim.assignedByUserName ?? "another administrator"} — only
+                    they can change it.
+                  </p>
                 )}
               </div>
 
