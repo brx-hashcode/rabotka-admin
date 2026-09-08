@@ -52,7 +52,14 @@ export type CreateClaimPayload = {
 
 export type AdminClaimCommentItem = {
   id: string;
+  /** Empty for an image-only comment. */
   content: string;
+  /**
+   * Optional because a bundle can outlive the backend it talks to: a deploy
+   * where this ships first returns comments without the field, and every read
+   * site would crash on `.map`. Read it as `?? []`.
+   */
+  attachmentUrls?: string[];
   userId: string | null;
   userName: string | null;
   profileId: string | null;
@@ -66,6 +73,16 @@ export type ReorderClaimPayload = {
   status: AdminClaimStatus;
   /** Slot the claim should occupy in that column once it has landed, counting itself. */
   index: number;
+};
+
+export type AddClaimCommentPayload = {
+  /** Omit for an image-only comment; the server requires one or the other. */
+  content?: string;
+  attachment_urls?: string[];
+};
+
+export type ClaimAttachmentUploadResponse = {
+  files: { url: string; key: string; name: string }[];
 };
 
 export type UpdateClaimPayload = {
@@ -124,9 +141,33 @@ class AdminClaimsController extends AdminBaseController {
     return this.get<AdminClaimCommentItem[]>(url);
   }
 
-  async addComment(claimId: string, content: string): Promise<AdminClaimCommentItem> {
+  /**
+   * The signature takes a payload rather than a second argument on purpose:
+   * changing it forces every call site to be visited when attachments landed.
+   */
+  async addComment(
+    claimId: string,
+    payload: AddClaimCommentPayload,
+  ): Promise<AdminClaimCommentItem> {
     const url = this.createURL(`/admin/claims/${claimId}/comments`, new URLSearchParams());
-    return this.post<AdminClaimCommentItem>(url, { content });
+    return this.post<AdminClaimCommentItem>(url, payload);
+  }
+
+  /**
+   * Upload claim images and get back urls to reference.
+   *
+   * Replaces the hand-rolled `fetchWithCsrfRetry` + FormData helper that sat
+   * inside `create-claim-modal.tsx` and pointed at the generic `/file/upload`,
+   * which accepts any mime type. `AdminBaseController` already accepts a
+   * FormData body, so this belongs here like `chat-controller`'s.
+   */
+  async uploadAttachments(files: File[]): Promise<string[]> {
+    const formData = new FormData();
+    for (const file of files) formData.append("files", file);
+
+    const url = this.createURL("/admin/claims/attachments", new URLSearchParams());
+    const response = await this.post<ClaimAttachmentUploadResponse>(url, formData);
+    return response.files.map((f) => f.url);
   }
 
   async deleteComment(claimId: string, commentId: string): Promise<{ success: boolean }> {
@@ -145,3 +186,5 @@ export const deleteClaim = controller.deleteClaim.bind(controller);
 export const listClaimComments = controller.listComments.bind(controller);
 export const addClaimComment = controller.addComment.bind(controller);
 export const deleteClaimComment = controller.deleteComment.bind(controller);
+export const uploadClaimAttachments =
+  controller.uploadAttachments.bind(controller);

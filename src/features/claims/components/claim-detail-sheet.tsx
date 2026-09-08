@@ -11,7 +11,7 @@ import {
 } from "#/components/ui/dialog";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
-import { Download } from "lucide-react";
+import { FileText } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,7 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
-import { appConfig } from "#/config";
 import { updateClaim, deleteClaim } from "#/lib/api/claims-controller";
 import type {
   AdminClaimItem,
@@ -38,7 +37,11 @@ import type {
 } from "#/lib/api/claims-controller";
 import { getUsersList } from "#/lib/api/users-controller";
 import { ProfileCell } from "#/components/table";
-import { ClaimComments } from "./claim-comments";
+import { ClaimComments, claimAttachmentToViewerDoc } from "./claim-comments";
+import {
+  DocumentViewerDrawer,
+  type ViewerDocument,
+} from "#/pages/profile-detail/components/document-viewer-drawer";
 import { useRole } from "#/hooks/use-role";
 import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 
@@ -76,7 +79,11 @@ export function ClaimDetailSheet({
   const { canManageContent } = useRole();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  // One viewer for the whole sheet — the claim's own attachments and the ones
+  // inside comments both open it. `DocumentViewerDrawer` is the app's shared
+  // viewer, already used by six other features; the bespoke dialog this
+  // replaces had no zoom, no rotate and no error state.
+  const [viewerDoc, setViewerDoc] = useState<ViewerDocument | null>(null);
 
   useEffect(() => {
     if (claim) {
@@ -275,45 +282,32 @@ export function ClaimDetailSheet({
               {claim.attachmentUrls.length > 0 && (
                 <Field label="Attachments">
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {claim.attachmentUrls.map((url) => (
+                    {claim.attachmentUrls.map((url, idx) => (
                       <button
                         key={url}
-                        onClick={() => setSelectedImageUrl(url)}
-                        className="group relative block w-16 h-16 rounded-md overflow-hidden border bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() =>
+                          setViewerDoc(claimAttachmentToViewerDoc(url, idx))
+                        }
+                        className="group relative block w-16 h-16 rounded-md overflow-hidden bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         title={fileNameFromUrl(url, "image")}
                       >
                         <img
                           src={url}
                           alt={fileNameFromUrl(url, "image")}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (
-                              e.currentTarget as HTMLImageElement
-                            ).style.display = "none";
-                            (
-                              e.currentTarget
-                                .nextElementSibling as HTMLElement | null
-                            )?.style.setProperty("display", "flex");
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.nextElementSibling?.setAttribute(
+                              "data-visible",
+                              "true",
+                            );
                           }}
                         />
-                        <div
-                          className="absolute inset-0 hidden items-center justify-center flex-col gap-1 p-2"
-                          style={{ display: "none" }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-6 h-6 text-muted-foreground"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                            />
-                          </svg>
+                        {/* Older claims may hold a PDF: say so rather than
+                            leaving an empty square. */}
+                        <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1 p-2 data-[visible=true]:flex">
+                          <FileText className="size-5 text-muted-foreground" />
                           <span className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2 break-all">
                             {fileNameFromUrl(url, "image")}
                           </span>
@@ -400,7 +394,10 @@ export function ClaimDetailSheet({
               </div>
 
               <div className="pt-4 border-t">
-                <ClaimComments claimId={claim.id} />
+                <ClaimComments
+                  claimId={claim.id}
+                  onOpenAttachment={setViewerDoc}
+                />
               </div>
             </div>
 
@@ -444,38 +441,14 @@ export function ClaimDetailSheet({
         )}
       </DialogContent>
 
-      {/* Image Viewer Dialog */}
-      <Dialog open={Boolean(selectedImageUrl)} onOpenChange={(open) => {
-        if (!open) setSelectedImageUrl(null);
-      }}>
-        <DialogContent className="w-full max-w-4xl p-0 border-0 bg-black/90">
-          <DialogHeader className="px-4 py-3 border-b border-white/10 shrink-0">
-            <DialogTitle className="text-white text-sm">
-              {fileNameFromUrl(selectedImageUrl, "image")}
-            </DialogTitle>
-            {selectedImageUrl && (
-              <a
-                href={`${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(selectedImageUrl)}`}
-                download={fileNameFromUrl(selectedImageUrl, "image")}
-                className="absolute right-12 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                title="Download"
-              >
-                <Download className="h-4 w-4 text-white" />
-                <span className="sr-only">Download</span>
-              </a>
-            )}
-          </DialogHeader>
-          <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
-            {selectedImageUrl && (
-              <img
-                src={selectedImageUrl}
-                alt="Attachment"
-                className="max-w-full max-h-[70vh] object-contain rounded"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* A sibling of DialogContent, not a child: nesting the drawer inside
+          the dialog makes their focus traps fight, which is why the bespoke
+          lightbox it replaces sat here too. */}
+      <DocumentViewerDrawer
+        open={viewerDoc !== null}
+        onOpenChange={(open) => !open && setViewerDoc(null)}
+        document={viewerDoc}
+      />
     </Dialog>
   );
 }
