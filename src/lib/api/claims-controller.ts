@@ -15,6 +15,13 @@ export type AdminClaimItem = {
   assignedUserId: string | null;
   assignedUserName: string | null;
   assignedUserEmail: string | null;
+  /**
+   * Who performed the assignment, and therefore the only admin the server will
+   * let change it (a SUPER_ADMIN aside). Null means nobody is assigned, or the
+   * assignment predates the column — in both cases anyone may change it.
+   */
+  assignedByUserId?: string | null;
+  assignedByUserName?: string | null;
   createdByUserId: string | null;
   createdByUserName: string | null;
   createdByUserEmail: string | null;
