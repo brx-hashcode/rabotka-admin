@@ -1,4 +1,8 @@
 import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { cn } from "#/lib/utils";
 import { Badge } from "#/components/ui/badge";
 import { ClaimCard } from "./claim-card";
@@ -22,24 +26,39 @@ export function ClaimColumn({ status, claims, onViewDetail }: Readonly<ClaimColu
   const config = STATUS_CONFIG[status];
 
   return (
-    <div className="flex flex-col gap-3 min-w-[260px] w-full">
-      <div className="flex items-center gap-2">
+    <div className="flex min-h-0 flex-col gap-3 min-w-[260px] w-full">
+      {/* The label stays put while the cards under it scroll — a column you
+          have scrolled halfway down should still say which one it is. */}
+      <div className="flex shrink-0 items-center gap-2">
         <Badge variant="outline" className={cn("text-xs font-medium", config.color)}>
           {config.label}
         </Badge>
         <span className="text-xs text-muted-foreground">{claims.length}</span>
       </div>
 
+      {/* The panel takes the leftover height; the cards are absolutely
+          positioned inside it so they contribute nothing to layout height.
+          Without that they push the column — and with it the whole page —
+          taller, and there is no definite height anywhere up the chain for
+          `flex-1 min-h-0` to shrink back from (the sidebar wrapper is
+          `min-h-svh`, a floor, not a cap). Same trick as the chat pane. */}
       <div
         ref={setNodeRef}
         className={cn(
-          "flex flex-col gap-2 min-h-[120px] rounded-lg p-2 transition-colors",
+          "relative min-h-[120px] flex-1 rounded-lg transition-colors",
           isOver ? config.bgOver : config.bg,
         )}
       >
-        {claims.map((claim) => (
-          <ClaimCard key={claim.id} claim={claim} onViewDetail={onViewDetail} />
-        ))}
+        <div className="absolute inset-0 flex flex-col gap-2 overflow-y-auto p-2">
+          <SortableContext
+            items={claims.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {claims.map((claim) => (
+              <ClaimCard key={claim.id} claim={claim} onViewDetail={onViewDetail} />
+            ))}
+          </SortableContext>
+        </div>
       </div>
     </div>
   );

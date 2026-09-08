@@ -18,6 +18,7 @@ type FormState = {
   maxNotificationWorkers: string;
   notificationCooldownMinutes: string;
   recommendationMinScore: string;
+  reliabilityThreshold: string;
 };
 
 const EMPTY: FormState = {
@@ -27,6 +28,7 @@ const EMPTY: FormState = {
   maxNotificationWorkers: "20",
   notificationCooldownMinutes: "60",
   recommendationMinScore: "0.3",
+  reliabilityThreshold: "50",
 };
 
 export function MatchingCard() {
@@ -58,6 +60,8 @@ export function MatchingCard() {
         data.notificationCooldownMinutes = item.value;
       if (item.key === "matching.recommendation_min_score")
         data.recommendationMinScore = item.value;
+      if (item.key === "matching.reliability_threshold")
+        data.reliabilityThreshold = item.value;
     }
     setForm(data);
     setInitial(data);
@@ -93,6 +97,12 @@ export function MatchingCard() {
       return;
     }
 
+    const reliability = parseInt(form.reliabilityThreshold, 10);
+    if (isNaN(reliability) || reliability < 0 || reliability > 100) {
+      toast.error("Le score de fiabilité doit être entre 0 et 100");
+      return;
+    }
+
     await saveChanges({
       "matching.use_embeddings": String(form.useEmbeddings),
       "matching.recommendations_enabled": String(form.recommendationsEnabled),
@@ -100,6 +110,7 @@ export function MatchingCard() {
       "matching.max_notification_workers": String(maxWorkers),
       "matching.notification_cooldown_minutes": String(cooldown),
       "matching.recommendation_min_score": String(recoScore),
+      "matching.reliability_threshold": String(reliability),
     });
     setInitial(form);
   }
@@ -239,6 +250,36 @@ export function MatchingCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label
+              htmlFor="reliability-threshold"
+              className="text-sm font-medium"
+            >
+              Minimum reliability score to be matched
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Workers scoring below this are not returned by the matching
+              engine. Separate from the platform-wide minimum under Fees &amp;
+              Penalties, which is the floor a score can be deducted to — this
+              one only decides who the engine will surface. Default: 50.
+            </p>
+          </div>
+          <Input
+            id="reliability-threshold"
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={form.reliabilityThreshold}
+            onChange={(e) => set("reliabilityThreshold", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label
               htmlFor="max-notification-workers"
               className="text-sm font-medium"
             >
@@ -246,7 +287,10 @@ export function MatchingCard() {
             </Label>
             <p className="text-muted-foreground text-xs">
               Maximum number of workers who receive a WhatsApp notification when
-              a new job offer is published. Default: 20.
+              a new job offer is published. Each one is a paid message to
+              someone who did not ask for it, so raise this in steps and watch
+              the WhatsApp quality rating. The cooldown below caps how often any
+              single worker can be reached, whatever this is set to. Default: 5.
             </p>
           </div>
           <Input

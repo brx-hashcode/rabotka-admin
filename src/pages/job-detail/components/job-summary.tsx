@@ -1,13 +1,22 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { format, formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import {
   IconMail,
   IconPhone,
   IconExternalLink,
   IconUser,
+  IconCopy,
+  IconCheck,
 } from "@tabler/icons-react";
 
 import type { AdminJobOfferDetailResponse } from "#/lib/api/jobs-controller";
-import { getJobOfferStatusLabel } from "#/lib/status-labels";
+import {
+  getJobOfferStatusLabel,
+  PAYMENT_FLOW_LABELS,
+} from "#/lib/status-labels";
+import { EMPLOYMENT_TYPE_LABELS } from "#/lib/employment-type";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
@@ -30,68 +39,140 @@ type Props = {
   job: AdminJobOfferDetailResponse;
 };
 
+/** Label on the left, value on the right — the shape a spec sheet is read in. */
+function Field({
+  label,
+  children,
+}: Readonly<{ label: string; children: React.ReactNode }>) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2">
+      <span className="text-muted-foreground shrink-0 text-xs">{label}</span>
+      <span className="min-w-0 text-right text-sm font-medium">{children}</span>
+    </div>
+  );
+}
+
+const EM_DASH = "\u2014";
+
 export function JobSummary({ job }: Readonly<Props>) {
+  const [copied, setCopied] = useState(false);
+
+  function copyReference() {
+    navigator.clipboard
+      .writeText(job.reference)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => toast.error("Could not copy reference"));
+  }
+
+  const closingDate = job.scheduledAt ? new Date(job.scheduledAt) : null;
+  const closingValid = closingDate && !Number.isNaN(closingDate.getTime());
+  const created = new Date(job.createdAt);
+  const createdValid = !Number.isNaN(created.getTime());
+
   return (
     <div className="space-y-6">
-      <Card className="gap-2 py-4">
-        <CardContent className="px-4">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-            Reference
-          </p>
-          <code className="mt-1 inline-block text-sm font-mono font-semibold rounded bg-muted px-2 py-0.5">
-            {job.reference}
-          </code>
+      <Card className="py-4">
+        <CardContent className="space-y-1 px-4">
+          {/* One button, not a card of its own. The reference exists to be
+              quoted into a support thread, so copying it is the only thing
+              anyone does with it — and it was previously unselectable text
+              occupying a whole panel. */}
+          <button
+            type="button"
+            onClick={copyReference}
+            className="hover:bg-muted flex w-full items-center justify-between gap-2 rounded px-1 py-1 text-left transition-colors"
+            title="Copy reference"
+          >
+            <span className="text-muted-foreground text-xs">Reference</span>
+            <span className="flex items-center gap-1.5 font-mono text-sm font-semibold">
+              {job.reference}
+              {copied ? (
+                <IconCheck className="size-3.5 text-emerald-500" />
+              ) : (
+                <IconCopy className="text-muted-foreground size-3.5" />
+              )}
+            </span>
+          </button>
+
+          <Separator />
+
+          <div className="divide-y">
+            <Field label="Status">
+              <Badge className={getStatusBadgeClass(job.status)}>
+                {getJobOfferStatusLabel(job.status)}
+              </Badge>
+            </Field>
+
+            {/* The fact that explains an Expired badge, and it was missing
+                entirely — "why is this expired" had no answer on the page. */}
+            {closingValid && (
+              <Field label="Closes">
+                <span title={format(closingDate, "PPpp")}>
+                  {formatDate(job.scheduledAt)}
+                  <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                    {formatDistanceToNow(closingDate, { addSuffix: true })}
+                  </span>
+                </span>
+              </Field>
+            )}
+
+            <Field label="Type">
+              {EMPLOYMENT_TYPE_LABELS[job.employmentType] ?? job.employmentType}
+            </Field>
+
+            {job.category && <Field label="Domain">{job.category.name}</Field>}
+
+            <Field label="Pay">
+              {job.amount == null && !job.paymentFlow ? (
+                <span className="text-muted-foreground">{EM_DASH}</span>
+              ) : (
+                <>
+                  {job.amount != null && (
+                    <span className="tabular-nums">
+                      {job.amount.toLocaleString("fr-FR")} FCFA
+                    </span>
+                  )}
+                  {job.paymentFlow && (
+                    <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                      {PAYMENT_FLOW_LABELS[job.paymentFlow] ?? job.paymentFlow}
+                    </span>
+                  )}
+                </>
+              )}
+            </Field>
+
+            {/* Applications against positions: "0" alone does not say whether
+                that is a problem, and "0 of 3" does. */}
+            <Field label="Applications">
+              <span className="tabular-nums">
+                {job.applicationsCount}
+                {job.quantity > 1 && (
+                  <span className="text-muted-foreground text-xs font-normal">
+                    {" "}
+                    / {job.quantity} positions
+                  </span>
+                )}
+              </span>
+            </Field>
+
+            <Field label="Created">
+              {createdValid ? (
+                <span title={format(created, "PPpp")}>
+                  {formatDate(job.createdAt)}
+                  <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                    {formatDistanceToNow(created, { addSuffix: true })}
+                  </span>
+                </span>
+              ) : (
+                EM_DASH
+              )}
+            </Field>
+          </div>
         </CardContent>
       </Card>
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Status
-            </p>
-            <Badge
-              className={`mt-1 ${getStatusBadgeClass(job.status)}`}
-            >
-              {getJobOfferStatusLabel(job.status)}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Pay type
-            </p>
-            {job.paymentFlow ? (
-              <Badge variant="outline" className="mt-1">
-                {job.paymentFlow}
-              </Badge>
-            ) : (
-              <span className="mt-1 text-sm text-muted-foreground">—</span>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Created
-            </p>
-            <p className="mt-1 text-sm font-medium">
-              {formatDate(job.createdAt)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Applications
-            </p>
-            <p className="mt-1 text-sm font-medium">{job.applicationsCount}</p>
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader className="pb-0">

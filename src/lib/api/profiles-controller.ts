@@ -14,13 +14,51 @@ export type AdminInvoiceItem = {
   createdAt: string;
 };
 
+export type ReferralStatus =
+  | "PENDING"
+  | "QUALIFIED_ON_HOLD"
+  | "REWARDED"
+  | "CAPPED"
+  | "FORFEITED";
+
+export type ReferralSource = "LINK" | "MANUAL_CODE" | "BOT" | "ADMIN";
+
+/**
+ * Who invited a profile. Read off the Referral relation rather than a column on
+ * the profile, so this and the payout logic cannot disagree about it.
+ */
+export type AdminProfileReferredBy = {
+  profileId: string;
+  firstName: string;
+  lastName: string;
+  code: string;
+  source: ReferralSource;
+  status: ReferralStatus;
+  rewardedAt: string | null;
+  referrerAmount: number | null;
+  /** Why nothing was paid, when the status says nothing was. */
+  settlementNote: string | null;
+};
+
 export type AdminProfileListItem = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  /**
+   * Optional second number to be reached on, when the WhatsApp number is not
+   * one the person answers calls on. Selected on the detail read only, so this
+   * is undefined on rows that came from the list endpoint.
+   */
+  directPhone?: string | null;
   address: string;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
+  /** Null unless geocoding succeeded; it is fire-and-forget, so gaps are normal. */
+  latitude: number | null;
+  longitude: number | null;
   description: string;
   status: string;
   profileType: string;
@@ -35,13 +73,44 @@ export type AdminProfileListItem = {
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Every trade this profile works in — a worker may have several. */
+  categoryIds: string[];
+  categoryNames: string[];
+  ratingAvg: number | null;
+  ratingCount: number;
+  billingStatus: string;
+  suspensionReason: string | null;
+  suspendedAt: string | null;
+  lastLoginAt: string | null;
+  /** First time the account became usable. Not a sign-in — activation mints no session. */
+  activatedAt: string | null;
+  firstLogin: boolean;
+  readAndApprovedPolicies: boolean;
+  portfolioSlug: string | null;
+  /** When this profile last reached the vector index; null means never. */
+  vectorIndexedAt: string | null;
+  jobOffersCount: number;
+  applicationsCount: number;
+  penaltiesCount: number;
+  unpaidPenaltiesCount: number;
 };
+
+/** What the bytes are, decided server-side. The stream url has no extension,
+ *  so there is nothing here to sniff. */
+export type KycContentKind = "image" | "pdf" | "other";
 
 export type AdminKycDocumentItem = {
   id: string;
   documentType: string | null;
   documentCategory: string;
-  documentUrl: string | null;
+  /**
+   * No url. `documentUrl` used to sit here and was either a signed url that
+   * died within the hour — which is why documents rendered as broken images —
+   * or a permanent public link to somebody's ID card. The bytes now come from
+   * `kycDocumentRawUrl()`, behind the admin session.
+   */
+  fileAvailable: boolean;
+  contentKind: KycContentKind;
   verificationStatus: string;
   verifiedAt: string | null;
   verifiedBy: string | null;
@@ -51,23 +120,40 @@ export type AdminKycDocumentItem = {
 
 export type AdminVerificationImageItem = {
   id: string;
-  imageUrl: string;
+  fileAvailable: boolean;
+  contentKind: KycContentKind;
   uploadedBy: string | null;
   createdAt: string;
 };
 
+/**
+ * Where to fetch a KYC document's bytes.
+ *
+ * Same-origin under `appConfig.apiUrl`, so the session cookie rides along on a
+ * bare `<img src>` with no token in the query string and nothing to leak.
+ */
+export function kycDocumentRawUrl(profileId: string, documentId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/kyc-documents/${documentId}/raw`;
+}
+
+export function kycVerificationImageRawUrl(profileId: string, imageId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/verification-images/${imageId}/raw`;
+}
+
 export type AdminProfileDetailResponse = AdminProfileListItem & {
+  /** Legacy single category, superseded by `categoryIds`/`categoryNames`. */
   categoryId: string | null;
   categoryName: string | null;
-  categoryIds: string[];
-  categoryNames: string[];
-  jobOffersCount: number;
-  applicationsCount: number;
-  penaltiesCount: number;
-  unpaidPenaltiesCount: number;
   kycDocuments: AdminKycDocumentItem[];
   verificationImages: AdminVerificationImageItem[];
-  vectorIndexedAt: string | null;
+  /**
+   * Parrainage. Detail-only: the list endpoint does not join the Referral
+   * relation, so putting these on AdminProfileListItem would promise every
+   * table row a field the API never sends.
+   */
+  referredBy: AdminProfileReferredBy | null;
+  /** How many people this profile has invited, in any payout state. */
+  referralsMadeCount: number;
 };
 
 export type AdminUpdateProfileParams = {
@@ -75,16 +161,36 @@ export type AdminUpdateProfileParams = {
   lastName?: string;
   description?: string;
   address?: string;
+  countryCode?: string;
+  countryName?: string;
+  city?: string;
   email?: string;
   phone?: string;
+  /** Send "" to clear it. Not unique, never used for login. */
+  directPhone?: string;
   /** Changing this re-indexes the profile into the other vector collection. */
   profileType?: string;
+};
+
+/**
+ * One supporting image, already uploaded via `uploadVerificationImage`.
+ *
+ * `url` is a signed preview that expires within the hour; the API never stores
+ * it and reads it only to re-derive the key. `key` is the durable half.
+ */
+export type AdminVerifyDocumentRef = {
+  key: string;
+  url?: string;
 };
 
 export type AdminVerifyProfileParams = {
   decision: "VERIFIED" | "REJECTED";
   reason: string;
-  files?: File[];
+  /**
+   * Descriptors, not bytes. Send EXACTLY `{ key, url }` per item — the API runs
+   * `forbidNonWhitelisted`, so an extra property is a 400 for the whole request.
+   */
+  documents?: AdminVerifyDocumentRef[];
 };
 
 export type AdminUpdateStatusParams = {
@@ -130,6 +236,31 @@ export type AdminProfileMessage = {
   body: string;
   createdAt: string;
   sentByName: string | null;
+};
+
+export type MessageChannel = "WHATSAPP" | "EMAIL";
+
+/** How a WhatsApp message would be delivered right now. */
+export type MessageDeliveryMode = "FREE_FORM" | "TEMPLATE";
+
+/**
+ * State of the profile's 24h WhatsApp customer-service window.
+ *
+ * Advisory: the window can open or lapse between this call and the send, so the
+ * backend recomputes it and is authoritative. Used to tell the admin which mode
+ * their message will go out in, never to block them from sending.
+ */
+export type WhatsAppWindowState = {
+  windowOpen: boolean;
+  lastInboundAt: string | null;
+  mode: MessageDeliveryMode;
+  hasPhone: boolean;
+};
+
+/** `deliveryMode` is null for EMAIL, which has no service window. */
+export type SendMessageResult = {
+  success: boolean;
+  deliveryMode: MessageDeliveryMode | null;
 };
 
 export type AdminLogEntry = {
@@ -208,15 +339,34 @@ export class AdminProfilesController extends AdminBaseController {
       `/admin/profiles/${id}/verify`,
       new URLSearchParams(),
     );
+    // JSON, not multipart. The images went up one at a time through
+    // `uploadVerificationImage` while the admin was reviewing, so this request
+    // is a few hundred bytes regardless of how many were attached.
+    return this.patch<AdminProfileDetailResponse>(
+      url,
+      data as unknown as Record<string, unknown>,
+    );
+  }
+
+  /**
+   * Upload one KYC verification image and get its descriptor back.
+   *
+   * Mirrors the client's onboarding `POST /profile/kyc-upload`: the file goes up
+   * as the admin picks it, and the verify call afterwards carries only keys.
+   * That is what makes a single failed photograph retryable on its own instead
+   * of taking the whole review down with it.
+   */
+  async uploadVerificationImage(
+    profileId: string,
+    file: File,
+  ): Promise<AdminVerifyDocumentRef & { url: string }> {
+    const url = this.createURL(
+      `/admin/profiles/${profileId}/verification-images`,
+      new URLSearchParams(),
+    );
     const formData = new FormData();
-    formData.append("decision", data.decision);
-    formData.append("reason", data.reason);
-    if (data.files) {
-      for (const file of data.files) {
-        formData.append("files", file);
-      }
-    }
-    return this.patch<AdminProfileDetailResponse>(url, formData);
+    formData.append("file", file);
+    return this.post<AdminVerifyDocumentRef & { url: string }>(url, formData);
   }
 
   async updateProfileStatus(
@@ -274,6 +424,14 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileMessage[]>(url);
   }
 
+  async getWhatsAppWindow(id: string): Promise<WhatsAppWindowState> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/whatsapp-window`,
+      new URLSearchParams(),
+    );
+    return this.get<WhatsAppWindowState>(url);
+  }
+
   async sendVerificationLink(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/profiles/${id}/send-verification-link`,
@@ -284,10 +442,10 @@ export class AdminProfilesController extends AdminBaseController {
 
   async sendMessage(
     id: string,
-    channel: "WHATSAPP" | "EMAIL",
+    channel: MessageChannel,
     message: string,
     files?: File[],
-  ): Promise<{ success: boolean }> {
+  ): Promise<SendMessageResult> {
     const url = this.createURL(
       `/admin/profiles/${id}/messages`,
       new URLSearchParams(),
@@ -297,9 +455,9 @@ export class AdminProfilesController extends AdminBaseController {
       form.append("channel", channel);
       form.append("message", message);
       for (const f of files) form.append("attachments", f);
-      return this.post<{ success: boolean }>(url, form);
+      return this.post<SendMessageResult>(url, form);
     }
-    return this.post<{ success: boolean }>(url, { channel, message });
+    return this.post<SendMessageResult>(url, { channel, message });
   }
 
   async updateAvatar(id: string, file: File): Promise<{ avatarUrl: string }> {
@@ -380,12 +538,16 @@ export async function fetchAllProfiles(
 export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
+export const uploadKycVerificationImage =
+  controller.uploadVerificationImage.bind(controller);
 export const updateProfileStatus =
   controller.updateProfileStatus.bind(controller);
 export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const getProfileWhatsAppWindow =
+  controller.getWhatsAppWindow.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
 export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);

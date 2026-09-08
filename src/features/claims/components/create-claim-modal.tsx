@@ -31,27 +31,19 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
-import { ImageUploadZone } from "#/pages/profile-detail/components/image-upload-zone";
-import { createClaim } from "#/lib/api/claims-controller";
+import {
+  ImageUploadZone,
+  type UploadRejection,
+} from "#/pages/profile-detail/components/image-upload-zone";
+import { createClaim, uploadClaimAttachments } from "#/lib/api/claims-controller";
 import {
   getProfilesList,
   type AdminProfileListItem,
 } from "#/lib/api/profiles-controller";
-import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
+import { compressImage } from "#/lib/media/image-compress";
+import { reportUploadRejections } from "#/lib/media/upload-rejection-toast";
 
-async function uploadFiles(files: File[]): Promise<string[]> {
-  if (files.length === 0) return [];
-  const formData = new FormData();
-  for (const file of files) formData.append("files", file);
-  const res = await fetchWithCsrfRetry(
-    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
-    { method: "POST", body: formData, credentials: "include" },
-  );
-  if (!res.ok) throw new Error("File upload failed");
-  const json = (await res.json()) as { files: { file_url: string }[] };
-  return json.files.map((f) => f.file_url);
-}
+const MAX_ATTACHMENTS = 3;
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -190,10 +182,19 @@ export function CreateClaimModal({
     });
   }, []);
 
+  const handleRejections = useCallback((rejections: UploadRejection[]) => {
+    reportUploadRejections(rejections, MAX_ATTACHMENTS);
+  }, []);
+
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!selectedProfile) throw new Error("Please select a profile");
-      const attachment_urls = await uploadFiles(attachmentFiles);
+      // The dedicated claim route, not the generic `/file/upload` this used to
+      // hand-roll: that one accepts any mime type, so it could not be what
+      // guarantees a claim carries images only.
+      const compressed = await Promise.all(attachmentFiles.map(compressImage));
+      const attachment_urls =
+        compressed.length > 0 ? await uploadClaimAttachments(compressed) : [];
       return createClaim({
         title: values.title,
         description: values.description,
@@ -237,7 +238,10 @@ export function CreateClaimModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((v) => mutate(v))}>
-            <div className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
+            {/* `min-h-0`: without it the flex child keeps min-height:auto,
+                never shrinks below its content, and the overflow rule does
+                nothing. */}
+            <div className="min-h-0 flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto">
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Profile</span>
                 <ProfilePicker
@@ -278,13 +282,16 @@ export function CreateClaimModal({
                 )}
               />
 
+              {/* `onReject` was missing here, so an oversize or wrong-format
+                  file was dropped in silence and never appeared. */}
               <ImageUploadZone
                 label="Attachments"
                 files={attachmentFiles}
                 previews={attachmentPreviews}
                 onAdd={handleAddFiles}
                 onRemove={handleRemoveFile}
-                maxFiles={3}
+                onReject={handleRejections}
+                maxFiles={MAX_ATTACHMENTS}
               />
             </div>
 

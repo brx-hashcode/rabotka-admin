@@ -8,6 +8,7 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   JOB_POSTING: "Job Posting",
   PENALTY: "Penalty",
   CONTACT_UNLOCK: "Contact Unlock",
+  WALLET_TOP_UP: "Wallet Top-up",
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -31,6 +32,7 @@ const TX_TYPE_LABELS: Record<string, string> = {
   CREDIT_COMMISSION: "Commission",
   CONTACT_UNLOCK_PAYMENT: "Contact Unlock",
   WELCOME_CREDIT: "Welcome Credit",
+  REFERRAL_CREDIT: "Referral Credit",
 };
 
 function isoOrEmpty(v: string | null | undefined): string {

@@ -1,8 +1,8 @@
 import { ContactCard } from "./settings/contact-card";
 import { FeesCard } from "./settings/fees-card";
 import { MatchingCard } from "./settings/matching-card";
-import { TwilioCard } from "./settings/twilio-card";
 import { StorageCard } from "./settings/storage-card";
+import { VovaCard } from "./settings/vova-card";
 
 export default function SettingsPage() {
   return (
@@ -10,7 +10,7 @@ export default function SettingsPage() {
       <ContactCard />
       <FeesCard />
       <MatchingCard />
-      <TwilioCard />
+      <VovaCard />
       <StorageCard />
     </div>
   );

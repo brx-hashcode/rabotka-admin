@@ -1,3 +1,5 @@
+import type { EmploymentTypeValue } from "#/lib/employment-type";
+
 import { AdminBaseController } from "./base-controller";
 
 export type AdminJobOfferListItem = {
@@ -6,10 +8,17 @@ export type AdminJobOfferListItem = {
   title: string;
   category: { id: string; name: string } | null;
   description: string;
-  scheduledAt: string;
+  employmentType: EmploymentTypeValue;
+  /** Null for a CDI, CDD or stage — only a mission has a closing date. */
+  scheduledAt: string | null;
   amount: number | null;
   paymentFlow: string | null;
-  address: string;
+  /** Null for a remote job — render `isRemote` instead. */
+  address: string | null;
+  isRemote: boolean;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
   note: string | null;
   quantity: number;
   status: string;
@@ -22,6 +31,32 @@ export type AdminJobOfferListItem = {
   createdAt: string;
   updatedAt: string;
   vectorIndexedAt: string | null;
+
+  /**
+   * What became of the offer, aggregated server-side. The Missions table shows
+   * none of it; the export and the analytics dashboard are what these are for.
+   */
+  applicationsPending: number;
+  applicationsAccepted: number;
+  applicationsRejected: number;
+  applicationsCancelled: number;
+  hiredCount: number;
+  completedCount: number;
+  cancelledAssignmentsCount: number;
+  noShowCount: number;
+  /** Workers assigned to the offer, in assignment order. */
+  workerNames: string[];
+  unlockAttempts: number;
+  unlocksCompleted: number;
+  unlockEmployerPaid: number;
+  unlockWorkerPaid: number;
+  unlockRevenue: number;
+  employerUnlockPaid: boolean;
+  penaltiesCount: number;
+  unpaidPenaltiesCount: number;
+  penaltiesAmount: number;
+  ratingAvg: number | null;
+  ratingCount: number;
 };
 
 export type AdminJobApplicationItem = {
@@ -53,11 +88,17 @@ export type AdminJobOffersResponse = {
 export type AdminUpdateJobOfferParams = {
   title?: string;
   description?: string;
-  scheduledAt?: string;
+  employmentType?: EmploymentTypeValue;
+  /** Explicit null clears the closing date; undefined leaves it alone. */
+  scheduledAt?: string | null;
   amount?: number | null;
   paymentFlow?: string | null;
   categoryId?: string | null;
   address?: string;
+  isRemote?: boolean;
+  countryCode?: string;
+  countryName?: string;
+  city?: string;
   note?: string;
   quantity?: number;
 };
@@ -67,6 +108,11 @@ export type AdminJobOffersListParams = {
   limit?: number;
   q?: string;
   status?: string[];
+  employment_type?: string[];
+  payment_flow?: string[];
+  /** Inclusive. Either bound may stand alone. */
+  amount_min?: number;
+  amount_max?: number;
   deleted?: boolean;
 };
 
@@ -79,6 +125,13 @@ export class AdminJobOffersController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.q) searchParams.q = params.q;
     if (params.status?.length) searchParams.status = params.status;
+    if (params.employment_type?.length)
+      searchParams.employment_type = params.employment_type;
+    if (params.payment_flow?.length)
+      searchParams.payment_flow = params.payment_flow;
+    // Not `if (amount)` — 0 is a legitimate bound and truthiness would drop it.
+    if (params.amount_min != null) searchParams.amount_min = params.amount_min;
+    if (params.amount_max != null) searchParams.amount_max = params.amount_max;
     if (params.deleted) searchParams.deleted = "true";
 
     const query = this.buildSearchParams(searchParams);

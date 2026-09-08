@@ -3,6 +3,7 @@ import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 import { IconDeviceMobile } from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
 import { SheetTrigger } from "#/components/ui/sheet";
+import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { BulkDeleteButton } from "#/components/table/bulk-delete-button";
 import { BulkPurgeButton } from "#/components/table/bulk-purge-button";
@@ -45,11 +46,21 @@ const TX_TYPE_OPTIONS = [
   { value: "CREDIT_COMMISSION", label: "Commission" },
   { value: "CONTACT_UNLOCK_PAYMENT", label: "Contact Unlock" },
   { value: "WELCOME_CREDIT", label: "Welcome Credit" },
+  { value: "REFERRAL_CREDIT", label: "Referral Credit" },
 ];
 
+/**
+ * Every member of the backend's `PaymentType`, not just the two that existed
+ * when this filter was written. Three had drifted out of it — a wallet top-up
+ * could not be filtered for at all, which is a poor way to find out you have
+ * been recording them under the wrong type.
+ */
 const PAYMENT_TYPE_OPTIONS = [
   { value: "PENALTY", label: "Penalty" },
   { value: "CONTACT_UNLOCK", label: "Contact Unlock" },
+  { value: "WALLET_TOP_UP", label: "Wallet Top-up" },
+  { value: "REGISTRATION", label: "Registration" },
+  { value: "JOB_POSTING", label: "Job Posting" },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
@@ -218,6 +229,10 @@ export default function WalletPage() {
 
   return (
     <div className="flex flex-col gap-6 pt-6">
+      <PageListHeader
+        title="Finance"
+        description="Revenue, payments and wallet movements across the platform."
+      />
       <WalletInfoCard />
       <div className="grid grid-cols-12 items-stretch gap-4">
         <div className="col-span-12 min-h-0 lg:col-span-9">

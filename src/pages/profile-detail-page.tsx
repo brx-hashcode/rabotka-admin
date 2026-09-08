@@ -29,6 +29,7 @@ import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
+import { ProfileReferralsContent } from "./profile-detail/components/profile-referrals-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
 import { ProfilePortfolioContent } from "./profile-detail/components/profile-portfolio-content";
@@ -41,6 +42,10 @@ import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
 } from "#/lib/api/profiles-controller";
+import type {
+  AdminVerifyDocumentRef,
+  AdminUpdateProfileParams,
+} from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
 
 type ProfileTab =
@@ -48,6 +53,7 @@ type ProfileTab =
   | "kyc"
   | "payments"
   | "invoices"
+  | "referrals"
   | "messages"
   | "portfolio";
 
@@ -56,6 +62,7 @@ const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "KYC Information", value: "kyc" },
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
+  { label: "Parrainage", value: "referrals" },
   { label: "Messages", value: "messages" },
   { label: "Portfolio", value: "portfolio" },
 ];
@@ -108,24 +115,19 @@ export default function ProfileDetailPage({
     },
   });
 
-  const handleSave = async (data: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    description: string;
-    email: string;
-    phone: string;
-    profileType: string;
-  }) => {
+  // Only the changed fields — ProfileForm diffs against what it loaded, so the
+  // activity timeline lists what was actually edited rather than every field on
+  // the form.
+  const handleSave = async (data: AdminUpdateProfileParams) => {
     await submitUpdate(data);
   };
 
   const handleKycSubmit = async (
     decision: "VERIFIED" | "REJECTED",
     reason: string,
-    files?: File[],
+    documents?: AdminVerifyDocumentRef[],
   ) => {
-    await submitVerify({ decision, reason, files });
+    await submitVerify({ decision, reason, documents });
     setKycModalOpen(false);
   };
 
@@ -170,10 +172,37 @@ export default function ProfileDetailPage({
 
   const canVerifyKyc =
     profile != null && profile.verificationStatus !== "VERIFIED";
+  /**
+   * Activation requires a verified identity.
+   *
+   * Verifying KYC already sets the account ACTIVE — `ProfileService` flips
+   * `status` and `whatsapp_connected` in the same transaction as the decision,
+   * because "a verified profile left PENDING_ACTIVATION can do nothing". So for
+   * an unverified profile this item was either redundant (KYC verification is
+   * about to do it anyway) or wrong (it activates an account whose identity
+   * nobody has checked), and admins were clicking it twice because neither
+   * outcome was visible from here.
+   *
+   * What it leaves enabled is the case that actually needs it: re-activating a
+   * verified profile that was suspended.
+   */
   const canActivate =
     profile != null &&
     profile.status !== "ACTIVE" &&
-    profile.status !== "BANNED";
+    profile.status !== "BANNED" &&
+    profile.verificationStatus === "VERIFIED";
+  /**
+   * Disabled specifically because the identity is unverified — as opposed to
+   * because the account is already active or banned. Only this case gets a
+   * reason printed, because only this case has something the admin can do
+   * about it, one item up in the same menu.
+   */
+  const activateBlockedByKyc =
+    profile != null &&
+    profile.status !== "ACTIVE" &&
+    profile.status !== "BANNED" &&
+    profile.verificationStatus !== "VERIFIED";
+
   const canDeactivate = profile?.status === "ACTIVE";
   const canSendVerifLink = profile?.whatsappConnected === false;
 
@@ -288,7 +317,14 @@ export default function ProfileDetailPage({
                     }}
                   >
                     <IconPlayerPlay className="size-4" />
-                    Activate
+                    <span className="flex flex-col">
+                      Activate
+                      {activateBlockedByKyc && (
+                        <span className="text-xs text-muted-foreground">
+                          Verify KYC first — that activates the account
+                        </span>
+                      )}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={!canDeactivate}
@@ -337,6 +373,10 @@ export default function ProfileDetailPage({
           <ProfilePaymentsContent profileId={profileId} />
         </TabsContent>
 
+        <TabsContent value="referrals">
+          <ProfileReferralsContent profileId={profileId} />
+        </TabsContent>
+
         <TabsContent value="invoices">
           <ProfileInvoicesContent profileId={profileId} />
         </TabsContent>
@@ -345,6 +385,8 @@ export default function ProfileDetailPage({
           <ProfileMessagesContent
             profileId={profileId}
             profileName={`${profile.firstName} ${profile.lastName}`}
+            profileType={profile.profileType}
+            firstName={profile.firstName}
           />
         </TabsContent>
 

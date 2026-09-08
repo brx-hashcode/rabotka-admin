@@ -1,4 +1,5 @@
 import { appConfig } from "#/config";
+import { guardResponse } from "#/lib/auth/session";
 
 let token: string | null = null;
 
@@ -53,13 +54,20 @@ export async function fetchWithCsrfRetry(
       msg.includes("invalid")
     ) {
       await fetchAndSetCsrfToken();
-      return fetch(url, buildInit());
+      return guardResponse(url, await fetch(url, buildInit()));
     }
+    // Synthesized 403 — deliberately not guarded; a 403 is never a 401.
     return new Response(JSON.stringify(body), {
       status: 403,
       headers: { "content-type": "application/json" },
     });
   }
 
-  return res;
+  // Blob downloads and multipart uploads bypass the controller entirely, so a
+  // 401 here would otherwise be invisible to the session interceptor. Callers
+  // still see the untouched Response and their own `!res.ok` handling.
+  //
+  // fetchAndSetCsrfToken above is deliberately NOT guarded: GET /csrf is the
+  // bootstrap, and expiring on it would be a chicken-and-egg loop.
+  return guardResponse(url, res);
 }

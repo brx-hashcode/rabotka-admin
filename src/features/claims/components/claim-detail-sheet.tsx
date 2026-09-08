@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -10,7 +11,7 @@ import {
 } from "#/components/ui/dialog";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
-import { Download } from "lucide-react";
+import { FileText } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,7 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "#/components/ui/alert-dialog";
-import { appConfig } from "#/config";
 import { updateClaim, deleteClaim } from "#/lib/api/claims-controller";
 import type {
   AdminClaimItem,
@@ -37,8 +37,14 @@ import type {
 } from "#/lib/api/claims-controller";
 import { getUsersList } from "#/lib/api/users-controller";
 import { ProfileCell } from "#/components/table";
-import { ClaimComments } from "./claim-comments";
+import { ClaimComments, claimAttachmentToViewerDoc } from "./claim-comments";
+import {
+  DocumentViewerDrawer,
+  type ViewerDocument,
+} from "#/pages/profile-detail/components/document-viewer-drawer";
 import { useRole } from "#/hooks/use-role";
+import { useAdminMe } from "#/hooks/use-admin-me";
+import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "CREATED", label: "CREATED" },
@@ -72,9 +78,14 @@ export function ClaimDetailSheet({
 }: Readonly<ClaimDetailDialogProps>) {
   const queryClient = useQueryClient();
   const { canManageContent } = useRole();
+  const { data: me } = useAdminMe();
   const [status, setStatus] = useState<AdminClaimStatus>("CREATED");
   const [assignedUserId, setAssignedUserId] = useState<string>("none");
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  // One viewer for the whole sheet — the claim's own attachments and the ones
+  // inside comments both open it. `DocumentViewerDrawer` is the app's shared
+  // viewer, already used by six other features; the bespoke dialog this
+  // replaces had no zoom, no rotate and no error state.
+  const [viewerDoc, setViewerDoc] = useState<ViewerDocument | null>(null);
 
   useEffect(() => {
     if (claim) {
@@ -91,17 +102,44 @@ export function ClaimDetailSheet({
   const users = usersData?.data ?? [];
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: () =>
-      updateClaim(claim!.id, {
-        status,
-        assigned_user_id: assignedUserId === "none" ? null : assignedUserId,
-      }),
+    // Status only. Assignment commits the moment it is picked — see `assign`
+    // below — so bundling it here would let a stale local value overwrite an
+    // assignment the server already has.
+    mutationFn: () => updateClaim(claim!.id, { status }),
     onSuccess: () => {
       toast.success("Claim updated");
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
     onError: (error) => toast.error(error.message),
+  });
+
+  /**
+   * Assigning commits on change rather than waiting for Save.
+   *
+   * Picking a name in a list reads as the act itself — the previous flow left
+   * the claim unassigned unless you also found the button at the bottom of a
+   * scrolling sheet, which is a silent no-op at exactly the moment someone
+   * thinks they have handed work over.
+   *
+   * Deliberately does NOT close the sheet, unlike Save: you assign a claim in
+   * order to keep reading it.
+   */
+  const { mutate: assign, isPending: isAssigning } = useMutation({
+    mutationFn: (userId: string) =>
+      updateClaim(claim!.id, {
+        assigned_user_id: userId === "none" ? null : userId,
+      }),
+    onSuccess: () => {
+      toast.success("Claim assigned");
+      queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
+    },
+    onError: (error) => {
+      // Put the control back where the server still has it, so the dropdown
+      // never shows an assignment that did not happen.
+      setAssignedUserId(claim?.assignedUserId ?? "none");
+      toast.error(error.message);
+    },
   });
 
   const { mutate: unassign, isPending: isUnassigning } = useMutation({
@@ -124,15 +162,34 @@ export function ClaimDetailSheet({
     onError: (error) => toast.error(error.message),
   });
 
-  const isDirty =
-    claim &&
-    (status !== claim.status ||
-      assignedUserId !== (claim.assignedUserId ?? "none"));
+  // Status only: assignment is no longer pending work, so counting it here
+  // would light up Save for a change that is already committed.
+  const isDirty = claim && status !== claim.status;
 
   const assignedUser = claim?.assignedUserId
     ? users.find((u) => u.id === claim.assignedUserId)
     : null;
-  const canUnassign = canManageContent && status !== "COMPLETED" && status !== "REJECTED";
+  /**
+   * Whoever assigned a claim is the only one who may change that assignment.
+   *
+   * Mirrors the server's rule — this is only the UI half. The server refuses
+   * the write regardless; showing a disabled control just means the admin
+   * learns why before clicking rather than after.
+   *
+   * Null `assignedByUserId` means the assignment predates the column, so it
+   * stays freely editable. SUPER_ADMIN can always override, because otherwise a
+   * claim assigned by someone who has left the team could never be moved on.
+   */
+  const assignmentLockedBy =
+    claim?.assignedUserId && claim.assignedByUserId ? claim.assignedByUserId : null;
+  const canChangeAssignment =
+    canManageContent &&
+    (assignmentLockedBy === null ||
+      assignmentLockedBy === me?.id ||
+      me?.role === "SUPER_ADMIN");
+
+  const canUnassign =
+    canChangeAssignment && status !== "COMPLETED" && status !== "REJECTED";
 
   return (
     <Dialog
@@ -173,29 +230,60 @@ export function ClaimDetailSheet({
               </div>
             </DialogHeader>
 
+            {/* `min-h-0` is what makes the overflow rule bite: a flex child
+                defaults to min-height:auto, refuses to shrink below its
+                content, and pushes the footer out of the dialog instead of
+                scrolling. */}
             <div
-              className="flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
+              className="min-h-0 flex-1 flex flex-col gap-5 px-6 py-5 overflow-y-auto scrollbar-hide"
               style={{ scrollbarWidth: "none" }}
             >
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Profile">
-                  <ProfileCell
-                    name={claim.profileName ?? ""}
-                    email={claim.profileEmail ?? ""}
-                    avatarUrl={claim.profileAvatarUrl}
-                  />
+                  {/* The claim is only half the story — "who is this and what
+                      else is going on with them" is the next question every
+                      time, and the answer is one page away. */}
+                  <Link
+                    to="/profiles/$profileId"
+                    params={{ profileId: claim.profileId }}
+                    onClick={onClose}
+                    className="block rounded-md hover:opacity-80 transition-opacity"
+                  >
+                    <ProfileCell
+                      name={claim.profileName ?? ""}
+                      email={claim.profileEmail ?? ""}
+                      avatarUrl={claim.profileAvatarUrl}
+                    />
+                  </Link>
                 </Field>
 
                 <Field label="Created by">
-                  <ProfileCell
-                    name={
-                      claim.createdByUserName ??
-                      claim.createdByProfileName ??
-                      ""
-                    }
-                    email={claim.createdByUserEmail ?? ""}
-                    avatarUrl={null}
-                  />
+                  {/* Claims raised from the app carry a profile author; ones
+                      opened by an admin carry a user, who has no page here. */}
+                  {claim.createdByProfileId ? (
+                    <Link
+                      to="/profiles/$profileId"
+                      params={{ profileId: claim.createdByProfileId }}
+                      onClick={onClose}
+                      className="block rounded-md hover:opacity-80 transition-opacity"
+                    >
+                      <ProfileCell
+                        name={claim.createdByProfileName ?? ""}
+                        email=""
+                        avatarUrl={null}
+                      />
+                    </Link>
+                  ) : (
+                    <ProfileCell
+                      name={
+                        claim.createdByUserName ??
+                        claim.createdByProfileName ??
+                        ""
+                      }
+                      email={claim.createdByUserEmail ?? ""}
+                      avatarUrl={null}
+                    />
+                  )}
                 </Field>
 
                 <Field label="Created at">
@@ -216,47 +304,34 @@ export function ClaimDetailSheet({
               {claim.attachmentUrls.length > 0 && (
                 <Field label="Attachments">
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {claim.attachmentUrls.map((url) => (
+                    {claim.attachmentUrls.map((url, idx) => (
                       <button
                         key={url}
-                        onClick={() => setSelectedImageUrl(url)}
-                        className="group relative block w-16 h-16 rounded-md overflow-hidden border bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                        title={url.split("/").pop()}
+                        onClick={() =>
+                          setViewerDoc(claimAttachmentToViewerDoc(url, idx))
+                        }
+                        className="group relative block w-16 h-16 rounded-md overflow-hidden bg-muted shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        title={fileNameFromUrl(url, "image")}
                       >
                         <img
                           src={url}
-                          alt={url.split("/").pop()}
+                          alt={fileNameFromUrl(url, "image")}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (
-                              e.currentTarget as HTMLImageElement
-                            ).style.display = "none";
-                            (
-                              e.currentTarget
-                                .nextElementSibling as HTMLElement | null
-                            )?.style.setProperty("display", "flex");
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.nextElementSibling?.setAttribute(
+                              "data-visible",
+                              "true",
+                            );
                           }}
                         />
-                        <div
-                          className="absolute inset-0 hidden items-center justify-center flex-col gap-1 p-2"
-                          style={{ display: "none" }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-6 h-6 text-muted-foreground"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                            />
-                          </svg>
+                        {/* Older claims may hold a PDF: say so rather than
+                            leaving an empty square. */}
+                        <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1 p-2 data-[visible=true]:flex">
+                          <FileText className="size-5 text-muted-foreground" />
                           <span className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2 break-all">
-                            {url.split("/").pop()}
+                            {fileNameFromUrl(url, "image")}
                           </span>
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
@@ -312,7 +387,13 @@ export function ClaimDetailSheet({
                 ) : canManageContent ? (
                   <Select
                     value={assignedUserId}
-                    onValueChange={setAssignedUserId}
+                    disabled={isAssigning || !canChangeAssignment}
+                    onValueChange={(value) => {
+                      // Local state first so the trigger updates immediately;
+                      // `onError` puts it back if the write is refused.
+                      setAssignedUserId(value);
+                      assign(value);
+                    }}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue
@@ -332,10 +413,21 @@ export function ClaimDetailSheet({
                 ) : (
                   <p className="text-sm text-muted-foreground">Unassigned</p>
                 )}
+
+                {assignedUser && !canChangeAssignment && canManageContent && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Assigned by{" "}
+                    {claim.assignedByUserName ?? "another administrator"} — only
+                    they can change it.
+                  </p>
+                )}
               </div>
 
               <div className="pt-4 border-t">
-                <ClaimComments claimId={claim.id} />
+                <ClaimComments
+                  claimId={claim.id}
+                  onOpenAttachment={setViewerDoc}
+                />
               </div>
             </div>
 
@@ -379,38 +471,14 @@ export function ClaimDetailSheet({
         )}
       </DialogContent>
 
-      {/* Image Viewer Dialog */}
-      <Dialog open={Boolean(selectedImageUrl)} onOpenChange={(open) => {
-        if (!open) setSelectedImageUrl(null);
-      }}>
-        <DialogContent className="w-full max-w-4xl p-0 border-0 bg-black/90">
-          <DialogHeader className="px-4 py-3 border-b border-white/10 shrink-0">
-            <DialogTitle className="text-white text-sm">
-              {selectedImageUrl?.split("/").pop()}
-            </DialogTitle>
-            {selectedImageUrl && (
-              <a
-                href={`${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(selectedImageUrl)}`}
-                download={selectedImageUrl.split("/").pop() ?? "image"}
-                className="absolute right-12 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                title="Download"
-              >
-                <Download className="h-4 w-4 text-white" />
-                <span className="sr-only">Download</span>
-              </a>
-            )}
-          </DialogHeader>
-          <div className="flex items-center justify-center bg-black/50 p-4 min-h-96">
-            {selectedImageUrl && (
-              <img
-                src={selectedImageUrl}
-                alt="Attachment"
-                className="max-w-full max-h-[70vh] object-contain rounded"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* A sibling of DialogContent, not a child: nesting the drawer inside
+          the dialog makes their focus traps fight, which is why the bespoke
+          lightbox it replaces sat here too. */}
+      <DocumentViewerDrawer
+        open={viewerDoc !== null}
+        onOpenChange={(open) => !open && setViewerDoc(null)}
+        document={viewerDoc}
+      />
     </Dialog>
   );
 }

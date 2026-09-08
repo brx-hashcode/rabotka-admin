@@ -48,6 +48,28 @@ export type AdminMobileMoneyBalanceResult = {
   byGateway: Record<string, number>;
 };
 
+export type PaymentOperatorMetadata = {
+  code: string;
+  label: string;
+};
+
+export type PaymentGatewayMetadata = {
+  key: string;
+  label: string;
+  requiresOperator: boolean;
+  operators: PaymentOperatorMetadata[];
+};
+
+/**
+ * `gateways` is every gateway the backend ships, not only the live one — a
+ * transaction row keeps the gateway it was paid through, so the admin still
+ * has to name gateways the deployment has since moved off.
+ */
+export type PaymentGatewaysResponse = {
+  active: string;
+  gateways: PaymentGatewayMetadata[];
+};
+
 export type AdminMobileMoneyTransactionItem = {
   id: string;
   walletId: string;
@@ -178,6 +200,15 @@ class AdminWalletController extends AdminBaseController {
     return this.get<AdminMobileMoneyBalanceResult>(url);
   }
 
+  /**
+   * Gateway names and operator codes come from the backend registry so adding a
+   * provider does not need a matching constant shipped here.
+   */
+  async getPaymentGateways(): Promise<PaymentGatewaysResponse> {
+    const url = this.createURL("/payment-gateways", new URLSearchParams());
+    return this.get<PaymentGatewaysResponse>(url);
+  }
+
   async recordMobileMoneyWithdrawal(body: {
     amount: number;
     description?: string;
@@ -270,6 +301,8 @@ export const downloadAdminInvoice = controller.downloadInvoice.bind(controller);
 export const fetchAdminInvoiceBlob = controller.fetchInvoiceBlob.bind(controller);
 export const getMobileMoneyBalance =
   controller.getMobileMoneyBalance.bind(controller);
+export const getPaymentGateways =
+  controller.getPaymentGateways.bind(controller);
 export const getMobileMoneyTransactions =
   controller.getMobileMoneyTransactions.bind(controller);
 export const recordMobileMoneyWithdrawal =

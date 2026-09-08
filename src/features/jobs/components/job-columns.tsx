@@ -5,6 +5,7 @@ import { Badge } from "#/components/ui/badge";
 import type { AdminJobOfferListItem } from "#/lib/api/jobs-controller";
 import { JobRowActions } from "./job-row-actions";
 import { getJobOfferStatusLabel } from "#/lib/status-labels";
+import { EMPLOYMENT_TYPE_LABELS } from "#/lib/employment-type";
 
 export type JobOffer = AdminJobOfferListItem;
 
@@ -115,7 +116,9 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     header: "Amount",
     cell: ({ row }) => {
       const amount = row.original.amount;
-      if (amount == null) return "—";
+      // The amount field is optional at creation, and 0 means "no price set",
+      // not "pays nothing" — the client shows «À négocier» for the same row.
+      if (amount == null || amount === 0) return "—";
 
       return (
         <span className="text-sm font-medium">
@@ -139,9 +142,22 @@ const jobDataColumns: ColumnDef<JobOffer, unknown>[] = [
     ),
   },
   {
+    id: "employmentType",
+    accessorKey: "employmentType",
+    header: "Type",
+    cell: ({ row }) => {
+      const v = row.original.employmentType;
+      return (
+        <span className="text-sm">
+          {EMPLOYMENT_TYPE_LABELS[v] ?? v ?? "Mission"}
+        </span>
+      );
+    },
+  },
+  {
     id: "scheduledAt",
     accessorKey: "scheduledAt",
-    header: "Scheduled at",
+    header: "Closing date",
     cell: ({ row }) => {
       const v = row.original.scheduledAt;
       if (!v) return "—";

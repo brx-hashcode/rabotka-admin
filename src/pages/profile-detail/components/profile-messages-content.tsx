@@ -8,18 +8,29 @@ import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
 import {
   getProfileMessages,
+  getProfileWhatsAppWindow,
   sendProfileMessage,
   type AdminProfileMessage,
+  type MessageChannel,
 } from "#/lib/api/profiles-controller";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { useRole } from "#/hooks/use-role";
+import { WhatsAppWindowBadge } from "#/components/whatsapp-window-badge";
+import {
+  flattenForTemplateVariable,
+  ADMIN_MESSAGE_VAR_MAX,
+} from "#/lib/whatsapp-template-text";
+import { MessageExportMenu } from "#/features/profiles/components/message-export-menu";
 import { ChatDoodleBg } from "./chat-doodle-bg";
-
-type Channel = "WHATSAPP" | "EMAIL";
+import { QuickMessagePicker } from "#/components/quick-message-picker";
 
 type Props = {
   profileId: string;
   profileName: string;
+  /** Narrows the template list to the ones that fit this recipient. */
+  profileType?: string | null;
+  /** Fills `{{prenom}}` in a picked template. */
+  firstName?: string | null;
 };
 
 function formatTime(v: string) {
@@ -36,24 +47,50 @@ function formatTime(v: string) {
 export function ProfileMessagesContent({
   profileId,
   profileName,
+  profileType,
+  firstName,
 }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const { data: adminMe } = useAdminMe();
   const { canManageContent } = useRole();
   const adminName = `${adminMe?.firstName} ${adminMe?.lastName}`;
-  const [channel, setChannel] = useState<Channel>("EMAIL");
+  const [channel, setChannel] = useState<MessageChannel>("EMAIL");
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const isWhatsApp = channel === "WHATSAPP";
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["admin", "profiles", profileId, "messages"],
     queryFn: () => getProfileMessages(profileId),
   });
 
+  // Not invalidated after a send: an outbound message does not move the window.
+  const { data: windowState, isLoading: isWindowLoading } = useQuery({
+    queryKey: ["admin", "profiles", profileId, "whatsapp-window"],
+    queryFn: () => getProfileWhatsAppWindow(profileId),
+    enabled: isWhatsApp,
+    staleTime: 60_000,
+  });
+
+  // Outside the 24h window the message travels as a template variable, which
+  // Meta caps and which grows when line breaks are flattened — so the count that
+  // matters is of the flattened text, not what is in the textarea.
+  const isTemplateMode = isWhatsApp && windowState?.mode === "TEMPLATE";
+  const flattenedLength = isTemplateMode
+    ? flattenForTemplateVariable(text).length
+    : 0;
+  const isOverTemplateLimit = flattenedLength > ADMIN_MESSAGE_VAR_MAX;
+
   const { mutate: send, isPending } = useMutation({
     mutationFn: () => sendProfileMessage(profileId, channel, text.trim()),
-    onSuccess: () => {
+    onSuccess: (result) => {
       setText("");
+      toast.success(
+        result.deliveryMode === "TEMPLATE"
+          ? "Message sent via approved template."
+          : "Message sent successfully.",
+      );
       queryClient.invalidateQueries({
         queryKey: ["admin", "profiles", profileId, "messages"],
       });
@@ -71,7 +108,8 @@ export function ProfileMessagesContent({
     bottomRef.current?.scrollIntoView({ behavior: "instant" });
   }, [messages]);
 
-  const canSend = text.trim().length > 0 && !isPending;
+  const canSend =
+    text.trim().length > 0 && !isPending && !isOverTemplateLimit;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
@@ -105,12 +143,43 @@ export function ProfileMessagesContent({
             </Button>
           </div>
         </div>
-        <span className="text-[11px] text-muted-foreground hidden sm:block">
-          Ctrl+Enter to send
-        </span>
+        <div className="flex items-center gap-2">
+          {isWhatsApp && (
+            <WhatsAppWindowBadge
+              state={windowState}
+              isLoading={isWindowLoading}
+            />
+          )}
+          {isTemplateMode && (
+            <span
+              className={cn(
+                "text-[11px] tabular-nums",
+                isOverTemplateLimit
+                  ? "text-destructive"
+                  : "text-muted-foreground",
+              )}
+            >
+              {flattenedLength}/{ADMIN_MESSAGE_VAR_MAX}
+            </span>
+          )}
+          <span className="text-[11px] text-muted-foreground hidden sm:block">
+            Ctrl+Enter to send
+          </span>
+        </div>
       </div>
       {canManageContent && (
-        <div className="mt-1 flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+        <div className="mt-1 space-y-2">
+          <div className="flex justify-end">
+            {/* Same templates as the header's quick message, so the wording a
+                worker receives does not depend on where the admin started. */}
+            <QuickMessagePicker
+              profileType={profileType}
+              firstName={firstName}
+              onPick={setText}
+              disabled={isPending}
+            />
+          </div>
+          <div className="flex items-end gap-2 rounded-xl border bg-muted/40 px-3 py-2">
           <Textarea
             className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[72px]"
             placeholder="Write a message…"
@@ -127,6 +196,7 @@ export function ProfileMessagesContent({
           >
             <IconSend className="size-4" />
           </Button>
+          </div>
         </div>
       )}
     </div>
@@ -164,6 +234,7 @@ export function ProfileMessagesContent({
         <span className="text-muted-foreground text-xs ml-auto">
           {messages.length} message{messages.length === 1 ? "" : "s"}
         </span>
+        <MessageExportMenu messages={messages} profileName={profileName} />
       </div>
 
       {/* Chat area */}

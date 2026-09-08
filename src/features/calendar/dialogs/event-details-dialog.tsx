@@ -1,7 +1,7 @@
 
 
 import { format, parseISO } from "date-fns";
-import { Calendar, Clock, Text, User } from "lucide-react";
+import { Calendar, Clock, Repeat, Text, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +21,9 @@ import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-d
 import { useRole } from "#/hooks/use-role";
 import { formatTime } from "#/features/calendar/helpers";
 import type { IEvent } from "#/features/calendar/interfaces";
+import type { TEventEditScope } from "#/features/calendar/types";
+import { describeRecurrence } from "#/features/calendar/utils";
+import { RecurringScopeDialog } from "./recurring-scope-dialog";
 
 type IProps = {
   event: IEvent;
@@ -35,15 +38,22 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
   const [open, setOpen] = useState(false);
   const { mutate: remove, isPending } = useDeleteEvent();
 
-  const deleteEvent = (eventId: number) => {
-    remove(eventId, {
-      onSuccess: () => {
-        toast.success("Event deleted successfully.");
-        setOpen(false);
+  const [scopeOpen, setScopeOpen] = useState(false);
+
+  const deleteEvent = (scope?: TEventEditScope) => {
+    remove(
+      { id: event.id, scope },
+      {
+        onSuccess: () => {
+          toast.success("Event deleted successfully.");
+          setOpen(false);
+        },
+        onError: () => toast.error("Error deleting event."),
       },
-      onError: () => toast.error("Error deleting event."),
-    });
+    );
   };
+
+  const repeatSummary = describeRecurrence(event.recurrence);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,6 +99,18 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
               </div>
             </div>
 
+            {repeatSummary && (
+              <div className="flex items-start gap-2">
+                <Repeat className="mt-1 size-4 shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Repeats</p>
+                  <p className="text-sm text-muted-foreground">
+                    {repeatSummary}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-start gap-2">
               <Text className="mt-1 size-4 shrink-0 text-muted-foreground" />
               <div>
@@ -109,13 +131,23 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
               variant="destructive"
               disabled={isPending}
               onClick={() => {
-                deleteEvent(event.id);
+                // A series member asks what to delete; a one-off goes straight
+                // through, as it always has.
+                if (event.seriesId) setScopeOpen(true);
+                else deleteEvent();
               }}
             >
               {isPending ? "Deleting..." : "Delete"}
             </Button>
           </div>
         )}
+
+        <RecurringScopeDialog
+          open={scopeOpen}
+          onOpenChange={setScopeOpen}
+          mode="delete"
+          onConfirm={deleteEvent}
+        />
         <DialogClose />
       </DialogContent>
     </Dialog>

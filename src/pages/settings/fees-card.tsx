@@ -5,6 +5,13 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 
 type FormState = {
   "fees.late_cancellation_penalty_fcfa": string;
@@ -13,6 +20,10 @@ type FormState = {
   "fees.reliability_score_min": string;
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
+  "fees.penalty_suspension_threshold": string;
+  "fees.penalty_hard_block_days": string;
+  "fees.penalty_max_notifications": string;
+  "fees.penalty_notification_interval_hours": string;
   "fees.max_concurrent_applications": string;
   "fees.max_daily_applications": string;
   "fees.contact_unlock_fee_employer": string;
@@ -21,6 +32,11 @@ type FormState = {
   "fees.contact_recommendation_fee_employer": string;
   "fees.welcome_credit_worker": string;
   "fees.welcome_credit_employer": string;
+  "fees.referral_commission_type": string;
+  "fees.referral_credit_referrer": string;
+  "fees.referral_credit_referee": string;
+  "fees.referral_max_rewarded_per_referrer": string;
+  "fees.referral_max_payout_per_referral": string;
   "fees.completion_score_reward": string;
   "fees.rating_score_delta_1": string;
   "fees.rating_score_delta_2": string;
@@ -36,6 +52,10 @@ const EMPTY: FormState = {
   "fees.reliability_score_min": "",
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
+  "fees.penalty_suspension_threshold": "",
+  "fees.penalty_hard_block_days": "",
+  "fees.penalty_max_notifications": "",
+  "fees.penalty_notification_interval_hours": "",
   "fees.max_concurrent_applications": "",
   "fees.max_daily_applications": "",
   "fees.contact_unlock_fee_employer": "",
@@ -44,6 +64,11 @@ const EMPTY: FormState = {
   "fees.contact_recommendation_fee_employer": "",
   "fees.welcome_credit_worker": "",
   "fees.welcome_credit_employer": "",
+  "fees.referral_commission_type": "FIXED",
+  "fees.referral_credit_referrer": "",
+  "fees.referral_credit_referee": "",
+  "fees.referral_max_rewarded_per_referrer": "",
+  "fees.referral_max_payout_per_referral": "",
   "fees.completion_score_reward": "",
   "fees.rating_score_delta_1": "",
   "fees.rating_score_delta_2": "",
@@ -51,6 +76,60 @@ const EMPTY: FormState = {
   "fees.rating_score_delta_4": "",
   "fees.rating_score_delta_5": "",
 };
+
+/**
+ * What the current settings actually pay out, in the mode they are in.
+ *
+ * The consequence is otherwise invisible in either mode, but for opposite
+ * reasons. In FIXED the two credits are also the payout floor — the backend
+ * never pays out more than the payment that triggered it — so raising them past
+ * a connection fee silently stops that fee rewarding anyone. In PERCENTAGE
+ * there is no floor at all, and the risk moves to the split: the shares must
+ * leave something for the platform.
+ */
+function ReferralPayoutNote({
+  type,
+  referrer,
+  referee,
+}: Readonly<{ type: string; referrer: string; referee: string }>) {
+  const total = Number(referrer || 0) + Number(referee || 0);
+  if (!Number.isFinite(total) || total <= 0) return null;
+
+  if (type === "PERCENTAGE") {
+    const overHundred = total > 100;
+    return (
+      <div className="bg-muted mb-6 rounded-lg p-3">
+        <p className="text-xs">
+          <strong>
+            {total}&nbsp;% of every qualifying payment is paid out
+            {!overHundred && `, ${100 - total} % stays with the platform`}.
+          </strong>{" "}
+          {overHundred ? (
+            <span className="text-destructive font-medium">
+              The two shares add up to more than 100&nbsp;%. This will be
+              rejected on save — a referral can never pay out more than the
+              payment that triggered it.
+            </span>
+          ) : (
+            "There is no minimum payment in this mode: a share fits inside any amount, so small connections reward proportionally rather than not at all."
+          )}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-muted mb-6 rounded-lg p-3">
+      <p className="text-xs">
+        <strong>Payout floor: {total.toLocaleString("fr-FR")} FCFA.</strong> A
+        referral pays out only when the referred user&apos;s first connection
+        payment reaches this amount — the program never pays out more than the
+        payment that triggered it. Keep it at or below the connection fees above,
+        or those payments will stop rewarding anyone.
+      </p>
+    </div>
+  );
+}
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -66,27 +145,39 @@ function NumericInput({
   placeholder,
   suffix,
   min = 0,
+  max,
+  hint,
 }: Readonly<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** A unit — short enough to sit inside the field. Use `hint` for prose. */
   suffix?: string;
   min?: number;
+  max?: number;
+  /** Sits under the field, so it survives a narrow column. */
+  hint?: string;
 }>) {
   return (
-    <div className="relative flex items-center">
-      <Input
-        type="number"
-        min={min}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={suffix ? "pr-14" : undefined}
-      />
-      {suffix && (
-        <span className="text-muted-foreground pointer-events-none absolute right-3 text-xs font-medium">
-          {suffix}
-        </span>
+    <div>
+      <div className="relative flex items-center">
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={suffix ? "pr-14" : undefined}
+        />
+        {suffix && (
+          <span className="text-muted-foreground pointer-events-none absolute right-3 text-xs font-medium">
+            {suffix}
+          </span>
+        )}
+      </div>
+      {hint && (
+        <p className="text-muted-foreground mt-1 text-[11px]">{hint}</p>
       )}
     </div>
   );
@@ -118,6 +209,9 @@ export function FeesCard() {
   function set(key: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  const isPercentage = form["fees.referral_commission_type"] === "PERCENTAGE";
+  const referralUnit = isPercentage ? "%" : "FCFA";
 
   async function handleSave() {
     await saveChanges(form);
@@ -296,24 +390,166 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Platform thresholds
+          Parrainage
         </p>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+        <p className="text-muted-foreground mb-4 text-xs">
+          Paid when a referred user makes their <strong>first mobile-money
+          payment for a connection</strong> — never at signup, which would be
+          farmable with throwaway accounts.
+        </p>
+        {/* Five across on a wide screen, collapsing to two and then one. The
+            commission type leads because it decides the unit of the two fields
+            after it — reading left to right is reading the sentence. */}
+        <div className="mb-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="space-y-1.5">
-            <FieldLabel>Minimum reliability score</FieldLabel>
+            <FieldLabel>Commission type</FieldLabel>
+            <Select
+              value={form["fees.referral_commission_type"] || "FIXED"}
+              onValueChange={(v) => set("fees.referral_commission_type", v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FIXED">Fixed (FCFA)</SelectItem>
+                <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Referral credit – Referrer</FieldLabel>
             <NumericInput
-              value={form["fees.reliability_score_min"]}
-              onChange={(v) => set("fees.reliability_score_min", v)}
-              suffix="pts"
+              value={form["fees.referral_credit_referrer"]}
+              onChange={(v) => set("fees.referral_credit_referrer", v)}
+              suffix={referralUnit}
+              max={isPercentage ? 100 : undefined}
             />
           </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Referral credit – Referee</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_credit_referee"]}
+              onChange={(v) => set("fees.referral_credit_referee", v)}
+              suffix={referralUnit}
+              max={isPercentage ? 100 : undefined}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max rewarded per referrer</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_max_rewarded_per_referrer"]}
+              onChange={(v) =>
+                set("fees.referral_max_rewarded_per_referrer", v)
+              }
+              hint="0 = unlimited"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Max payout per referral</FieldLabel>
+            <NumericInput
+              value={form["fees.referral_max_payout_per_referral"]}
+              onChange={(v) => set("fees.referral_max_payout_per_referral", v)}
+              suffix="FCFA"
+              hint="0 = no ceiling"
+            />
+          </div>
+        </div>
+        <ReferralPayoutNote
+          type={form["fees.referral_commission_type"]}
+          referrer={form["fees.referral_credit_referrer"]}
+          referee={form["fees.referral_credit_referee"]}
+        />
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Unpaid penalties – escalation
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Three steps, applied in order. <strong>Block</strong> flips the billing
+          status and diverts the WhatsApp conversation to the payment prompt.{" "}
+          <strong>Suspend</strong> disables the account — it is the harsher of
+          the two, so it is clamped to never fire before the block. The{" "}
+          <strong>hard block</strong> is time-based rather than count-based: one
+          penalty left unpaid this long stops the account applying, publishing
+          or unlocking a contact, and drops it out of the recommendation
+          fan-out.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
             <FieldLabel>Unpaid penalties before block</FieldLabel>
             <NumericInput
               value={form["fees.billing_block_threshold"]}
               onChange={(v) => set("fees.billing_block_threshold", v)}
+              min={1}
             />
           </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Unpaid penalties before suspension</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_suspension_threshold"]}
+              onChange={(v) => set("fees.penalty_suspension_threshold", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Hard block after</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_hard_block_days"]}
+              onChange={(v) => set("fees.penalty_hard_block_days", v)}
+              suffix="days"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Unpaid penalties – reminders
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          WhatsApp reminders for an unpaid penalty. The run stops at the hard
+          block above — past that the block itself is the message — so raising
+          the reminder count beyond that window has no effect. Keep the interval
+          just under 24h so a daily reminder does not drift later each day.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <FieldLabel>Max reminders per penalty</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_max_notifications"]}
+              onChange={(v) => set("fees.penalty_max_notifications", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Minimum gap between reminders</FieldLabel>
+            <NumericInput
+              value={form["fees.penalty_notification_interval_hours"]}
+              onChange={(v) =>
+                set("fees.penalty_notification_interval_hours", v)
+              }
+              suffix="h"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Platform thresholds
+        </p>
+        {/* No grid: this section has one field, and a two-column grid around a
+            single item just leaves half the row empty. */}
+        <div className="space-y-1.5">
+          <FieldLabel>Minimum reliability score</FieldLabel>
+          <NumericInput
+            value={form["fees.reliability_score_min"]}
+            onChange={(v) => set("fees.reliability_score_min", v)}
+            suffix="pts"
+          />
         </div>
 
         <Separator className="my-6" />

@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   IconWallet,
   IconGavel,
   IconLock,
   IconPlus,
+  IconGift,
+  IconUsers,
+  IconUserPlus,
+  IconDeviceMobile,
+  IconArrowBackUp,
+  IconBriefcase,
+  IconReceipt,
+  IconArrowDownLeft,
+  IconArrowUpRight,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 import type { IconProps } from "@tabler/icons-react";
@@ -14,7 +24,6 @@ import {
   type AdminProfileWalletTransaction,
 } from "#/lib/api/profiles-controller";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
-import { Badge } from "#/components/ui/badge";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Button } from "#/components/ui/button";
 import {
@@ -27,9 +36,11 @@ import {
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { toast } from "sonner";
+import { groupByDay } from "#/lib/date-grouping";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   WELCOME_CREDIT: "Welcome credit",
+  REFERRAL_CREDIT: "Referral credit",
   MANUAL_CREDIT: "Manual credit (admin)",
   CONTACT_UNLOCK_DEBIT: "Contact unlock",
   CONTACT_UNLOCK_CREDIT: "Contact unlock refund",
@@ -45,15 +56,39 @@ const TX_TYPE_LABELS: Record<string, string> = {
   DEBIT: "Debit",
 };
 
-function formatDate(v: string) {
-  try {
-    return new Date(v).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return v;
-  }
+/**
+ * One icon per movement, so a long list is scannable by shape.
+ *
+ * The list is overwhelmingly the same two or three types repeated — five
+ * "Contact unlock" rows in a row is the normal case — and identical text at
+ * identical weight is what made it read as noise rather than as a ledger.
+ */
+const TX_TYPE_ICONS: Record<string, ComponentType<IconProps>> = {
+  WELCOME_CREDIT: IconGift,
+  REFERRAL_CREDIT: IconUsers,
+  MANUAL_CREDIT: IconUserPlus,
+  CONTACT_UNLOCK_DEBIT: IconLock,
+  CONTACT_UNLOCK_CREDIT: IconArrowBackUp,
+  CONTACT_UNLOCK_CREDIT_CONVERSION: IconArrowBackUp,
+  MOBILE_MONEY_TOPUP: IconDeviceMobile,
+  TOP_UP_CREDIT: IconDeviceMobile,
+  PENALTY_DEBIT: IconGavel,
+  PENALTY_PAYMENT: IconGavel,
+  JOB_POSTING_DEBIT: IconBriefcase,
+  JOB_POSTING_PAYMENT: IconBriefcase,
+  REGISTRATION_PAYMENT: IconReceipt,
+};
+
+function txTypeIcon(type: string, credit: boolean): ComponentType<IconProps> {
+  return TX_TYPE_ICONS[type] ?? (credit ? IconArrowDownLeft : IconArrowUpRight);
+}
+
+/** A day's signed total — the number someone wants when a balance moved. */
+function netOf(txs: AdminProfileWalletTransaction[]): number {
+  return txs.reduce(
+    (sum, tx) => sum + (isCredit(tx.type) ? tx.amount : -tx.amount),
+    0,
+  );
 }
 
 function formatAmount(amount: number) {
@@ -72,6 +107,7 @@ function isCredit(type: string): boolean {
     type === "CONTACT_UNLOCK_CREDIT_CONVERSION" ||
     type === "MOBILE_MONEY_TOPUP" ||
     type === "TOP_UP_CREDIT" ||
+    type === "REFERRAL_CREDIT" ||
     type === "CREDIT"
   );
 }
@@ -283,9 +319,37 @@ export function ProfilePaymentsContent({ profileId }: Readonly<Props>) {
               </p>
             </div>
           ) : (
-            <div className="divide-y">
-              {transactions.map((tx) => (
-                <TransactionRow key={tx.id} tx={tx} />
+            <div>
+              {groupByDay(transactions, (tx) => tx.createdAt).map((group) => (
+                <section key={group.key}>
+                  {/* Sticky, so the day stays answerable while scrolling a long
+                      run of same-day movements. The net is what someone wants
+                      when a balance moved and they are asking why. */}
+                  <div className="bg-muted/40 text-muted-foreground sticky top-0 z-10 flex items-center justify-between px-6 py-1.5 text-xs font-medium">
+                    <span>{group.heading}</span>
+                    <span
+                      className={`tabular-nums ${
+                        netOf(group.items) > 0
+                          ? "text-emerald-500"
+                          : netOf(group.items) < 0
+                            ? "text-rose-500"
+                            : ""
+                      }`}
+                    >
+                      {netOf(group.items) > 0
+                        ? "+"
+                        : netOf(group.items) < 0
+                          ? "−"
+                          : ""}
+                      {formatAmount(Math.abs(netOf(group.items)))}
+                    </span>
+                  </div>
+                  <div className="divide-y">
+                    {group.items.map((tx) => (
+                      <TransactionRow key={tx.id} tx={tx} />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
@@ -306,26 +370,49 @@ function TransactionRow({
   tx,
 }: Readonly<{ tx: AdminProfileWalletTransaction }>) {
   const credit = isCredit(tx.type);
+  const Icon = txTypeIcon(tx.type, credit);
+  const date = new Date(tx.createdAt);
+  const valid = !Number.isNaN(date.getTime());
 
   return (
-    <div className="flex items-center justify-between px-6 py-3">
+    <div className="flex items-center gap-3 px-6 py-3">
+      <div
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full border ${
+          credit ? "text-emerald-500" : "text-muted-foreground"
+        }`}
+      >
+        <Icon className="size-4" />
+      </div>
+
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{txTypeLabel(tx.type)}</p>
-        <p className="text-muted-foreground text-xs">{formatDate(tx.createdAt)}</p>
-        {tx.referenceType && (
-          <p className="text-muted-foreground truncate text-xs">
-            Ref: {tx.referenceType}
-            {tx.referenceId ? ` · ${tx.referenceId.slice(0, 8)}…` : ""}
-          </p>
-        )}
+        <p className="text-muted-foreground text-xs">
+          {valid ? format(date, "HH:mm") : tx.createdAt}
+          {valid && (
+            <span title={format(date, "PPpp")}>
+              {" · "}
+              {formatDistanceToNow(date, { addSuffix: true })}
+            </span>
+          )}
+        </p>
       </div>
-      <div className="ml-4 shrink-0 text-right">
-        <Badge
-          className={`font-mono text-xs ${credit ? "bg-emerald-500 text-white border-transparent" : "bg-rose-600 text-white border-transparent"}`}
-        >
-          {credit ? "+" : "−"}
-          {formatAmount(tx.amount)}
-        </Badge>
+
+      {/* Plain, weighted text rather than a filled pill. Every row carried one,
+          so the colour marked nothing — and a ledger is read down the amount
+          column, which a badge's padding breaks up. The reference id moves to
+          the title: it is for support to quote, not for anyone to read. */}
+      <div
+        className={`shrink-0 text-right font-mono text-sm tabular-nums ${
+          credit ? "text-emerald-500" : "text-foreground"
+        }`}
+        title={
+          tx.referenceType
+            ? `${tx.referenceType}${tx.referenceId ? ` · ${tx.referenceId}` : ""}`
+            : undefined
+        }
+      >
+        {credit ? "+" : "−"}
+        {formatAmount(tx.amount)}
       </div>
     </div>
   );

@@ -1,4 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap");
+/* JetBrains Mono is the reference code on the generated job flyer. Bundled
+   with the families already fetched here rather than left to `ui-monospace`,
+   which resolves to SF Mono on macOS and Consolas on Windows — the same job
+   would otherwise produce a visibly different flyer depending on who clicked. */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=JetBrains+Mono:wght@700&family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -307,6 +311,15 @@ a {
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --shadow-nav-selected: 0 4px 14px -2px hsl(var(--whatsapp) / 0.32);
+  /*
+   * The house card shadow, matching rabotka-client's `--shadow-soft`. Surfaces
+   * here are separated by elevation rather than by a hairline border.
+   *
+   * `shadow-soft` was already in use (feedback-table, the graph panels) with no
+   * token behind it, so Tailwind emitted nothing and those surfaces have been
+   * rendering flat.
+   */
+  --shadow-soft: 0 4px 20px -4px hsl(25 35% 15% / 0.08);
   --color-whatsapp: hsl(var(--whatsapp));
   --color-whatsapp-dark: hsl(var(--whatsapp-dark));
   --color-background: var(--background);

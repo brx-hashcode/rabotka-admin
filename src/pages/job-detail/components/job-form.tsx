@@ -1,4 +1,12 @@
 import { useState, useEffect } from "react";
+import { Checkbox } from "#/components/ui/checkbox";
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  EMPLOYMENT_TYPE_VALUES,
+  type EmploymentTypeValue,
+} from "#/lib/employment-type";
+import { GeoCombobox } from "#/components/geo-combobox";
+import { useCities, useCountries } from "#/hooks/use-geo";
 
 import type {
   AdminJobOfferDetailResponse,
@@ -20,10 +28,16 @@ import {
 type FormData = {
   title: string;
   description: string;
+  employmentType: string;
   scheduledAt: string;
   amount: string;
   paymentFlow: string;
   address: string;
+  /** "1" or "" — this form keeps every field a string so `isDirty` can compare. */
+  isRemote: string;
+  countryCode: string;
+  countryName: string;
+  city: string;
   note: string;
   quantity: string;
 };
@@ -36,7 +50,10 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function toLocalDateTimeValue(isoStr: string): string {
+// An offer with no closing date maps to an empty field, not to the epoch:
+// `new Date(null)` is 1970 and would silently invent a date on every save.
+function toLocalDateTimeValue(isoStr: string | null): string {
+  if (!isoStr) return "";
   const d = new Date(isoStr);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -70,24 +87,33 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
   const [form, setForm] = useState<FormData>({
     title: "",
     description: "",
+    employmentType: "MISSION",
     scheduledAt: "",
     amount: "",
     paymentFlow: "",
     address: "",
+    isRemote: "",
+    countryCode: "",
+    countryName: "",
+    city: "",
     note: "",
     quantity: "",
   });
   const [initialForm, setInitialForm] = useState<FormData>(form);
-  const [paymentFlowError, setPaymentFlowError] = useState(false);
 
   useEffect(() => {
     const data: FormData = {
       title: job.title ?? "",
       description: job.description ?? "",
+      employmentType: job.employmentType ?? "MISSION",
       scheduledAt: toLocalDateTimeValue(job.scheduledAt),
       amount: job.amount == null ? "" : String(job.amount),
       paymentFlow: job.paymentFlow ?? "",
       address: job.address ?? "",
+      isRemote: job.isRemote ? "1" : "",
+      countryCode: job.countryCode ?? "",
+      countryName: job.countryName ?? "",
+      city: job.city ?? "",
       note: job.note ?? "",
       quantity: String(job.quantity ?? 1),
     };
@@ -95,35 +121,76 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
     setInitialForm(data);
   }, [job]);
 
+  // Drives what gets sent, not what is allowed: the frequency is optional
+  // everywhere it matters. The DTO marks it @IsOptional(), the service writes
+  // `payment_flow = dto.paymentFlow ?? null`, and the client renders the label
+  // as `PAYMENT_FLOW_LABELS[flow] ?? ""` — so an amount with no frequency
+  // simply prints without a period. Requiring it here blocked saves on records
+  // the rest of the stack accepts.
   const hasAmount = form.amount.trim() !== "" && Number(form.amount) > 0;
 
   const isDirty = (Object.keys(form) as (keyof FormData)[]).some(
     (k) => form[k] !== initialForm[k],
   );
 
+  const countries = useCountries();
+  const cities = useCities(form.countryCode || null);
+
+  const countryOptions = (countries.data ?? []).map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
+  const cityOptions = (cities.data ?? []).map((name) => ({
+    value: name,
+    label: name,
+  }));
+
+  /** Changing the country always clears the city; see profile-form.tsx. */
+  const handleCountryChange = (code: string | null) => {
+    const country = countries.data?.find((c) => c.code === code);
+    setForm((prev) => ({
+      ...prev,
+      countryCode: country?.code ?? "",
+      countryName: country?.name ?? "",
+      city: "",
+    }));
+  };
+
   const updateField = (field: keyof FormData, value: string) => {
+    // Clearing the price clears the frequency with it — a cadence attached to
+    // no number is meaningless, and the Payment Flow select unmounts anyway.
     if (field === "amount" && (value.trim() === "" || Number(value) <= 0)) {
       setForm((prev) => ({ ...prev, amount: value, paymentFlow: "" }));
-      setPaymentFlowError(false);
     } else {
       setForm((prev) => ({ ...prev, [field]: value }));
     }
   };
 
   const handleSave = async () => {
-    if (hasAmount && !form.paymentFlow) {
-      setPaymentFlowError(true);
-      return;
-    }
-    setPaymentFlowError(false);
-
     const params: AdminUpdateJobOfferParams = {};
     if (form.title !== initialForm.title) params.title = form.title;
     if (form.description !== initialForm.description)
       params.description = form.description;
+    if (form.employmentType !== initialForm.employmentType)
+      params.employmentType = form.employmentType as EmploymentTypeValue;
+    // An empty field clears the closing date, which is how a dated offer
+    // becomes an open-ended one. `new Date("")` would throw.
     if (form.scheduledAt !== initialForm.scheduledAt)
-      params.scheduledAt = new Date(form.scheduledAt).toISOString();
-    if (form.address !== initialForm.address) params.address = form.address;
+      params.scheduledAt = form.scheduledAt
+        ? new Date(form.scheduledAt).toISOString()
+        : null;
+    const isRemote = form.isRemote === "1";
+    if (form.isRemote !== initialForm.isRemote) params.isRemote = isRemote;
+    // A remote job sends no location: the server clears the columns, and
+    // sending a stale address alongside isRemote would only be discarded.
+    if (!isRemote) {
+      if (form.address !== initialForm.address) params.address = form.address;
+      if (form.countryCode !== initialForm.countryCode) {
+        params.countryCode = form.countryCode;
+        params.countryName = form.countryName;
+      }
+      if (form.city !== initialForm.city) params.city = form.city;
+    }
     if (form.note !== initialForm.note) params.note = form.note;
     if (form.quantity !== initialForm.quantity)
       params.quantity = Number(form.quantity);
@@ -190,23 +257,100 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
             </div>
           </div>
 
-          <div className="space-y-1.5 col-span-2">
-            <FieldLabel>Address</FieldLabel>
-            <Input
-              value={form.address}
-              onChange={(e) => updateField("address", e.target.value)}
+          <div className="col-span-2 flex items-center gap-2">
+            <Checkbox
+              id="job-is-remote"
+              checked={form.isRemote === "1"}
+              onCheckedChange={(checked) => {
+                const remote = checked === true;
+                setForm((prev) => ({
+                  ...prev,
+                  isRemote: remote ? "1" : "",
+                  // Cleared, not merely hidden: an address left in state would
+                  // be sent again the moment someone unticked the box.
+                  ...(remote
+                    ? { address: "", countryCode: "", countryName: "", city: "" }
+                    : {}),
+                }));
+              }}
               disabled={disabled}
             />
+            <label htmlFor="job-is-remote" className="cursor-pointer text-sm">
+              Remote job — done from anywhere, no address
+            </label>
+          </div>
+
+          {/* The whole location block disappears for a remote job: there is no
+              site, so a greyed-out address field is a question with no answer. */}
+          {form.isRemote !== "1" && (
+            <>
+              <div className="space-y-1.5">
+                <FieldLabel>Country</FieldLabel>
+                <GeoCombobox
+                  options={countryOptions}
+                  value={form.countryCode || null}
+                  onChange={handleCountryChange}
+                  placeholder="Select a country"
+                  searchPlaceholder="Search countries…"
+                  disabled={disabled || countries.isPending}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel>City</FieldLabel>
+                <GeoCombobox
+                  options={cityOptions}
+                  value={form.city || null}
+                  onChange={(city) => updateField("city", city ?? "")}
+                  placeholder={
+                    form.countryCode ? "Select a city" : "Select a country first"
+                  }
+                  searchPlaceholder="Search cities…"
+                  disabled={disabled || !form.countryCode || cities.isPending}
+                />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <FieldLabel>Address</FieldLabel>
+                <Input
+                  value={form.address}
+                  onChange={(e) => updateField("address", e.target.value)}
+                  disabled={disabled}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="space-y-1.5">
+            <FieldLabel>Employment type</FieldLabel>
+            <Select
+              value={form.employmentType || undefined}
+              onValueChange={(v) => updateField("employmentType", v)}
+              disabled={disabled}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose…" />
+              </SelectTrigger>
+              <SelectContent>
+                {EMPLOYMENT_TYPE_VALUES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {EMPLOYMENT_TYPE_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel>Scheduled At</FieldLabel>
+            <FieldLabel>Closing date</FieldLabel>
             <Input
               type="datetime-local"
               value={form.scheduledAt}
               onChange={(e) => updateField("scheduledAt", e.target.value)}
               disabled={disabled}
             />
+            <p className="text-muted-foreground text-xs">
+              When the offer stops accepting applications. Only a MISSION needs
+              one — clear it for a CDI, CDD or stage.
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -240,10 +384,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
               <FieldLabel>Payment Flow</FieldLabel>
               <Select
                 value={form.paymentFlow}
-                onValueChange={(v) => {
-                  updateField("paymentFlow", v);
-                  setPaymentFlowError(false);
-                }}
+                onValueChange={(v) => updateField("paymentFlow", v)}
                 disabled={disabled}
               >
                 <SelectTrigger className="w-full">
@@ -255,11 +396,9 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
                 </SelectContent>
               </Select>
-              {paymentFlowError && (
-                <p className="text-[11px] text-destructive">
-                  Select a payment frequency
-                </p>
-              )}
+              <p className="text-muted-foreground text-[11px]">
+                Optional — leave empty to show the amount without a period
+              </p>
             </div>
           ) : (
             <div />

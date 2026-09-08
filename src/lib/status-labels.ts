@@ -32,6 +32,19 @@ export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {
   EXPIRED: "Expired",
 } as const;
 
+/**
+ * How an offer pays. Mirrors the backend `PaymentFlow` enum exactly — the
+ * Payment column renders a badge for `FIXED` too, but that value is not in the
+ * enum and cannot come back from the API, so it is deliberately not offered as
+ * a filter option: a filter that can only ever return nothing is worse than no
+ * filter at all.
+ */
+export const PAYMENT_FLOW_LABELS: Record<string, string> = {
+  HOURLY: "Hourly",
+  DAILY: "Daily",
+  MONTHLY: "Monthly",
+} as const;
+
 export const APPLICATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   ACCEPTED: "Accepted",
@@ -82,4 +95,39 @@ export function getJobOfferStatusLabel(status: string): string {
 
 export function getApplicationStatusLabel(status: string): string {
   return APPLICATION_STATUS_LABELS[status] ?? status;
+}
+
+/**
+ * Referral payout states, in the words an admin needs when someone asks why a
+ * parrainage was not paid.
+ *
+ * Four of the five mean "no money moved", and they mean different things:
+ * "On hold" is waiting on the parrain's own KYC, "Capped" is a rule that
+ * declined to pay, and "Forfeited" is a parrain who is gone. Collapsing them
+ * into "not paid" is what makes support unanswerable.
+ */
+export const REFERRAL_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pending",
+  QUALIFIED_ON_HOLD: "On hold",
+  REWARDED: "Rewarded",
+  CAPPED: "Capped",
+  FORFEITED: "Forfeited",
+} as const;
+
+export function getReferralStatusBadgeClass(status: string): string {
+  switch (status) {
+    case "REWARDED":
+      return "bg-emerald-500 text-white border-transparent";
+    case "QUALIFIED_ON_HOLD":
+      return "bg-amber-500 text-white border-transparent";
+    case "PENDING":
+      return "bg-sky-500 text-white border-transparent";
+    // Capped and forfeited are both terminal non-payments, and neither is an
+    // error — a red badge here would send admins hunting for a bug.
+    case "CAPPED":
+    case "FORFEITED":
+      return "bg-muted text-muted-foreground border-border";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
 }

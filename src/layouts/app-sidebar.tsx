@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   IconAlertTriangle,
+  IconBrandWhatsapp,
   IconBriefcase,
   IconFileText,
   IconFileWord,
@@ -12,13 +13,16 @@ import {
   type Icon,
   IconFile,
   IconWallet,
+  IconGift,
   IconCalendar,
+  IconStar,
   IconTag,
   IconPackage,
   IconSpeakerphone,
   IconGridDots,
   IconMessage,
   IconTopologyStar3,
+  IconKey,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -51,12 +55,18 @@ export type NavItem = {
 
 const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
 
+/**
+ * The ladder without MODERATOR, for areas a moderator has no business in:
+ * money, the WhatsApp delivery log, the audit trail and the document library.
+ */
+const MANAGER_UP: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
+
 const navMain: NavItem[] = [
   {
     title: "Dashboard",
     url: "/",
     icon: IconGridDots,
-    roles: [...LADDER, "FINANCE"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Profiles",
@@ -68,47 +78,65 @@ const navMain: NavItem[] = [
     title: "Job Offers",
     url: "/jobs",
     icon: IconBriefcase,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Domains",
     url: "/job-categories",
     icon: IconTag,
-    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+    // admin/job-categories resolves to MANAGER+, and editing a domain
+    // re-buckets the whole marketplace.
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Applications",
     url: "/applications",
     icon: IconFileText,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Chat",
     url: "/chat",
     icon: IconMessage,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Penalties",
     url: "/penalties",
     icon: IconAlertTriangle,
-    roles: [...LADDER, "FINANCE"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Network",
     url: "/network",
     icon: IconTopologyStar3,
-    roles: [...LADDER],
+    // The collaboration graph is neither a finance nor a support surface.
+    roles: [...LADDER, "FINANCE"],
   },
   {
     title: "Team",
     url: "/team",
     icon: IconUsers,
-    roles: ["ADMIN", "SUPER_ADMIN"],
+    // Team management is served by the `user` controller, which no lateral
+    // role may reach at all — the list itself 403s, not just the mutations.
+    roles: [...LADDER],
   },
 ];
 
 const navSecondary: NavItem[] = [
+  {
+    // "Partner apps", NOT "Applications": that label is already taken by
+    // `/applications`, the job applications board, and two identical entries in
+    // one sidebar is a support ticket waiting to happen.
+    //
+    // SUPER_ADMIN-only, matching the endpoint's @Roles — registering an app
+    // decides who Rabotka vouches for its users' identities to, which is the
+    // same class of decision as team management, not an operational one.
+    title: "Partner apps",
+    url: "/oauth-apps",
+    icon: IconKey,
+    roles: ["SUPER_ADMIN"],
+  },
   {
     title: "Settings",
     url: "/settings",
@@ -120,46 +148,67 @@ const navSecondary: NavItem[] = [
 
 const documents: NavItem[] = [
   {
-    title: "Wallet",
+    title: "Finance",
     url: "/wallet",
     icon: IconWallet,
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
   },
   {
+    // MANAGER+, matching the endpoint's @Roles. This is support-desk data —
+    // "why was my parrainage not paid?" — rather than revenue.
+    title: "Parrainage",
+    url: "/referrals",
+    icon: IconGift,
+    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
+  },
+  {
     title: "Claims",
     url: "/claim",
     icon: IconReport,
-    roles: [...LADDER, "SUPPORT"],
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    title: "Feedback",
+    url: "/feedback",
+    icon: IconStar,
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
     title: "Events",
     url: "/events",
     icon: IconCalendar,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
+  },
+  {
+    title: "WhatsApp",
+    url: "/whatsapp",
+    icon: IconBrandWhatsapp,
+    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
   },
   {
     title: "Logs",
     url: "/logs",
     icon: IconFileWord,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    // The audit log is every admin action on every record; MANAGER+.
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Documents",
     url: "/documents",
     icon: IconFile,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Ad Bundles",
     url: "/ads-bundles",
     icon: IconPackage,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
   },
   {
     title: "Advertisements",
     url: "/advertisements",
     icon: IconSpeakerphone,
-    roles: ["SUPER_ADMIN", "MANAGER", "MODERATOR"],
+    roles: [...LADDER, "FINANCE"],
   },
 ];
 

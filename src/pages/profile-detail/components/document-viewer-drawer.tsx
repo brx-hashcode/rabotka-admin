@@ -19,9 +19,12 @@ import {
   ZoomIn,
   ZoomOut,
   Printer,
+  RotateCw,
+  RotateCcw,
 } from "lucide-react";
 
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
+import { kycDocumentRawUrl } from "#/lib/api/profiles-controller";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { Button } from "#/components/ui/button";
@@ -39,6 +42,14 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { docCategoryLabel, docTypeLabel, formatDate } from "../helpers";
 import { appConfig } from "#/config";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
+import { guardResponse } from "#/lib/auth/session";
+import {
+  isQuarterTurn,
+  rotateLeft,
+  rotateRight,
+  type Rotation,
+} from "#/lib/media/rotation";
 
 export { isLikelyImageAsset };
 
@@ -56,8 +67,21 @@ function pdfDocumentUrl(fileUrl: string): string {
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 async function downloadViaProxy(fileUrl: string, filename: string) {
-  const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
-  const res = await fetch(proxyUrl, { credentials: "include" });
+  // A KYC document is served from our own api, authenticated by the session
+  // cookie, so it is fetched directly. Sending it through `/file/proxy` would
+  // hand that endpoint a relative path it cannot resolve, and routing identity
+  // documents through a caller-supplied-url fetcher is not something to do
+  // even when it works.
+  const isOwnApi = fileUrl.startsWith(`${appConfig.apiUrl}/`);
+  const proxyUrl = isOwnApi
+    ? fileUrl
+    : `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
+  // Guarded: a raw media fetch bypasses the controller, so a 401 here would
+  // otherwise never reach the session interceptor.
+  const res = guardResponse(
+    proxyUrl,
+    await fetch(proxyUrl, { credentials: "include" }),
+  );
   if (!res.ok) throw new Error("Download failed");
   const blob = await res.blob();
   const objectUrl = URL.createObjectURL(blob);
@@ -182,7 +206,7 @@ function DocFallback({
         </Button>
         <Button
           onClick={() =>
-            downloadViaProxy(url, url.split("/").pop() ?? "document")
+            downloadViaProxy(url, fileNameFromUrl(url))
           }
         >
           <Download className="size-4" />
@@ -222,13 +246,20 @@ export type ViewerDocument = {
   onDownload?: () => void;
 };
 
-export function toKycViewerDoc(doc: AdminKycDocumentItem): ViewerDocument {
-  const inferred = isLikelyImageAsset(doc.documentUrl) ? "image" : undefined;
+export function toKycViewerDoc(
+  profileId: string,
+  doc: AdminKycDocumentItem,
+): ViewerDocument {
+  // `contentKind` comes from the server. The stream url has no extension, so
+  // sniffing it the way this used to would answer "not an image" every time.
   return {
-    url: doc.documentUrl ?? "",
+    url: kycDocumentRawUrl(profileId, doc.id),
     title: docCategoryLabel(doc.documentCategory),
     description: `${docTypeLabel(doc.documentType)} — Uploaded ${formatDate(doc.createdAt)}`,
-    fileType: inferred,
+    // "other" carries no information the viewer can act on; "pdf" does, and
+    // without it a pdf falls through to the unsupported branch, since the
+    // stream url has no `.pdf` for the viewer to notice.
+    fileType: doc.contentKind === "other" ? undefined : doc.contentKind,
   };
 }
 
@@ -242,11 +273,61 @@ const ZOOM_MIN = 0.75;
 const ZOOM_MAX = 2.25;
 const ZOOM_STEP = 0.25;
 
+/**
+ * Left and right, laid out like the zoom group beside it: control, readout,
+ * control. A sideways scan is one press away whichever way it was taken, and
+ * the pairing means neither direction has to be reasoned about — the same shape
+ * as `−  100%  +` two elements over.
+ *
+ * Neither button is ever disabled, unlike zoom: rotation wraps, so there is no
+ * end of the range to run into.
+ */
+function RotateControl({
+  rotation,
+  onRotateLeft,
+  onRotateRight,
+}: Readonly<{
+  rotation: Rotation;
+  onRotateLeft: () => void;
+  onRotateRight: () => void;
+}>) {
+  return (
+    <div className="inline-flex items-center rounded-lg border bg-background p-0.5 shadow-xs">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-8"
+        onClick={onRotateLeft}
+        aria-label="Rotate left"
+        title="Rotate left"
+      >
+        <RotateCcw className="size-4" />
+      </Button>
+      <span className="min-w-11 px-1 text-center text-xs font-medium tabular-nums text-muted-foreground">
+        {rotation}°
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-8"
+        onClick={onRotateRight}
+        aria-label="Rotate right"
+        title="Rotate right"
+      >
+        <RotateCw className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
 function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () => void }>) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [width, setWidth] = useState(600);
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState<Rotation>(0);
 
   const pdfFile = useMemo(() => {
     // blob:/data: URLs are browser-local references — the server-side proxy
@@ -370,6 +451,12 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
                 </Button>
               </div>
 
+              <RotateControl
+                rotation={rotation}
+                onRotateLeft={() => setRotation(rotateLeft)}
+                onRotateRight={() => setRotation(rotateRight)}
+              />
+
               <Button
                 type="button"
                 variant="outline"
@@ -390,7 +477,7 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
                 onClick={() =>
                   onDownload
                     ? onDownload()
-                    : downloadViaProxy(url, url.split("/").pop() ?? "document")
+                    : downloadViaProxy(url, fileNameFromUrl(url))
                 }
               >
                 <Download className="size-3.5" />
@@ -422,6 +509,7 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
               setNumPages(n);
               setPageNumber(1);
               setZoom(1);
+              setRotation(0);
             }}
             onLoadError={() => {}}
             loading={
@@ -436,9 +524,13 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
               />
             }
           >
+            {/* `rotate` is react-pdf's own prop, not a CSS transform: it turns
+                the page at render time, so the canvas comes out with the right
+                dimensions and the text layer stays aligned with it. */}
             <Page
               pageNumber={pageNumber}
               width={Math.max(240, width * zoom)}
+              rotate={rotation}
               renderAnnotationLayer
               renderTextLayer
             />
@@ -451,8 +543,31 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
 
 function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState<Rotation>(0);
   const [failed, setFailed] = useState(false);
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
   const src = useMemo(() => pdfDocumentUrl(url), [url]);
+
+  // A new document starts flat. Carrying a turn over from the previous one
+  // shows the next reviewer a sideways ID and no clue why.
+  useEffect(() => {
+    setZoom(1);
+    setRotation(0);
+    setFailed(false);
+  }, [url]);
+
+  // The scroll box, measured once it has been laid out. A CSS transform does
+  // not change layout, so a quarter-turned image keeps the footprint it had
+  // upright — which is how a turned portrait scan ends up wider than the panel
+  // holding it. Constraining against the OPPOSITE axis is what keeps it inside.
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) setBox({ w: node.clientWidth - 32, h: node.clientHeight - 32 });
+  }, []);
+
+  const quarterTurned = isQuarterTurn(rotation);
+  const imageFit = quarterTurned
+    ? { maxWidth: box?.h ?? undefined, maxHeight: box?.w ?? undefined }
+    : { maxWidth: "100%", maxHeight: "calc(100vh - 280px)" };
 
   if (failed) {
     return (
@@ -505,6 +620,11 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
               <ZoomIn className="size-4" />
             </Button>
           </div>
+          <RotateControl
+            rotation={rotation}
+            onRotateLeft={() => setRotation(rotateLeft)}
+            onRotateRight={() => setRotation(rotateRight)}
+          />
           <Button
             type="button"
             variant="outline"
@@ -523,7 +643,7 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             size="sm"
             className="h-8 gap-1.5"
             onClick={() =>
-              downloadViaProxy(url, url.split("/").pop() ?? "image")
+              downloadViaProxy(url, fileNameFromUrl(url, "image"))
             }
           >
             <Download className="size-3.5" />
@@ -543,7 +663,14 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 justify-center overflow-auto rounded-lg border bg-muted/15 p-3 sm:p-4">
+      <div
+        ref={containerRef}
+        className="flex min-h-0 flex-1 justify-center overflow-auto rounded-lg border bg-muted/15 p-3 sm:p-4"
+      >
+        {/* Zoom stays on the wrapper and keeps its top origin: scaling from the
+            centre pushes the top of a magnified document above the scroll box,
+            where it cannot be scrolled back into view. Rotation sits on the
+            image itself, about its own centre, so the two do not fight. */}
         <div
           className="inline-block origin-top transition-transform duration-150"
           style={{ transform: `scale(${zoom})` }}
@@ -551,7 +678,8 @@ function ImageViewer({ url, title }: Readonly<{ url: string; title: string }>) {
           <img
             src={src}
             alt={title}
-            className="max-h-[calc(100vh-280px)] max-w-full rounded-md border bg-background object-contain shadow-md"
+            className="rounded-md border bg-background object-contain shadow-md transition-transform duration-150"
+            style={{ transform: `rotate(${rotation}deg)`, ...imageFit }}
             onError={() => setFailed(true)}
           />
         </div>
@@ -608,7 +736,7 @@ function DocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
             onClick={() =>
               downloadViaProxy(
                 url,
-                title || (url.split("/").pop() ?? "document"),
+                title || fileNameFromUrl(url),
               )
             }
           >
@@ -707,8 +835,9 @@ function MarkdownViewer({
     const proxyUrl = `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(url)}`;
     fetch(proxyUrl, { credentials: "include" })
       .then((r) => {
-        if (!r.ok) throw new Error("fetch failed");
-        return r.text();
+        const res = guardResponse(proxyUrl, r);
+        if (!res.ok) throw new Error("fetch failed");
+        return res.text();
       })
       .then(setContent)
       .catch(() => setError(true));
@@ -742,7 +871,7 @@ function MarkdownViewer({
             onClick={() =>
               downloadViaProxy(
                 url,
-                title || (url.split("/").pop() ?? "document"),
+                title || fileNameFromUrl(url),
               )
             }
           >

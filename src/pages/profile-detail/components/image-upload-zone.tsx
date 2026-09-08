@@ -1,14 +1,28 @@
-import { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useCallback, type ReactNode } from "react";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { IconUpload, IconX, IconPhoto } from "@tabler/icons-react";
 import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
+
+/** A file the zone declined, and why. */
+export type UploadRejection = {
+  file: File;
+  errors: { code: string; message: string }[];
+};
 
 type ImageUploadZoneProps = {
   files: File[];
   previews: string[];
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
+  /**
+   * Called with anything the zone declined — too large, wrong type, or over
+   * `maxFiles`. Optional: a caller that passes nothing keeps the historical
+   * behaviour of dropping them silently.
+   */
+  onReject?: (rejections: UploadRejection[]) => void;
+  /** Rendered over each thumbnail, for per-file upload status. */
+  renderOverlay?: (index: number) => ReactNode;
   label?: string;
   maxSize?: number;
   maxFiles?: number;
@@ -19,18 +33,48 @@ export function ImageUploadZone({
   previews,
   onAdd,
   onRemove,
+  onReject,
+  renderOverlay,
   label = "Supporting Images",
   maxSize = 5 * 1024 * 1024,
   maxFiles,
 }: Readonly<ImageUploadZoneProps>) {
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       const images = acceptedFiles.filter((f) => f.type.startsWith("image/"));
       const remaining = maxFiles ? maxFiles - previews.length : images.length;
       const toAdd = images.slice(0, remaining);
+      const overflow = images.slice(Math.max(remaining, 0));
+
       if (toAdd.length > 0) onAdd(toAdd);
+
+      // `fileRejections` used to be collected by the dropzone and thrown away,
+      // so an oversize file simply vanished with no message. The overflow slice
+      // above was the same bug in a second place.
+      if (onReject && (fileRejections.length > 0 || overflow.length > 0)) {
+        onReject([
+          // Copied into plain objects: react-dropzone's own errors are readonly
+          // and carry a narrower `code` union than callers need to switch on.
+          ...fileRejections.map((r) => ({
+            file: r.file as File,
+            errors: r.errors.map((e) => ({
+              code: String(e.code),
+              message: e.message,
+            })),
+          })),
+          ...overflow.map((file) => ({
+            file,
+            errors: [
+              {
+                code: "too-many-files",
+                message: `Maximum ${maxFiles} files`,
+              },
+            ],
+          })),
+        ]);
+      }
     },
-    [onAdd, maxFiles, previews.length],
+    [onAdd, onReject, maxFiles, previews.length],
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -90,6 +134,16 @@ export function ImageUploadZone({
                       {files[i]?.name}
                     </p>
                   </div>
+
+                  {/* `pointer-events-none` so the status chip never swallows the
+                      remove button underneath it; anything interactive inside
+                      re-enables pointer events on itself. */}
+                  {renderOverlay && (
+                    <div className="pointer-events-none absolute inset-0">
+                      {renderOverlay(i)}
+                    </div>
+                  )}
+
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-200 group-hover/thumb:bg-black/40">
                     <Button
                       type="button"

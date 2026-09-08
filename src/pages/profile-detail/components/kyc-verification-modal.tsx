@@ -1,14 +1,29 @@
-import { useState, useEffect } from "react";
-import { IconCheck, IconFileText, IconX } from "@tabler/icons-react";
-import { X } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  IconCheck,
+  IconFileText,
+  IconX,
+  IconRefresh,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
+import { Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 
-import type { AdminProfileDetailResponse } from "#/lib/api/profiles-controller";
+import type {
+  AdminKycDocumentItem,
+  AdminProfileDetailResponse,
+  AdminVerifyDocumentRef,
+} from "#/lib/api/profiles-controller";
+import { useUploadVerificationImage } from "#/hooks/use-upload-verification-image";
+import { compressImage } from "#/lib/media/image-compress";
+import type { UploadRejection } from "./image-upload-zone";
+import { kycDocumentRawUrl } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
-import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import type { ReasonTemplateScope } from "#/lib/reason-templates";
 
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
-import { Textarea } from "#/components/ui/textarea";
+import { ReasonField } from "#/components/reason-field";
 import {
   Dialog,
   DialogClose,
@@ -31,47 +46,62 @@ type KycVerificationModalProps = {
   onSubmit: (
     decision: "VERIFIED" | "REJECTED",
     reason: string,
-    files?: File[],
+    documents?: AdminVerifyDocumentRef[],
   ) => void;
   isPending: boolean;
 };
 
+/**
+ * One attachment, tracked from the moment it is picked.
+ *
+ * The bytes used to ride along with the verify request, so the modal only ever
+ * needed a `File[]`. Now each file is compressed and uploaded on its own as
+ * soon as it is chosen, and this is what carries that journey: its status, its
+ * preview, and — once it lands — the descriptor the verify call will send.
+ */
+type UploadItem = {
+  /** Stable across status changes, unlike an array index. */
+  id: string;
+  file: File;
+  preview: string;
+  status: "compressing" | "uploading" | "done" | "failed";
+  key?: string;
+  url?: string;
+  error?: string;
+};
+
+/**
+ * Ids for upload items.
+ *
+ * A counter rather than `crypto.randomUUID()`, which is only defined in a
+ * SECURE CONTEXT — https or localhost. Admin served over plain http to a LAN
+ * address (a staging box, a phone on the same network) would get `undefined`
+ * and throw on the first file picked. These ids only have to be unique within
+ * one session, so global uniqueness buys nothing worth that failure mode.
+ */
+let uploadItemSeq = 0;
+const nextUploadItemId = () => `upload-${++uploadItemSeq}`;
+
+/**
+ * How many files may be compressing or uploading at once, PER DROP. Two rapid
+ * drops can therefore exceed it — acceptable, since the point is to avoid one
+ * large batch saturating a slow uplink, not to enforce a global budget.
+ */
+const UPLOAD_CONCURRENCY = 3;
+
+/** Matches ArrayMaxSize(10) on the API's documents field. */
+const MAX_FILES = 10;
+
 const REASON_PLACEHOLDER =
   "Enter the reason for your decision (required for approve and reject)…";
 
-const KYC_REASON_FIELD_ID = "kyc-verification-reason";
-
-function ReasonField({
-  reason,
-  reasonError,
-  onReasonChange,
-}: Readonly<{
-  reason: string;
-  reasonError: boolean;
-  onReasonChange: (value: string) => void;
-}>) {
-  return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={KYC_REASON_FIELD_ID}
-        className="text-muted-foreground text-xs font-medium uppercase tracking-wide"
-      >
-        Reason <span className="text-destructive">*</span>
-      </label>
-      <Textarea
-        id={KYC_REASON_FIELD_ID}
-        placeholder={REASON_PLACEHOLDER}
-        value={reason}
-        rows={3}
-        onChange={(e) => onReasonChange(e.target.value)}
-        className={cn("resize-none", reasonError && "border-destructive")}
-      />
-      {reasonError && (
-        <p className="text-destructive text-xs">A reason is required.</p>
-      )}
-    </div>
-  );
-}
+const REASON_SCOPE_BY_DECISION: Record<
+  "VERIFIED" | "REJECTED",
+  ReasonTemplateScope
+> = {
+  VERIFIED: "KYC_APPROVE",
+  REJECTED: "KYC_REJECT",
+};
 
 export function KycVerificationModal({
   open,
@@ -85,54 +115,219 @@ export function KycVerificationModal({
   );
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(
+  const [items, setItems] = useState<UploadItem[]>([]);
+  const [previewDoc, setPreviewDoc] = useState<AdminKycDocumentItem | null>(
     null,
   );
 
+  const uploadImage = useUploadVerificationImage(profile.id).mutateAsync;
+
+  // The SDK's request takes no AbortSignal, so an upload in flight cannot be
+  // cancelled when the dialog closes. This lets the async pipeline notice and
+  // stop writing to state it no longer owns.
+  const openRef = useRef(open);
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [files]);
+    openRef.current = open;
+  }, [open]);
+
+  // Mirrors `items` so object urls can be revoked from outside a state updater.
+  // Creating or revoking one inside an updater would make it impure, and React
+  // invokes updaters twice under StrictMode — which would leak one url per
+  // upload the day somebody turns StrictMode on.
+  const itemsRef = useRef<UploadItem[]>([]);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  // Object urls are created and revoked explicitly rather than derived in an
+  // effect. The previous version rebuilt every preview whenever the file list
+  // changed, which under this model would revoke live previews mid-upload —
+  // `items` now changes on each status transition, not just on add and remove.
+  const clearItems = useCallback(() => {
+    itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview));
+    itemsRef.current = [];
+    setItems([]);
+  }, []);
 
   useEffect(() => {
     if (!open) {
       setDecision(null);
       setReason("");
       setReasonError(false);
-      setFiles([]);
-      setPreviews([]);
-      setDocumentPreviewUrl(null);
+      clearItems();
+      setPreviewDoc(null);
     }
-  }, [open]);
+  }, [open, clearItems]);
+
+  // Revoke on unmount too — closing the dialog is the usual exit, but not the
+  // only one.
+  useEffect(() => clearItems, [clearItems]);
+
+  const patchItem = useCallback(
+    (id: string, patch: Partial<UploadItem>) => {
+      // Functional update keyed by id: by the time this resolves the array may
+      // have been reordered or filtered by another in-flight upload or a
+      // removal, so an index captured at call time would be wrong.
+      if (!openRef.current) return;
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      );
+    },
+    [],
+  );
+
+  const runUpload = useCallback(
+    async (id: string, file: File) => {
+      try {
+        const compressed = await compressImage(file);
+        if (!openRef.current) return;
+
+        // Swap in a preview of what will actually be sent, and drop the
+        // original's url now that nothing references it. Both url operations
+        // happen HERE rather than inside the updater, so the updater stays pure.
+        const stalePreview = itemsRef.current.find(
+          (item) => item.id === id,
+        )?.preview;
+        const preview = URL.createObjectURL(compressed);
+        if (stalePreview) URL.revokeObjectURL(stalePreview);
+
+        patchItem(id, { file: compressed, preview, status: "uploading" });
+
+        const { key, url } = await uploadImage(compressed);
+        patchItem(id, { status: "done", key, url, error: undefined });
+      } catch (error) {
+        patchItem(id, {
+          status: "failed",
+          error: error instanceof Error ? error.message : "Upload failed",
+        });
+      }
+    },
+    [uploadImage, patchItem],
+  );
+
+  const addFiles = useCallback(
+    (newFiles: File[]) => {
+      const queued: UploadItem[] = newFiles.map((file) => ({
+        id: nextUploadItemId(),
+        file,
+        // Preview the ORIGINAL immediately so the thumbnail appears on pick
+        // rather than after compression finishes.
+        preview: URL.createObjectURL(file),
+        status: "compressing" as const,
+      }));
+
+      setItems((prev) => [...prev, ...queued]);
+
+      // Bounded pool over THIS drop. Sequential would recreate the serial
+      // bottleneck this change exists to remove; unbounded would saturate a
+      // slow uplink and make every thumbnail crawl at once, which looks worse
+      // than the single large request it replaced.
+      let next = 0;
+      const worker = async () => {
+        while (next < queued.length) {
+          const item = queued[next++];
+          await runUpload(item.id, item.file);
+        }
+      };
+      void Promise.all(
+        Array.from({ length: Math.min(UPLOAD_CONCURRENCY, queued.length) }, () =>
+          worker(),
+        ),
+      );
+    },
+    [runUpload],
+  );
+
+  const removeItem = useCallback((index: number) => {
+    const target = itemsRef.current[index];
+    if (target) URL.revokeObjectURL(target.preview);
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const retryItem = useCallback(
+    (id: string) => {
+      const target = itemsRef.current.find((item) => item.id === id);
+      if (!target) return;
+      patchItem(id, { status: "uploading", error: undefined });
+      // The file was already compressed on the first attempt; doing it again
+      // would re-encode an already-lossy image for nothing.
+      uploadImage(target.file)
+        .then(({ key, url }) =>
+          patchItem(id, { status: "done", key, url, error: undefined }),
+        )
+        .catch((error: unknown) =>
+          patchItem(id, {
+            status: "failed",
+            error: error instanceof Error ? error.message : "Upload failed",
+          }),
+        );
+    },
+    [patchItem, uploadImage],
+  );
+
+  const handleRejections = useCallback((rejections: UploadRejection[]) => {
+    // These used to be dropped in silence, so an oversize photograph simply
+    // never appeared and the reviewer had no way to know.
+    //
+    // The count limit is reported ONCE however many files overflowed it — it is
+    // one fact about the drop, not one per file, and dropping fifteen images
+    // should not produce five identical toasts.
+    let reportedTooMany = false;
+
+    rejections.forEach(({ file, errors }) => {
+      const code = errors[0]?.code;
+      if (code === "too-many-files") {
+        if (!reportedTooMany) {
+          toast.error(`Only ${MAX_FILES} images can be attached`);
+          reportedTooMany = true;
+        }
+      } else if (code === "file-too-large") {
+        toast.error(`${file.name} is larger than 5 MB`);
+      } else {
+        toast.error(`${file.name} is not a JPG, PNG or WEBP image`);
+      }
+    });
+  }, []);
+
+  const uploadsInFlight = items.some(
+    (item) => item.status === "compressing" || item.status === "uploading",
+  );
+  const uploadsFailed = items.some((item) => item.status === "failed");
 
   const canSubmit =
-    decision != null && reason.trim().length > 0 && !reasonError;
+    decision != null &&
+    reason.trim().length > 0 &&
+    !reasonError &&
+    !uploadsInFlight &&
+    !uploadsFailed;
 
-  const addFiles = (newFiles: File[]) => {
-    setFiles((prev) => [...prev, ...newFiles]);
-  };
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  /** Reason suggestions follow the decision; none until one is picked. */
+  const reasonScope = decision ? REASON_SCOPE_BY_DECISION[decision] : null;
 
   const handleSubmit = () => {
     if (!decision || !reason.trim()) {
       setReasonError(true);
       return;
     }
-    onSubmit(decision, reason.trim(), files.length > 0 ? files : undefined);
+    // Mapped to fresh objects deliberately, not spread: the API runs
+    // `forbidNonWhitelisted`, so sending `id`/`status`/`preview` alongside the
+    // descriptor would 400 the entire request.
+    const documents: AdminVerifyDocumentRef[] = items
+      .filter((item) => item.status === "done" && item.key)
+      .map((item) => ({ key: item.key as string, url: item.url }));
+
+    onSubmit(decision, reason.trim(), documents.length > 0 ? documents : undefined);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xl">
-        <DialogHeader>
+      {/* Capped to the viewport and laid out as a column so only the middle
+          scrolls. Scrolling the dialog as a whole would push Confirm and Cancel
+          off-screen on a short window — which is what happened here: a profile
+          with three documents plus the reason box outgrew the viewport and the
+          decision buttons became unreachable. */}
+      <DialogContent className="flex max-h-[90vh] w-full max-w-xl flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>KYC Verification</DialogTitle>
           <DialogDescription>
             Approve or reject this profile&apos;s KYC. Supporting uploads are
@@ -140,7 +335,10 @@ export function KycVerificationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {/* `min-h-0` is what actually lets this scroll: a flex child defaults to
+            min-height:auto, which refuses to shrink below its content and pushes
+            the overflow outside the dialog instead of into a scrollbar. */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -166,7 +364,10 @@ export function KycVerificationModal({
                   ? "border-red-500 bg-red-500/15 text-red-500"
                   : "border-border hover:border-red-500/50 hover:text-red-500",
               )}
-              onClick={() => setDecision("REJECTED")}
+              onClick={() => {
+                setDecision("REJECTED");
+                setReasonError(false);
+              }}
             >
               <IconX className="size-6" />
               <span>Reject</span>
@@ -174,13 +375,24 @@ export function KycVerificationModal({
           </div>
 
           <ImageUploadZone
-            files={files}
-            previews={previews}
+            files={items.map((item) => item.file)}
+            previews={items.map((item) => item.preview)}
             onAdd={addFiles}
-            onRemove={removeFile}
+            onRemove={removeItem}
+            onReject={handleRejections}
+            renderOverlay={(index) => (
+              <UploadStatusOverlay item={items[index]} onRetry={retryItem} />
+            )}
             label="KYC supporting documents (optional)"
             maxSize={5 * 1024 * 1024}
+            maxFiles={MAX_FILES}
           />
+
+          {uploadsFailed && (
+            <p className="text-destructive text-xs">
+              Retry or remove the failed upload before confirming.
+            </p>
+          )}
 
           {profile.kycDocuments.length > 0 && (
             <div className="space-y-2">
@@ -192,21 +404,20 @@ export function KycVerificationModal({
                   <button
                     type="button"
                     title={
-                      doc.documentUrl
+                      doc.fileAvailable
                         ? "Preview document"
                         : "Document file is missing"
                     }
                     onClick={() =>
-                      doc.documentUrl &&
-                      setDocumentPreviewUrl(doc.documentUrl)
+                      doc.fileAvailable && setPreviewDoc(doc)
                     }
-                    disabled={!doc.documentUrl}
+                    disabled={!doc.fileAvailable}
                     className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {doc.documentUrl && isLikelyImageAsset(doc.documentUrl) ? (
+                    {doc.fileAvailable && doc.contentKind === "image" ? (
                       <>
                         <img
-                          src={doc.documentUrl}
+                          src={kycDocumentRawUrl(profile.id, doc.id)}
                           alt=""
                           className="h-full w-full object-cover"
                           onError={(e) => {
@@ -252,16 +463,20 @@ export function KycVerificationModal({
           )}
 
           <ReasonField
-            reason={reason}
-            reasonError={reasonError}
-            onReasonChange={(value) => {
+            value={reason}
+            onChange={(value) => {
               setReason(value);
               if (value.trim()) setReasonError(false);
             }}
+            templateScope={reasonScope}
+            placeholder={REASON_PLACEHOLDER}
+            required
+            error={reasonError}
+            disabled={isPending}
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -270,16 +485,18 @@ export function KycVerificationModal({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || isPending}>
-            {isPending ? "Submitting..." : "Confirm"}
+            {isPending && "Submitting..."}
+            {!isPending && uploadsInFlight && "Uploading…"}
+            {!isPending && !uploadsInFlight && "Confirm"}
           </Button>
         </DialogFooter>
       </DialogContent>
 
       {/* Nested viewer: same pattern as claim detail — keeps KYC dialog open underneath */}
       <Dialog
-        open={documentPreviewUrl != null}
+        open={previewDoc != null}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setDocumentPreviewUrl(null);
+          if (!isOpen) setPreviewDoc(null);
         }}
       >
         <DialogContent
@@ -288,7 +505,7 @@ export function KycVerificationModal({
         >
           <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3">
             <DialogTitle className="text-sm text-white">
-              {documentPreviewUrl?.split("/").pop()}
+              {previewDoc ? docCategoryLabel(previewDoc.documentCategory) : ""}
             </DialogTitle>
             <DialogClose asChild>
               <button
@@ -301,24 +518,72 @@ export function KycVerificationModal({
             </DialogClose>
           </DialogHeader>
           <div className="flex min-h-96 items-center justify-center bg-black/50 p-4">
-            {documentPreviewUrl != null &&
-              isLikelyImageAsset(documentPreviewUrl) && (
-                <img
-                  src={documentPreviewUrl}
-                  alt="KYC document"
-                  className="max-h-[70vh] max-w-full rounded object-contain"
-                />
-              )}
-            {documentPreviewUrl != null &&
-              !isLikelyImageAsset(documentPreviewUrl) && (
-                <p className="text-muted-foreground text-sm">
-                  Preview is only available for image URLs. Open the document from
-                  the KYC tab for full viewer.
-                </p>
-              )}
+            {previewDoc?.contentKind === "image" && (
+              <img
+                src={kycDocumentRawUrl(profile.id, previewDoc.id)}
+                alt="KYC document"
+                className="max-h-[70vh] max-w-full rounded object-contain"
+              />
+            )}
+            {previewDoc != null && previewDoc.contentKind !== "image" && (
+              <p className="text-muted-foreground text-sm">
+                Preview is only available for images. Open the document from the
+                KYC tab for the full viewer.
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
     </Dialog>
+  );
+}
+
+/**
+ * What is happening to one attachment, drawn over its thumbnail.
+ *
+ * Indeterminate rather than a percentage: the API client is `fetch`-based and
+ * exposes no upload progress, and after compression these are a few hundred KB,
+ * so a determinate bar would mostly be animating jitter. What matters to the
+ * reviewer is which file is still going and which one failed.
+ */
+function UploadStatusOverlay({
+  item,
+  onRetry,
+}: Readonly<{ item: UploadItem | undefined; onRetry: (id: string) => void }>) {
+  if (!item || item.status === "done") return null;
+
+  if (item.status === "failed") {
+    return (
+      <div className="bg-destructive/70 absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-white">
+        <IconAlertTriangle className="size-5" />
+        <span className="px-1 text-center text-[10px] font-medium">
+          {item.error ?? "Upload failed"}
+        </span>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon-xs"
+          // The wrapper is pointer-events-none so the chip never swallows the
+          // remove button; this one control opts back in.
+          className="pointer-events-auto"
+          title="Retry upload"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRetry(item.id);
+          }}
+        >
+          <IconRefresh className="size-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50 text-white">
+      <Loader2 className="size-5 animate-spin" />
+      <span className="text-[10px] font-medium">
+        {item.status === "compressing" ? "Compressing…" : "Uploading…"}
+      </span>
+    </div>
   );
 }
