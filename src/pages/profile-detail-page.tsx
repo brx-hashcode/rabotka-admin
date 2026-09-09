@@ -32,6 +32,7 @@ import { ProfilePaymentsContent } from "./profile-detail/components/profile-paym
 import { ProfileReferralsContent } from "./profile-detail/components/profile-referrals-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
+import { ProfileVovaMemory } from "./profile-detail/components/profile-vova-memory";
 import { ProfilePortfolioContent } from "./profile-detail/components/profile-portfolio-content";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
@@ -381,12 +382,18 @@ export default function ProfileDetailPage({
           <ProfileInvoicesContent profileId={profileId} />
         </TabsContent>
 
-        <TabsContent value="messages">
+        <TabsContent value="messages" className="flex flex-col gap-4">
           <ProfileMessagesContent
             profileId={profileId}
             profileName={`${profile.firstName} ${profile.lastName}`}
             profileType={profile.profileType}
             firstName={profile.firstName}
+          />
+          {/* Under the transcript, because a puzzling answer up there is usually
+              explained by a line down here. */}
+          <ProfileVovaMemory
+            profileId={profileId}
+            profileName={`${profile.firstName} ${profile.lastName}`}
           />
         </TabsContent>
 
