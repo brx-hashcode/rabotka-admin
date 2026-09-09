@@ -32,12 +32,15 @@ import { Badge } from "#/components/ui/badge";
 import { Button, buttonVariants } from "#/components/ui/button";
 import {
   deleteOAuthApp,
+  readSandboxAppSecret,
   reactivateOAuthApp,
   rotateOAuthAppSecret,
   suspendOAuthApp,
   type MintedSecret,
   type OAuthApp,
 } from "#/lib/api/oauth-apps-controller";
+import { secretRowState } from "../secret-row-state";
+import { httpStatusOf } from "#/lib/auth/session";
 import { scopeLabel } from "../scopes";
 
 type AppCardProps = {
@@ -156,10 +159,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
 
         <div className="space-y-2">
           <CopyableRow label="Client ID" value={app.clientId} />
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Client secret</span>
-            <code className="font-mono">••••{app.clientSecretHint}</code>
-          </div>
+          <SecretRow app={app} />
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Connected</span>
             <span className="flex items-center gap-1.5">
@@ -259,10 +259,134 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
  * consent records by design, so "0 people" would read as a failed integration
  * when it is the expected and only possible answer.
  */
+/** Said in two places — the muted button and a 409 from a stale list. */
+const ROTATE_TO_ENABLE =
+  "Rotate this app's secret once to make it copyable.";
+
 function connectedLabel(app: OAuthApp): string {
   if (app.isSandbox) return "Sandbox users only";
   if (app.userCount === 0) return "No one yet";
   return `${app.userCount} ${app.userCount === 1 ? "person" : "people"}`;
+}
+
+/**
+ * The "Client secret" row.
+ *
+ * A sibling of `CopyableRow` rather than more props on it: there the displayed
+ * text IS the copied text, the copy is synchronous, and there is no failure
+ * state. Here the displayed text (`••••1a2b`) is never what gets copied, the
+ * value arrives over the network, and there is a third "not copyable yet"
+ * state. Threading that through would leave `CopyableRow` with three optional
+ * props exercised by one caller and a `value` that no longer means its name.
+ */
+function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
+  const state = secretRowState(app);
+  // Only ever set when the clipboard itself refused — see the comment on the
+  // failure branch below. The happy path never puts the secret in state.
+  const [fallback, setFallback] = useState<string | null>(null);
+
+  const { mutate: reveal, isPending } = useMutation({
+    mutationFn: () => readSandboxAppSecret(app.id),
+    // A mutation, not a query: the server writes an audit row per read, so this
+    // must be one fetch per click. A query would also cache the secret where
+    // `@tanstack/react-devtools` can read it, and `refetchOnWindowFocus` would
+    // silently re-read — and re-audit — on every tab switch.
+    onSuccess: async ({ clientSecret }) => {
+      try {
+        await navigator.clipboard.writeText(clientSecret);
+        toast.success("Client secret copied");
+      } catch {
+        // Safari treats the awaited network round trip as having consumed the
+        // click's user activation, so the write is refused there every time —
+        // "try again" would loop forever. Showing the value gives a fresh
+        // gesture to copy from. This is the only path that holds the secret.
+        setFallback(clientSecret);
+      }
+    },
+    onError: (error: unknown) => {
+      // 409 is the server saying "sandbox app, but nothing stored" — reachable
+      // from a list that went stale after someone rotated elsewhere. Read
+      // through the shared helper rather than off `error.status`: the SDK puts
+      // it on `statusCode`.
+      if (httpStatusOf(error) === 409) {
+        toast.info(ROTATE_TO_ENABLE);
+        return;
+      }
+      toast.error("Could not read the client secret");
+    },
+  });
+
+  if (state === "hidden") {
+    return (
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">Client secret</span>
+        <code className="font-mono">••••{app.clientSecretHint}</code>
+      </div>
+    );
+  }
+
+  const needsRotation = state === "needs-rotation";
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="text-muted-foreground shrink-0">Client secret</span>
+        <div className="flex min-w-0 items-center gap-1">
+          <code className="truncate font-mono">••••{app.clientSecretHint}</code>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`size-6 shrink-0 ${needsRotation ? "text-muted-foreground" : ""}`}
+            // `aria-disabled`, not `disabled`: a really disabled button swallows
+            // pointer events, so the explanation would need a tooltip on a
+            // wrapper — and a tooltip does not exist on touch. One click handler
+            // that always fires works on every input.
+            aria-disabled={needsRotation || undefined}
+            aria-label="Copy client secret"
+            onClick={() => {
+              if (needsRotation) {
+                toast.info(ROTATE_TO_ENABLE);
+                return;
+              }
+              if (!isPending) reveal();
+            }}
+          >
+            <Copy className="size-3" />
+          </Button>
+        </div>
+      </div>
+
+      {fallback !== null && (
+        <div className="bg-muted space-y-2 rounded-md p-2">
+          <p className="text-muted-foreground text-xs">
+            Your browser blocked the automatic copy. Copy it from here:
+          </p>
+          <div className="flex items-center gap-1">
+            <code className="min-w-0 flex-1 truncate font-mono text-xs">
+              {fallback}
+            </code>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6 shrink-0"
+              aria-label="Copy client secret"
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(fallback)
+                  .then(() => {
+                    toast.success("Client secret copied");
+                    setFallback(null);
+                  })
+                  .catch(() => toast.error("Could not copy"));
+              }}
+            >
+              <Copy className="size-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 function CopyableRow({
