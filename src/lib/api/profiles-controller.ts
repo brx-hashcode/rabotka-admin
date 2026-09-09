@@ -2,6 +2,20 @@ import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
 import { fetchWithCsrfRetry } from "./csrf-token";
 
+/** What the assistant carries about someone between conversations. */
+export type AdminVovaMemoryFact = {
+  /** One short sentence, as the assistant will read it back. */
+  text: string;
+  /** ISO date the fact was last seen to hold. */
+  at: string;
+};
+
+export type AdminVovaMemory = {
+  facts: AdminVovaMemoryFact[];
+  /** Null when nothing has ever been remembered — the ordinary state. */
+  updatedAt: string | null;
+};
+
 export type AdminInvoiceItem = {
   id: string;
   profileId: string;
@@ -424,6 +438,22 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileMessage[]>(url);
   }
 
+  async getVovaMemory(id: string): Promise<AdminVovaMemory> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/vova-memory`,
+      new URLSearchParams(),
+    );
+    return this.get<AdminVovaMemory>(url);
+  }
+
+  async eraseVovaMemory(id: string): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/vova-memory`,
+      new URLSearchParams(),
+    );
+    return this.delete<{ success: boolean }>(url);
+  }
+
   async getWhatsAppWindow(id: string): Promise<WhatsAppWindowState> {
     const url = this.createURL(
       `/admin/profiles/${id}/whatsapp-window`,
@@ -546,6 +576,9 @@ export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const getProfileVovaMemory = controller.getVovaMemory.bind(controller);
+export const eraseProfileVovaMemory =
+  controller.eraseVovaMemory.bind(controller);
 export const getProfileWhatsAppWindow =
   controller.getWhatsAppWindow.bind(controller);
 export const getProfileWallet = controller.getWallet.bind(controller);
