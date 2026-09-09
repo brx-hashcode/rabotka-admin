@@ -9,11 +9,23 @@ export type OAuthApp = {
   logoUrl: string | null;
   clientId: string;
   /**
-   * Last four characters of the current secret. The secret itself is stored as
-   * a hash and cannot be read back by anyone — this is only here so an admin
-   * can tell which one a partner is using.
+   * Last four characters of the current secret. For a real application the
+   * secret itself is stored as a hash and cannot be read back by anyone, so
+   * this is the only way to tell which one a partner is using. A SANDBOX app
+   * is the exception — see `canCopySecret`.
    */
   clientSecretHint: string;
+  /**
+   * Whether this app's secret can be read back, which is true only for a
+   * sandbox app that has one stored.
+   *
+   * Optional because a bundle can outlive the backend it talks to: against an
+   * older API this is `undefined` and the card renders exactly as it did
+   * before. Not derivable from `isSandbox` alone — a sandbox app registered
+   * before the server started keeping the plaintext is `isSandbox: true` with
+   * nothing to copy, and that is the "rotate once to enable" case.
+   */
+  canCopySecret?: boolean;
   secretRotatedAt: string | null;
   /** Non-null while a rotated-out secret is still inside its grace window. */
   previousSecretExpiresAt: string | null;
@@ -48,13 +60,26 @@ export type SandboxUsers = {
 };
 
 /**
- * The only shape that ever carries a secret, and only in the response to
- * creating or rotating one. There is no endpoint that reads a secret back.
+ * A newly MINTED secret, from creating an app or rotating its key. Shown once
+ * and then unrecoverable, which is what `SecretRevealDialog`'s acknowledgement
+ * flow exists for.
  */
 export type MintedSecret = {
   clientId: string;
   clientSecret: string;
   warning: string;
+};
+
+/**
+ * A sandbox secret read back from storage.
+ *
+ * Deliberately WITHOUT a `warning` field, so it is structurally distinct from
+ * `MintedSecret` and cannot be handed to `SecretRevealDialog` — that dialog
+ * says "copy it now, it will never be shown again", which is false here.
+ */
+export type SandboxSecret = {
+  clientId: string;
+  clientSecret: string;
 };
 
 export type CreateOAuthAppPayload = {
@@ -121,6 +146,21 @@ class OAuthAppsController extends AdminBaseController {
     return this.post<MintedSecret>(url, {});
   }
 
+  /**
+   * Reads a SANDBOX app's secret back. Refused for every real application.
+   *
+   * Fetched on demand rather than carried in the list: the server writes an
+   * audit row per read, so this must happen once per click and not on every
+   * page load.
+   */
+  async readSandboxSecret(id: string): Promise<SandboxSecret> {
+    const url = this.createURL(
+      `/admin/oauth-apps/${id}/secret`,
+      new URLSearchParams(),
+    );
+    return this.get<SandboxSecret>(url);
+  }
+
   /** Ends the 24h grace window now, for a secret believed to be leaked. */
   async revokePreviousSecret(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
@@ -163,6 +203,8 @@ export const listSandboxUsers = controller.sandboxUsers.bind(controller);
 export const createOAuthApp = controller.create.bind(controller);
 export const updateOAuthApp = controller.update.bind(controller);
 export const rotateOAuthAppSecret = controller.rotateSecret.bind(controller);
+export const readSandboxAppSecret =
+  controller.readSandboxSecret.bind(controller);
 export const revokePreviousOAuthSecret =
   controller.revokePreviousSecret.bind(controller);
 export const suspendOAuthApp = controller.suspend.bind(controller);
