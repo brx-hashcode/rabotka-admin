@@ -23,9 +23,13 @@ import {
 export default function OAuthAppsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   /**
-   * Held in state because it exists nowhere else — the server keeps only a hash
-   * and there is no endpoint that reads a secret back. It is cleared the moment
-   * the admin acknowledges the reveal dialog.
+   * Held in state because a freshly minted secret exists nowhere else — for a
+   * real application the server keeps only a hash, and nothing can read it
+   * back. It is cleared the moment the admin acknowledges the reveal dialog.
+   *
+   * A sandbox app is the exception, and it does NOT come through here: its
+   * secret is read on demand by the card itself, which is why that path never
+   * needs an acknowledgement.
    */
   const [mintedSecret, setMintedSecret] = useState<MintedSecret | null>(null);
 
