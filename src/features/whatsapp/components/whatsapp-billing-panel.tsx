@@ -39,26 +39,6 @@ import {
 } from "#/hooks/use-whatsapp-analytics";
 import { WhatsappCategoryBadge } from "./whatsapp-status-badge";
 
-/**
- * Two different numbers, kept visibly apart.
- *
- * CONSUMED is what we used in the selected window, from `pricing_analytics`.
- * OUTSTANDING is what Meta has not yet been paid, from the business node. They
- * are not comparable, and putting one big currency figure on this page without
- * saying which it is invites the obvious mistake: reading a 30-day usage total
- * as the amount owed, which overstates the bill by everything already charged.
- *
- * So the window is always in the card's label, never implied.
- *
- * The outstanding half needs `business_management` on the access token. When
- * it is missing the panel says which scope to grant rather than rendering an
- * empty card that reads as "you owe nothing".
- *
- * Cost is withheld entirely for partner-billed accounts, which is why an
- * absent cost renders as "not reported" rather than as zero. Charting a real
- * volume as free would be a lie the reader has no way to detect.
- */
-
 const chartConfig = {
   cost: { label: "Cost", color: "#f59e0b" },
   volume: { label: "Messages", color: "#3b82f6" },
@@ -256,8 +236,8 @@ export function WhatsappBillingPanel({
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <Skeleton className="h-[120px] w-full" />
-        <Skeleton className="h-[280px] w-full" />
+        <Skeleton className="h-30 w-full" />
+        <Skeleton className="h-70 w-full" />
       </div>
     );
   }
@@ -375,9 +355,6 @@ export function WhatsappBillingPanel({
           <CardDescription>
             Messages Meta counted as billable, per day.
           </CardDescription>
-          {/* The preset toggle moves the window for the whole tab, not just
-              this chart — the cards above carry the window in their labels, so
-              the link is visible rather than surprising. */}
           <CardAction>
             <WhatsappRangeToggle />
           </CardAction>
@@ -385,7 +362,7 @@ export function WhatsappBillingPanel({
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[260px] w-full"
+            className="aspect-auto h-65 w-full"
           >
             <BarChart data={days} margin={{ left: 4, right: 8 }}>
               <CartesianGrid vertical={false} />

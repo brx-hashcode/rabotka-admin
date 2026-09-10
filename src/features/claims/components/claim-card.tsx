@@ -8,6 +8,12 @@ import type { AdminClaimItem } from "#/lib/api/claims-controller";
 type ClaimCardProps = {
   claim: AdminClaimItem;
   onViewDetail: (claim: AdminClaimItem) => void;
+  /**
+   * False for a role that may read the board but not write to it — MODERATOR.
+   * The card then has no grab affordance and cannot be picked up, instead of
+   * moving under the cursor and snapping back on the server's 403.
+   */
+  draggable: boolean;
 };
 
 const CARD_CLASS =
@@ -55,7 +61,11 @@ function ClaimCardBody({ claim }: Readonly<{ claim: AdminClaimItem }>) {
   );
 }
 
-export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
+export function ClaimCard({
+  claim,
+  onViewDetail,
+  draggable,
+}: Readonly<ClaimCardProps>) {
   const {
     attributes,
     listeners,
@@ -63,7 +73,7 @@ export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: claim.id, data: { claim } });
+  } = useSortable({ id: claim.id, data: { claim }, disabled: !draggable });
 
   return (
     <div
@@ -78,7 +88,8 @@ export function ClaimCard({ claim, onViewDetail }: Readonly<ClaimCardProps>) {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         CARD_CLASS,
-        "shrink-0 cursor-grab active:cursor-grabbing",
+        "shrink-0",
+        draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
         isDragging && "opacity-40",
       )}
       onClick={() => onViewDetail(claim)}

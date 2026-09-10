@@ -19,9 +19,16 @@ type ClaimColumnProps = {
   status: AdminClaimStatus;
   claims: AdminClaimItem[];
   onViewDetail: (claim: AdminClaimItem) => void;
+  /** Passed through to the cards; see `ClaimCard`. */
+  draggable: boolean;
 };
 
-export function ClaimColumn({ status, claims, onViewDetail }: Readonly<ClaimColumnProps>) {
+export function ClaimColumn({
+  status,
+  claims,
+  onViewDetail,
+  draggable,
+}: Readonly<ClaimColumnProps>) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const config = STATUS_CONFIG[status];
 
@@ -55,7 +62,12 @@ export function ClaimColumn({ status, claims, onViewDetail }: Readonly<ClaimColu
             strategy={verticalListSortingStrategy}
           >
             {claims.map((claim) => (
-              <ClaimCard key={claim.id} claim={claim} onViewDetail={onViewDetail} />
+              <ClaimCard
+                key={claim.id}
+                claim={claim}
+                onViewDetail={onViewDetail}
+                draggable={draggable}
+              />
             ))}
           </SortableContext>
         </div>
