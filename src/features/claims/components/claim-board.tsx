@@ -17,6 +17,7 @@ import type {
   AdminClaimStatus,
 } from "#/lib/api/claims-controller";
 import { useClaimsBoard, type ClaimsByStatus } from "#/hooks/use-claims-board";
+import { useRole } from "#/hooks/use-role";
 import { resolveDrop } from "../resolve-drop";
 import { ClaimColumn } from "./claim-column";
 import { ClaimCardOverlay } from "./claim-card";
@@ -28,6 +29,10 @@ type ClaimBoardProps = {
 export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   const { claimsByStatus, allStatuses, isLoading } = useClaimsBoard();
   const queryClient = useQueryClient();
+  // MODERATOR may open this page but not write to it, and the server requires
+  // MANAGER on the reorder endpoint. Without this the board happily moved the
+  // card, then replaced it with a bare "Failed to move claim".
+  const { canManageContent } = useRole();
 
   // The board renders from this copy, not straight from the query, so a drop
   // shows where the card landed before the server has answered.
@@ -68,7 +73,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveClaim(null);
-    if (!over) return;
+    if (!over || !canManageContent) return;
 
     const claimId = String(active.id);
     const drop = resolveDrop(board, allStatuses, claimId, String(over.id));
@@ -106,6 +111,7 @@ export function ClaimBoard({ onViewDetail }: Readonly<ClaimBoardProps>) {
             status={status}
             claims={board[status]}
             onViewDetail={onViewDetail}
+            draggable={canManageContent}
           />
         ))}
       </div>
