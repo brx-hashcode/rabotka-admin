@@ -166,8 +166,14 @@ export function ClaimDetailSheet({
   // would light up Save for a change that is already committed.
   const isDirty = claim && status !== claim.status;
 
+  // From the claim itself, not from `users`: that list is the first 100 admins,
+  // so an assignee outside it resolved to undefined and the dialog announced a
+  // claim as Unassigned while the board showed the name.
   const assignedUser = claim?.assignedUserId
-    ? users.find((u) => u.id === claim.assignedUserId)
+    ? {
+        name: claim.assignedUserName ?? "",
+        email: claim.assignedUserEmail ?? "",
+      }
     : null;
   /**
    * Whoever assigned a claim is the only one who may change that assignment.
@@ -188,8 +194,13 @@ export function ClaimDetailSheet({
       assignmentLockedBy === me?.id ||
       me?.role === "SUPER_ADMIN");
 
+  // `claim.status`, not the `status` state: the latter is the unsaved value of
+  // the dropdown, so merely previewing "COMPLETED" made the Unassign button
+  // disappear before anything had been saved.
   const canUnassign =
-    canChangeAssignment && status !== "COMPLETED" && status !== "REJECTED";
+    canChangeAssignment &&
+    claim?.status !== "COMPLETED" &&
+    claim?.status !== "REJECTED";
 
   return (
     <Dialog
@@ -348,7 +359,7 @@ export function ClaimDetailSheet({
                 {assignedUser ? (
                   <div className="flex items-center justify-between gap-3">
                     <ProfileCell
-                      name={`${assignedUser.firstName} ${assignedUser.lastName}`}
+                      name={assignedUser.name}
                       email={assignedUser.email}
                       avatarUrl={null}
                     />
@@ -369,9 +380,8 @@ export function ClaimDetailSheet({
                               Unassign this claim?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              {assignedUser.firstName} {assignedUser.lastName}{" "}
-                              will be notified by email and removed from this
-                              claim.
+                              {assignedUser.name} will be notified by email and
+                              removed from this claim.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -384,35 +394,68 @@ export function ClaimDetailSheet({
                       </AlertDialog>
                     )}
                   </div>
-                ) : canManageContent ? (
+                ) : null}
+
+                {/* Handing the claim straight to someone else. Without this the
+                    only route was Unassign-then-assign, which drops the claim
+                    off every list in between and emails the first person that
+                    they were removed. The "Unassigned" option is deliberately
+                    absent — clearing is the destructive action and keeps its
+                    confirmation above. */}
+                {assignedUser && canChangeAssignment && (
                   <Select
                     value={assignedUserId}
-                    disabled={isAssigning || !canChangeAssignment}
+                    disabled={isAssigning}
                     onValueChange={(value) => {
-                      // Local state first so the trigger updates immediately;
-                      // `onError` puts it back if the write is refused.
                       setAssignedUserId(value);
                       assign(value);
                     }}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder="Unassigned"
-                        className="w-full"
-                      />
+                    <SelectTrigger className="mt-3 w-full">
+                      <SelectValue placeholder="Reassign to…" />
                     </SelectTrigger>
                     <SelectContent className="w-full">
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {users.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.firstName} {u.lastName}
-                        </SelectItem>
-                      ))}
+                      {users
+                        .filter((u) => u.id !== claim.assignedUserId)
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.firstName} {u.lastName}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Unassigned</p>
                 )}
+
+                {!assignedUser &&
+                  (canManageContent ? (
+                    <Select
+                      value={assignedUserId}
+                      disabled={isAssigning || !canChangeAssignment}
+                      onValueChange={(value) => {
+                        // Local state first so the trigger updates immediately;
+                        // `onError` puts it back if the write is refused.
+                        setAssignedUserId(value);
+                        assign(value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder="Unassigned"
+                          className="w-full"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.firstName} {u.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Unassigned</p>
+                  ))}
 
                 {assignedUser && !canChangeAssignment && canManageContent && (
                   <p className="mt-2 text-xs text-muted-foreground">
