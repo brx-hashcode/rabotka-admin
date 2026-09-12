@@ -33,7 +33,7 @@ export default function ContactRecordsPage() {
   const { data, total, isLoading } = useContactRecordsList();
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Paid contacts"
         description="Every time an employer paid to reach a worker — through a job offer (Mission) or straight from a recommendation (Direct). One row per payment, so an employer who paid twice for the same worker appears twice."

@@ -95,7 +95,7 @@ export default function AdvertisementsPage() {
   }
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Advertisements"
         description="Review, approve and manage all advertisement campaigns."

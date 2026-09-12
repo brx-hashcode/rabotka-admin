@@ -85,7 +85,7 @@ export default function PenaltiesPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Penalties"
         description="Violations, penalties and payment follow-up across profiles."

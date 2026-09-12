@@ -94,7 +94,7 @@ export default function NotificationsPage() {
 
   return (
     <>
-      <div className="pt-6">
+      <div>
         <PageListHeader
           title="Notifications"
           description="Review recent admin notifications and manage them from one place."

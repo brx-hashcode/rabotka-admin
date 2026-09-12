@@ -52,7 +52,7 @@ export default function AdsBundlesPage() {
   }
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Advertisements Bundles"
         description="Manage advertisement bundles available for campaigns."

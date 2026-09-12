@@ -91,7 +91,7 @@ export default function JobCategoriesPage() {
   }
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Domains"
         description="Manage job domains for workers and job offers."
