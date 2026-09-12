@@ -22,6 +22,7 @@ import {
   IconGridDots,
   IconMessage,
   IconTopologyStar3,
+  IconAddressBook,
   IconKey,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
@@ -92,6 +93,15 @@ const navMain: NavItem[] = [
     title: "Applications",
     url: "/applications",
     icon: IconFileText,
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    title: "Paid contacts",
+    url: "/contact-records",
+    icon: IconAddressBook,
+    // Matches `admin/contact-records`: MODERATOR+ on the ladder, and both
+    // lateral roles read-only — support fields "I paid and never got the
+    // contact", finance reconciles the fees behind it.
     roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
