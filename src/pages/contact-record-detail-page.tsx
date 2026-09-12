@@ -33,6 +33,8 @@ function Field({
   );
 }
 
+const ID_CODE_CLASS = "block font-mono text-xs break-all";
+
 /**
  * A raw id, for the payment-trail row.
  *
@@ -50,10 +52,43 @@ function IdField({
         {label}
       </p>
       {value ? (
-        <code className="text-muted-foreground block font-mono text-xs break-all">
+        <code className={`text-muted-foreground ${ID_CODE_CLASS}`}>
           {value}
         </code>
       ) : (
+        <span className="text-sm font-medium">—</span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The application id, as a way through to the application rather than a string
+ * to copy into the URL bar by hand. "Which application was this?" is the first
+ * question a MISSION contact raises, and the answer was one page away with no
+ * way to get there.
+ *
+ * Only the application links: payment requests have no detail route in admin,
+ * so a link there would go nowhere.
+ */
+function ApplicationField({
+  applicationId,
+}: Readonly<{ applicationId: string | null }>) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-muted-foreground text-xs uppercase tracking-wide">
+        Application
+      </p>
+      {applicationId ? (
+        <Link
+          to="/applications/$applicationId"
+          params={{ applicationId }}
+          className={`text-primary hover:underline ${ID_CODE_CLASS}`}
+        >
+          {applicationId}
+        </Link>
+      ) : (
+        // Null for every DIRECT contact — there was no application.
         <span className="text-sm font-medium">—</span>
       )}
     </div>
@@ -212,7 +247,7 @@ export default function ContactRecordDetailPage({
         <CardContent className="grid grid-cols-2 gap-x-6 gap-y-5 pt-6 md:grid-cols-4">
           <IdField label="Payment" value={record.paymentId} />
           <IdField label="Payment request" value={record.paymentRequestId} />
-          <IdField label="Application" value={record.applicationId} />
+          <ApplicationField applicationId={record.applicationId} />
           <Field label="Recorded at" value={formatDateTime(record.createdAt)} />
         </CardContent>
       </Card>
