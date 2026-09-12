@@ -88,7 +88,7 @@ export default function ApplicationsPage() {
   const { data, total, isLoading } = useApplicationsList();
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Applications"
         description="Track job applications, penalties and application status."

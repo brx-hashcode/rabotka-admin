@@ -96,7 +96,7 @@ export default function ProfilesPage() {
   const { data, total, isLoading } = useProfilesList();
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Profiles"
         description="Search and manage candidate profiles, verification and account status."

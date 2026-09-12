@@ -62,7 +62,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Documents"
         description="Platform agreements, contracts, policies and more."
