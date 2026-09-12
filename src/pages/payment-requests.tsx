@@ -87,7 +87,7 @@ export default function PaymentRequestsPage() {
   const { data, total, isLoading } = usePaymentRequestsList();
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Payment Requests"
         description="Review proof submissions and approve or reject payout requests."

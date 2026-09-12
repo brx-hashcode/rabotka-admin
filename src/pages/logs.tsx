@@ -73,7 +73,7 @@ export default function LogsPage() {
 
   return (
     <>
-      <div className="pt-6">
+      <div>
         <PageListHeader
           title="Activity Logs"
           description="Audit trail of admin actions and system events across entities."

@@ -120,7 +120,7 @@ export default function JobsPage() {
   const { data, total, isLoading } = useJobsList();
 
   return (
-    <div className="pt-6">
+    <div>
       <PageListHeader
         title="Missions"
         description="Browse and filter published job offers and their status."
