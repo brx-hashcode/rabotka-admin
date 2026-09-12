@@ -12,7 +12,8 @@ export function useWalletPayments() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, pay_type, pay_status, created_from, created_to } = queryState;
+  const { q, pay_type, pay_status, pay_method, created_from, created_to } =
+    queryState;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -20,7 +21,7 @@ export function useWalletPayments() {
       return;
     }
     setPage(1);
-  }, [q, pay_type, pay_status, created_from, created_to, setPage]);
+  }, [q, pay_type, pay_status, pay_method, created_from, created_to, setPage]);
 
   const params = {
     page: queryState.page,
@@ -28,6 +29,7 @@ export function useWalletPayments() {
     ...(queryState.q ? { q: queryState.q } : {}),
     ...(queryState.pay_type?.length ? { type: queryState.pay_type } : {}),
     ...(queryState.pay_status?.length ? { status: queryState.pay_status } : {}),
+    ...(queryState.pay_method?.length ? { method: queryState.pay_method } : {}),
     ...(queryState.created_from ? { created_from: queryState.created_from } : {}),
     ...(queryState.created_to ? { created_to: queryState.created_to } : {}),
   };

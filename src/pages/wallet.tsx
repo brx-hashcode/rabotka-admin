@@ -63,6 +63,14 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: "JOB_POSTING", label: "Job Posting" },
 ];
 
+/** Mirrors the Method column; values are the `PaymentMethod` enum. */
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "MOBILE_MONEY", label: "Mobile Money" },
+  { value: "WALLET", label: "Wallet" },
+  { value: "CARD", label: "Card" },
+  { value: "OTHER", label: "Other" },
+];
+
 const PAYMENT_STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "COMPLETED", label: "Completed" },
@@ -162,6 +170,11 @@ function PaymentsTableHeader({
             id: "pay_status",
             label: "Status",
             options: PAYMENT_STATUS_OPTIONS,
+          },
+          {
+            id: "pay_method",
+            label: "Method",
+            options: PAYMENT_METHOD_OPTIONS,
           },
         ]}
         table={table}

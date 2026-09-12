@@ -47,6 +47,10 @@ export function WalletExportMenu({
     ...(paymentQs.q ? { q: paymentQs.q } : {}),
     ...(paymentQs.pay_type?.length ? { type: paymentQs.pay_type } : {}),
     ...(paymentQs.pay_status?.length ? { status: paymentQs.pay_status } : {}),
+    // Kept in step with the toolbar: an export that quietly ignored the Method
+    // filter would hand someone a spreadsheet that disagrees with the table
+    // they were looking at when they clicked Export.
+    ...(paymentQs.pay_method?.length ? { method: paymentQs.pay_method } : {}),
     ...(paymentQs.created_from
       ? { created_from: paymentQs.created_from }
       : {}),
