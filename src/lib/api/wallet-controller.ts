@@ -124,6 +124,8 @@ export type AdminPaymentsListParams = {
   q?: string;
   type?: string[];
   status?: string[];
+  /** MOBILE_MONEY | WALLET | CARD | OTHER — the Method column. */
+  method?: string[];
   created_from?: string;
   created_to?: string;
 };
@@ -167,6 +169,7 @@ class AdminWalletController extends AdminBaseController {
     if (params.q) searchParams.q = params.q;
     if (params.type?.length) searchParams.type = params.type;
     if (params.status?.length) searchParams.status = params.status;
+    if (params.method?.length) searchParams.method = params.method;
     if (params.created_from) searchParams.created_from = params.created_from;
     if (params.created_to) searchParams.created_to = params.created_to;
 
