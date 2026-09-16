@@ -83,13 +83,9 @@ function parseRedirectUris(value: string): string[] {
     .filter(Boolean);
 }
 
+// Required only for "Login with Rabotka" — see the superRefine below.
 const redirectUrisField = z
   .string()
-  .min(1, "At least one redirect URI is required")
-  .refine(
-    (value) => parseRedirectUris(value).length > 0,
-    "At least one redirect URI is required",
-  )
   .refine(
     (value) => parseRedirectUris(value).every((uri) => URL.canParse(uri)),
     "Each line must be a full absolute URL",
@@ -112,7 +108,17 @@ const schema = z.object({
   identityCheck: z.boolean(),
   webhookUrl: z.string(),
 }).superRefine((values, ctx) => {
-  if (!values.identityCheck) return;
+  if (!values.identityCheck) {
+    if (parseRedirectUris(values.redirectUris).length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["redirectUris"],
+        message:
+          "At least one redirect URI is required, unless the app is for identity checks only",
+      });
+    }
+    return;
+  }
   const problem = webhookUrlProblem(values.webhookUrl, values.isSandbox);
   if (problem) {
     ctx.addIssue({ code: "custom", path: ["webhookUrl"], message: problem });
@@ -328,7 +334,8 @@ export function CreateAppModal({
                   </FormControl>
                   <FormDescription>
                     One per line, matched exactly. A trailing slash makes it a
-                    different URI. No wildcards.
+                    different URI. No wildcards. Optional when the app only
+                    uses the identity check API.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
