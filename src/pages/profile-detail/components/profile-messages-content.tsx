@@ -23,6 +23,7 @@ import {
 import { MessageExportMenu } from "#/features/profiles/components/message-export-menu";
 import { ChatDoodleBg } from "./chat-doodle-bg";
 import { QuickMessagePicker } from "#/components/quick-message-picker";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type Props = {
   profileId: string;
@@ -100,7 +101,7 @@ export function ProfileMessagesContent({
       );
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't send the message. Try again."));
     },
   });
 

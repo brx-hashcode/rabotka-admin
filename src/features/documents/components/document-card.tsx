@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import {
   deleteDocument,
@@ -114,7 +114,7 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
         proxyUrl,
         await fetch(proxyUrl, { credentials: "include" }),
       );
-      if (!res.ok) throw new Error("Download failed");
+      if (!res.ok) throw new Error("The file couldn't be downloaded. Try again.");
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = globalThis.document.createElement("a");
@@ -253,7 +253,7 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
             <AlertDialogAction
               onClick={() => doDelete()}
               disabled={isDeleting}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {isDeleting ? "Deleting…" : "Delete"}
             </AlertDialogAction>

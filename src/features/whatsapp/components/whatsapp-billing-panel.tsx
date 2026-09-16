@@ -38,6 +38,7 @@ import {
   useWhatsappRange,
 } from "#/hooks/use-whatsapp-analytics";
 import { WhatsappCategoryBadge } from "./whatsapp-status-badge";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const chartConfig = {
   cost: { label: "Cost", color: "#f59e0b" },
@@ -145,9 +146,10 @@ function billingHubUrl(businessId: string | null): string {
 function UnbilledHint() {
   return (
     <p className="text-muted-foreground mt-2 text-xs">
-      Meta does not expose charges to the API, so this page cannot show what is
-      still unpaid. To read it yourself, set <span className="font-medium">From</span>{" "}
-      to the date of your last charge — Consumed is then what has accrued since.
+      WhatsApp doesn't tell us what has already been paid, so this page can't
+      show what is still owed. To find out, set{" "}
+      <span className="font-medium">From</span> to the date of your last
+      payment — Consumed then shows what has been used since.
     </p>
   );
 }
@@ -248,10 +250,10 @@ export function WhatsappBillingPanel({
   // the page keeps working — and both deserve the same offer of a retry.
   let requestError: string | null = null;
   if (isError) {
-    requestError =
-      error instanceof Error
-        ? error.message
-        : "Could not reach the WhatsApp Business Account.";
+    requestError = friendlyError(
+      error,
+      "Couldn't get the WhatsApp costs right now.",
+    );
   }
   const unreachable = data?.unavailable ?? requestError;
 
@@ -317,7 +319,7 @@ export function WhatsappBillingPanel({
                     is a zero-decimal currency, so no phantom centimes). */}
                 {costReported && fx
                   ? formatXAF(totalCost * fx.rate)
-                  : "rate unavailable"}
+                  : "exchange rate unavailable"}
               </CardTitle>
               {/*
                 The provenance is not decoration. A converted figure the reader
@@ -327,8 +329,8 @@ export function WhatsappBillingPanel({
               */}
               <p className="text-muted-foreground pt-1 text-xs">
                 {fx
-                  ? `1 AED = ${fx.rate.toFixed(1)} XAF · ECB ${fx.asOf} · XAF/EUR and AED/USD are fixed pegs`
-                  : "The exchange rate could not be fetched, so this window is shown in dirhams only."}
+                  ? `Converted at 1 AED = ${fx.rate.toFixed(1)} XAF (official rate of ${fx.asOf})`
+                  : "We couldn't get today's exchange rate, so amounts are shown in dirhams (AED) only."}
               </p>
             </CardHeader>
           </Card>

@@ -11,14 +11,14 @@ import type { AdminJobCategory } from "#/lib/api/job-categories-controller";
  * Must stay index-aligned with both row builders below.
  */
 export const CATEGORY_EXPORT_HEADERS = [
-  "ID",
+  "Reference",
   "Name",
-  "Slug",
+  "Web address name",
   "Description",
   "Icon",
   "Workers",
   "Job offers",
-  "Created at (ISO)",
+  "Created at",
 ] as const;
 
 export function categoryItemsToStringRows(

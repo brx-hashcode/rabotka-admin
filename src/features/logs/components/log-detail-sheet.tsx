@@ -8,6 +8,8 @@ import {
   SheetDescription,
 } from "#/components/ui/sheet";
 import { Badge } from "#/components/ui/badge";
+import { TechnicalDetails } from "#/components/technical-details";
+import { actionLabel, recordTypeLabel } from "#/lib/log-labels";
 
 type LogDetailSheetProps = {
   log: AdminLogItem | null;
@@ -64,7 +66,7 @@ export function LogDetailSheet({
         <div className="shrink-0 pb-4 border-b">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline">{log?.action}</Badge>
+              <Badge variant="outline">{actionLabel(log?.action ?? null)}</Badge>
               <span className="text-muted-foreground text-xs font-normal">
                 {log?.createdAt
                   ? format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")
@@ -72,7 +74,7 @@ export function LogDetailSheet({
               </span>
             </SheetTitle>
             <SheetDescription>
-              Log entry details and raw payload
+              What happened, who did it and when
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -80,36 +82,28 @@ export function LogDetailSheet({
         {log && (
           <div className="flex flex-col gap-5 px-6 py-5 flex-1 overflow-y-auto min-h-0">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              <Field label="Entity Type" value={log.entityType} />
-              <Field label="Entity ID" value={log.entityId} />
-              <Field label="Actor (Admin)" value={log.userName ?? "—"} />
-              <Field label="Actor (Profile)" value={log.profileName ?? "—"} />
-              <Field label="IP Address" value={log.ipAddress} />
+              <Field label="About" value={recordTypeLabel(log.entityType)} />
               <Field
-                label="Created At"
+                label="When"
                 value={format(new Date(log.createdAt), "PPpp")}
               />
+              <Field label="Done by (team)" value={log.userName ?? "—"} />
+              <Field label="Done by (user)" value={log.profileName ?? "—"} />
             </div>
 
-            {log.userAgent && (
-              <div className="space-y-0.5">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                  User Agent
-                </p>
-                <p className="text-xs text-muted-foreground break-all leading-relaxed">
-                  {log.userAgent}
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-col flex-1 min-h-0 space-y-1.5">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide shrink-0">
-                Raw Data
-              </p>
-              <pre className="bg-muted rounded-md p-3 text-xs leading-relaxed whitespace-pre-wrap break-all flex-1 overflow-y-auto min-h-0">
+            <TechnicalDetails
+              rows={[
+                { label: "Action code", value: log.action },
+                { label: "Record type", value: log.entityType },
+                { label: "Record reference", value: log.entityId },
+                { label: "Internet address (IP)", value: log.ipAddress },
+                { label: "Device and browser", value: log.userAgent },
+              ]}
+            >
+              <pre className="bg-background max-h-80 overflow-y-auto rounded-md p-3 text-xs leading-relaxed whitespace-pre-wrap break-all">
                 {rawData}
               </pre>
-            </div>
+            </TechnicalDetails>
           </div>
         )}
       </SheetContent>

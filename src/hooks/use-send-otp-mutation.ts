@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { sendOTP, type SendOTPResponse } from "#/lib/api/auth-controller";
 import { toast } from "sonner";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export function useSendOtpMutation() {
   return useMutation({
@@ -9,13 +10,13 @@ export function useSendOtpMutation() {
       return await sendOTP(email);
     },
     onSuccess: () => {
-      toast.success("OTP code sent", {
+      toast.success("Sign-in code sent", {
         description: "Check your email for the code.",
       });
     },
     onError: (error) => {
-      toast.error("Failed to send code", {
-        description: error.message,
+      toast.error("Couldn't send the code", {
+        description: friendlyError(error, "Try again in a moment."),
       });
     },
   });

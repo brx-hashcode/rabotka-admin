@@ -510,7 +510,7 @@ export class AdminProfilesController extends AdminBaseController {
       `${appConfig.apiUrl}/admin/profiles/${profileId}/agreement/download`,
       { credentials: "include" },
     );
-    if (!response.ok) throw new Error("Download failed");
+    if (!response.ok) throw new Error("The file couldn't be downloaded. Try again.");
     return response.blob();
   }
 

@@ -150,11 +150,11 @@ describe("profile export rows", () => {
    */
   it("exports activation separately from last login", () => {
     const row = profileItemsToStringRows([full])[0];
-    expect(cell(row, "Activated at (ISO)")).toBe("2026-07-12T18:30:00.000Z");
-    expect(cell(row, "Last login (ISO)")).toBe("2026-08-15T09:00:00.000Z");
+    expect(cell(row, "Activated at")).toBe("2026-07-12T18:30:00.000Z");
+    expect(cell(row, "Last login")).toBe("2026-08-15T09:00:00.000Z");
 
     const sparseRow = profileItemsToStringRows([sparse])[0];
-    expect(cell(sparseRow, "Activated at (ISO)")).toBe("");
+    expect(cell(sparseRow, "Activated at")).toBe("");
   });
 
   it("has no duplicate header names", () => {

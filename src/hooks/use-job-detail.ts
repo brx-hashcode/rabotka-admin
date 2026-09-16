@@ -8,6 +8,7 @@ import {
   type AdminJobOfferDetailResponse,
   type AdminUpdateJobOfferParams,
 } from "#/lib/api/jobs-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export function useJobDetail(jobId: string) {
   const queryClient = useQueryClient();
@@ -38,7 +39,7 @@ export function useJobDetail(jobId: string) {
       toast.success("Job offer deleted successfully");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this job. Try again."));
     },
   });
 

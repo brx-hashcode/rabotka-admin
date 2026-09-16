@@ -54,14 +54,14 @@ export default function OAuthAppsPage() {
         <div className="bg-muted rounded-full p-5">
           <KeyRound className="text-muted-foreground size-10" />
         </div>
-        <p className="text-lg font-medium">No applications yet</p>
+        <p className="text-lg font-medium">No partner apps yet</p>
         <p className="text-muted-foreground max-w-sm text-sm">
-          Register a partner application to let it authenticate Rabotka users
-          and read their verification status.
+          Add a partner company so its customers can sign in with their
+          Rabotka account, or so it can check a person's identity.
         </p>
         <Button className="mt-2" onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
-          Register an application
+          Add a partner app
         </Button>
       </div>
     );
@@ -82,13 +82,13 @@ export default function OAuthAppsPage() {
   return (
     <>
       <PageListHeader
-        title="Applications"
-        description="Applications that can sign users in with Rabotka."
+        title="Partner apps"
+        description="Companies that can sign people in with Rabotka or check their identity."
         actions={
           apps.length > 0 ? (
             <Button onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" />
-              Register
+              Add a partner app
             </Button>
           ) : null
         }

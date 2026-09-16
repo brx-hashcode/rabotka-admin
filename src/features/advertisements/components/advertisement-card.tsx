@@ -29,7 +29,7 @@ import {
   IconCreditCard,
 } from "@tabler/icons-react";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +64,7 @@ import { AdvertisementDialog } from "./advertisement-dialog";
 import { AdvertisementPreviewDialog } from "./advertisement-preview-dialog";
 import { AdvertisementStatsSheet } from "./advertisement-stats-sheet";
 import { AdvertisementPlanningSheet } from "./advertisement-planning-sheet";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 function audienceLabel(audience: string): string {
   if (audience === "WORKER") return "Workers";
@@ -221,7 +222,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
         onDone?.();
         invalidate();
       },
-      onError: (e: Error) => toast.error(e.message),
+      onError: (e: Error) => toast.error(friendlyError(e, "Couldn't update this ad. Try again.")),
     });
 
   const confirmPaymentMut = useActionMutation(
@@ -246,7 +247,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
       setRejectOpen(false);
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e, "Couldn't update this ad. Try again.")),
   });
   const pauseMut = useActionMutation(
     () => pauseAdvertisement(ad.id),
@@ -265,7 +266,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
       setCancelOpen(false);
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e, "Couldn't update this ad. Try again.")),
   });
   const deleteMut = useMutation({
     mutationFn: () => deleteAdvertisement(ad.id),
@@ -274,7 +275,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
       setDeleteOpen(false);
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e, "Couldn't update this ad. Try again.")),
   });
 
   const s = ad.status;
@@ -662,7 +663,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => cancelMut.mutate()}
               disabled={cancelMut.isPending}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {cancelMut.isPending ? "Cancelling…" : "Cancel Ad"}
             </AlertDialogAction>
@@ -684,7 +685,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => deleteMut.mutate()}
               disabled={deleteMut.isPending}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {deleteMut.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>

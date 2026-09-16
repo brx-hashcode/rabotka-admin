@@ -23,6 +23,7 @@ import { cn } from "#/lib/utils";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { getUsersList } from "#/lib/api/users-controller";
 import { useCreateDirect, useCreateGroup } from "#/hooks/use-chat";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export type PickUser = {
   id: string;
@@ -171,7 +172,7 @@ export function NewConversationDialog({ onCreated }: Props) {
       reset();
       onCreated(convo.id);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't start the conversation. Try again."));
     }
   };
 
@@ -196,7 +197,7 @@ export function NewConversationDialog({ onCreated }: Props) {
       reset();
       onCreated(convo.id);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't start the conversation. Try again."));
     }
   };
 

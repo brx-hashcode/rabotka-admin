@@ -34,14 +34,15 @@ import {
   updateBundle,
   type AdBundle,
 } from "#/lib/api/advertisements-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
-  price: z.coerce.number().min(0, "Price must be >= 0"),
-  maxReach: z.coerce.number().int().min(1, "Max reach must be >= 1"),
-  maxFrequencyPerWeek: z.coerce.number().int().min(1, "Frequency must be >= 1"),
-  maxDurationDays: z.coerce.number().int().min(1, "Duration must be >= 1 day"),
+  price: z.coerce.number().min(0, "The price must be 0 or more"),
+  maxReach: z.coerce.number().int().min(1, "Reach at least 1 person"),
+  maxFrequencyPerWeek: z.coerce.number().int().min(1, "Send at least once a week"),
+  maxDurationDays: z.coerce.number().int().min(1, "The ad must run for at least 1 day"),
   channels: z
     .array(z.enum(["EMAIL", "WHATSAPP", "IN_APP"]))
     .min(1, "Select at least one channel"),
@@ -158,8 +159,12 @@ export function BundleDialog({
     },
     onError: (err: Error) =>
       toast.error(
-        err.message ||
-          (isEdit ? "Failed to update bundle" : "Failed to create bundle"),
+        friendlyError(
+          err,
+          isEdit
+            ? "Couldn't update the bundle. Try again."
+            : "Couldn't create the bundle. Try again.",
+        ),
       ),
   });
 

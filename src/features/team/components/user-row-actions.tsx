@@ -25,6 +25,7 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { UserModal } from "./user-modal";
 import { useToggleUserStatus } from "../hooks/use-toggle-user-status";
 import { useRole } from "#/hooks/use-role";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const STATUS_ACTIONS = {
   active: {
@@ -75,7 +76,7 @@ export function UserRowActions({ user }: Readonly<Props>) {
       setDeleteOpen(false);
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this team member. Try again."));
     },
   });
 

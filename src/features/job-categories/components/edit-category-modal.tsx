@@ -24,13 +24,14 @@ import {
   updateJobCategory,
   type AdminJobCategory,
 } from "#/lib/api/job-categories-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z
     .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers and hyphens"),
+    .min(1, "Enter a web address name")
+    .regex(/^[a-z0-9-]+$/, "Use only small letters, numbers and dashes (-), no spaces"),
   icon: z.string().optional(),
   description: z.string().optional(),
 });
@@ -85,7 +86,7 @@ export function EditCategoryModal({
       onOpenChange(false);
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update category"),
+      toast.error(friendlyError(err, "Couldn't update the category. Try again.")),
   });
 
   return (
@@ -136,7 +137,7 @@ export function EditCategoryModal({
                 name="slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Slug</FormLabel>
+                    <FormLabel>Web address name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}

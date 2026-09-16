@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { Skeleton } from "#/components/ui/skeleton";
 import { groupByDay } from "#/lib/date-grouping";
+import { humanizeCode } from "#/lib/status-labels";
 
 type Props = {
   logs: AdminLogEntry[];
@@ -40,12 +41,12 @@ const ACTION_CONFIG: Record<
   { label: string; icon: typeof IconShieldCheck; color: string }
 > = {
   KYC_APPROVED: {
-    label: "KYC approved",
+    label: "Identity check approved",
     icon: IconShieldCheck,
     color: "text-emerald-500",
   },
   KYC_REJECTED: {
-    label: "KYC rejected",
+    label: "Identity check refused",
     icon: IconShieldX,
     color: "text-rose-500",
   },
@@ -139,7 +140,7 @@ const METADATA_RENDERERS: Record<
       <div className="mt-1.5 flex flex-col items-start gap-1">
         {status && (
           <Badge variant="outline" className="font-normal">
-            {status.replaceAll("_", " ")}
+            {humanizeCode(status)}
           </Badge>
         )}
         {reason && <Note>{reason}</Note>}

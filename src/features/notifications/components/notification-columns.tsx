@@ -51,7 +51,7 @@ const notificationDataColumns: ColumnDef<AdminNotificationItem, unknown>[] = [
   },
   {
     id: "entityType",
-    header: "Entity",
+    header: "About",
     cell: ({ row }) => (
       <Badge
         className={`text-xs ${getEntityBadgeClass(row.original.entity_type)}`}

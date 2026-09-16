@@ -24,6 +24,7 @@ import {
   deleteJobOffer,
 } from "#/lib/api/jobs-controller";
 import { useRole } from "#/hooks/use-role";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type JobRowActionsProps = Readonly<{
   job: AdminJobOfferListItem;
@@ -49,7 +50,7 @@ export function JobRowActions({ job }: JobRowActionsProps) {
       toast.success("Job offer activated.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this job. Try again.")),
   });
 
   const deactivateMutation = useMutation({
@@ -59,7 +60,7 @@ export function JobRowActions({ job }: JobRowActionsProps) {
       toast.success("Job offer deactivated.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this job. Try again.")),
   });
 
   const cancelMutation = useMutation({
@@ -69,7 +70,7 @@ export function JobRowActions({ job }: JobRowActionsProps) {
       toast.success("Job offer cancelled.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this job. Try again.")),
   });
 
   const deleteMutation = useMutation({
@@ -79,7 +80,7 @@ export function JobRowActions({ job }: JobRowActionsProps) {
       toast.success("Job offer deleted.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this job. Try again.")),
   });
 
   const canActivate =

@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import type { AdminUserListItem } from "#/lib/api/users-controller";
 import { UserRowActions } from "./user-row-actions";
+import { TEAM_ROLE_LABELS, labelOf } from "#/lib/status-labels";
 
 export type AdminUser = AdminUserListItem;
 
@@ -68,7 +69,7 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
     header: "Role",
     cell: ({ row }) => (
       <Badge className={getRoleBadgeClass(row.original.role)}>
-        {row.original.role}
+        {labelOf(TEAM_ROLE_LABELS, row.original.role)}
       </Badge>
     ),
   },

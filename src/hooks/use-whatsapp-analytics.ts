@@ -7,6 +7,7 @@ import {
   getWhatsappStats,
   retryWhatsappDlqJob,
 } from "#/lib/api/whatsapp-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /**
  * The analytics half of the WhatsApp page.
@@ -69,18 +70,18 @@ export function useRetryDlqJob() {
     mutationFn: (jobId: string) => retryWhatsappDlqJob(jobId),
     onSuccess: (result) => {
       if (result.retried) {
-        toast.success("Job re-queued");
+        toast.success("Sending the message again");
       } else {
         // Not an error: the job aged out of Redis, or its payload was
         // unusable. Saying which beats a success toast over nothing happening.
-        toast.warning("Nothing to retry — the job is gone or has no payload");
+        toast.warning("This message can no longer be sent again — it has expired.");
       }
       void queryClient.invalidateQueries({
         queryKey: ["admin", "whatsapp", "queue"],
       });
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Could not retry the job");
+      toast.error(friendlyError(err, "Couldn't send the message again. Try again."));
     },
   });
 }

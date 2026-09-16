@@ -26,6 +26,7 @@ import {
 } from "#/lib/api/notification-controller";
 import { getNotificationHref } from "#/features/notifications/utils";
 import { useSocketStore } from "#/stores/use-socket-store";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export default function NotificationsPage() {
       toast.success("Notifications marked as read");
       await refreshNotifications();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update the notifications. Try again.")),
   });
 
   const clearAllMutation = useMutation({
@@ -62,7 +63,7 @@ export default function NotificationsPage() {
       setClearOpen(false);
       await refreshNotifications();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update the notifications. Try again.")),
   });
 
   const deleteMutation = useMutation({
@@ -72,7 +73,7 @@ export default function NotificationsPage() {
       setDeleteTarget(null);
       await refreshNotifications();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update the notifications. Try again.")),
   });
 
   const handleOpenNotification = (notification: AdminNotificationItem) => {

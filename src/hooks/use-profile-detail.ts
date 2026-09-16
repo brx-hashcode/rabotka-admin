@@ -12,6 +12,7 @@ import {
   type AdminVerifyProfileParams,
   type AdminUpdateStatusParams,
 } from "#/lib/api/profiles-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export function useProfileDetail(profileId: string) {
   const queryClient = useQueryClient();
@@ -42,7 +43,7 @@ export function useProfileDetail(profileId: string) {
       toast.success("Profile updated successfully");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this profile. Try again."));
     },
   });
 
@@ -52,10 +53,10 @@ export function useProfileDetail(profileId: string) {
     onSuccess: (data) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
       invalidateLogs();
-      toast.success("KYC verification submitted");
+      toast.success("Identity check decision saved");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this profile. Try again."));
     },
   });
 
@@ -68,7 +69,7 @@ export function useProfileDetail(profileId: string) {
       toast.success("Status updated successfully");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this profile. Try again."));
     },
   });
 
@@ -81,7 +82,7 @@ export function useProfileDetail(profileId: string) {
       toast.success("Avatar updated");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this profile. Try again."));
     },
   });
 

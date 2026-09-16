@@ -19,6 +19,7 @@ import {
 } from "#/lib/api/profiles-controller";
 import { downloadAdminInvoice } from "#/lib/api/wallet-controller";
 import { groupByDay } from "#/lib/date-grouping";
+import { humanizeCode } from "#/lib/status-labels";
 
 const REASON_LABELS: Record<string, string> = {
   CONTACT_UNLOCK: "Contact unlock",
@@ -44,7 +45,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function statusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status.toLowerCase().replaceAll("_", " ");
+  return STATUS_LABELS[status] ?? humanizeCode(status);
 }
 
 function amountOf(invoice: AdminInvoiceItem): number {

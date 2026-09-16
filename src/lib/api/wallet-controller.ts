@@ -248,7 +248,7 @@ class AdminWalletController extends AdminBaseController {
       `${appConfig.apiUrl}/admin/invoices/${invoiceId}/download`,
       { credentials: "include" },
     );
-    if (!response.ok) throw new Error("Download failed");
+    if (!response.ok) throw new Error("The file couldn't be downloaded. Try again.");
     return response.blob();
   }
 

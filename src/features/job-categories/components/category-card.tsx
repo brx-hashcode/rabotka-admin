@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   deleteJobCategory,
   type AdminJobCategory,
@@ -87,7 +87,7 @@ export function CategoryCard({ category }: Readonly<CategoryCardProps>) {
             <p className="font-medium text-sm leading-snug line-clamp-2">
               {category.name}
             </p>
-            <p className="text-xs text-muted-foreground font-mono">
+            <p className="text-xs text-muted-foreground" title="Web address name">
               {category.slug}
             </p>
             {category.description && (
@@ -120,7 +120,7 @@ export function CategoryCard({ category }: Readonly<CategoryCardProps>) {
             <AlertDialogAction
               onClick={() => doDelete()}
               disabled={isDeleting}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {isDeleting ? "Deleting…" : "Delete"}
             </AlertDialogAction>

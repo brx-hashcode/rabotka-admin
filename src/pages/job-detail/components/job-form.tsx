@@ -226,7 +226,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
           </div>
 
           <div className="space-y-1.5 col-span-2">
-            <FieldLabel>Indexing</FieldLabel>
+            <FieldLabel>Job matching</FieldLabel>
             <div className="flex items-start gap-2 rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 px-3 py-2.5">
               <span
                 className={`mt-1 h-2 w-2 shrink-0 rounded-full ${job.vectorIndexedAt ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
@@ -235,21 +235,21 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
                 {job.vectorIndexedAt ? (
                   <>
                     <p className="text-xs font-medium text-foreground">
-                      Indexed
+                      Ready for matching
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Last indexed{' '}
+                      Last updated{' '}
                       {new Date(job.vectorIndexedAt).toLocaleString()}
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="text-xs font-medium text-muted-foreground">
-                      Not yet indexed
+                      Not ready yet
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Will be indexed automatically. Category is inferred from
-                      job content and employer profile.
+                      This happens automatically in a few minutes. The category
+                      is guessed from the job description and the employer.
                     </p>
                   </>
                 )}

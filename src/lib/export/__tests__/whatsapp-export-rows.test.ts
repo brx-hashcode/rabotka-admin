@@ -84,49 +84,49 @@ describe("whatsapp export rows", () => {
       failed,
       inbound,
     ]);
-    expect(ok[at("Variables (JSON)")]).toBe('{"name":"Alice","code":"4821"}');
-    expect(none[at("Variables (JSON)")]).toBe("");
+    expect(ok[at("Message details")]).toBe('{"name":"Alice","code":"4821"}');
+    expect(none[at("Message details")]).toBe("");
     // `{}` is noise that reads as data.
-    expect(empty[at("Variables (JSON)")]).toBe("");
+    expect(empty[at("Message details")]).toBe("");
   });
 
   it("leaves billable blank when Meta has not said yet", () => {
     const [ok, unknown] = whatsappItemsToStringRows([base, failed]);
-    expect(ok[at("Billable")]).toBe("Yes");
-    expect(unknown[at("Billable")]).toBe("");
+    expect(ok[at("Paid message")]).toBe("Yes");
+    expect(unknown[at("Paid message")]).toBe("");
     // "No" would assert we were not charged, which is a different claim.
-    expect(unknown[at("Billable")]).not.toBe("No");
+    expect(unknown[at("Paid message")]).not.toBe("No");
   });
 
   it("keeps the provider error code numeric for xlsx and a string for csv", () => {
     const [, typedFailed] = whatsappItemsToTypedRows([base, failed]);
     const [, stringFailed] = whatsappItemsToStringRows([base, failed]);
-    expect(typedFailed[at("Error provider code")]).toBe(131047);
-    expect(stringFailed[at("Error provider code")]).toBe("131047");
+    expect(typedFailed[at("WhatsApp error number")]).toBe(131047);
+    expect(stringFailed[at("WhatsApp error number")]).toBe("131047");
   });
 
   it("blanks a missing timestamp rather than zeroing it", () => {
     const [typed] = whatsappItemsToTypedRows([failed]);
     const [str] = whatsappItemsToStringRows([failed]);
-    expect(typed[at("Delivered at (ISO)")]).toBeNull();
-    expect(str[at("Delivered at (ISO)")]).toBe("");
+    expect(typed[at("Delivered at")]).toBeNull();
+    expect(str[at("Delivered at")]).toBe("");
   });
 
   it("passes timestamps through byte-identical", () => {
     // Guards against a future "helpful" round-trip through new Date(), which
     // would silently relocalise every cell.
     const [row] = whatsappItemsToTypedRows([base]);
-    expect(row[at("Created at (ISO)")]).toBe("2026-08-20T08:00:00.000Z");
-    expect(row[at("Read at (ISO)")]).toBe("2026-08-20T08:01:00.000Z");
+    expect(row[at("Created at")]).toBe("2026-08-20T08:00:00.000Z");
+    expect(row[at("Read at")]).toBe("2026-08-20T08:01:00.000Z");
   });
 
   it("derives time to delivery, and leaves it empty when it cannot", () => {
     const [okTyped, failedTyped] = whatsappItemsToTypedRows([base, failed]);
     const [okStr, failedStr] = whatsappItemsToStringRows([base, failed]);
-    expect(okTyped[at("Time to delivery (s)")]).toBe(7);
-    expect(okStr[at("Time to delivery (s)")]).toBe("7");
-    expect(failedTyped[at("Time to delivery (s)")]).toBeNull();
-    expect(failedStr[at("Time to delivery (s)")]).toBe("");
+    expect(okTyped[at("Time to delivery (seconds)")]).toBe(7);
+    expect(okStr[at("Time to delivery (seconds)")]).toBe("7");
+    expect(failedTyped[at("Time to delivery (seconds)")]).toBeNull();
+    expect(failedStr[at("Time to delivery (seconds)")]).toBe("");
   });
 
   it("records direction, which no filter exposes and every export mixes", () => {
@@ -137,7 +137,7 @@ describe("whatsapp export rows", () => {
 
   it("keeps declared and billed categories apart", () => {
     const [row] = whatsappItemsToStringRows([base]);
-    expect(row[at("Template category")]).toBe("MARKETING");
-    expect(row[at("Pricing category")]).toBe("UTILITY");
+    expect(row[at("Message category")]).toBe("MARKETING");
+    expect(row[at("Billed as")]).toBe("UTILITY");
   });
 });

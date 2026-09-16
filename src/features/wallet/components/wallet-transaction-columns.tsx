@@ -2,6 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "#/components/ui/badge";
 import { getCommonColumns } from "#/components/table";
 import type { AdminWalletTransactionItem } from "#/lib/api/wallet-controller";
+import { recordTypeLabel } from "#/lib/log-labels";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   CREDIT_PENALTY: "Penalty",
@@ -70,17 +71,17 @@ const transactionDataColumns: ColumnDef<AdminWalletTransactionItem, unknown>[] =
     {
       id: "referenceType",
       accessorKey: "referenceType",
-      header: "Ref. Type",
+      header: "Linked to",
       cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground capitalize">
-          {row.original.referenceType ?? "—"}
+        <span className="text-sm text-muted-foreground">
+          {recordTypeLabel(row.original.referenceType ?? null)}
         </span>
       ),
     },
     {
       id: "referenceId",
       accessorKey: "referenceId",
-      header: "Ref. ID",
+      header: "Reference",
       cell: ({ row }) =>
         row.original.referenceId ? (
           <span className="font-mono text-xs text-muted-foreground truncate block max-w-[140px]">

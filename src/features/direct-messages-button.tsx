@@ -26,6 +26,7 @@ import {
   flattenForTemplateVariable,
   ADMIN_MESSAGE_VAR_MAX,
 } from "#/lib/whatsapp-template-text";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export const DirectMessagesButton = ({
   className,
@@ -77,7 +78,7 @@ export const DirectMessagesButton = ({
       handleClose();
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't send the message. Try again."));
     },
   });
 

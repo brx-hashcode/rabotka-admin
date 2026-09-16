@@ -10,6 +10,7 @@ import {
 import { Button } from "#/components/ui/button";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { confirmQrSessionFromPhone } from "#/lib/api/auth-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export const Route = createFileRoute("/auth/qr-confirm")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -27,7 +28,7 @@ function QrConfirmPage() {
 
   async function handleConfirm() {
     if (!session) {
-      setErrorMsg("Invalid QR code — missing session.");
+      setErrorMsg("This QR code isn't complete. Scan it again from your computer.");
       setPhase("error");
       return;
     }
@@ -36,23 +37,23 @@ function QrConfirmPage() {
       await confirmQrSessionFromPhone(session);
       setPhase("done");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to confirm.";
+      // Classified on the server's own wording; only the display is softened.
+      const raw = (err instanceof Error ? err.message : "").toLowerCase();
       const isNotPaired =
-        msg.toLowerCase().includes("not paired") ||
-        msg.toLowerCase().includes("phone token");
+        raw.includes("not paired") || raw.includes("phone token");
       if (isNotPaired) {
         setPhase("not-paired");
         return;
       }
       const needsRepair =
-        msg.toLowerCase().includes("expired") ||
-        msg.toLowerCase().includes("invalid") ||
-        msg.toLowerCase().includes("not found") ||
-        msg.toLowerCase().includes("reset");
+        raw.includes("expired") ||
+        raw.includes("invalid") ||
+        raw.includes("not found") ||
+        raw.includes("reset");
       setErrorMsg(
         needsRepair
-          ? "Phone pairing has expired or been reset. Re-pair your phone in your admin profile."
-          : msg,
+          ? "This phone's link has expired. Link your phone again from your admin profile."
+          : friendlyError(err, "Couldn't confirm the sign-in. Try again."),
       );
       setPhase("error");
     }
@@ -67,26 +68,26 @@ function QrConfirmPage() {
               <img src={rabotkaLogo} alt="Rabotka" className="h-14 w-auto" />
             </div>
             <CardTitle className="text-xl">
-              {phase === "not-paired" ? "Phone not configured" : "Confirm login"}
+              {phase === "not-paired" ? "This phone isn't linked yet" : "Confirm sign-in"}
             </CardTitle>
             <CardDescription>
               {phase === "not-paired"
-                ? "This phone has not been paired for QR login."
-                : "Someone is signing in via QR code on a desktop browser."}
+                ? "Link this phone before using it to sign in with a QR code."
+                : "Someone is signing in with a QR code on a computer. Confirm only if it's you."}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="flex flex-col gap-4">
             {phase === "not-paired" && (
               <p className="text-muted-foreground text-sm text-center">
-                Go to your admin profile on desktop, open the{" "}
-                <strong>Phone pairing</strong> section, and pair this device first.
+                On your computer, open your admin profile, go to{" "}
+                <strong>Link your phone</strong>, and link this phone first.
               </p>
             )}
 
             {phase === "ready" && (
               <Button className="w-full" onClick={() => void handleConfirm()}>
-                Confirm login
+                Confirm sign-in
               </Button>
             )}
 

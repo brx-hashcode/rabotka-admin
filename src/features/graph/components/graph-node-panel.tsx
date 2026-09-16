@@ -27,7 +27,7 @@ function describeEdge(edge: {
   if (edge.contacts > 0) {
     return `${edge.contacts} contact${edge.contacts === 1 ? "" : "s"}`;
   }
-  return `${edge.applications} cand.`;
+  return `${edge.applications} application${edge.applications === 1 ? "" : "s"}`;
 }
 
 export function GraphNodePanel({ node, edges, nodesById, onClose }: Props) {

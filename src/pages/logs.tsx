@@ -40,8 +40,8 @@ function LogsTableHeader({
       <div className="flex flex-wrap items-center gap-2">
         <TableHeaderToolbar
           searchParamKey="q"
-          searchPlaceholder="Search logs..."
-          filters={[{ id: "entity_type", label: "Entity type", options: entityTypeOptions }]}
+          searchPlaceholder="Search the activity..."
+          filters={[{ id: "entity_type", label: "About", options: entityTypeOptions }]}
           table={table}
           extraFiltersActive={extraFiltersActive}
           onResetExtras={handleResetExtras}

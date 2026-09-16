@@ -139,7 +139,7 @@ export function Step2OtpForm({
     resendButtonContent = (
       <>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Sending...
+        Sending…
       </>
     );
   } else if (resendCooldown > 0) {
@@ -195,10 +195,10 @@ export function Step2OtpForm({
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
+                  Checking…
                 </>
               ) : (
-                "Verify code"
+                "Sign in"
               )}
             </Button>
             <Button

@@ -37,8 +37,8 @@ export function WhatsappStatCards({
           trendPercentage: null,
           description:
             stats.totals.QUEUED > 0
-              ? `${stats.totals.QUEUED.toLocaleString()} still queued`
-              : "handed to the provider without error",
+              ? `${stats.totals.QUEUED.toLocaleString()} still being prepared`
+              : "accepted by WhatsApp",
         },
         {
           id: "delivered",

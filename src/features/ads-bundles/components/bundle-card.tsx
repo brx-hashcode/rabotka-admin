@@ -32,13 +32,14 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   deleteBundle,
   updateBundle,
   type AdBundle,
 } from "#/lib/api/advertisements-controller";
 import { BundleDialog } from "./bundle-dialog";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 function channelBadgeClass(channel: string): string {
   switch (channel) {
@@ -72,7 +73,7 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
       queryClient.invalidateQueries({ queryKey: ["admin", "bundles"] });
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to delete bundle"),
+      toast.error(friendlyError(err, "Couldn't delete the bundle. Try again.")),
   });
 
   const { mutate: doToggle, isPending: isToggling } = useMutation({
@@ -84,7 +85,7 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
       queryClient.invalidateQueries({ queryKey: ["admin", "bundles"] });
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update bundle"),
+      toast.error(friendlyError(err, "Couldn't update the bundle. Try again.")),
   });
 
   const channelLabel =
@@ -288,7 +289,7 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
             <AlertDialogAction
               onClick={() => doDelete()}
               disabled={isDeleting}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {isDeleting ? "Deleting…" : "Delete"}
             </AlertDialogAction>
