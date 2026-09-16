@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { verifyOTP, type VerifyOTPResponse } from "#/lib/api/auth-controller";
 import { toast } from "sonner";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type VerifyOtpVariables = {
   email: string;
@@ -17,11 +18,11 @@ export function useVerifyOtpMutation() {
       return await verifyOTP(email, otp);
     },
     onSuccess: () => {
-      toast.success("Authentication successful");
+      toast.success("You're signed in");
     },
     onError: (error) => {
-      toast.error("Invalid code", {
-        description: error.message,
+      toast.error("That code didn't work", {
+        description: friendlyError(error, "Check the code and try again."),
       });
     },
   });

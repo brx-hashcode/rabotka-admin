@@ -6,6 +6,7 @@ import {
   type ConfigCategory,
   type SystemConfigItem,
 } from "#/lib/api/system-config-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 function categoryQueryKey(category: ConfigCategory) {
   return ["admin", "system-configs", category];
@@ -58,7 +59,7 @@ export function useSystemConfigCategory(category: ConfigCategory) {
       toast.success("Settings saved");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to save settings";
+        friendlyError(err, "Couldn't save the settings. Try again.");
       toast.error(message);
     }
   }

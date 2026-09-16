@@ -23,6 +23,7 @@ import {
   updateProfileStatus,
 } from "#/lib/api/profiles-controller";
 import { useRole } from "#/hooks/use-role";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type ProfileRowActionsProps = Readonly<{
   profile: AdminProfileListItem;
@@ -47,7 +48,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Verification link sent via WhatsApp.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this profile. Try again.")),
   });
 
   const activateMutation = useMutation({
@@ -57,7 +58,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Profile activated.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this profile. Try again.")),
   });
 
   const suspendMutation = useMutation({
@@ -67,7 +68,7 @@ export function ProfileRowActions({ profile }: ProfileRowActionsProps) {
       toast.success("Profile suspended.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this profile. Try again.")),
   });
 
   const canSendVerifLink = !profile.whatsappConnected;

@@ -12,6 +12,13 @@ import {
   WhatsappCategoryBadge,
   WhatsappStatusBadge,
 } from "./whatsapp-status-badge";
+import { TechnicalDetails } from "#/components/technical-details";
+import {
+  messageKindLabel,
+  sendErrorLabel,
+  templateLabel,
+  whatsappServiceLabel,
+} from "../labels";
 
 type WhatsappMessageDetailSheetProps = {
   message: WhatsappMessageItem | null;
@@ -98,7 +105,7 @@ export function WhatsappMessageDetailSheet({
   const steps: Step[] = message
     ? [
         {
-          label: "Queued",
+          label: "Prepared",
           at: message.createdAt,
           from: null,
           tone: "bg-muted-foreground",
@@ -151,7 +158,7 @@ export function WhatsappMessageDetailSheet({
               </span>
             </SheetTitle>
             <SheetDescription>
-              Delivery timeline and full message content
+              When the message was sent, delivered and read, and what it said
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -170,19 +177,9 @@ export function WhatsappMessageDetailSheet({
             {message.errorCode ? (
               <div className="bg-card shadow-soft space-y-1 rounded-md p-4">
                 <p className="text-xs font-medium tracking-wide text-rose-600 uppercase">
-                  Failure
+                  Why it wasn't delivered
                 </p>
-                <p className="font-mono text-sm">
-                  {message.errorCode}
-                  {message.errorProviderCode
-                    ? ` / ${message.errorProviderCode}`
-                    : ""}
-                </p>
-                {message.errorMessage ? (
-                  <p className="text-muted-foreground text-sm">
-                    {message.errorMessage}
-                  </p>
-                ) : null}
+                <p className="text-sm">{sendErrorLabel(message.errorCode)}</p>
               </div>
             ) : null}
 
@@ -208,8 +205,11 @@ export function WhatsappMessageDetailSheet({
                   )
                 }
               />
-              <Field label="Kind" value={message.kind} />
-              <Field label="Template" value={message.templateKey ?? "—"} />
+              <Field label="Type" value={messageKindLabel(message.kind)} />
+              <Field
+                label="Approved message"
+                value={message.templateKey ? templateLabel(message.templateKey) : "—"}
+              />
               <Field
                 label="Category"
                 value={
@@ -221,7 +221,7 @@ export function WhatsappMessageDetailSheet({
                 }
               />
               <Field
-                label="Billable"
+                label="Paid message"
                 value={
                   message.billable === null
                     ? "—"
@@ -230,7 +230,10 @@ export function WhatsappMessageDetailSheet({
                       : "No (free)"
                 }
               />
-              <Field label="Provider" value={message.provider} />
+              <Field
+                label="Sent through"
+                value={whatsappServiceLabel(message.provider)}
+              />
               <Field label="Sent by" value={message.sentByName ?? "System"} />
             </div>
 
@@ -243,25 +246,21 @@ export function WhatsappMessageDetailSheet({
               </p>
             </div>
 
-            {message.variables ? (
-              <div className="space-y-1.5">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Template variables
-                </p>
-                <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs leading-relaxed">
+            <TechnicalDetails
+              rows={[
+                { label: "WhatsApp reference", value: message.providerMessageId },
+                { label: "Message template key", value: message.templateKey },
+                { label: "Error code", value: message.errorCode },
+                { label: "WhatsApp error code", value: message.errorProviderCode },
+                { label: "WhatsApp error text", value: message.errorMessage },
+              ]}
+            >
+              {message.variables ? (
+                <pre className="bg-background overflow-x-auto rounded-md p-3 text-xs leading-relaxed">
                   {JSON.stringify(message.variables, null, 2)}
                 </pre>
-              </div>
-            ) : null}
-
-            <Field
-              label="Provider message ID"
-              value={
-                <span className="font-mono text-xs">
-                  {message.providerMessageId ?? "—"}
-                </span>
-              }
-            />
+              ) : null}
+            </TechnicalDetails>
           </div>
         )}
       </SheetContent>

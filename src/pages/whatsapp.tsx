@@ -27,17 +27,18 @@ import {
   useWhatsappStats,
 } from "#/hooks/use-whatsapp-analytics";
 import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
+import { templateLabel } from "#/features/whatsapp/labels";
 
 const kindOptions = [
-  { value: "template", label: "Template" },
-  { value: "text", label: "Text" },
-  { value: "media", label: "Media" },
-  { value: "flow", label: "Flow" },
+  { value: "template", label: "Approved message" },
+  { value: "text", label: "Normal reply" },
+  { value: "media", label: "Image" },
+  { value: "flow", label: "Form" },
 ] as const;
 
 const providerOptions = [
-  { value: "cloud", label: "Meta Cloud" },
-  { value: "twilio", label: "Twilio" },
+  { value: "cloud", label: "WhatsApp (Meta)" },
+  { value: "twilio", label: "WhatsApp (Twilio)" },
 ] as const;
 
 /**
@@ -98,7 +99,7 @@ function MessagesTableHeader({
       */}
       <TableHeaderToolbar
         searchParamKey="q"
-        searchPlaceholder="Search phone, content, template, message id..."
+        searchPlaceholder="Search by phone, message text or reference..."
         filters={[
           { id: "status", label: "Status", options: whatsappStatusOptions },
           { id: "kind", label: "Type", options: kindOptions },
@@ -106,12 +107,12 @@ function MessagesTableHeader({
             ? [
                 {
                   id: "template_key",
-                  label: "Template",
+                  label: "Approved message",
                   options: templateOptions,
                 },
               ]
             : []),
-          { id: "provider", label: "Provider", options: providerOptions },
+          { id: "provider", label: "Sent through", options: providerOptions },
         ]}
         table={table}
         extraFilters={<WhatsappDateRange />}
@@ -155,7 +156,7 @@ export default function WhatsappPage() {
     () =>
       (stats?.byTemplate ?? []).map((row) => ({
         value: row.templateKey,
-        label: row.templateKey,
+        label: templateLabel(row.templateKey),
       })),
     [stats],
   );
@@ -199,8 +200,8 @@ export default function WhatsappPage() {
           <TabsList>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="billing">Consumption</TabsTrigger>
-            <TabsTrigger value="queue">Queue</TabsTrigger>
+            <TabsTrigger value="billing">Costs</TabsTrigger>
+            <TabsTrigger value="queue">Waiting & failed</TabsTrigger>
           </TabsList>
 
           <TabsContent value="messages">

@@ -1,5 +1,6 @@
 import { Badge } from "#/components/ui/badge";
 import type { WhatsappDeliveryStatus } from "#/lib/api/whatsapp-controller";
+import { messageCategoryLabel } from "../labels";
 
 /**
  * A delivery status as a badge.
@@ -19,7 +20,7 @@ const STATUS_STYLE: Record<WhatsappDeliveryStatus, string> = {
 };
 
 const STATUS_LABEL: Record<WhatsappDeliveryStatus, string> = {
-  QUEUED: "Queued",
+  QUEUED: "Preparing",
   SENT: "Sent",
   DELIVERED: "Delivered",
   READ: "Read",
@@ -58,7 +59,7 @@ export function WhatsappCategoryBadge({
         "bg-muted text-muted-foreground"
       }`}
     >
-      {category}
+      {messageCategoryLabel(category)}
     </Badge>
   );
 }

@@ -19,6 +19,7 @@ import {
   deletePenalty,
 } from "#/lib/api/penalties-controller";
 import { useRole } from "#/hooks/use-role";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type PenaltyRowActionsProps = Readonly<{
   penalty: AdminPenaltyListItem;
@@ -42,7 +43,7 @@ export function PenaltyRowActions({ penalty }: PenaltyRowActionsProps) {
       toast.success("Payment confirmed — penalty marked as paid.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this penalty. Try again.")),
   });
 
   const deleteMutation = useMutation({
@@ -52,7 +53,7 @@ export function PenaltyRowActions({ penalty }: PenaltyRowActionsProps) {
       toast.success("Penalty deleted.");
       invalidate();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this penalty. Try again.")),
   });
 
   const canConfirmPayment = penalty.paidAt == null;

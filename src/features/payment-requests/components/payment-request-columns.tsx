@@ -3,6 +3,7 @@ import { getCommonColumns, ProfileCell } from "#/components/table";
 import { Badge } from "#/components/ui/badge";
 import type { AdminPaymentRequestListItem } from "#/lib/api/payment-requests-controller";
 import { PaymentRequestRowActions } from "./payment-request-row-actions";
+import { recordTypeLabel } from "#/lib/log-labels";
 
 export type PaymentRequest = AdminPaymentRequestListItem;
 
@@ -67,10 +68,10 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
   {
     id: "gateway",
     accessorKey: "gateway",
-    header: "Gateway",
+    header: "Payment method",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
-        {row.original.gateway ?? "—"}
+        {recordTypeLabel(row.original.gateway)}
       </span>
     ),
   },

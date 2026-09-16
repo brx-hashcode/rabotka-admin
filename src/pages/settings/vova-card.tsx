@@ -13,7 +13,8 @@ type FormState = {
   enabled: boolean;
   shadowMode: boolean;
   rolloutPercent: string;
-  timeoutMs: string;
+  /** Shown in seconds; stored as milliseconds. */
+  timeoutSeconds: string;
   anonymousEnabled: boolean;
   anonDailyLimit: string;
   walledDailyLimit: string;
@@ -23,7 +24,7 @@ const EMPTY: FormState = {
   enabled: false,
   shadowMode: true,
   rolloutPercent: "0",
-  timeoutMs: "25000",
+  timeoutSeconds: "25",
   anonymousEnabled: false,
   anonDailyLimit: "10",
   walledDailyLimit: "10",
@@ -41,25 +42,25 @@ const EMPTY: FormState = {
 function describeState(form: FormState): { text: string; tone: "off" | "watch" | "live" } {
   if (!form.enabled) {
     return {
-      text: "Off — the bot answers exactly as it did before, with its usual menu card.",
+      text: "Off — the WhatsApp bot replies as usual, with its welcome card.",
       tone: "off",
     };
   }
   if (form.shadowMode) {
     return {
-      text: "Observation — replies are computed and written to the logs, and users still receive the menu card. Nothing is sent.",
+      text: "Test mode — VoVa writes its answers in the activity logs only. People still get the usual welcome card; nothing from VoVa is sent.",
       tone: "watch",
     };
   }
   const percent = Number(form.rolloutPercent);
   if (!Number.isFinite(percent) || percent <= 0) {
     return {
-      text: "Off in practice — observation is disabled but the rollout is at 0%, so no one is served.",
+      text: "Off in practice — test mode is off, but the share of users is 0%, so nobody gets VoVa's answers.",
       tone: "off",
     };
   }
   return {
-    text: `LIVE — about ${percent}% of workers and recruiters receive answers written by the assistant.`,
+    text: `LIVE — about ${percent}% of workers and employers get answers written by VoVa.`,
     tone: "live",
   };
 }
@@ -79,7 +80,8 @@ export function VovaCard() {
       if (item.key === "vova.shadow_mode")
         data.shadowMode = item.value === "true";
       if (item.key === "vova.rollout_percent") data.rolloutPercent = item.value;
-      if (item.key === "vova.timeout_ms") data.timeoutMs = item.value;
+      if (item.key === "vova.timeout_ms")
+        data.timeoutSeconds = msToSeconds(item.value);
       if (item.key === "vova.anonymous_enabled")
         data.anonymousEnabled = item.value === "true";
       if (item.key === "vova.anon_daily_limit")
@@ -102,26 +104,27 @@ export function VovaCard() {
   async function handleSave() {
     const percent = parseInt(form.rolloutPercent, 10);
     if (isNaN(percent) || percent < 0 || percent > 100) {
-      toast.error("Le pourcentage doit être entre 0 et 100");
+      toast.error("The share of users must be between 0 and 100%.");
       return;
     }
-    const timeout = parseInt(form.timeoutMs, 10);
+    const seconds = Number.parseFloat(form.timeoutSeconds);
     // Below ~5s a tool-calling turn cannot finish, so every message would fall
     // back — indistinguishable from the assistant being switched off.
-    if (isNaN(timeout) || timeout < 5000 || timeout > 60000) {
-      toast.error("Le budget de réponse doit être entre 5000 et 60000 ms");
+    if (Number.isNaN(seconds) || seconds < 5 || seconds > 60) {
+      toast.error("The maximum reply time must be between 5 and 60 seconds.");
       return;
     }
+    const timeout = Math.round(seconds * 1000);
 
     const anonLimit = parseInt(form.anonDailyLimit, 10);
     if (isNaN(anonLimit) || anonLimit < 0 || anonLimit > 200) {
-      toast.error("La limite par numéro non inscrit doit être entre 0 et 200");
+      toast.error("Replies per unregistered number must be between 0 and 200.");
       return;
     }
 
     const walledLimit = parseInt(form.walledDailyLimit, 10);
     if (isNaN(walledLimit) || walledLimit < 0 || walledLimit > 200) {
-      toast.error("La limite par compte bloqué doit être entre 0 et 200");
+      toast.error("Replies per blocked account must be between 0 and 200.");
       return;
     }
 
@@ -148,9 +151,9 @@ export function VovaCard() {
             <IconRobot className="size-5" />
           </div>
           <div>
-            <CardTitle className="text-base font-semibold">VoVa AI</CardTitle>
+            <CardTitle className="text-base font-semibold">VoVa assistant</CardTitle>
             <p className="text-muted-foreground text-xs">
-              The WhatsApp assistant that answers free-form messages
+              The WhatsApp assistant that answers questions people type in their own words
             </p>
           </div>
         </div>
@@ -176,8 +179,8 @@ export function VovaCard() {
           {form.enabled && form.anonymousEnabled && (
             <span className="block pt-1">
               Unregistered numbers are answered too — up to{" "}
-              {form.anonDailyLimit} replies a day each. This is unaffected by
-              observation mode and by the rollout percentage.
+              {form.anonDailyLimit} replies a day each. Test mode and the share
+              of users don't apply to them.
             </span>
           )}
         </div>
@@ -185,13 +188,12 @@ export function VovaCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="vova-enabled" className="text-sm font-medium">
-              Enable VoVa AI
+              Turn on VoVa
             </Label>
             <p className="text-muted-foreground text-xs">
-              Master switch. When off, a message the bot does not recognise gets
-              the usual welcome card — the behaviour that predates the
-              assistant. Turning this on does not send anything to users while
-              observation mode is on.
+              The main switch. When off, a message the bot doesn't understand
+              gets the usual welcome card. Turning this on sends nothing to
+              people while test mode is on.
             </p>
           </div>
           <Switch
@@ -207,13 +209,12 @@ export function VovaCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="vova-shadow" className="text-sm font-medium">
-              Observation mode
+              Test mode
             </Label>
             <p className="text-muted-foreground text-xs">
-              Computes the answer and writes it to the logs without sending it.
-              Use it to read what the assistant would have said, on real
-              traffic, before a single user sees a reply. Turn it off only once
-              the logs look right.
+              VoVa writes its answers in the activity logs without sending
+              them, so you can read what it would have said to real people
+              first. Turn it off only when those answers look right.
             </p>
           </div>
           <Switch
@@ -229,13 +230,12 @@ export function VovaCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="vova-rollout" className="text-sm font-medium">
-              Rollout percentage
+              Share of users (%)
             </Label>
             <p className="text-muted-foreground text-xs">
-              Share of profiles served by the assistant, ignored while
-              observation mode is on. The same profile always falls on the same
-              side, so nobody alternates between the assistant and the menu
-              from one message to the next.
+              How many people get VoVa's answers once test mode is off. A person
+              always stays on the same side, so nobody switches between VoVa
+              and the usual bot from one message to the next.
             </p>
           </div>
           <Input
@@ -255,23 +255,22 @@ export function VovaCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="vova-timeout" className="text-sm font-medium">
-              Reply budget (ms)
+              Maximum reply time (seconds)
             </Label>
             <p className="text-muted-foreground text-xs">
-              How long the assistant may take before the bot gives up and sends
-              the welcome card instead. The user never sees an error — only a
-              slower, ordinary reply. A tool-calling answer needs well over 5
-              seconds.
+              How long VoVa may think before the bot sends the welcome card
+              instead. People never see an error, only the usual reply. Most
+              answers need well over 5 seconds.
             </p>
           </div>
           <Input
             id="vova-timeout"
             type="number"
-            min={5000}
-            max={60000}
-            step={1000}
-            value={form.timeoutMs}
-            onChange={(e) => set("timeoutMs", e.target.value)}
+            min={5}
+            max={60}
+            step={1}
+            value={form.timeoutSeconds}
+            onChange={(e) => set("timeoutSeconds", e.target.value)}
             disabled={disabled}
             className="w-28"
           />
@@ -285,12 +284,11 @@ export function VovaCard() {
               Answer unregistered numbers
             </Label>
             <p className="text-muted-foreground text-xs">
-              Lets a number with no account ask what Rabotka is and how it
-              works. They get no personal data and no app card — only answers
-              from the documentation, and <code>/compte</code> when they want to
-              sign up. Needs the master switch as well. Observation mode and the
-              rollout percentage do not apply: both key off a profile, and these
-              callers have none.
+              Lets someone without an account ask what Rabotka is and how it
+              works. They only get general answers — nothing personal — and a
+              way to sign up when they ask. Needs "Turn on VoVa" too. Test mode
+              and the share of users don't apply, because these people have no
+              account.
             </p>
           </div>
           <Switch
@@ -309,9 +307,9 @@ export function VovaCard() {
               Daily replies per unregistered number
             </Label>
             <p className="text-muted-foreground text-xs">
-              This is the only path where someone who never signed up can spend
-              tokens, so it is metered. Past the limit the number gets the
-              signup card for the rest of the day. Set to 0 to answer none.
+              Each answer has a cost, and these people haven't signed up, so
+              their replies are limited. Past the limit they get the sign-up
+              card for the rest of the day. Set to 0 to answer none.
             </p>
           </div>
           <Input
@@ -334,14 +332,11 @@ export function VovaCard() {
               Daily replies per blocked account
             </Label>
             <p className="text-muted-foreground text-xs">
-              A suspended account, or one whose identity check is under review
-              or was refused. These people have no menu, so the assistant is
-              their only way to ask anything — and the one most likely to ask it
-              twenty times, while earning nothing until they are unblocked.
-              Past the limit they get the card that opens the app, for the rest
-              of the day. Unlike unregistered numbers, they do go through
-              observation mode and the rollout percentage, because they have a
-              profile. Set to 0 to answer none.
+              Accounts that are suspended, or whose identity check is waiting or
+              was refused. They have no menu, so VoVa is their only way to ask
+              questions, and they may ask many times. Past the limit they get
+              the card that opens the app for the rest of the day. Test mode and
+              the share of users do apply to them. Set to 0 to answer none.
             </p>
           </div>
           <Input
@@ -358,4 +353,9 @@ export function VovaCard() {
       </CardContent>
     </Card>
   );
+}
+
+function msToSeconds(stored: string): string {
+  const ms = Number.parseInt(stored, 10);
+  return Number.isNaN(ms) ? stored : String(ms / 1000);
 }

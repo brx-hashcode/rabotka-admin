@@ -7,6 +7,7 @@ import { downloadBlob } from "#/lib/export/spreadsheet";
 import { getWhatsappBillingReportPdf } from "#/lib/api/whatsapp-controller";
 import { useWhatsappRange } from "#/hooks/use-whatsapp-analytics";
 import { describeRange } from "./whatsapp-range-toggle";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /**
  * The consumption tab, as a document to keep.
@@ -40,7 +41,7 @@ export function WhatsappBillingDownload() {
       // missing — and every one of those needs a different response from the
       // reader, so the message is passed through rather than flattened.
       toast.error(
-        err instanceof Error ? err.message : "The report could not be generated.",
+        friendlyError(err, "The report couldn't be created. Try again."),
       );
     } finally {
       setBusy(false);

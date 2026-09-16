@@ -114,7 +114,7 @@ export function DocumentCard({ document }: Readonly<DocumentCardProps>) {
         proxyUrl,
         await fetch(proxyUrl, { credentials: "include" }),
       );
-      if (!res.ok) throw new Error("Download failed");
+      if (!res.ok) throw new Error("The file couldn't be downloaded. Try again.");
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = globalThis.document.createElement("a");

@@ -208,7 +208,7 @@ const paymentDataColumns: ColumnDef<AdminPaymentItem, unknown>[] = [
   {
     id: "transactionId",
     accessorKey: "transactionId",
-    header: "Transaction ID",
+    header: "Reference",
     cell: ({ row }) => (
       <span className="font-mono text-xs text-muted-foreground truncate block max-w-[140px]">
         {row.original.transactionId}

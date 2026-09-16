@@ -14,7 +14,7 @@ import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
  */
 export const PROFILE_EXPORT_HEADERS = [
   // Identity
-  "ID",
+  "Reference",
   "First name",
   "Last name",
   "Email",
@@ -34,11 +34,11 @@ export const PROFILE_EXPORT_HEADERS = [
   "Status",
   "Billing status",
   "Suspension reason",
-  "Suspended at (ISO)",
+  "Suspended at",
   // Verification
   "Verification",
   "Verified by",
-  "Verified at (ISO)",
+  "Verified at",
   "Rejection reason",
   "KYC note",
   // Quality
@@ -52,17 +52,17 @@ export const PROFILE_EXPORT_HEADERS = [
   "Unpaid penalties",
   // Engagement
   "WhatsApp",
-  "Last login (ISO)",
-  "Activated at (ISO)",
+  "Last login",
+  "Activated at",
   "First login pending",
   "Policies accepted",
   // Links
-  "Portfolio slug",
+  "Portfolio web address name",
   "Avatar URL",
-  "Vector indexed at (ISO)",
+  "Vector indexed at",
   // Timestamps
-  "Created at (ISO)",
-  "Updated at (ISO)",
+  "Created at",
+  "Updated at",
 ] as const;
 
 /** Domains joined for a single cell; the CSV writer quotes the separator. */

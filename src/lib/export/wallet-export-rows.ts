@@ -46,20 +46,20 @@ export const PAYMENT_EXPORT_HEADERS = [
   "Amount (FCFA)",
   "Method",
   "Status",
-  "Transaction ID",
-  "Paid at (ISO)",
-  "Created at (ISO)",
+  "Transaction reference",
+  "Paid at",
+  "Created at",
   "Description",
 ] as const;
 
 export const TRANSACTION_EXPORT_HEADERS = [
-  "ID",
-  "Wallet ID",
+  "Reference",
+  "Wallet reference",
   "Type",
   "Amount (FCFA)",
   "Reference type",
-  "Reference ID",
-  "Created at (ISO)",
+  "Linked record reference",
+  "Created at",
 ] as const;
 
 export function paymentItemsToStringRows(items: AdminPaymentItem[]): string[][] {

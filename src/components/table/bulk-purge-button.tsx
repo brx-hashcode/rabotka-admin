@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "#/components/ui/button";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /** Shape the API returns with a 409 when linked records block the purge. */
 type PurgeBlocker = { label: string; count: number };
@@ -63,7 +64,7 @@ export function BulkPurgeButton<TData>({
         return;
       }
       setOpen(false);
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't delete these items. Try again."));
     },
   });
 

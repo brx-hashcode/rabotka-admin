@@ -35,7 +35,7 @@ async function fetchAdminPdfBlob(path: string): Promise<Blob> {
   const res = await fetchWithCsrfRetry(`${appConfig.apiUrl}${path}`, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error("Download failed");
+  if (!res.ok) throw new Error("The file couldn't be downloaded. Try again.");
   return res.blob();
 }
 

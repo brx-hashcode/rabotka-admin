@@ -27,6 +27,8 @@ import {
   totpEnable,
   totpDisable,
 } from "#/lib/api/auth-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
+import { TEAM_ROLE_LABELS, labelOf } from "#/lib/status-labels";
 
 const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
@@ -130,7 +132,7 @@ function PhonePairingCard({
       handleReset();
     } catch (err: unknown) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Failed to disconnect phone.",
+        friendlyError(err, "Couldn't disconnect the phone. Try again."),
       );
       setPhase("error");
     }
@@ -151,7 +153,7 @@ function PhonePairingCard({
       setPhase("show-code");
     } catch (err: unknown) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Failed to generate code.",
+        friendlyError(err, "Couldn't generate the code. Try again."),
       );
       setPhase("error");
     }
@@ -175,7 +177,7 @@ function PhonePairingCard({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
           <IconDeviceMobile className="size-4" />
-          Phone pairing
+          Link your phone
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -204,8 +206,8 @@ function PhonePairingCard({
                     <p className="text-sm font-medium">No phone paired</p>
                     <p className="text-muted-foreground text-xs">
                       {totpEnabled
-                        ? "Pair your phone to enable QR code login."
-                        : "Enable two-factor authentication to pair a phone."}
+                        ? "Link your phone to sign in by scanning a QR code."
+                        : "Turn on two-step sign-in before linking a phone."}
                     </p>
                   </>
                 )}
@@ -220,10 +222,10 @@ function PhonePairingCard({
               className="shrink-0"
               disabled={totpEnabled === false}
               title={
-                totpEnabled ? undefined : "Enable two-factor authentication first"
+                totpEnabled ? undefined : "Turn on two-step sign-in first"
               }
             >
-              {phonePairedAt ? "Re-pair" : "Pair a phone"}
+              {phonePairedAt ? "Link again" : "Link a phone"}
             </Button>
           </div>
         )}
@@ -240,7 +242,7 @@ function PhonePairingCard({
                 Cancel
               </Button>
               <Button size="sm" variant="destructive" onClick={handleUnpair}>
-                Disconnect phone
+                Unlink phone
               </Button>
             </div>
           </div>
@@ -310,8 +312,8 @@ function PhonePairingCard({
                   )}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Scan the QR or open this URL on your phone, then enter the
-                  code above.
+                  Scan the QR code with your phone, or open the link on it, then
+                  enter the code above.
                 </p>
               </div>
             </div>
@@ -366,7 +368,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
       setSecret(result.secret);
       setPhase("setup");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to start setup.");
+      setError(friendlyError(err, "Couldn't start the two-step sign-in setup. Try again."));
       setPhase("idle");
     }
   }
@@ -375,12 +377,12 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
     setError("");
     try {
       await totpEnable(code);
-      toast.success("Authenticator enabled");
+      toast.success("Two-step sign-in is on");
       setCode("");
       setPhase("idle");
       onChanged();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid code.");
+      setError(friendlyError(err, "That code isn't right. Check it and try again."));
     }
   }
 
@@ -388,12 +390,12 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
     setError("");
     try {
       await totpDisable(code);
-      toast.success("Authenticator disabled");
+      toast.success("Two-step sign-in is off");
       setCode("");
       setPhase("idle");
       onChanged();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid code.");
+      setError(friendlyError(err, "That code isn't right. Check it and try again."));
     }
   }
 
@@ -402,7 +404,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
           <IconShield className="size-4" />
-          Two-factor authentication
+          Two-step sign-in
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -411,13 +413,13 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
             <div className="min-w-0">
               {totpEnabled ? (
                 <>
-                  <p className="text-sm font-medium">Authenticator enabled</p>
-                  <p className="text-xs text-muted-foreground">Your account is protected with 2FA.</p>
+                  <p className="text-sm font-medium">Two-step sign-in is on</p>
+                  <p className="text-xs text-muted-foreground">Signing in needs the code we email you and a code from your phone.</p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-medium">Authenticator not enabled</p>
-                  <p className="text-xs text-muted-foreground">Add an extra layer of security to your account.</p>
+                  <p className="text-sm font-medium">Two-step sign-in is off</p>
+                  <p className="text-xs text-muted-foreground">Ask for a second code from your phone when signing in, for extra safety.</p>
                 </>
               )}
             </div>
@@ -427,7 +429,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
               onClick={() => totpEnabled ? setPhase("disable") : void handleStartSetup()}
               className="shrink-0"
             >
-              {totpEnabled ? "Disable" : "Enable"}
+              {totpEnabled ? "Turn off" : "Turn on"}
             </Button>
           </div>
         )}
@@ -442,13 +444,13 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
         {phase === "setup" && qrDataUrl && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code below to confirm.
+              Scan this QR code with a code app on your phone (such as Google Authenticator or Authy), then enter the 6-digit code it shows.
             </p>
             <div className="flex justify-center">
-              <img src={qrDataUrl} alt="TOTP QR code" className="h-44 w-44 rounded-lg border border-border" />
+              <img src={qrDataUrl} alt="QR code for your code app" className="h-44 w-44 rounded-lg border border-border" />
             </div>
             <p className="text-center text-xs text-muted-foreground break-all">
-              Manual key: <span className="font-mono font-medium">{secret}</span>
+              Can't scan? Type this key in the app: <span className="font-mono font-medium">{secret}</span>
             </p>
             <Input
               type="text"
@@ -482,7 +484,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
         {phase === "disable" && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              Enter the current code from your authenticator app to disable 2FA.
+              Enter the code your code app shows now to turn off two-step sign-in.
             </p>
             <Input
               type="text"
@@ -656,7 +658,7 @@ export default function AdminProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold uppercase">
-              Account Information
+              Your details
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
@@ -683,7 +685,7 @@ export default function AdminProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <FieldLabel>Role</FieldLabel>
-                <Input value={admin.role} disabled />
+                <Input value={labelOf(TEAM_ROLE_LABELS, admin.role)} disabled />
               </div>
             </div>
             <div className="flex justify-end">

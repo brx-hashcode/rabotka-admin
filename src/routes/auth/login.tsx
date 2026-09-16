@@ -28,6 +28,7 @@ import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe, totpLogin } from "#/lib/api/auth-controller";
 import { getQueryClient } from "#/app/providers";
 import { toast } from "sonner";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 function getSafeRedirectTarget(raw: string): string | null {
   if (!raw) return null;
@@ -90,7 +91,7 @@ function LoginPage() {
   const verifyTotp = useMutation({
     mutationFn: () => totpLogin(pendingToken, totpCode),
     onSuccess: () => {
-      toast.success("Authentication successful");
+      toast.success("You're signed in");
       const safeTarget = getSafeRedirectTarget(redirectTarget);
       if (safeTarget) {
         globalThis.location.assign(safeTarget);
@@ -99,7 +100,9 @@ function LoginPage() {
       }
     },
     onError: (error: Error) => {
-      toast.error("Invalid code", { description: error.message });
+      toast.error("That code didn't work", {
+        description: friendlyError(error, "Check the code and try again."),
+      });
     },
   });
 
@@ -130,13 +133,13 @@ function LoginPage() {
     await sendOtp.mutateAsync(email);
   }
 
-  const stepTitle = step === 1 ? "Admin sign in" : step === 2 ? "Verification" : "Two-factor auth";
+  const stepTitle = step === 1 ? "Admin sign in" : step === 2 ? "Check your email" : "Two-step sign-in";
   const stepDesc =
     step === 1
-      ? "Enter your email to receive an OTP code"
+      ? "Enter your email and we'll send you a sign-in code"
       : step === 2
         ? "Enter the 6-digit code sent to your email"
-        : "Enter the 6-digit code from your authenticator app";
+        : "Enter the 6-digit code from your code app";
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
@@ -157,7 +160,9 @@ function LoginPage() {
                 onSubmit={handleSendOtp}
                 isLoading={sendOtp.isPending}
                 serverError={
-                  sendOtp.isError ? (sendOtp.error?.message ?? null) : null
+                  sendOtp.isError
+                    ? friendlyError(sendOtp.error, "Couldn't send the code. Try again.")
+                    : null
                 }
               />
             )}
@@ -171,7 +176,9 @@ function LoginPage() {
                 isVerifying={verifyOtp.isPending}
                 isResending={sendOtp.isPending}
                 serverError={
-                  verifyOtp.isError ? (verifyOtp.error?.message ?? null) : null
+                  verifyOtp.isError
+                    ? friendlyError(verifyOtp.error, "That code isn't right. Check it and try again.")
+                    : null
                 }
               />
             )}
@@ -197,7 +204,10 @@ function LoginPage() {
                 />
                 {verifyTotp.isError && (
                   <p className="text-sm text-destructive text-center">
-                    {verifyTotp.error.message}
+                    {friendlyError(
+                      verifyTotp.error,
+                      "That code isn't right. Check your code app and try again.",
+                    )}
                   </p>
                 )}
                 <Button

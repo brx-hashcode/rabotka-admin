@@ -10,16 +10,16 @@ export function AppError({ error }: { error: Error }) {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-lg">Une erreur est survenue</h1>
+        <h1 className="font-semibold text-lg">Something went wrong</h1>
         <p className="max-w-sm text-muted-foreground text-sm">
-          La page n'a pas pu se charger. Rechargez pour réessayer — si le
-          problème persiste, vérifiez votre connexion.
+          This page couldn't load. Reload to try again — if it keeps
+          happening, check your internet connection.
         </p>
       </div>
 
       <Button onClick={() => window.location.reload()}>
         <IconRefresh />
-        Recharger la page
+        Reload the page
       </Button>
 
       {import.meta.env.DEV && (

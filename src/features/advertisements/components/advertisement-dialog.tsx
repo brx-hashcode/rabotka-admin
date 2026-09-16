@@ -40,6 +40,7 @@ import {
 import { appConfig } from "#/config";
 import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { IconPlus } from "@tabler/icons-react";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /** Convert "HH:MM" UTC string to local HH:MM for display in the time input */
 function utcTimeToLocal(utcTime: string): string {
@@ -89,7 +90,7 @@ const schema = z.object({
   bundleId: z.string().min(1, "Bundle is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
-  dispatchTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Must be HH:MM"),
+  dispatchTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time like 14:30"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -265,7 +266,12 @@ export function AdvertisementDialog({
     },
     onError: (err: Error) =>
       toast.error(
-        err.message || (isEdit ? "Failed to update" : "Failed to create"),
+        friendlyError(
+          err,
+          isEdit
+            ? "Couldn't update the ad. Try again."
+            : "Couldn't create the ad. Try again.",
+        ),
       ),
   });
 

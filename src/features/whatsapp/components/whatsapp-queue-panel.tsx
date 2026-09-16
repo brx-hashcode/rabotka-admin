@@ -22,6 +22,11 @@ import {
   useWhatsappQueue,
 } from "#/hooks/use-whatsapp-analytics";
 import { useRole } from "#/hooks/use-role";
+import {
+  QUEUE_STATE_LABEL,
+  failedSendReason,
+  messageKindLabel,
+} from "../labels";
 
 /**
  * The send queue and the messages that gave up trying.
@@ -58,7 +63,9 @@ function CountTiles({ counts }: Readonly<{ counts: Record<string, number> }>) {
     <div className="grid grid-cols-2 gap-3 @xl/main:grid-cols-5">
       {COUNT_ORDER.map((key) => (
         <div key={key} className="bg-card shadow-soft rounded-md p-3">
-          <p className="text-muted-foreground text-xs uppercase">{key}</p>
+          <p className="text-muted-foreground text-xs uppercase">
+            {QUEUE_STATE_LABEL[key] ?? key}
+          </p>
           <p className="text-2xl font-bold tabular-nums">
             {(counts[key] ?? 0).toLocaleString()}
           </p>
@@ -91,10 +98,10 @@ export function WhatsappQueuePanel({
     <div className="flex flex-col gap-4">
       <Card className="@container/card">
         <CardHeader>
-          <CardTitle>Outbound queue</CardTitle>
+          <CardTitle>Bot replies waiting to be sent</CardTitle>
           <CardDescription>
-            Bot replies pass through this queue. Most other sends call the
-            provider directly, so this is not the whole of WhatsApp traffic.
+            Replies from the WhatsApp bot line up here before they go out.
+            Other messages are sent straight away, so they don't appear here.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,10 +111,10 @@ export function WhatsappQueuePanel({
 
       <Card className="@container/card">
         <CardHeader>
-          <CardTitle>Dead-letter queue</CardTitle>
+          <CardTitle>Messages that could not be sent</CardTitle>
           <CardDescription>
-            Sends that exhausted all three attempts. Retrying puts the original
-            payload back on the outbound queue.
+            We tried each of these three times without success. "Try again"
+            sends the same message once more.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -119,8 +126,8 @@ export function WhatsappQueuePanel({
                 <TableRow>
                   <TableHead>Failed at</TableHead>
                   <TableHead>Recipient</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Error</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>Reason</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -131,7 +138,7 @@ export function WhatsappQueuePanel({
                       colSpan={5}
                       className="text-muted-foreground py-8 text-center text-sm"
                     >
-                      Nothing dead-lettered. This is the good state.
+                      Nothing here — every message went out.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -144,10 +151,13 @@ export function WhatsappQueuePanel({
                         {job.phone ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {job.type ?? "—"}
+                        {messageKindLabel(job.type)}
                       </TableCell>
-                      <TableCell className="text-muted-foreground max-w-sm truncate text-xs">
-                        {job.error ?? "—"}
+                      <TableCell
+                        className="text-muted-foreground max-w-sm truncate text-xs"
+                        title={job.error ?? undefined}
+                      >
+                        {failedSendReason(job.error)}
                       </TableCell>
                       <TableCell className="text-right">
                         {canRetry ? (
@@ -158,7 +168,7 @@ export function WhatsappQueuePanel({
                             onClick={() => retry.mutate(job.id)}
                           >
                             <IconRefresh className="size-4" aria-hidden />
-                            Retry
+                            Try again
                           </Button>
                         ) : null}
                       </TableCell>

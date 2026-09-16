@@ -8,6 +8,7 @@ import {
   type AdminPortfolioItem,
   type AdminUpdatePortfolioItemParams,
 } from "#/lib/api/portfolio-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export function useProfilePortfolio(profileId: string) {
   const queryClient = useQueryClient();
@@ -35,7 +36,7 @@ export function useProfilePortfolio(profileId: string) {
       toast.success("Portfolio item updated");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to update portfolio item");
+      toast.error(friendlyError(error, "Couldn't update the portfolio item. Try again."));
     },
   });
 
@@ -46,7 +47,7 @@ export function useProfilePortfolio(profileId: string) {
       toast.success("Portfolio item deleted");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to delete portfolio item");
+      toast.error(friendlyError(error, "Couldn't delete the portfolio item. Try again."));
     },
   });
 
@@ -58,7 +59,7 @@ export function useProfilePortfolio(profileId: string) {
       toast.success("Image deleted");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to delete image");
+      toast.error(friendlyError(error, "Couldn't delete the image. Try again."));
     },
   });
 

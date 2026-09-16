@@ -22,7 +22,7 @@ export function NetworkStatusIndicator() {
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        {isConnected ? "Connecté au serveur" : "Déconnecté du serveur"}
+        {isConnected ? "Connected" : "Connection lost — reconnecting"}
       </TooltipContent>
     </Tooltip>
   );

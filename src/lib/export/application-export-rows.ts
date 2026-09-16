@@ -15,9 +15,9 @@ export const APPLICATION_EXPORT_HEADERS = [
   "Penalty applied",
   "Penalty amount",
   "Cancel reason",
-  "Cancelled at (ISO)",
-  "Created at (ISO)",
-  "Updated at (ISO)",
+  "Cancelled at",
+  "Created at",
+  "Updated at",
 ] as const;
 
 export function applicationItemsToStringRows(

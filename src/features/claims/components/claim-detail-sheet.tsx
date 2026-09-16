@@ -45,6 +45,7 @@ import {
 import { useRole } from "#/hooks/use-role";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { fileNameFromUrl } from "#/lib/media/file-name-from-url";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const STATUS_OPTIONS: { value: AdminClaimStatus; label: string }[] = [
   { value: "CREATED", label: "CREATED" },
@@ -111,7 +112,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this claim. Try again.")),
   });
 
   /**
@@ -138,7 +139,7 @@ export function ClaimDetailSheet({
       // Put the control back where the server still has it, so the dropdown
       // never shows an assignment that did not happen.
       setAssignedUserId(claim?.assignedUserId ?? "none");
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't update this claim. Try again."));
     },
   });
 
@@ -149,7 +150,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this claim. Try again.")),
   });
 
   const { mutate: remove, isPending: isDeleting } = useMutation({
@@ -159,7 +160,7 @@ export function ClaimDetailSheet({
       queryClient.invalidateQueries({ queryKey: ["admin", "claims"] });
       onClose();
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't update this claim. Try again.")),
   });
 
   // Status only: assignment is no longer pending work, so counting it here

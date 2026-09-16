@@ -36,6 +36,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const userFormSchema = z.object({
   firstName: z.string().min(1, "Required"),
@@ -240,8 +241,10 @@ export function UserModal({ open, onOpenChange, user }: Readonly<Props>) {
 
             {mutation.isError && (
               <p className="text-destructive text-sm">
-                {(mutation.error as Error)?.message ??
-                  `Failed to ${isEdit ? "update" : "create"} user. Please try again.`}
+                {friendlyError(
+                  mutation.error,
+                  `Couldn't ${isEdit ? "update" : "add"} this team member. Try again.`,
+                )}
               </p>
             )}
 

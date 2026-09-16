@@ -34,6 +34,8 @@ import { ProfileCombobox } from "#/components/profile-combobox";
 import { getApplicationsList } from "#/lib/api/applications-controller";
 import { createPenalty } from "#/lib/api/penalties-controller";
 import type { AdminProfileListItem } from "#/lib/api/profiles-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
+import { getApplicationStatusLabel } from "#/lib/status-labels";
 
 const schema = z.object({
   applicationId: z.string().optional(),
@@ -87,7 +89,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
       handleClose();
     },
     onError: (err: Error) => {
-      toast.error(err.message ?? "Erreur lors de la création");
+      toast.error(friendlyError(err, "Couldn't create the penalty. Try again."));
     },
   });
 
@@ -153,7 +155,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
                         <SelectItem key={a.id} value={a.id}>
                           {a.jobTitle}{" "}
                           <span className="text-muted-foreground text-xs">
-                            · {a.status}
+                            · {getApplicationStatusLabel(a.status)}
                           </span>
                         </SelectItem>
                       ))}

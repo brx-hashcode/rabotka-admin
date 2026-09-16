@@ -11,7 +11,7 @@ import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
  *
  * Two columns need their reason written down:
  *
- * - `Variables (JSON)` is not decoration. When a send had no rendered body the
+ * - `Message details` is not decoration. When a send had no rendered body the
  *   log stores the literal `[TPL:kyc_v3]`, and the variables are then the only
  *   record of what the recipient actually read.
  * - `Content` is capped at 2000 characters and always was — the backend
@@ -22,36 +22,36 @@ import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
  */
 export const WHATSAPP_EXPORT_HEADERS = [
   // When and which way
-  "Created at (ISO)",
+  "Created at",
   "Direction",
   // Who
   "Recipient phone",
   "Profile name",
-  "Profile ID",
+  "Profile reference",
   // What was sent
-  "Kind",
-  "Template key",
-  "Template category",
-  "Pricing category",
-  "Billable",
-  "Content (first 2000 chars)",
-  "Variables (JSON)",
+  "Type",
+  "Approved message",
+  "Message category",
+  "Billed as",
+  "Paid message",
+  "Content (first 2000 characters)",
+  "Message details",
   // What happened to it
   "Status",
-  "Sent at (ISO)",
-  "Delivered at (ISO)",
-  "Read at (ISO)",
-  "Failed at (ISO)",
-  "Time to delivery (s)",
+  "Sent at",
+  "Delivered at",
+  "Read at",
+  "Failed at",
+  "Time to delivery (seconds)",
   // Why it failed
-  "Error code",
-  "Error provider code",
-  "Error message",
+  "Problem",
+  "WhatsApp error number",
+  "What WhatsApp said",
   // Provenance
-  "Provider",
+  "Sent through",
   "Sent by",
-  "Provider message ID",
-  "Message ID",
+  "WhatsApp reference",
+  "Message reference",
 ] as const;
 
 /**

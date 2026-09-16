@@ -60,6 +60,7 @@ import {
   type PickUser,
 } from "./new-conversation-dialog";
 import { EmojiPicker } from "./emoji-picker";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /** Same-day grouping key for the date separators in a thread. */
 function dayKey(iso: string): string {
@@ -350,7 +351,7 @@ function ChatThread({
         const att = await uploadAttachment.mutateAsync(file);
         setPending((prev) => [...prev, att]);
       } catch (e) {
-        toast.error((e as Error).message);
+        toast.error(friendlyError(e, "Couldn't complete this action. Try again."));
       }
     }
     if (fileRef.current) fileRef.current.value = "";
@@ -384,7 +385,7 @@ function ChatThread({
     try {
       await sendMessage.mutateAsync({ body: body || undefined, attachments });
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't complete this action. Try again."));
       setText(body);
       setPending(attachments);
     }
@@ -632,7 +633,7 @@ function GroupMembersSheet({
       await addMembers.mutateAsync([user.id]);
       setAdding(false);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't complete this action. Try again."));
     }
   };
 
@@ -641,7 +642,7 @@ function GroupMembersSheet({
       await removeMember.mutateAsync(userId);
       if (self) setOpen(false);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't complete this action. Try again."));
     }
   };
 
@@ -652,7 +653,7 @@ function GroupMembersSheet({
       await deleteGroup.mutateAsync();
       setOpen(false);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError(e, "Couldn't complete this action. Try again."));
     }
   };
 
@@ -734,7 +735,7 @@ function GroupMembersSheet({
           {isTeam && (
             <p className="border-b bg-muted/20 px-4 py-5 text-xs leading-relaxed text-muted-foreground">
               This is the company-wide RABOTKA GROUP — everyone on the team is
-              here by default. Its members stay in sync automatically as
+              here by default. Its members are updated automatically as
               teammates are added or removed, so the list can’t be edited by
               hand.
             </p>

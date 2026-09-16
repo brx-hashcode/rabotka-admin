@@ -17,6 +17,7 @@ import {
   totpLogin,
 } from "#/lib/api/auth-controller";
 import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type Props = {
   open: boolean;
@@ -132,7 +133,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
       setPhase("done");
       setTimeout(redirectToHome, 800);
     } catch (err: unknown) {
-      setTotpError(err instanceof Error ? err.message : "Invalid code.");
+      setTotpError(friendlyError(err, "That code isn't right. Check it and try again."));
     } finally {
       setTotpPending(false);
     }
@@ -189,13 +190,13 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
         <DialogHeader>
           <DialogTitle>
             {phase === "totp"
-              ? "Two-factor authentication"
+              ? "Two-step sign-in"
               : "Sign in with QR code"}
           </DialogTitle>
           <DialogDescription>
             {phase === "totp"
-              ? "Enter the 6-digit code from your authenticator app."
-              : "Scan this code with your phone to authenticate."}
+              ? "Enter the 6-digit code from your code app (such as Google Authenticator)."
+              : "Scan this code with your phone to sign in."}
           </DialogDescription>
         </DialogHeader>
 
@@ -247,14 +248,14 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
                   </p>
                   <p className="text-center text-xs text-muted-foreground px-4">
                     Open the admin app on your phone, go to{" "}
-                    <strong>Settings → Approve QR login</strong>, then scan.
+                    <strong>Settings → Approve QR sign-in</strong>, then scan.
                   </p>
                 </>
               )}
 
               {phase === "expired" && (
                 <p className="text-sm text-muted-foreground">
-                  QR code expired.
+                  This QR code has expired.
                 </p>
               )}
             </>
@@ -309,7 +310,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
           {phase === "error" && (
             <div className="flex flex-col items-center gap-3 py-6">
               <p className="text-sm text-destructive">
-                Failed to generate QR code.
+                Couldn't create the QR code.
               </p>
               <Button
                 size="sm"
