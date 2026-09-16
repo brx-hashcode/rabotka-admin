@@ -34,6 +34,7 @@ import { ProfileInvoicesContent } from "./profile-detail/components/profile-invo
 import { ProfileMessagesContent } from "./profile-detail/components/profile-messages-content";
 import { ProfileVovaMemory } from "./profile-detail/components/profile-vova-memory";
 import { ProfilePortfolioContent } from "./profile-detail/components/profile-portfolio-content";
+import { ProfileNotificationsContent } from "./profile-detail/components/profile-notifications-content";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 import { KycVerificationModal } from "./profile-detail/components/kyc-verification-modal";
 import { StatusVerificationModal } from "./profile-detail/components/status-verification-modal";
@@ -56,6 +57,7 @@ type ProfileTab =
   | "invoices"
   | "referrals"
   | "messages"
+  | "notifications"
   | "portfolio";
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
@@ -65,6 +67,7 @@ const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "Invoices", value: "invoices" },
   { label: "Parrainage", value: "referrals" },
   { label: "Messages", value: "messages" },
+  { label: "Notifications", value: "notifications" },
   { label: "Portfolio", value: "portfolio" },
 ];
 
@@ -395,6 +398,10 @@ export default function ProfileDetailPage({
             profileId={profileId}
             profileName={`${profile.firstName} ${profile.lastName}`}
           />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <ProfileNotificationsContent profileId={profileId} />
         </TabsContent>
 
         {isWorker && (

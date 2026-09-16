@@ -131,3 +131,22 @@ export function getReferralStatusBadgeClass(status: string): string {
       return "bg-muted text-muted-foreground border-border";
   }
 }
+
+export type NotificationState = "UNREAD" | "READ" | "DISMISSED";
+
+/**
+ * A profile notification's state in the admin tab. Dismissed is amber, not
+ * red: the profile cleared it from their own feed, which is not a fault.
+ */
+export function getNotificationStateBadgeClass(state: NotificationState): string {
+  switch (state) {
+    case "UNREAD":
+      return "bg-sky-500 text-white border-transparent";
+    case "READ":
+      return "bg-emerald-500 text-white border-transparent";
+    case "DISMISSED":
+      return "bg-amber-500 text-white border-transparent";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
+}
