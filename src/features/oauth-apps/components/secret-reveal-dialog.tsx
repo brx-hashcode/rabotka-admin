@@ -44,7 +44,7 @@ export function SecretRevealDialog({
       // Clipboard access is refused in some browser configurations, and the
       // value is on screen and selectable — so this is a nuisance, not a
       // failure worth blocking on.
-      toast.error("Could not copy — select the value and copy it manually");
+      toast.error("Couldn't copy. Select the text and copy it yourself.");
     }
   }
 
@@ -57,28 +57,28 @@ export function SecretRevealDialog({
     >
       <DialogContent showClose={false} className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Client credentials</DialogTitle>
+          <DialogTitle>Sign-in details for the partner</DialogTitle>
           <DialogDescription>
-            Send these to the partner over a channel you trust.
+            Send both to the partner in a private message. Their developers need them to connect to Rabotka.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-3 rounded-lg bg-destructive/10 p-3 text-destructive">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           <p className="text-sm leading-snug">
-            {secret?.warning ??
-              "Copy the secret now — it will never be shown again."}
+            Copy the app password now. For security, Rabotka can never show it
+            again. If it gets lost, you'll have to create a new one.
           </p>
         </div>
 
         <div className="space-y-3">
           <CredentialRow
-            label="Client ID"
+            label="App ID (client_id)"
             value={secret?.clientId ?? ""}
             onCopy={copy}
           />
           <CredentialRow
-            label="Client secret"
+            label="App password (client_secret)"
             value={secret?.clientSecret ?? ""}
             onCopy={copy}
           />
@@ -94,8 +94,8 @@ export function SecretRevealDialog({
             }}
           >
             {copied
-              ? "I have copied the secret"
-              : "Copy the secret to continue"}
+              ? "I've copied the app password"
+              : "Copy the app password to continue"}
           </Button>
         </DialogFooter>
       </DialogContent>

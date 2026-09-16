@@ -15,34 +15,34 @@
 export const SCOPE_LABELS = [
   {
     value: "openid",
-    label: "openid",
-    detail: "Required. The per-application subject identifier.",
+    label: "Sign-in",
+    detail: "Always on. Lets the app recognise the same person each time.",
   },
   {
     value: "profile",
-    label: "Profile",
-    detail: "First name, last name, avatar.",
+    label: "Name and photo",
+    detail: "First name, last name and profile photo.",
   },
   {
     value: "phone",
     label: "Phone number",
-    detail: "E.164 number, always with phone_number_verified: true.",
+    detail: "The WhatsApp number, which the person has just confirmed.",
   },
   {
     value: "rabotka:verification",
-    label: "Rabotka verification status",
+    label: "Identity check result (KYC)",
     detail:
-      "Whether KYC was approved by an admin, and when. The reason most partners integrate.",
+      "Whether our team approved the person's ID, and when. This is why most partners connect.",
   },
   {
     value: "email",
     label: "Email",
-    detail: "Address only. Rabotka never verifies it, and says so in the claim.",
+    detail: "The address only. Rabotka doesn't confirm it, and tells the app so.",
   },
   {
     value: "rabotka:location",
     label: "City and country",
-    detail: "No street address.",
+    detail: "Never the street address.",
   },
 ] as const;
 
@@ -62,6 +62,6 @@ export const DEFAULT_SCOPES = [
 ] as const;
 
 export function scopeLabel(value: string): string {
-  if (value === "rabotka:identity_check") return "Identity check API";
+  if (value === "rabotka:identity_check") return "Identity check";
   return SCOPE_LABELS.find((s) => s.value === value)?.label ?? value;
 }

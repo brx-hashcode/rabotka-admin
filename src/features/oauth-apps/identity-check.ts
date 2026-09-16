@@ -29,23 +29,23 @@ export function webhookUrlProblem(
   isSandbox: boolean,
 ): string | null {
   const value = raw.trim();
-  if (!value) return "A webhook URL is required to enable identity checks";
+  if (!value) return "Add the address where we should send the results";
 
   let url: URL;
   try {
     url = new URL(value);
   } catch {
-    return "Enter a full absolute URL";
+    return "Enter a full web address, starting with https://";
   }
 
-  if (url.username || url.password) return "No credentials in the URL";
-  if (url.hash) return "No fragment (#) in the URL";
+  if (url.username || url.password) return "The address can't contain a username or password";
+  if (url.hash) return "The address can't contain a # sign";
   if (url.protocol === "https:") return null;
 
   if (url.protocol === "http:" && LOCAL_HOSTS.has(url.hostname)) {
     return isSandbox
       ? null
-      : "http://localhost is only accepted for sandbox applications";
+      : "Addresses on this computer (localhost) only work for test apps";
   }
-  return "The URL must start with https://";
+  return "The address must start with https://";
 }

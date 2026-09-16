@@ -88,22 +88,22 @@ const redirectUrisField = z
   .string()
   .refine(
     (value) => parseRedirectUris(value).every((uri) => URL.canParse(uri)),
-    "Each line must be a full absolute URL",
+    "Each line must be a full web address, starting with https://",
   )
   .refine(
     (value) => !parseRedirectUris(value).some((uri) => uri.includes("*")),
-    "Wildcards are not supported — write each URI out in full",
+    "Write each address in full — the * sign isn't allowed",
   );
 
 const schema = z.object({
-  name: z.string().min(2, "Name is required").max(80),
+  name: z.string().min(2, "Enter the app's name").max(80, "Keep the name under 80 characters"),
   description: z
     .string()
-    .min(10, "Describe the app — users read this on the consent screen")
-    .max(500),
-  contactEmail: z.string().email("A valid contact email is required"),
+    .min(10, "Describe the app in a sentence — people read this before giving permission")
+    .max(500, "Keep the description under 500 characters"),
+  contactEmail: z.string().email("Enter a valid email address"),
   redirectUris: redirectUrisField,
-  allowedScopes: z.array(z.string()).min(1, "Select at least one scope"),
+  allowedScopes: z.array(z.string()).min(1, "Choose at least one thing this app may see"),
   isSandbox: z.boolean(),
   identityCheck: z.boolean(),
   webhookUrl: z.string(),
@@ -114,7 +114,7 @@ const schema = z.object({
         code: "custom",
         path: ["redirectUris"],
         message:
-          "At least one redirect URI is required, unless the app is for identity checks only",
+          "Add at least one sign-in return address, or turn on Identity check if the app only checks identities",
       });
     }
     return;
@@ -185,7 +185,7 @@ export function CreateAppModal({
     },
     onError: () => {
       clearLogo();
-      toast.error("Logo upload failed — try again");
+      toast.error("The logo couldn't be uploaded. Try again.");
     },
   });
 
@@ -226,7 +226,7 @@ export function CreateAppModal({
       onCreated(secret);
     },
     onError: (error: unknown) => {
-      toast.error(messageFrom(error) ?? "Failed to register the application");
+      toast.error(messageFrom(error) ?? "Couldn't add this partner app. Try again.");
     },
   });
 
@@ -239,9 +239,9 @@ export function CreateAppModal({
       */}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Register an application</DialogTitle>
+          <DialogTitle>Add a partner app</DialogTitle>
           <DialogDescription>
-            The name and description appear on the consent screen users see.
+            People see this name and description when the app asks for their permission.
           </DialogDescription>
         </DialogHeader>
 
@@ -297,7 +297,7 @@ export function CreateAppModal({
                     />
                   </FormControl>
                   <FormDescription>
-                    Shown to every user deciding whether to trust this app.
+                    Shown to people deciding whether to trust this app.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -323,7 +323,7 @@ export function CreateAppModal({
               name="redirectUris"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Redirect URIs</FormLabel>
+                  <FormLabel>Sign-in return addresses</FormLabel>
                   <FormControl>
                     <Textarea
                       rows={3}
@@ -333,9 +333,10 @@ export function CreateAppModal({
                     />
                   </FormControl>
                   <FormDescription>
-                    One per line, matched exactly. A trailing slash makes it a
-                    different URI. No wildcards. Optional when the app only
-                    uses the identity check API.
+                    The pages people come back to after signing in with
+                    Rabotka, given by the partner. One per line, written
+                    exactly — a "/" at the end makes it a different address.
+                    Leave empty if the app only uses Identity check.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -347,10 +348,10 @@ export function CreateAppModal({
               name="allowedScopes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Scopes</FormLabel>
+                  <FormLabel>What this app may see</FormLabel>
                   <FormDescription>
-                    The ceiling on what this app may request. Anything not
-                    checked is refused outright, not silently dropped.
+                    When someone signs in, the app can only ask for what's
+                    ticked here.
                   </FormDescription>
                   {/*
                     The one two-column block in this form. Six rows of
@@ -400,12 +401,13 @@ export function CreateAppModal({
                 <FormItem>
                   <label className="flex items-start justify-between gap-4 text-sm">
                     <span>
-                      <span className="font-medium">Identity check API</span>
+                      <span className="font-medium">Identity check</span>
                       <span className="text-muted-foreground block text-xs">
-                        Lets this partner ask Rabotka to confirm a person's
-                        identity from their WhatsApp number. The person
-                        approves each request; the partner receives a match
-                        score, never profile data. Requires a webhook.
+                        Lets this partner ask us to confirm who someone is,
+                        using their WhatsApp number. The person agrees to each
+                        request, and the partner only learns whether its
+                        details match — never the person's profile. Needs a
+                        results address.
                       </span>
                     </span>
                     <FormControl>
@@ -425,7 +427,7 @@ export function CreateAppModal({
                 name="webhookUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Webhook URL</FormLabel>
+                    <FormLabel>Results address</FormLabel>
                     <FormControl>
                       <Input
                         className="font-mono text-xs"
@@ -434,8 +436,9 @@ export function CreateAppModal({
                       />
                     </FormControl>
                     <FormDescription>
-                      Receives each result as a signed JWS. https only —
-                      http://localhost is accepted for sandbox apps.
+                      Where we send each result, given by the partner. It must
+                      start with https://. Rabotka signs each result so the
+                      partner knows it came from us.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -465,13 +468,13 @@ export function CreateAppModal({
                       />
                     </FormControl>
                     <span>
-                      <span className="font-medium">Sandbox application</span>
+                      <span className="font-medium">Test app</span>
                       <span className="text-muted-foreground block text-xs">
-                        Signs in only the two Rabotka sandbox users, with a
-                        fixed code and no WhatsApp message — never a real
-                        person. For a partner building their integration.{" "}
+                        Works only with two fake Rabotka accounts, never with
+                        real people, and sends no WhatsApp messages. For a
+                        partner who is still building their connection.{" "}
                         <strong className="font-medium">
-                          Cannot be changed after registration.
+                          You can't change this later.
                         </strong>
                       </span>
                     </span>
@@ -494,7 +497,7 @@ export function CreateAppModal({
                 register the app with no logo and give no hint why.
               */}
               <Button type="submit" disabled={isPending || isUploadingLogo}>
-                {isPending ? "Registering…" : "Register"}
+                {isPending ? "Adding…" : "Add app"}
               </Button>
             </div>
           </form>

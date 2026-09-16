@@ -62,12 +62,12 @@ export function IdentityCheckDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
       toast.success(
-        enabled ? "Identity checks enabled" : "Identity checks disabled",
+        enabled ? "Identity check turned on" : "Identity check turned off",
       );
       onOpenChange(false);
     },
     onError: (error: unknown) => {
-      toast.error(messageFrom(error) ?? "Failed to save");
+      toast.error(messageFrom(error) ?? "Couldn't save. Try again.");
     },
   });
 
@@ -75,11 +75,11 @@ export function IdentityCheckDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Identity check API</DialogTitle>
+          <DialogTitle>Identity check</DialogTitle>
           <DialogDescription>
-            {app.name} sends a WhatsApp number and a name. The person approves
-            the request on their phone, and {app.name} receives a match score —
-            never the profile itself.
+            {app.name} gives us a WhatsApp number and a name. We ask the person
+            on their phone, and if they agree, {app.name} learns whether the
+            details match — never the person's profile.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,13 +92,13 @@ export function IdentityCheckDialog({
           }}
         >
           <label className="flex items-center justify-between gap-4 text-sm">
-            <span className="font-medium">Enabled</span>
+            <span className="font-medium">On</span>
             <Switch checked={enabled} onCheckedChange={setEnabled} />
           </label>
 
           {enabled && (
             <div className="space-y-1.5">
-              <Label htmlFor="identity-check-webhook">Webhook URL</Label>
+              <Label htmlFor="identity-check-webhook">Results address</Label>
               <Input
                 id="identity-check-webhook"
                 className="font-mono text-xs"
@@ -112,8 +112,9 @@ export function IdentityCheckDialog({
                 <p className="text-destructive text-xs">{problem}</p>
               ) : (
                 <p className="text-muted-foreground text-xs">
-                  Required. Receives each result as a JWS signed with the
-                  Rabotka OIDC key.
+                  Required. Where we send each result, given by the partner.
+                  Rabotka signs each result so the partner knows it came from
+                  us.
                 </p>
               )}
             </div>
