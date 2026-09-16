@@ -31,6 +31,12 @@ export type OAuthApp = {
   previousSecretExpiresAt: string | null;
   redirectUris: string[];
   allowedScopes: string[];
+  /**
+   * Where identity-check results are POSTed. Set whenever the app has
+   * `rabotka:identity_check` — the API refuses the switch without one.
+   * Optional for the same reason as `canCopySecret`.
+   */
+  webhookUrl?: string | null;
   status: OAuthAppStatus;
   /**
    * A sandbox application: it signs in only the two hardcoded Rabotka sandbox
@@ -89,6 +95,8 @@ export type CreateOAuthAppPayload = {
   logoUrl?: string;
   redirectUris: string[];
   allowedScopes?: string[];
+  /** `null` or `""` removes it. */
+  webhookUrl?: string | null;
   isSandbox?: boolean;
 };
 

@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Pause,
   Play,
+  ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
@@ -42,6 +43,8 @@ import {
 import { secretRowState } from "../secret-row-state";
 import { httpStatusOf } from "#/lib/auth/session";
 import { scopeLabel } from "../scopes";
+import { IDENTITY_CHECK_SCOPE, hasIdentityCheck } from "../identity-check";
+import { IdentityCheckDialog } from "./identity-check-dialog";
 
 type AppCardProps = {
   app: OAuthApp;
@@ -52,6 +55,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [rotateOpen, setRotateOpen] = useState(false);
+  const [identityCheckOpen, setIdentityCheckOpen] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
@@ -132,6 +136,10 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
                 <KeyRound className="size-4" />
                 Rotate secret
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIdentityCheckOpen(true)}>
+                <ShieldCheck className="size-4" />
+                Identity check API
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => doToggle()} disabled={isToggling}>
                 {isSuspended ? (
                   <>
@@ -169,6 +177,12 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
               </span>
             </span>
           </div>
+          {hasIdentityCheck(app.allowedScopes) && app.webhookUrl && (
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground shrink-0">Webhook</span>
+              <code className="truncate font-mono">{app.webhookUrl}</code>
+            </div>
+          )}
           {app.lastUsedAt && (
             // Only when it has actually been used. "Never" is already carried
             // by a connected count of zero, and a second line saying so would
@@ -199,12 +213,22 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
           {app.allowedScopes
             .filter((scope) => scope !== "openid")
             .map((scope) => (
-              <Badge key={scope} variant="secondary" className="font-normal">
+              <Badge
+                key={scope}
+                variant={scope === IDENTITY_CHECK_SCOPE ? "default" : "secondary"}
+                className="font-normal"
+              >
                 {scopeLabel(scope)}
               </Badge>
             ))}
         </div>
       </div>
+
+      <IdentityCheckDialog
+        app={app}
+        open={identityCheckOpen}
+        onOpenChange={setIdentityCheckOpen}
+      />
 
       <AlertDialog open={rotateOpen} onOpenChange={setRotateOpen}>
         <AlertDialogContent>

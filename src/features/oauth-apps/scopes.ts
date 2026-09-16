@@ -62,5 +62,6 @@ export const DEFAULT_SCOPES = [
 ] as const;
 
 export function scopeLabel(value: string): string {
+  if (value === "rabotka:identity_check") return "Identity check API";
   return SCOPE_LABELS.find((s) => s.value === value)?.label ?? value;
 }

@@ -23,6 +23,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Checkbox } from "#/components/ui/checkbox";
+import { Switch } from "#/components/ui/switch";
 import { Button } from "#/components/ui/button";
 import { LogoPicker } from "./logo-picker";
 import { appConfig } from "#/config";
@@ -32,6 +33,7 @@ import {
   type MintedSecret,
 } from "#/lib/api/oauth-apps-controller";
 import { SCOPE_LABELS, DEFAULT_SCOPES } from "../scopes";
+import { webhookUrlProblem, withIdentityCheck } from "../identity-check";
 
 /**
  * Uploads the logo and returns the URL Rabotka will serve it from.
@@ -107,6 +109,14 @@ const schema = z.object({
   redirectUris: redirectUrisField,
   allowedScopes: z.array(z.string()).min(1, "Select at least one scope"),
   isSandbox: z.boolean(),
+  identityCheck: z.boolean(),
+  webhookUrl: z.string(),
+}).superRefine((values, ctx) => {
+  if (!values.identityCheck) return;
+  const problem = webhookUrlProblem(values.webhookUrl, values.isSandbox);
+  if (problem) {
+    ctx.addIssue({ code: "custom", path: ["webhookUrl"], message: problem });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -182,6 +192,8 @@ export function CreateAppModal({
       redirectUris: "",
       allowedScopes: [...DEFAULT_SCOPES],
       isSandbox: false,
+      identityCheck: false,
+      webhookUrl: "",
     },
   });
 
@@ -194,7 +206,11 @@ export function CreateAppModal({
         // Already a hosted URL by this point — the upload happened on pick.
         logoUrl: logoUrl ?? undefined,
         redirectUris: parseRedirectUris(values.redirectUris),
-        allowedScopes: values.allowedScopes,
+        allowedScopes: withIdentityCheck(
+          values.allowedScopes,
+          values.identityCheck,
+        ),
+        webhookUrl: values.identityCheck ? values.webhookUrl.trim() : undefined,
         isSandbox: values.isSandbox,
       }),
     onSuccess: (secret) => {
@@ -369,6 +385,56 @@ export function CreateAppModal({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="identityCheck"
+              render={({ field }) => (
+                <FormItem>
+                  <label className="flex items-start justify-between gap-4 text-sm">
+                    <span>
+                      <span className="font-medium">Identity check API</span>
+                      <span className="text-muted-foreground block text-xs">
+                        Lets this partner ask Rabotka to confirm a person's
+                        identity from their WhatsApp number. The person
+                        approves each request; the partner receives a match
+                        score, never profile data. Requires a webhook.
+                      </span>
+                    </span>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </label>
+                </FormItem>
+              )}
+            />
+
+            {form.watch("identityCheck") && (
+              <FormField
+                control={form.control}
+                name="webhookUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Webhook URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="font-mono text-xs"
+                        placeholder="https://partner.com/webhooks/rabotka"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Receives each result as a signed JWS. https only —
+                      http://localhost is accepted for sandbox apps.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/*
               Last, and on its own, because it is the one answer here that
