@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Pause,
   Play,
+  ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
@@ -29,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   deleteOAuthApp,
   readSandboxAppSecret,
@@ -42,6 +43,8 @@ import {
 import { secretRowState } from "../secret-row-state";
 import { httpStatusOf } from "#/lib/auth/session";
 import { scopeLabel } from "../scopes";
+import { IDENTITY_CHECK_SCOPE, hasIdentityCheck } from "../identity-check";
+import { IdentityCheckDialog } from "./identity-check-dialog";
 
 type AppCardProps = {
   app: OAuthApp;
@@ -52,6 +55,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [rotateOpen, setRotateOpen] = useState(false);
+  const [identityCheckOpen, setIdentityCheckOpen] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
@@ -63,7 +67,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
       setRotateOpen(false);
       onSecretMinted(secret);
     },
-    onError: () => toast.error("Failed to rotate the secret"),
+    onError: () => toast.error("Couldn't create a new app password. Try again."),
   });
 
   const { mutate: doToggle, isPending: isToggling } = useMutation({
@@ -74,19 +78,19 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
     onSuccess: () => {
       invalidate();
       toast.success(
-        app.status === "ACTIVE" ? "Application suspended" : "Application active",
+        app.status === "ACTIVE" ? "Partner app paused" : "Partner app turned back on",
       );
     },
-    onError: () => toast.error("Failed to change the status"),
+    onError: () => toast.error("Couldn't change this app. Try again."),
   });
 
   const { mutate: doDelete, isPending: isDeleting } = useMutation({
     mutationFn: () => deleteOAuthApp(app.id),
     onSuccess: () => {
       invalidate();
-      toast.success("Application removed");
+      toast.success("Partner app deleted");
     },
-    onError: () => toast.error("Failed to remove the application"),
+    onError: () => toast.error("Couldn't delete this app. Try again."),
   });
 
   const isSuspended = app.status === "SUSPENDED";
@@ -111,7 +115,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
             <div className="flex items-center gap-2">
               <p className="truncate font-medium">{app.name}</p>
               {isSuspended && <Badge variant="destructive">Suspended</Badge>}
-              {app.isSandbox && <Badge variant="secondary">Sandbox</Badge>}
+              {app.isSandbox && <Badge variant="secondary">Test app</Badge>}
             </div>
             <p className="text-muted-foreground line-clamp-2 text-sm">
               {app.description}
@@ -130,18 +134,22 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
                 disabled={isRotating}
               >
                 <KeyRound className="size-4" />
-                Rotate secret
+                New app password
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIdentityCheckOpen(true)}>
+                <ShieldCheck className="size-4" />
+                Identity check
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => doToggle()} disabled={isToggling}>
                 {isSuspended ? (
                   <>
                     <Play className="size-4" />
-                    Reactivate
+                    Turn back on
                   </>
                 ) : (
                   <>
                     <Pause className="size-4" />
-                    Suspend
+                    Pause
                   </>
                 )}
               </DropdownMenuItem>
@@ -151,17 +159,17 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="size-4" />
-                Remove
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         <div className="space-y-2">
-          <CopyableRow label="Client ID" value={app.clientId} />
+          <CopyableRow label="App ID" value={app.clientId} />
           <SecretRow app={app} />
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Connected</span>
+            <span className="text-muted-foreground">People signed in</span>
             <span className="flex items-center gap-1.5">
               <Users className="text-muted-foreground size-3" />
               <span className={app.userCount === 0 ? "text-muted-foreground" : ""}>
@@ -169,6 +177,12 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
               </span>
             </span>
           </div>
+          {hasIdentityCheck(app.allowedScopes) && app.webhookUrl && (
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground shrink-0">Results sent to</span>
+              <code className="truncate font-mono">{app.webhookUrl}</code>
+            </div>
+          )}
           {app.lastUsedAt && (
             // Only when it has actually been used. "Never" is already carried
             // by a connected count of zero, and a second line saying so would
@@ -184,7 +198,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
           // Only rendered while a rotation is still in its grace window, so its
           // presence is the signal: two secrets are live right now.
           <p className="text-muted-foreground bg-muted rounded-md p-2 text-xs">
-            Previous secret still valid until{" "}
+            The old app password still works until{" "}
             {format(new Date(app.previousSecretExpiresAt), "d MMM, HH:mm")}
           </p>
         )}
@@ -199,21 +213,31 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
           {app.allowedScopes
             .filter((scope) => scope !== "openid")
             .map((scope) => (
-              <Badge key={scope} variant="secondary" className="font-normal">
+              <Badge
+                key={scope}
+                variant={scope === IDENTITY_CHECK_SCOPE ? "default" : "secondary"}
+                className="font-normal"
+              >
                 {scopeLabel(scope)}
               </Badge>
             ))}
         </div>
       </div>
 
+      <IdentityCheckDialog
+        app={app}
+        open={identityCheckOpen}
+        onOpenChange={setIdentityCheckOpen}
+      />
+
       <AlertDialog open={rotateOpen} onOpenChange={setRotateOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rotate the client secret?</AlertDialogTitle>
+            <AlertDialogTitle>Create a new app password?</AlertDialogTitle>
             <AlertDialogDescription>
-              A new secret is issued immediately. The current one keeps working
-              for 24 hours so {app.name} can redeploy without downtime — tell
-              them before the window closes.
+              You'll get a new password to send to {app.name}. The current one
+              keeps working for 24 hours so they have time to switch — let them
+              know before then.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -228,22 +252,22 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {app.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete {app.name}?</AlertDialogTitle>
             <AlertDialogDescription>
               {app.userCount > 0
-                ? `${app.userCount} ${app.userCount === 1 ? "person has" : "people have"} signed in with this app. Removing it revokes every one of those consents and signs them out of it immediately.`
-                : "Sign-in through this application stops immediately."}{" "}
-              Suspending is reversible; this is not.
+                ? `${app.userCount} ${app.userCount === 1 ? "person has" : "people have"} signed in with this app. Deleting it cancels their permission and signs them out of it right away.`
+                : "Nobody will be able to use this app from now on."}{" "}
+              Pausing can be undone; deleting cannot.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
               onClick={() => doDelete()}
               disabled={isDeleting}
             >
-              Remove
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -261,10 +285,10 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
  */
 /** Said in two places — the muted button and a 409 from a stale list. */
 const ROTATE_TO_ENABLE =
-  "Rotate this app's secret once to make it copyable.";
+  "Create a new app password once to be able to copy it.";
 
 function connectedLabel(app: OAuthApp): string {
-  if (app.isSandbox) return "Sandbox users only";
+  if (app.isSandbox) return "Test accounts only";
   if (app.userCount === 0) return "No one yet";
   return `${app.userCount} ${app.userCount === 1 ? "person" : "people"}`;
 }
@@ -294,7 +318,7 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
     onSuccess: async ({ clientSecret }) => {
       try {
         await navigator.clipboard.writeText(clientSecret);
-        toast.success("Client secret copied");
+        toast.success("App password copied");
       } catch {
         // Safari treats the awaited network round trip as having consumed the
         // click's user activation, so the write is refused there every time —
@@ -312,14 +336,14 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
         toast.info(ROTATE_TO_ENABLE);
         return;
       }
-      toast.error("Could not read the client secret");
+      toast.error("Couldn't get the app password. Try again.");
     },
   });
 
   if (state === "hidden") {
     return (
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">Client secret</span>
+        <span className="text-muted-foreground">App password</span>
         <code className="font-mono">••••{app.clientSecretHint}</code>
       </div>
     );
@@ -330,7 +354,7 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
   return (
     <>
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="text-muted-foreground shrink-0">Client secret</span>
+        <span className="text-muted-foreground shrink-0">App password</span>
         <div className="flex min-w-0 items-center gap-1">
           <code className="truncate font-mono">••••{app.clientSecretHint}</code>
           <Button
@@ -342,7 +366,7 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
             // wrapper — and a tooltip does not exist on touch. One click handler
             // that always fires works on every input.
             aria-disabled={needsRotation || undefined}
-            aria-label="Copy client secret"
+            aria-label="Copy app password"
             onClick={() => {
               if (needsRotation) {
                 toast.info(ROTATE_TO_ENABLE);
@@ -359,7 +383,7 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
       {fallback !== null && (
         <div className="bg-muted space-y-2 rounded-md p-2">
           <p className="text-muted-foreground text-xs">
-            Your browser blocked the automatic copy. Copy it from here:
+            Your browser didn't allow copying. Copy it from here:
           </p>
           <div className="flex items-center gap-1">
             <code className="min-w-0 flex-1 truncate font-mono text-xs">
@@ -369,15 +393,15 @@ function SecretRow({ app }: Readonly<{ app: OAuthApp }>) {
               variant="ghost"
               size="icon"
               className="size-6 shrink-0"
-              aria-label="Copy client secret"
+              aria-label="Copy app password"
               onClick={() => {
                 navigator.clipboard
                   .writeText(fallback)
                   .then(() => {
-                    toast.success("Client secret copied");
+                    toast.success("App password copied");
                     setFallback(null);
                   })
-                  .catch(() => toast.error("Could not copy"));
+                  .catch(() => toast.error("Couldn't copy. Select the text and copy it yourself."));
               }}
             >
               <Copy className="size-3" />
@@ -407,7 +431,7 @@ function CopyableRow({
             navigator.clipboard
               .writeText(value)
               .then(() => toast.success(`${label} copied`))
-              .catch(() => toast.error("Could not copy"));
+              .catch(() => toast.error("Couldn't copy. Select the text and copy it yourself."));
           }}
         >
           <Copy className="size-3" />

@@ -29,7 +29,7 @@ import {
   IconCreditCard,
 } from "@tabler/icons-react";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -662,7 +662,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => cancelMut.mutate()}
               disabled={cancelMut.isPending}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {cancelMut.isPending ? "Cancelling…" : "Cancel Ad"}
             </AlertDialogAction>
@@ -684,7 +684,7 @@ export function AdvertisementCard({ advertisement: ad }: Readonly<Props>) {
             <AlertDialogAction
               onClick={() => deleteMut.mutate()}
               disabled={deleteMut.isPending}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {deleteMut.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>

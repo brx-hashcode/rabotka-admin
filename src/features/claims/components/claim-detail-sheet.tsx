@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { FileText } from "lucide-react";
 import {
@@ -493,7 +493,7 @@ export function ClaimDetailSheet({
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => remove()}
-                        className={buttonVariants({ variant: "destructive" })}
+                        variant="destructive"
                       >
                         Delete
                       </AlertDialogAction>
