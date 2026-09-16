@@ -58,19 +58,19 @@ function describe(state: WhatsAppWindowState) {
 
   if (state.windowOpen) {
     return {
-      label: "Free-form · window open",
+      label: "Sent as a normal message",
       dot: "bg-emerald-500",
       tooltip:
-        "The profile messaged us within the last 24h, so your text is delivered exactly as written, line breaks and all.",
+        "This person wrote to us in the last 24 hours, so your message is delivered exactly as you type it.",
     };
   }
 
   return {
-    label: "Template · window closed",
+    label: "Sent as an approved message",
     dot: "bg-amber-500",
     tooltip:
-      `Outside WhatsApp's 24h window. Your message is delivered inside an approved ` +
-      `template and flattened to a single paragraph, with blank lines shown as "·". ` +
-      `Maximum ${ADMIN_MESSAGE_VAR_MAX} characters.`,
+      `This person hasn't written to us in the last 24 hours, so WhatsApp only ` +
+      `allows an approved message. Yours is placed inside it on one line, with ` +
+      `blank lines shown as "·". At most ${ADMIN_MESSAGE_VAR_MAX} characters.`,
   };
 }

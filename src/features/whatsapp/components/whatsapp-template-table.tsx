@@ -15,6 +15,7 @@ import {
 } from "#/components/ui/table";
 import type { WhatsappStats } from "#/lib/api/whatsapp-controller";
 import { WhatsappCategoryBadge } from "./whatsapp-status-badge";
+import { sendErrorLabel, templateLabel } from "../labels";
 
 /**
  * Which templates are working, and which are quietly failing.
@@ -38,10 +39,10 @@ export function WhatsappTemplateTable({
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>By template</CardTitle>
+        <CardTitle>By approved message</CardTitle>
         <CardDescription>
-          Most-sent templates first — a high failure rate matters more the more
-          traffic sits behind it.
+          Most-sent first — a high failure rate matters more when many people
+          get that message.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -49,7 +50,7 @@ export function WhatsappTemplateTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Template</TableHead>
+                <TableHead>Message</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Sent</TableHead>
                 <TableHead className="text-right">Delivered</TableHead>
@@ -63,14 +64,14 @@ export function WhatsappTemplateTable({
                     colSpan={5}
                     className="text-muted-foreground py-8 text-center text-sm"
                   >
-                    No template messages in this window.
+                    No approved messages were sent in this period.
                   </TableCell>
                 </TableRow>
               ) : (
                 rows.map((row) => (
                   <TableRow key={row.templateKey}>
-                    <TableCell className="font-mono text-xs">
-                      {row.templateKey}
+                    <TableCell className="text-sm" title={row.templateKey}>
+                      {templateLabel(row.templateKey)}
                     </TableCell>
                     <TableCell>
                       <WhatsappCategoryBadge category={row.category} />
@@ -113,8 +114,7 @@ export function WhatsappErrorTable({
       <CardHeader>
         <CardTitle>Failure reasons</CardTitle>
         <CardDescription>
-          Normalized codes, so a Meta error and a Twilio one that mean the same
-          thing land in the same row.
+          Why messages weren't delivered, grouped by cause.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -122,8 +122,8 @@ export function WhatsappErrorTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Example message</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>What WhatsApp said (example)</TableHead>
                 <TableHead className="text-right">Count</TableHead>
               </TableRow>
             </TableHeader>
@@ -134,14 +134,17 @@ export function WhatsappErrorTable({
                     colSpan={3}
                     className="text-muted-foreground py-8 text-center text-sm"
                   >
-                    No failures in this window.
+                    No failed messages in this period.
                   </TableCell>
                 </TableRow>
               ) : (
                 rows.map((row) => (
                   <TableRow key={row.errorCode}>
-                    <TableCell className="font-mono text-xs text-rose-600">
-                      {row.errorCode}
+                    <TableCell
+                      className="text-sm text-rose-600"
+                      title={row.errorCode}
+                    >
+                      {sendErrorLabel(row.errorCode)}
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-md truncate text-sm">
                       {row.sample ?? "—"}

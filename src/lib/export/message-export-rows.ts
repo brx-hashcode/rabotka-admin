@@ -14,12 +14,12 @@ import type { AdminProfileMessage } from "#/lib/api/profiles-controller";
  * Must stay index-aligned with both row builders below.
  */
 export const MESSAGE_EXPORT_HEADERS = [
-  "Sent at (ISO)",
+  "Sent at",
   "Direction",
   "Sender",
   "Channel",
   "Message",
-  "Message ID",
+  "Message reference",
 ] as const;
 
 /**

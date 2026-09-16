@@ -70,11 +70,11 @@ export function useRetryDlqJob() {
     mutationFn: (jobId: string) => retryWhatsappDlqJob(jobId),
     onSuccess: (result) => {
       if (result.retried) {
-        toast.success("Job re-queued");
+        toast.success("Sending the message again");
       } else {
         // Not an error: the job aged out of Redis, or its payload was
         // unusable. Saying which beats a success toast over nothing happening.
-        toast.warning("Nothing to retry — the job is gone or has no payload");
+        toast.warning("This message can no longer be sent again — it has expired.");
       }
       void queryClient.invalidateQueries({
         queryKey: ["admin", "whatsapp", "queue"],

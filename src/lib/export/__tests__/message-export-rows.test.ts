@@ -63,7 +63,7 @@ describe("message export rows", () => {
       ],
       PROFILE,
     );
-    expect(rows.map((r) => cell(r, "Message ID"))).toEqual([
+    expect(rows.map((r) => cell(r, "Message reference"))).toEqual([
       "earlier",
       "later",
     ]);

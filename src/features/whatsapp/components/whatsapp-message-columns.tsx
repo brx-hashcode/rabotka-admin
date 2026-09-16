@@ -7,6 +7,11 @@ import {
   WhatsappStatusBadge,
 } from "./whatsapp-status-badge";
 import { WhatsappMessageRowActions } from "./whatsapp-message-row-actions";
+import {
+  messageKindLabel,
+  sendErrorLabel,
+  templateLabel,
+} from "../labels";
 
 export function formatDate(value: string) {
   try {
@@ -71,10 +76,10 @@ const messageColumns: ColumnDef<WhatsappMessageItem, unknown>[] = [
               KIND_STYLE[kind] ?? "bg-muted text-muted-foreground"
             }`}
           >
-            {kind}
+            {messageKindLabel(kind)}
           </Badge>
           {templateKey ? (
-            <span className="font-mono text-xs">{templateKey}</span>
+            <span className="text-xs">{templateLabel(templateKey)}</span>
           ) : null}
         </div>
       );
@@ -112,27 +117,25 @@ const messageColumns: ColumnDef<WhatsappMessageItem, unknown>[] = [
   },
   {
     id: "error",
-    header: "Error",
+    header: "Problem",
     cell: ({ row }) => {
       const { errorCode, errorMessage } = row.original;
       if (!errorCode) {
         return <span className="text-muted-foreground text-sm">—</span>;
       }
       return (
-        <div className="flex flex-col" title={errorMessage ?? undefined}>
-          <span className="font-mono text-xs text-rose-600">{errorCode}</span>
-          {errorMessage ? (
-            <span className="text-muted-foreground line-clamp-1 max-w-[16rem] text-xs">
-              {errorMessage}
-            </span>
-          ) : null}
-        </div>
+        <span
+          className="line-clamp-2 max-w-[16rem] text-xs text-rose-600"
+          title={errorMessage ?? undefined}
+        >
+          {sendErrorLabel(errorCode)}
+        </span>
       );
     },
   },
   {
     id: "providerMessageId",
-    header: "Message ID",
+    header: "WhatsApp ref.",
     cell: ({ row }) =>
       row.original.providerMessageId ? (
         <span

@@ -59,9 +59,9 @@ export const JOB_EXPORT_HEADERS = [
   "Rating average",
   "Rating count",
   // Timestamps and free text
-  "Scheduled at (ISO)",
-  "Created at (ISO)",
-  "Updated at (ISO)",
+  "Scheduled at",
+  "Created at",
+  "Updated at",
   "Description",
   "Note",
 ] as const;
