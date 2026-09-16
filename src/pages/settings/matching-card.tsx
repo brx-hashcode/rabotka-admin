@@ -25,10 +25,11 @@ type FormState = {
 const EMPTY: FormState = {
   useEmbeddings: false,
   recommendationsEnabled: true,
-  minNotificationScore: "0.55",
+  // The two match scores are stored as 0–1 and shown as percentages.
+  minNotificationScore: "55",
   maxNotificationWorkers: "20",
   notificationCooldownMinutes: "60",
-  recommendationMinScore: "0.3",
+  recommendationMinScore: "30",
   reliabilityThreshold: "50",
 };
 
@@ -41,7 +42,7 @@ export function MatchingCard() {
 
   const reindexMutation = useMutation({
     mutationFn: reindexMatching,
-    onSuccess: () => toast.success("Re-indexing started in background"),
+    onSuccess: () => toast.success("Refreshing the matching data. This runs in the background."),
     onError: (error) => toast.error(friendlyError(error, "Couldn't refresh the matching data. Try again.")),
   });
 
@@ -54,13 +55,13 @@ export function MatchingCard() {
       if (item.key === "matching.recommendations_enabled")
         data.recommendationsEnabled = item.value === "true";
       if (item.key === "matching.min_notification_score")
-        data.minNotificationScore = item.value;
+        data.minNotificationScore = toPercent(item.value);
       if (item.key === "matching.max_notification_workers")
         data.maxNotificationWorkers = item.value;
       if (item.key === "matching.notification_cooldown_minutes")
         data.notificationCooldownMinutes = item.value;
       if (item.key === "matching.recommendation_min_score")
-        data.recommendationMinScore = item.value;
+        data.recommendationMinScore = toPercent(item.value);
       if (item.key === "matching.reliability_threshold")
         data.reliabilityThreshold = item.value;
     }
@@ -77,30 +78,30 @@ export function MatchingCard() {
   }
 
   async function handleSave() {
-    const score = parseFloat(form.minNotificationScore);
-    if (isNaN(score) || score < 0 || score > 1) {
-      toast.error("Le score de notification doit être entre 0 et 1");
+    const score = fromPercent(form.minNotificationScore);
+    if (score === null) {
+      toast.error("The minimum match for alerts must be between 0 and 100%.");
       return;
     }
-    const recoScore = parseFloat(form.recommendationMinScore);
-    if (isNaN(recoScore) || recoScore < 0 || recoScore > 1) {
-      toast.error("Le score de recommandation doit être entre 0 et 1");
+    const recoScore = fromPercent(form.recommendationMinScore);
+    if (recoScore === null) {
+      toast.error("The minimum match for employers must be between 0 and 100%.");
       return;
     }
     const maxWorkers = parseInt(form.maxNotificationWorkers, 10);
     if (isNaN(maxWorkers) || maxWorkers < 1) {
-      toast.error("Le nombre de travailleurs doit être au moins 1");
+      toast.error("At least 1 worker must be alerted per job.");
       return;
     }
     const cooldown = parseInt(form.notificationCooldownMinutes, 10);
     if (isNaN(cooldown) || cooldown < 0) {
-      toast.error("Le délai doit être 0 ou plus");
+      toast.error("The waiting time must be 0 minutes or more.");
       return;
     }
 
     const reliability = parseInt(form.reliabilityThreshold, 10);
     if (isNaN(reliability) || reliability < 0 || reliability > 100) {
-      toast.error("Le score de fiabilité doit être entre 0 et 100");
+      toast.error("The minimum reliability must be between 0 and 100.");
       return;
     }
 
@@ -127,10 +128,10 @@ export function MatchingCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              Matching Algorithm
+              Job matching
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Enable semantic similarity matching via embeddings
+              How workers and jobs are suggested to each other
             </p>
           </div>
         </div>
@@ -149,12 +150,12 @@ export function MatchingCard() {
         <div className="flex items-center justify-between gap-4 pt-6">
           <div className="space-y-1">
             <Label htmlFor="use-embeddings" className="text-sm font-medium">
-              Enable embeddings
+              Smart matching
             </Label>
             <p className="text-muted-foreground text-xs">
-              When enabled, the system uses semantic similarity (vector
-              embeddings) to suggest the best matches between job offers and
-              workers. Disable if the embeddings service is not configured.
+              Suggests jobs and workers by the meaning of what they describe,
+              not only exact words — "plombier" also finds "sanitaire". Turn
+              off if the tech team says the matching service isn't set up.
             </p>
           </div>
           <Switch
@@ -173,12 +174,11 @@ export function MatchingCard() {
               htmlFor="recommendations-enabled"
               className="text-sm font-medium"
             >
-              Job recommendation notifications
+              Job alerts on WhatsApp
             </Label>
             <p className="text-muted-foreground text-xs">
-              When enabled, workers are notified via WhatsApp when a new job
-              matches their profile. Disable to pause all recommendation
-              notifications without touching code.
+              Workers get a WhatsApp message when a new job suits them. Turn
+              off to pause all these alerts.
             </p>
           </div>
           <Switch
@@ -197,20 +197,19 @@ export function MatchingCard() {
               htmlFor="min-notification-score"
               className="text-sm font-medium"
             >
-              Minimum notification score
+              Minimum match for job alerts (%)
             </Label>
             <p className="text-muted-foreground text-xs">
-              Minimum match score (0–1) required before sending a recommendation
-              notification. Higher values mean fewer but higher-quality alerts.
-              Default: 0.55.
+              How well a job must suit a worker before we alert them. Higher
+              means fewer, better alerts. Usual value: 55%.
             </p>
           </div>
           <Input
             id="min-notification-score"
             type="number"
             min={0}
-            max={1}
-            step={0.05}
+            max={100}
+            step={5}
             value={form.minNotificationScore}
             onChange={(e) => set("minNotificationScore", e.target.value)}
             disabled={disabled}
@@ -226,19 +225,20 @@ export function MatchingCard() {
               htmlFor="recommendation-min-score"
               className="text-sm font-medium"
             >
-              Employer feed minimum score
+              Minimum match for employers' suggestions (%)
             </Label>
             <p className="text-muted-foreground text-xs">
-              Minimum match score (0–1) for the employer "recommended profiles"
-              home feed. Lower values surface more nearby matches. Default: 0.3.
+              How well a worker must suit an employer to appear in their
+              "recommended profiles". Lower shows more people nearby. Usual
+              value: 30%.
             </p>
           </div>
           <Input
             id="recommendation-min-score"
             type="number"
             min={0}
-            max={1}
-            step={0.05}
+            max={100}
+            step={5}
             value={form.recommendationMinScore}
             onChange={(e) => set("recommendationMinScore", e.target.value)}
             disabled={disabled}
@@ -254,13 +254,13 @@ export function MatchingCard() {
               htmlFor="reliability-threshold"
               className="text-sm font-medium"
             >
-              Minimum reliability score to be matched
+              Minimum reliability to be suggested
             </Label>
             <p className="text-muted-foreground text-xs">
-              Workers scoring below this are not returned by the matching
-              engine. Separate from the platform-wide minimum under Fees &amp;
-              Penalties, which is the floor a score can be deducted to — this
-              one only decides who the engine will surface. Default: 50.
+              Workers below this reliability score (out of 100) are not
+              suggested for jobs. This is different from the lowest score
+              under Fees &amp; Penalties, which is how low a score can go.
+              Usual value: 50.
             </p>
           </div>
           <Input
@@ -284,14 +284,14 @@ export function MatchingCard() {
               htmlFor="max-notification-workers"
               className="text-sm font-medium"
             >
-              Max notified workers per offer
+              Workers alerted per job
             </Label>
             <p className="text-muted-foreground text-xs">
-              Maximum number of workers who receive a WhatsApp notification when
-              a new job offer is published. Each one is a paid message to
-              someone who did not ask for it, so raise this in steps and watch
-              the WhatsApp quality rating. The cooldown below caps how often any
-              single worker can be reached, whatever this is set to. Default: 5.
+              How many workers get a WhatsApp alert for each new job. Each alert
+              is a paid message the worker didn't ask for, so raise this slowly
+              and keep an eye on WhatsApp's quality rating. The waiting time
+              below still limits how often one worker is contacted. Usual
+              value: 5.
             </p>
           </div>
           <Input
@@ -311,11 +311,11 @@ export function MatchingCard() {
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label htmlFor="notification-cooldown" className="text-sm font-medium">
-              Minimum cooldown between notifications (minutes)
+              Waiting time between alerts (minutes)
             </Label>
             <p className="text-muted-foreground text-xs">
-              Prevents sending multiple recommendation notifications to the same
-              worker in quick succession. Set to 0 to disable. Default: 60 min.
+              Stops one worker from getting several alerts in a row. Set to 0
+              for no waiting time. Usual value: 60 minutes.
             </p>
           </div>
           <Input
@@ -334,11 +334,11 @@ export function MatchingCard() {
 
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Re-index all data</p>
+            <p className="text-sm font-medium">Refresh matching data</p>
             <p className="text-muted-foreground text-xs">
-              Re-embed all existing job offers and worker/employer profiles into
-              Qdrant. Runs in the background. Use this after enabling embeddings
-              for the first time or after a Qdrant reset.
+              Re-reads every job and profile so smart matching is up to date.
+              It runs in the background. Use it after turning smart matching on
+              for the first time, or when the tech team asks.
             </p>
           </div>
           <Button
@@ -350,10 +350,22 @@ export function MatchingCard() {
             <IconRefresh
               className={`size-4 mr-2 ${reindexMutation.isPending ? "animate-spin" : ""}`}
             />
-            {reindexMutation.isPending ? "Starting..." : "Re-index"}
+            {reindexMutation.isPending ? "Starting…" : "Refresh"}
           </Button>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function toPercent(stored: string): string {
+  const value = Number.parseFloat(stored);
+  return Number.isNaN(value) ? stored : String(Math.round(value * 100));
+}
+
+/** A percentage typed by the admin, as the 0–1 value the server stores. */
+function fromPercent(typed: string): number | null {
+  const value = Number.parseFloat(typed);
+  if (Number.isNaN(value) || value < 0 || value > 100) return null;
+  return Math.round(value * 100) / 10000;
 }

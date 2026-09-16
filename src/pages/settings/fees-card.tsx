@@ -463,17 +463,17 @@ export function FeesCard() {
         <Separator className="mb-6" />
 
         <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-          Unpaid penalties – escalation
+          Unpaid penalties – what happens next
         </p>
         <p className="text-muted-foreground mb-4 text-xs">
-          Three steps, applied in order. <strong>Block</strong> flips the billing
-          status and diverts the WhatsApp conversation to the payment prompt.{" "}
-          <strong>Suspend</strong> disables the account — it is the harsher of
-          the two, so it is clamped to never fire before the block. The{" "}
-          <strong>hard block</strong> is time-based rather than count-based: one
-          penalty left unpaid this long stops the account applying, publishing
-          or unlocking a contact, and drops it out of the recommendation
-          fan-out.
+          Three steps, in this order. <strong>Block</strong>: the person's
+          WhatsApp chat only offers to pay the penalty.{" "}
+          <strong>Suspend</strong>: the account is turned off. It is the
+          stronger step, so it never happens before the block. The{" "}
+          <strong>hard block</strong> depends on time, not on the number of
+          penalties: one penalty unpaid for this long stops the person from
+          applying, posting jobs or unlocking contacts, and they no longer get
+          job alerts.
         </p>
         <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">

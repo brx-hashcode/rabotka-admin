@@ -57,7 +57,29 @@ const DRIVER_KEYS: Record<StorageDriver, string[]> = {
 // leaves identity documents world-readable, and everything keeps working.
 const HINTS: Record<string, string> = {
   "storage.cloudflare.kyc_bucket_name":
-    "Doit être un bucket DIFFÉRENT du précédent, et jamais exposé publiquement. Il ne contient que les pièces d'identité et les selfies de vérification, servis par des liens signés valables 1 heure. Vide = les envois KYC échouent (volontairement) plutôt que de repartir dans le bucket public.",
+    "Must be a DIFFERENT storage space from the one above, and never public. It holds only ID documents and verification selfies, opened through links that expire after 1 hour. If left empty, ID uploads are refused on purpose rather than saved in the public space.",
+};
+
+/**
+ * Plain names for every setting, so a raw key never reaches the screen. The
+ * server's own label is only used for a key added later and missing here.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  "storage.s3.bucket": "Storage space name",
+  "storage.s3.region": "Region",
+  "storage.s3.access_key_id": "Access key",
+  "storage.s3.secret_access_key": "Secret access key",
+  "storage.s3.endpoint": "Server address (optional)",
+  "storage.cloudflare.account_id": "Cloudflare account number",
+  "storage.cloudflare.bucket_name": "Storage space for public files",
+  "storage.cloudflare.kyc_bucket_name": "Private storage space for ID documents",
+  "storage.cloudflare.access_key_id": "Access key",
+  "storage.cloudflare.secret_access_key": "Secret access key",
+  "storage.cloudflare.public_base_url": "Public web address of the files",
+  "storage.cloudinary.cloud_name": "Cloudinary account name",
+  "storage.cloudinary.api_key": "Access key",
+  "storage.cloudinary.api_secret": "Secret access key",
+  "storage.vercel_blob.token": "Access key",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -84,7 +106,7 @@ function SecretInput({
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder ?? "Leave blank to keep unchanged"}
+        placeholder={placeholder ?? "Leave empty to keep the current one"}
         className="pr-10"
       />
       <button
@@ -164,10 +186,11 @@ export function StorageCard() {
           </div>
           <div>
             <CardTitle className="text-base font-semibold">
-              File Storage
+              File storage
             </CardTitle>
             <p className="text-muted-foreground text-xs">
-              Active provider and access credentials
+              Where photos and documents are kept, and the keys to reach it.
+              Change only with the tech team.
             </p>
           </div>
         </div>
@@ -184,7 +207,7 @@ export function StorageCard() {
 
       <CardContent>
         <div className="mb-6 space-y-1.5 pt-6">
-          <FieldLabel>Provider</FieldLabel>
+          <FieldLabel>Storage service</FieldLabel>
           <Select
             value={driver}
             onValueChange={(v) => setDriver(v as StorageDriver)}
@@ -208,7 +231,7 @@ export function StorageCard() {
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           {activeKeys.map((key) => {
             const cfg = configs.find((c) => c.key === key);
-            const label = cfg?.label ?? key;
+            const label = FIELD_LABELS[key] ?? cfg?.label ?? "Setting";
             const isSecret = cfg?.isSecret ?? false;
             const value = form[key] ?? "";
 
