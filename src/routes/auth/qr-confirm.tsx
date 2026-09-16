@@ -10,6 +10,7 @@ import {
 import { Button } from "#/components/ui/button";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { confirmQrSessionFromPhone } from "#/lib/api/auth-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export const Route = createFileRoute("/auth/qr-confirm")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -27,7 +28,7 @@ function QrConfirmPage() {
 
   async function handleConfirm() {
     if (!session) {
-      setErrorMsg("Invalid QR code — missing session.");
+      setErrorMsg("This QR code isn't complete. Scan it again from your computer.");
       setPhase("error");
       return;
     }
@@ -36,23 +37,23 @@ function QrConfirmPage() {
       await confirmQrSessionFromPhone(session);
       setPhase("done");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to confirm.";
+      // Classified on the server's own wording; only the display is softened.
+      const raw = (err instanceof Error ? err.message : "").toLowerCase();
       const isNotPaired =
-        msg.toLowerCase().includes("not paired") ||
-        msg.toLowerCase().includes("phone token");
+        raw.includes("not paired") || raw.includes("phone token");
       if (isNotPaired) {
         setPhase("not-paired");
         return;
       }
       const needsRepair =
-        msg.toLowerCase().includes("expired") ||
-        msg.toLowerCase().includes("invalid") ||
-        msg.toLowerCase().includes("not found") ||
-        msg.toLowerCase().includes("reset");
+        raw.includes("expired") ||
+        raw.includes("invalid") ||
+        raw.includes("not found") ||
+        raw.includes("reset");
       setErrorMsg(
         needsRepair
-          ? "Phone pairing has expired or been reset. Re-pair your phone in your admin profile."
-          : msg,
+          ? "This phone's link has expired. Link your phone again from your admin profile."
+          : friendlyError(err, "Couldn't confirm the sign-in. Try again."),
       );
       setPhase("error");
     }

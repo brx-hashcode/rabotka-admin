@@ -20,6 +20,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Button } from "#/components/ui/button";
 import { createJobCategory } from "#/lib/api/job-categories-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -81,7 +82,7 @@ export function CreateCategoryModal({
       handleClose();
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to create category"),
+      toast.error(friendlyError(err, "Couldn't create the category. Try again.")),
   });
 
   return (

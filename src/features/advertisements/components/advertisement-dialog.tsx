@@ -40,6 +40,7 @@ import {
 import { appConfig } from "#/config";
 import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { IconPlus } from "@tabler/icons-react";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /** Convert "HH:MM" UTC string to local HH:MM for display in the time input */
 function utcTimeToLocal(utcTime: string): string {
@@ -265,7 +266,12 @@ export function AdvertisementDialog({
     },
     onError: (err: Error) =>
       toast.error(
-        err.message || (isEdit ? "Failed to update" : "Failed to create"),
+        friendlyError(
+          err,
+          isEdit
+            ? "Couldn't update the ad. Try again."
+            : "Couldn't create the ad. Try again.",
+        ),
       ),
   });
 

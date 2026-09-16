@@ -49,6 +49,7 @@ import {
   type AdminMobileMoneyTransactionItem,
   type PaymentGatewayMetadata,
 } from "#/lib/api/wallet-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const LIMIT = 12;
 
@@ -221,7 +222,7 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
       });
     } catch (err) {
       setWithdrawError(
-        err instanceof Error ? err.message : "Withdrawal failed.",
+        friendlyError(err, "The withdrawal didn't go through. Try again."),
       );
     } finally {
       setWithdrawLoading(false);

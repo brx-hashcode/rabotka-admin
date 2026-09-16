@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "#/components/ui/button";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type BulkDeleteButtonProps<TData> = Readonly<{
   table: TableInstance<TData>;
@@ -51,7 +52,7 @@ export function BulkDeleteButton<TData>({
         `Deleted ${result.count} ${entityLabel}${result.count === 1 ? "" : "s"}.`,
       );
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't archive these items. Try again.")),
   });
 
   if (disabled || count === 0) return null;

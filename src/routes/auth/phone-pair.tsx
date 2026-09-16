@@ -11,6 +11,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { verifyPhonePairingOtp } from "#/lib/api/auth-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export const Route = createFileRoute("/auth/phone-pair")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -37,7 +38,7 @@ function PhonePairPage() {
       await verifyPhonePairingOtp(userId, otp);
       setPhase("done");
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Verification failed.");
+      setErrorMsg(friendlyError(err, "Linking this phone didn't work. Try again."));
       setPhase("error");
     }
   }

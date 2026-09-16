@@ -18,6 +18,7 @@ import {
   JobFlyer,
   type JobFlyerData,
 } from "./job-flyer";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type Format = "png" | "jpg";
 
@@ -121,8 +122,8 @@ export function JobFlyerButton({ job }: Readonly<{ job: JobFlyerData }>) {
       // Loud, unlike the silent catch in advertisement-preview-dialog: nothing
       // appears on screen when this fails, so without a toast the button just
       // looks broken.
-      toast.error("Impossible de générer le visuel", {
-        description: err instanceof Error ? err.message : undefined,
+      toast.error("Couldn't create the flyer image", {
+        description: friendlyError(err, "Try again in a moment."),
       });
     } finally {
       setBusy(false);

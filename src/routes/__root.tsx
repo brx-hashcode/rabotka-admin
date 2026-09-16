@@ -2,6 +2,7 @@ import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 import { Providers } from "#/app/providers";
+import "#/lib/validations/zod-messages";
 import "../styles.css";
 
 export const Route = createRootRoute({

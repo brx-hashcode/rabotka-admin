@@ -38,6 +38,7 @@ import {
   useWhatsappRange,
 } from "#/hooks/use-whatsapp-analytics";
 import { WhatsappCategoryBadge } from "./whatsapp-status-badge";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const chartConfig = {
   cost: { label: "Cost", color: "#f59e0b" },
@@ -248,10 +249,10 @@ export function WhatsappBillingPanel({
   // the page keeps working — and both deserve the same offer of a retry.
   let requestError: string | null = null;
   if (isError) {
-    requestError =
-      error instanceof Error
-        ? error.message
-        : "Could not reach the WhatsApp Business Account.";
+    requestError = friendlyError(
+      error,
+      "Couldn't get the WhatsApp costs right now.",
+    );
   }
   const unreachable = data?.unavailable ?? requestError;
 

@@ -28,6 +28,7 @@ import { useVerifyOtpMutation } from "#/hooks/use-verify-otp-mutation";
 import { getMe, totpLogin } from "#/lib/api/auth-controller";
 import { getQueryClient } from "#/app/providers";
 import { toast } from "sonner";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 function getSafeRedirectTarget(raw: string): string | null {
   if (!raw) return null;
@@ -99,7 +100,9 @@ function LoginPage() {
       }
     },
     onError: (error: Error) => {
-      toast.error("Invalid code", { description: error.message });
+      toast.error("That code didn't work", {
+        description: friendlyError(error, "Check the code and try again."),
+      });
     },
   });
 
@@ -157,7 +160,9 @@ function LoginPage() {
                 onSubmit={handleSendOtp}
                 isLoading={sendOtp.isPending}
                 serverError={
-                  sendOtp.isError ? (sendOtp.error?.message ?? null) : null
+                  sendOtp.isError
+                    ? friendlyError(sendOtp.error, "Couldn't send the code. Try again.")
+                    : null
                 }
               />
             )}
@@ -171,7 +176,9 @@ function LoginPage() {
                 isVerifying={verifyOtp.isPending}
                 isResending={sendOtp.isPending}
                 serverError={
-                  verifyOtp.isError ? (verifyOtp.error?.message ?? null) : null
+                  verifyOtp.isError
+                    ? friendlyError(verifyOtp.error, "That code isn't right. Check it and try again.")
+                    : null
                 }
               />
             )}
@@ -197,7 +204,10 @@ function LoginPage() {
                 />
                 {verifyTotp.isError && (
                   <p className="text-sm text-destructive text-center">
-                    {verifyTotp.error.message}
+                    {friendlyError(
+                      verifyTotp.error,
+                      "That code isn't right. Check your code app and try again.",
+                    )}
                   </p>
                 )}
                 <Button

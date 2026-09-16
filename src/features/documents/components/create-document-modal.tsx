@@ -39,6 +39,7 @@ import {
 import { appConfig } from "#/config";
 import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
 import { IconBrandGoogleDrive, IconUpload } from "@tabler/icons-react";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type SourceMode = "upload" | "google-docs";
 
@@ -135,7 +136,7 @@ export function CreateDocumentModal({
     },
     onError: (err) => {
       toast.error(
-        err instanceof Error ? err.message : "Failed to create document",
+        friendlyError(err, "Couldn't create the document. Try again."),
       );
     },
   });
@@ -159,7 +160,7 @@ export function CreateDocumentModal({
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Failed to import document",
+          friendlyError(err, "Couldn't import document. Try again."),
         );
       },
     });

@@ -7,6 +7,7 @@ import {
   getWhatsappStats,
   retryWhatsappDlqJob,
 } from "#/lib/api/whatsapp-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /**
  * The analytics half of the WhatsApp page.
@@ -80,7 +81,7 @@ export function useRetryDlqJob() {
       });
     },
     onError: (err: Error) => {
-      toast.error(err.message || "Could not retry the job");
+      toast.error(friendlyError(err, "Couldn't send the message again. Try again."));
     },
   });
 }

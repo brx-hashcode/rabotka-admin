@@ -17,6 +17,7 @@ import {
   totpLogin,
 } from "#/lib/api/auth-controller";
 import { getRoundedLogoDataUrl } from "#/lib/qr-utils";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type Props = {
   open: boolean;
@@ -132,7 +133,7 @@ export function QrLoginDialog({ open, onOpenChange }: Readonly<Props>) {
       setPhase("done");
       setTimeout(redirectToHome, 800);
     } catch (err: unknown) {
-      setTotpError(err instanceof Error ? err.message : "Invalid code.");
+      setTotpError(friendlyError(err, "That code isn't right. Check it and try again."));
     } finally {
       setTotpPending(false);
     }

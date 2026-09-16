@@ -42,6 +42,7 @@ import {
 } from "#/lib/api/profiles-controller";
 import { compressImage } from "#/lib/media/image-compress";
 import { reportUploadRejections } from "#/lib/media/upload-rejection-toast";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const MAX_ATTACHMENTS = 3;
 
@@ -209,7 +210,7 @@ export function CreateClaimModal({
     },
     onError: (err) => {
       toast.error(
-        err instanceof Error ? err.message : "Failed to create claim",
+        friendlyError(err, "Couldn't create the claim. Try again."),
       );
     },
   });

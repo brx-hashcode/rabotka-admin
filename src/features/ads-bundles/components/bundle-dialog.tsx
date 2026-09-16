@@ -34,6 +34,7 @@ import {
   updateBundle,
   type AdBundle,
 } from "#/lib/api/advertisements-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -158,8 +159,12 @@ export function BundleDialog({
     },
     onError: (err: Error) =>
       toast.error(
-        err.message ||
-          (isEdit ? "Failed to update bundle" : "Failed to create bundle"),
+        friendlyError(
+          err,
+          isEdit
+            ? "Couldn't update the bundle. Try again."
+            : "Couldn't create the bundle. Try again.",
+        ),
       ),
   });
 

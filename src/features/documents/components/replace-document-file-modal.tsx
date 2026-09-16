@@ -17,6 +17,7 @@ import {
   type AdminDocumentItem,
 } from "#/lib/api/documents-controller";
 import { DocumentUploadZone } from "./document-upload-zone";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 /** Upload a file to storage via /file/upload and return its public URL. */
 async function uploadToStorage(file: File): Promise<string> {
@@ -62,7 +63,7 @@ export function ReplaceDocumentFileModal({
       handleClose();
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Failed to replace file");
+      toast.error(friendlyError(err, "Couldn't replace the file. Try again."));
     },
   });
 

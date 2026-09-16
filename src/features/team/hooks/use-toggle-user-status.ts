@@ -4,6 +4,7 @@ import {
   activateAdminUser,
   deactivateAdminUser,
 } from "#/lib/api/users-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 export function useToggleUserStatus(userId: string, isActive: boolean) {
   const queryClient = useQueryClient();
@@ -15,7 +16,7 @@ export function useToggleUserStatus(userId: string, isActive: boolean) {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error, "Couldn't change this team member's access. Try again."));
     },
   });
 }

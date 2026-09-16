@@ -38,6 +38,7 @@ import { docCategoryLabel, docTypeLabel } from "../helpers";
 import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { ImageUploadZone } from "./image-upload-zone";
 import { cn } from "#/lib/utils";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type KycVerificationModalProps = {
   open: boolean;
@@ -198,7 +199,7 @@ export function KycVerificationModal({
       } catch (error) {
         patchItem(id, {
           status: "failed",
-          error: error instanceof Error ? error.message : "Upload failed",
+          error: friendlyError(error, "Upload didn't go through. Try again."),
         });
       }
     },
@@ -258,7 +259,7 @@ export function KycVerificationModal({
         .catch((error: unknown) =>
           patchItem(id, {
             status: "failed",
-            error: error instanceof Error ? error.message : "Upload failed",
+            error: friendlyError(error, "Upload didn't go through. Try again."),
           }),
         );
     },

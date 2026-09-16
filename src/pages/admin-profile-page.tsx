@@ -27,6 +27,7 @@ import {
   totpEnable,
   totpDisable,
 } from "#/lib/api/auth-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
@@ -130,7 +131,7 @@ function PhonePairingCard({
       handleReset();
     } catch (err: unknown) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Failed to disconnect phone.",
+        friendlyError(err, "Couldn't disconnect the phone. Try again."),
       );
       setPhase("error");
     }
@@ -151,7 +152,7 @@ function PhonePairingCard({
       setPhase("show-code");
     } catch (err: unknown) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Failed to generate code.",
+        friendlyError(err, "Couldn't generate the code. Try again."),
       );
       setPhase("error");
     }
@@ -366,7 +367,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
       setSecret(result.secret);
       setPhase("setup");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to start setup.");
+      setError(friendlyError(err, "Couldn't start the two-step sign-in setup. Try again."));
       setPhase("idle");
     }
   }
@@ -380,7 +381,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
       setPhase("idle");
       onChanged();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid code.");
+      setError(friendlyError(err, "That code isn't right. Check it and try again."));
     }
   }
 
@@ -393,7 +394,7 @@ function TotpCard({ totpEnabled, onChanged }: Readonly<{ totpEnabled: boolean; o
       setPhase("idle");
       onChanged();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid code.");
+      setError(friendlyError(err, "That code isn't right. Check it and try again."));
     }
   }
 

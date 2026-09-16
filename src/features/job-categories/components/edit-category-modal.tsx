@@ -24,6 +24,7 @@ import {
   updateJobCategory,
   type AdminJobCategory,
 } from "#/lib/api/job-categories-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -85,7 +86,7 @@ export function EditCategoryModal({
       onOpenChange(false);
     },
     onError: (err: Error) =>
-      toast.error(err.message || "Failed to update category"),
+      toast.error(friendlyError(err, "Couldn't update the category. Try again.")),
   });
 
   return (

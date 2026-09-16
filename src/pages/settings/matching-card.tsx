@@ -10,6 +10,7 @@ import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { toast } from "sonner";
 import { reindexMatching } from "#/lib/api/matching-controller";
+import { friendlyError } from "#/lib/api/friendly-error";
 
 type FormState = {
   useEmbeddings: boolean;
@@ -41,7 +42,7 @@ export function MatchingCard() {
   const reindexMutation = useMutation({
     mutationFn: reindexMatching,
     onSuccess: () => toast.success("Re-indexing started in background"),
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(friendlyError(error, "Couldn't refresh the matching data. Try again.")),
   });
 
   useEffect(() => {
