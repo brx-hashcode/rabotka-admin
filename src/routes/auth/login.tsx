@@ -91,7 +91,7 @@ function LoginPage() {
   const verifyTotp = useMutation({
     mutationFn: () => totpLogin(pendingToken, totpCode),
     onSuccess: () => {
-      toast.success("Authentication successful");
+      toast.success("You're signed in");
       const safeTarget = getSafeRedirectTarget(redirectTarget);
       if (safeTarget) {
         globalThis.location.assign(safeTarget);
@@ -133,13 +133,13 @@ function LoginPage() {
     await sendOtp.mutateAsync(email);
   }
 
-  const stepTitle = step === 1 ? "Admin sign in" : step === 2 ? "Verification" : "Two-factor auth";
+  const stepTitle = step === 1 ? "Admin sign in" : step === 2 ? "Check your email" : "Two-step sign-in";
   const stepDesc =
     step === 1
-      ? "Enter your email to receive an OTP code"
+      ? "Enter your email and we'll send you a sign-in code"
       : step === 2
         ? "Enter the 6-digit code sent to your email"
-        : "Enter the 6-digit code from your authenticator app";
+        : "Enter the 6-digit code from your code app";
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-background px-4">

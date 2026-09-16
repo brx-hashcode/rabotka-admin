@@ -68,26 +68,26 @@ function QrConfirmPage() {
               <img src={rabotkaLogo} alt="Rabotka" className="h-14 w-auto" />
             </div>
             <CardTitle className="text-xl">
-              {phase === "not-paired" ? "Phone not configured" : "Confirm login"}
+              {phase === "not-paired" ? "This phone isn't linked yet" : "Confirm sign-in"}
             </CardTitle>
             <CardDescription>
               {phase === "not-paired"
-                ? "This phone has not been paired for QR login."
-                : "Someone is signing in via QR code on a desktop browser."}
+                ? "Link this phone before using it to sign in with a QR code."
+                : "Someone is signing in with a QR code on a computer. Confirm only if it's you."}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="flex flex-col gap-4">
             {phase === "not-paired" && (
               <p className="text-muted-foreground text-sm text-center">
-                Go to your admin profile on desktop, open the{" "}
-                <strong>Phone pairing</strong> section, and pair this device first.
+                On your computer, open your admin profile, go to{" "}
+                <strong>Link your phone</strong>, and link this phone first.
               </p>
             )}
 
             {phase === "ready" && (
               <Button className="w-full" onClick={() => void handleConfirm()}>
-                Confirm login
+                Confirm sign-in
               </Button>
             )}
 

@@ -28,7 +28,7 @@ function PhonePairPage() {
 
   async function handleVerify() {
     if (!userId) {
-      setErrorMsg("Invalid pairing link. Please generate a new code from your desktop.");
+      setErrorMsg("This link doesn't work. Create a new code from your profile on your computer.");
       setPhase("error");
       return;
     }
@@ -51,9 +51,9 @@ function PhonePairPage() {
             <div className="flex justify-center mb-2">
               <img src={rabotkaLogo} alt="Rabotka" className="h-14 w-auto" />
             </div>
-            <CardTitle className="text-xl">Pair this phone</CardTitle>
+            <CardTitle className="text-xl">Link this phone</CardTitle>
             <CardDescription>
-              Enter the 6-digit code shown on your desktop profile page.
+              Enter the 6-digit code shown on your profile page on your computer.
             </CardDescription>
           </CardHeader>
 
@@ -78,7 +78,7 @@ function PhonePairPage() {
                   disabled={otp.length !== 6 || phase === "loading"}
                   className="w-full"
                 >
-                  {phase === "loading" ? "Verifying…" : "Pair this phone"}
+                  {phase === "loading" ? "Checking…" : "Link this phone"}
                 </Button>
               </>
             )}
@@ -87,7 +87,7 @@ function PhonePairPage() {
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <p className="text-sm font-medium">Phone paired successfully.</p>
                 <p className="text-muted-foreground text-xs">
-                  You can now use QR code login on this device.
+                  You can now sign in with a QR code using this phone.
                 </p>
               </div>
             )}
