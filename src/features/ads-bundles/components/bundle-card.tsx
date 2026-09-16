@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   deleteBundle,
   updateBundle,
@@ -288,7 +288,7 @@ export function BundleCard({ bundle }: Readonly<BundleCardProps>) {
             <AlertDialogAction
               onClick={() => doDelete()}
               disabled={isDeleting}
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
             >
               {isDeleting ? "Deleting…" : "Delete"}
             </AlertDialogAction>

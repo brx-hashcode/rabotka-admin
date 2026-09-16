@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   deleteOAuthApp,
   readSandboxAppSecret,
@@ -263,7 +263,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className={buttonVariants({ variant: "destructive" })}
+              variant="destructive"
               onClick={() => doDelete()}
               disabled={isDeleting}
             >
