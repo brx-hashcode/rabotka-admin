@@ -28,6 +28,7 @@ import {
   totpDisable,
 } from "#/lib/api/auth-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { TEAM_ROLE_LABELS, labelOf } from "#/lib/status-labels";
 
 const FieldLabel = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
@@ -684,7 +685,7 @@ export default function AdminProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <FieldLabel>Role</FieldLabel>
-                <Input value={admin.role} disabled />
+                <Input value={labelOf(TEAM_ROLE_LABELS, admin.role)} disabled />
               </div>
             </div>
             <div className="flex justify-end">

@@ -64,6 +64,11 @@ import type {
   Advertisement,
   AdvertisementDeliveryLogItem,
 } from "#/lib/api/advertisements-controller";
+import {
+  DELIVERY_STATUS_LABELS,
+  MESSAGE_CHANNEL_LABELS,
+  labelOf,
+} from "#/lib/status-labels";
 
 type Props = {
   open: boolean;
@@ -231,7 +236,7 @@ function makeDeliveryLogColumns(): ColumnDef<AdvertisementDeliveryLogItem>[] {
       header: "Channel",
       cell: ({ row }) => (
         <Badge className={getChannelBadgeClass(row.original.channel)}>
-          {row.original.channel}
+          {labelOf(MESSAGE_CHANNEL_LABELS, row.original.channel)}
         </Badge>
       ),
     },
@@ -240,7 +245,7 @@ function makeDeliveryLogColumns(): ColumnDef<AdvertisementDeliveryLogItem>[] {
       header: "Status",
       cell: ({ row }) => (
         <Badge className={getDeliveryStatusBadgeClass(row.original.status)}>
-          {row.original.status}
+          {labelOf(DELIVERY_STATUS_LABELS, row.original.status)}
         </Badge>
       ),
     },

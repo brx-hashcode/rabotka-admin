@@ -329,7 +329,7 @@ export function KycVerificationModal({
           decision buttons became unreachable. */}
       <DialogContent className="flex max-h-[90vh] w-full max-w-xl flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>KYC Verification</DialogTitle>
+          <DialogTitle>Identity check (KYC)</DialogTitle>
           <DialogDescription>
             Approve or reject this profile&apos;s KYC. Supporting uploads are
             optional; a reason is required and is stored on the profile.
@@ -384,7 +384,7 @@ export function KycVerificationModal({
             renderOverlay={(index) => (
               <UploadStatusOverlay item={items[index]} onRetry={retryItem} />
             )}
-            label="KYC supporting documents (optional)"
+            label="Extra documents for the identity check (optional)"
             maxSize={5 * 1024 * 1024}
             maxFiles={MAX_FILES}
           />
@@ -522,14 +522,14 @@ export function KycVerificationModal({
             {previewDoc?.contentKind === "image" && (
               <img
                 src={kycDocumentRawUrl(profile.id, previewDoc.id)}
-                alt="KYC document"
+                alt="ID document"
                 className="max-h-[70vh] max-w-full rounded object-contain"
               />
             )}
             {previewDoc != null && previewDoc.contentKind !== "image" && (
               <p className="text-muted-foreground text-sm">
                 Preview is only available for images. Open the document from the
-                KYC tab for the full viewer.
+                "Identity check (KYC)" tab to see it in full.
               </p>
             )}
           </div>
@@ -558,7 +558,7 @@ function UploadStatusOverlay({
       <div className="bg-destructive/70 absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-white">
         <IconAlertTriangle className="size-5" />
         <span className="px-1 text-center text-[10px] font-medium">
-          {item.error ?? "Upload failed"}
+          {item.error ?? "The file couldn't be uploaded. Try again."}
         </span>
         <Button
           type="button"
@@ -567,7 +567,7 @@ function UploadStatusOverlay({
           // The wrapper is pointer-events-none so the chip never swallows the
           // remove button; this one control opts back in.
           className="pointer-events-auto"
-          title="Retry upload"
+          title="Upload again"
           onClick={(e) => {
             e.stopPropagation();
             onRetry(item.id);

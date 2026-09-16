@@ -170,7 +170,7 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
               )}
             </Row>
 
-            <Row label="Indexed">
+            <Row label="Job matching">
               <span className="flex items-center justify-end gap-2">
                 <Badge
                   className={
@@ -179,7 +179,7 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                       : "bg-amber-500 text-white border-transparent hover:bg-amber-600"
                   }
                 >
-                  {profile.vectorIndexedAt ? "Indexed" : "Not Indexed"}
+                  {profile.vectorIndexedAt ? "Ready" : "Not ready yet"}
                 </Badge>
                 {profile.vectorIndexedAt && (
                   <span className="text-muted-foreground text-xs font-normal">

@@ -4,7 +4,7 @@
  */
 
 export const ACCOUNT_STATUS_LABELS: Record<string, string> = {
-  PENDING_ACTIVATION: "En attente d'activation",
+  PENDING_ACTIVATION: "Waiting for activation",
   ACTIVE: "Active",
   SUSPENDED: "Suspended",
   BANNED: "Banned",
@@ -24,9 +24,9 @@ export const VERIFICATION_STATUS_LABELS: Record<string, string> = {
 export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Draft",
   ACTIVE: "Active",
-  PARTIALLY_FILLED: "Partially Filled",
+  PARTIALLY_FILLED: "Partly filled",
   FILLED: "Filled",
-  IN_PROGRESS: "In Progress",
+  IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
   EXPIRED: "Expired",
@@ -54,7 +54,7 @@ export const APPLICATION_STATUS_LABELS: Record<string, string> = {
 
 export const ADVERTISEMENT_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Draft",
-  PENDING_REVIEW: "Pending Review",
+  PENDING_REVIEW: "Waiting for review",
   APPROVED: "Approved",
   ACTIVE: "Active",
   PAUSED: "Paused",
@@ -64,7 +64,55 @@ export const ADVERTISEMENT_STATUS_LABELS: Record<string, string> = {
 } as const;
 
 export function getAdvertisementStatusLabel(status: string): string {
-  return ADVERTISEMENT_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+  return ADVERTISEMENT_STATUS_LABELS[status] ?? humanizeCode(status);
+}
+
+/**
+ * Any stored code as words — `PENDING_ACTIVATION` → "Pending activation" —
+ * for values with no label of their own, so an uppercase code never reaches
+ * the screen.
+ */
+export function humanizeCode(value: string | null | undefined): string {
+  if (!value) return "—";
+  const words = value.replaceAll("_", " ").toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export const TEAM_ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: "Super admin",
+  ADMIN: "Admin",
+  MANAGER: "Manager",
+  MODERATOR: "Moderator",
+  FINANCE: "Finance",
+  SUPPORT: "Support",
+} as const;
+
+export const MESSAGE_CHANNEL_LABELS: Record<string, string> = {
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  IN_APP: "In the app",
+  SMS: "SMS",
+} as const;
+
+export const DELIVERY_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Waiting",
+  QUEUED: "Preparing",
+  SENT: "Sent",
+  DELIVERED: "Delivered",
+  OPENED: "Opened",
+  READ: "Read",
+  CLICKED: "Clicked",
+  FAILED: "Failed",
+  BOUNCED: "Not delivered",
+} as const;
+
+/** The label from `labels`, or the code turned into words. */
+export function labelOf(
+  labels: Record<string, string>,
+  value: string | null | undefined,
+): string {
+  if (!value) return "—";
+  return labels[value] ?? humanizeCode(value);
 }
 
 export const PENALTY_PAYMENT_STATUS_LABELS: Record<string, string> = {
@@ -78,7 +126,7 @@ export const PENALTY_APPLIED_LABELS: Record<string, string> = {
 } as const;
 
 export function getAccountStatusLabel(status: string): string {
-  return ACCOUNT_STATUS_LABELS[status] ?? status.replaceAll("_", " ");
+  return ACCOUNT_STATUS_LABELS[status] ?? humanizeCode(status);
 }
 
 export function getProfileTypeLabel(profileType: string): string {
@@ -90,11 +138,11 @@ export function getVerificationStatusLabel(verificationStatus: string): string {
 }
 
 export function getJobOfferStatusLabel(status: string): string {
-  return JOB_OFFER_STATUS_LABELS[status] ?? status;
+  return JOB_OFFER_STATUS_LABELS[status] ?? humanizeCode(status);
 }
 
 export function getApplicationStatusLabel(status: string): string {
-  return APPLICATION_STATUS_LABELS[status] ?? status;
+  return APPLICATION_STATUS_LABELS[status] ?? humanizeCode(status);
 }
 
 /**

@@ -37,6 +37,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { toast } from "sonner";
 import { groupByDay } from "#/lib/date-grouping";
+import { humanizeCode } from "#/lib/status-labels";
 
 const TX_TYPE_LABELS: Record<string, string> = {
   WELCOME_CREDIT: "Welcome credit",
@@ -96,7 +97,7 @@ function formatAmount(amount: number) {
 }
 
 function txTypeLabel(type: string) {
-  return TX_TYPE_LABELS[type] ?? type.replaceAll("_", " ");
+  return TX_TYPE_LABELS[type] ?? humanizeCode(type);
 }
 
 function isCredit(type: string): boolean {

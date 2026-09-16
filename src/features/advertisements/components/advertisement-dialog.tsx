@@ -90,7 +90,7 @@ const schema = z.object({
   bundleId: z.string().min(1, "Bundle is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
-  dispatchTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Must be HH:MM"),
+  dispatchTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time like 14:30"),
 });
 
 type FormValues = z.infer<typeof schema>;

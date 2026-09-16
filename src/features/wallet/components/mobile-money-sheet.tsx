@@ -128,7 +128,7 @@ const buildMmColumns = (
   {
     id: "gateway",
     accessorKey: "gateway",
-    header: "Gateway",
+    header: "Payment method",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {labelFor(row.original.gateway)}
@@ -473,7 +473,7 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="wd-gateway">Gateway *</Label>
+              <Label htmlFor="wd-gateway">Payment method *</Label>
               <Select
                 value={withdrawGateway}
                 onValueChange={(v) => {
@@ -483,7 +483,7 @@ export function MobileMoneySheet({ children }: Readonly<Props>) {
                 disabled={withdrawLoading}
               >
                 <SelectTrigger id="wd-gateway" className="w-full">
-                  <SelectValue placeholder="Select a gateway" />
+                  <SelectValue placeholder="Choose a payment method" />
                 </SelectTrigger>
                 <SelectContent>
                   {gatewayKeys.map((gw) => (

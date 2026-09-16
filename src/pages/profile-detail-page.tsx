@@ -62,7 +62,7 @@ type ProfileTab =
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
-  { label: "KYC Information", value: "kyc" },
+  { label: "Identity check (KYC)", value: "kyc" },
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
   { label: "Parrainage", value: "referrals" },
@@ -309,7 +309,7 @@ export default function ProfileDetailPage({
                     onClick={() => canVerifyKyc && setKycModalOpen(true)}
                   >
                     <IconShieldCheck className="size-4" />
-                    KYC Verification
+                    Check identity (KYC)
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -325,7 +325,7 @@ export default function ProfileDetailPage({
                       Activate
                       {activateBlockedByKyc && (
                         <span className="text-xs text-muted-foreground">
-                          Verify KYC first — that activates the account
+                          Check the identity first — that activates the account
                         </span>
                       )}
                     </span>

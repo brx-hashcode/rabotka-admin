@@ -735,7 +735,7 @@ function GroupMembersSheet({
           {isTeam && (
             <p className="border-b bg-muted/20 px-4 py-5 text-xs leading-relaxed text-muted-foreground">
               This is the company-wide RABOTKA GROUP — everyone on the team is
-              here by default. Its members stay in sync automatically as
+              here by default. Its members are updated automatically as
               teammates are added or removed, so the list can’t be edited by
               hand.
             </p>

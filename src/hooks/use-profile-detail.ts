@@ -53,7 +53,7 @@ export function useProfileDetail(profileId: string) {
     onSuccess: (data) => {
       queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, data);
       invalidateLogs();
-      toast.success("KYC verification submitted");
+      toast.success("Identity check decision saved");
     },
     onError: (error) => {
       toast.error(friendlyError(error, "Couldn't update this profile. Try again."));

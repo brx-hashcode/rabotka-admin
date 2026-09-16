@@ -6,6 +6,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { getOriginBadgeClass, getOriginLabel } from "#/features/contact-records";
 import { useContactRecordDetail } from "#/hooks/use-contact-record-detail";
 import type { AdminContactRecordDetail } from "#/lib/api/contact-records-controller";
+import { humanizeCode } from "#/lib/status-labels";
 
 function formatDateTime(value: string | null): string {
   if (!value) return "—";
@@ -214,10 +215,10 @@ export default function ContactRecordDetailPage({
         <Card>
           <CardContent className="space-y-4 pt-6">
             <p className="text-muted-foreground text-xs uppercase tracking-wide">
-              Unlock attempt
+              Contact unlock
             </p>
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-              <Field label="Status" value={attempt.status} />
+              <Field label="Status" value={humanizeCode(attempt.status)} />
               <Field
                 label="Employer"
                 value={

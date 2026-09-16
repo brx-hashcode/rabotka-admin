@@ -26,8 +26,8 @@ const schema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z
     .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers and hyphens"),
+    .min(1, "Enter a web address name")
+    .regex(/^[a-z0-9-]+$/, "Use only small letters, numbers and dashes (-), no spaces"),
   icon: z.string().optional(),
   description: z.string().optional(),
 });
@@ -137,7 +137,7 @@ export function CreateCategoryModal({
                 name="slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Slug</FormLabel>
+                    <FormLabel>Web address name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
