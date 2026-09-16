@@ -3,6 +3,7 @@ import { Badge } from "#/components/ui/badge";
 import { getCommonColumns } from "#/components/table";
 import type { AdminLogItem } from "#/lib/api/logs-controller";
 import { LogRowActions } from "./log-row-actions";
+import { actionLabel, recordTypeLabel } from "#/lib/log-labels";
 
 function getActionBadgeClass(action: string): string {
   const a = action.toLowerCase();
@@ -64,19 +65,22 @@ const logDataColumns: ColumnDef<AdminLogItem, unknown>[] = [
     accessorKey: "action",
     header: "Action",
     cell: ({ row }) => (
-      <Badge className={`font-mono text-xs ${getActionBadgeClass(row.original.action)}`}>
-        {row.original.action}
+      <Badge
+        className={`text-xs ${getActionBadgeClass(row.original.action)}`}
+        title={row.original.action}
+      >
+        {actionLabel(row.original.action)}
       </Badge>
     ),
   },
   {
     id: "entityType",
     accessorKey: "entityType",
-    header: "Entity",
+    header: "About",
     cell: ({ row }) =>
       row.original.entityType ? (
         <Badge className={`text-xs ${getEntityBadgeClass(row.original.entityType)}`}>
-          {row.original.entityType}
+          {recordTypeLabel(row.original.entityType)}
         </Badge>
       ) : (
         <span className="text-muted-foreground text-sm">—</span>
@@ -84,7 +88,7 @@ const logDataColumns: ColumnDef<AdminLogItem, unknown>[] = [
   },
   {
     id: "actor",
-    header: "Actor",
+    header: "Done by",
     cell: ({ row }) => {
       const name = row.original.userName ?? row.original.profileName;
       return name ? (
@@ -93,17 +97,6 @@ const logDataColumns: ColumnDef<AdminLogItem, unknown>[] = [
         <span className="text-muted-foreground text-sm">—</span>
       );
     },
-  },
-  {
-    id: "ipAddress",
-    accessorKey: "ipAddress",
-    header: "IP Address",
-    cell: ({ row }) =>
-      row.original.ipAddress ? (
-        <span className="font-mono text-xs">{row.original.ipAddress}</span>
-      ) : (
-        <span className="text-muted-foreground text-sm">—</span>
-      ),
   },
   {
     id: "createdAt",
