@@ -82,12 +82,12 @@ function TimelineStep({ step }: Readonly<{ step: Step }>) {
       </span>
       {step.at ? (
         <>
-          <span className="text-muted-foreground text-xs">
-            {format(new Date(step.at), "MMM d, HH:mm:ss")}
-          </span>
-          {delta ? (
-            <span className="text-muted-foreground/70 text-xs">{delta}</span>
-          ) : null}
+              <span className="text-muted-foreground text-xs">
+                {format(new Date(step.at), "MMM d, HH:mm:ss")}
+              </span>
+              {delta ? (
+                <span className="text-muted-foreground/70 text-xs">{delta}</span>
+              ) : null}
         </>
       ) : (
         <span className="text-muted-foreground/60 text-xs italic">
@@ -102,8 +102,21 @@ export function WhatsappMessageDetailSheet({
   message,
   onClose,
 }: Readonly<WhatsappMessageDetailSheetProps>) {
-  const steps: Step[] = message
-    ? [
+  const inbound = message?.direction === "INBOUND";
+
+  // A received message has no delivery lifecycle — only the moment it came in.
+  const steps: Step[] = !message
+    ? []
+    : inbound
+      ? [
+          {
+            label: "Received",
+            at: message.receivedAt ?? message.createdAt,
+            from: null,
+            tone: "bg-teal-600",
+          },
+        ]
+      : [
         {
           label: "Prepared",
           at: message.createdAt,
@@ -138,8 +151,7 @@ export function WhatsappMessageDetailSheet({
               },
             ]
           : []),
-      ]
-    : [];
+      ];
 
   return (
     <Sheet
@@ -158,7 +170,9 @@ export function WhatsappMessageDetailSheet({
               </span>
             </SheetTitle>
             <SheetDescription>
-              When the message was sent, delivered and read, and what it said
+              {inbound
+                ? "A message this contact sent us, and what it said"
+                : "When the message was sent, delivered and read, and what it said"}
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -167,7 +181,7 @@ export function WhatsappMessageDetailSheet({
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
             <div className="bg-card shadow-soft space-y-2 rounded-md p-4">
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                Delivery
+                {inbound ? "Received" : "Delivery"}
               </p>
               {steps.map((step) => (
                 <TimelineStep key={step.label} step={step} />
@@ -184,7 +198,10 @@ export function WhatsappMessageDetailSheet({
             ) : null}
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              <Field label="Recipient" value={message.toPhone} />
+              <Field
+                label={inbound ? "From" : "Recipient"}
+                value={message.toPhone}
+              />
               {/* Linked when we know who it is. The question this panel raises
                   most often is "who is this and what else happened to them",
                   and the answer is one page away — but only if the id resolved:
@@ -205,36 +222,48 @@ export function WhatsappMessageDetailSheet({
                   )
                 }
               />
+              {/* The name they chose on WhatsApp. For a number that never
+                  registered, the only name there is. */}
+              <Field label="WhatsApp name" value={message.waProfileName ?? "—"} />
               <Field label="Type" value={messageKindLabel(message.kind)} />
-              <Field
-                label="Approved message"
-                value={message.templateKey ? templateLabel(message.templateKey) : "—"}
-              />
-              <Field
-                label="Category"
-                value={
-                  <WhatsappCategoryBadge
-                    category={
-                      message.pricingCategory ?? message.templateCategory
+              {inbound ? (
+                <Field
+                  label="Received through"
+                  value={whatsappServiceLabel(message.provider)}
+                />
+              ) : (
+                <>
+                  <Field
+                    label="Approved message"
+                    value={message.templateKey ? templateLabel(message.templateKey) : "—"}
+                  />
+                  <Field
+                    label="Category"
+                    value={
+                      <WhatsappCategoryBadge
+                        category={
+                          message.pricingCategory ?? message.templateCategory
+                        }
+                      />
                     }
                   />
-                }
-              />
-              <Field
-                label="Paid message"
-                value={
-                  message.billable === null
-                    ? "—"
-                    : message.billable
-                      ? "Yes"
-                      : "No (free)"
-                }
-              />
-              <Field
-                label="Sent through"
-                value={whatsappServiceLabel(message.provider)}
-              />
-              <Field label="Sent by" value={message.sentByName ?? "System"} />
+                  <Field
+                    label="Paid message"
+                    value={
+                      message.billable === null
+                        ? "—"
+                        : message.billable
+                          ? "Yes"
+                          : "No (free)"
+                    }
+                  />
+                  <Field
+                    label="Sent through"
+                    value={whatsappServiceLabel(message.provider)}
+                  />
+                  <Field label="Sent by" value={message.sentByName ?? "System"} />
+                </>
+              )}
             </div>
 
             <div className="space-y-1.5">

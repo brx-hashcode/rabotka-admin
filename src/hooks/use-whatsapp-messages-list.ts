@@ -22,6 +22,7 @@ export const whatsappMessagesParsers = {
   status: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   template_key: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   kind: parseAsArrayOf(parseAsString).withDefault([] as string[]),
+  direction: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   provider: parseAsArrayOf(parseAsString).withDefault([] as string[]),
   created_from: parseAsString.withDefault(""),
   created_to: parseAsString.withDefault(""),
@@ -32,8 +33,16 @@ export function useWhatsappMessagesList() {
   const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const isFirstMount = useRef(true);
 
-  const { q, status, template_key, kind, provider, created_from, created_to } =
-    queryState;
+  const {
+    q,
+    status,
+    template_key,
+    kind,
+    direction,
+    provider,
+    created_from,
+    created_to,
+  } = queryState;
 
   // Changing a filter has to reset to page 1, or a narrowed result set lands
   // the reader on a page that no longer exists and looks empty.
@@ -48,6 +57,7 @@ export function useWhatsappMessagesList() {
     status,
     template_key,
     kind,
+    direction,
     provider,
     created_from,
     created_to,
@@ -63,6 +73,9 @@ export function useWhatsappMessagesList() {
       ? { template_key: queryState.template_key }
       : {}),
     ...(queryState.kind?.length ? { kind: queryState.kind } : {}),
+    ...(queryState.direction?.length
+      ? { direction: queryState.direction }
+      : {}),
     ...(queryState.provider?.length ? { provider: queryState.provider } : {}),
     ...(queryState.created_from ? { created_from: queryState.created_from } : {}),
     ...(queryState.created_to ? { created_to: queryState.created_to } : {}),

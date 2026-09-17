@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import { getCommonColumns } from "#/components/table";
 import type { WhatsappMessageItem } from "#/lib/api/whatsapp-controller";
@@ -30,13 +31,32 @@ const KIND_STYLE: Record<string, string> = {
   media: "bg-cyan-600 text-white",
   flow: "bg-teal-600 text-white",
   interactive: "bg-indigo-500 text-white",
+  interactive_cta: "bg-indigo-500 text-white",
 };
+
+/** Which way the message went, readable at a glance down the column. */
+function DirectionMark({
+  direction,
+}: Readonly<{ direction: WhatsappMessageItem["direction"] }>) {
+  const inbound = direction === "INBOUND";
+  return inbound ? (
+    <ArrowDownLeft
+      className="size-3.5 shrink-0 text-teal-600"
+      aria-label="Received"
+    />
+  ) : (
+    <ArrowUpRight
+      className="text-muted-foreground size-3.5 shrink-0"
+      aria-label="Sent"
+    />
+  );
+}
 
 const messageColumns: ColumnDef<WhatsappMessageItem, unknown>[] = [
   {
     id: "createdAt",
     accessorKey: "createdAt",
-    header: "Sent at",
+    header: "Time",
     cell: ({ row }) => (
       <span className="text-sm text-nowrap">
         {formatDate(row.original.createdAt)}
@@ -45,13 +65,23 @@ const messageColumns: ColumnDef<WhatsappMessageItem, unknown>[] = [
   },
   {
     id: "recipient",
-    header: "Recipient",
+    header: "Contact",
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-mono text-xs">{row.original.toPhone}</span>
+        <span className="flex items-center gap-1.5 font-mono text-xs">
+          <DirectionMark direction={row.original.direction} />
+          {row.original.toPhone}
+        </span>
         {row.original.profileName ? (
           <span className="text-muted-foreground text-xs">
             {row.original.profileName}
+          </span>
+        ) : row.original.waProfileName ? (
+          // The name they chose on WhatsApp — for a number with no profile,
+          // the only name we have. Labelled so it is not mistaken for one.
+          <span className="text-muted-foreground text-xs">
+            <span className="opacity-70">WhatsApp: </span>
+            {row.original.waProfileName}
           </span>
         ) : (
           // Worth showing rather than leaving blank: a send to a number with

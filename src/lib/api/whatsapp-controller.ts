@@ -3,7 +3,7 @@ import { appConfig } from "#/config";
 import { fetchWithCsrfRetry } from "./csrf-token";
 
 /**
- * The WhatsApp delivery log and its analytics.
+ * The WhatsApp message log (sent and received) and its analytics.
  *
  * Nothing here existed before: sends were fire-and-forget and delivery
  * webhooks were discarded, so the admin had no way to tell a delivered
@@ -15,7 +15,9 @@ export type WhatsappDeliveryStatus =
   | "SENT"
   | "DELIVERED"
   | "READ"
-  | "FAILED";
+  | "FAILED"
+  /** A message someone sent us. Not a delivery state. */
+  | "RECEIVED";
 
 export type WhatsappMessageItem = {
   id: string;
@@ -26,6 +28,11 @@ export type WhatsappMessageItem = {
   toPhone: string;
   profileId: string | null;
   profileName: string | null;
+  /**
+   * The contact's WhatsApp display name: the one they wrote with, or the
+   * latest known for the number. Often the only name a non-member has.
+   */
+  waProfileName: string | null;
   kind: string;
   templateKey: string | null;
   templateCategory: string | null;
@@ -36,6 +43,7 @@ export type WhatsappMessageItem = {
   deliveredAt: string | null;
   readAt: string | null;
   failedAt: string | null;
+  receivedAt: string | null;
   errorCode: string | null;
   errorProviderCode: number | null;
   errorMessage: string | null;
@@ -66,8 +74,10 @@ export type WhatsappMessagesResponse = {
 };
 
 export type WhatsappStats = {
+  /** Sent messages only; received ones are counted in `received`. */
   totals: Record<WhatsappDeliveryStatus, number>;
   total: number;
+  received: number;
   sent: number;
   deliveryRate: number;
   readRate: number;

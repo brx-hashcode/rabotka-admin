@@ -25,8 +25,9 @@ export const WHATSAPP_EXPORT_HEADERS = [
   "Created at",
   "Direction",
   // Who
-  "Recipient phone",
+  "Phone",
   "Profile name",
+  "WhatsApp name",
   "Profile reference",
   // What was sent
   "Type",
@@ -104,6 +105,7 @@ export function whatsappItemsToStringRows(
       item.direction,
       item.toPhone,
       item.profileName ?? "",
+      item.waProfileName ?? "",
       item.profileId ?? "",
       item.kind,
       item.templateKey ?? "",
@@ -147,6 +149,7 @@ export function whatsappItemsToTypedRows(
     item.direction,
     item.toPhone,
     item.profileName ?? "",
+    item.waProfileName ?? "",
     item.profileId ?? "",
     item.kind,
     item.templateKey ?? "",

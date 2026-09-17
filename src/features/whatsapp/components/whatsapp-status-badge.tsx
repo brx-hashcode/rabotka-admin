@@ -17,6 +17,8 @@ const STATUS_STYLE: Record<WhatsappDeliveryStatus, string> = {
   DELIVERED: "bg-emerald-500 text-white",
   READ: "bg-violet-600 text-white",
   FAILED: "bg-rose-600 text-white",
+  // Not part of the progression: a message someone sent us.
+  RECEIVED: "bg-teal-600 text-white",
 };
 
 const STATUS_LABEL: Record<WhatsappDeliveryStatus, string> = {
@@ -25,6 +27,7 @@ const STATUS_LABEL: Record<WhatsappDeliveryStatus, string> = {
   DELIVERED: "Delivered",
   READ: "Read",
   FAILED: "Failed",
+  RECEIVED: "Received",
 };
 
 export const whatsappStatusOptions = (
