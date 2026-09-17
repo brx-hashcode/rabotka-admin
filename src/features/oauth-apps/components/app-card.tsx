@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
+  ChartColumn,
   Copy,
   KeyRound,
   MoreHorizontal,
@@ -45,6 +46,7 @@ import { httpStatusOf } from "#/lib/auth/session";
 import { scopeLabel } from "../scopes";
 import { IDENTITY_CHECK_SCOPE, hasIdentityCheck } from "../identity-check";
 import { IdentityCheckDialog } from "./identity-check-dialog";
+import { AppStatsSheet } from "./app-stats-sheet";
 
 type AppCardProps = {
   app: OAuthApp;
@@ -56,6 +58,7 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [rotateOpen, setRotateOpen] = useState(false);
   const [identityCheckOpen, setIdentityCheckOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "oauth-apps"] });
@@ -122,6 +125,15 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
             </p>
           </div>
 
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Stats"
+            title="Stats"
+            onClick={() => setStatsOpen(true)}
+          >
+            <ChartColumn className="size-4" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Actions">
@@ -135,6 +147,10 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
               >
                 <KeyRound className="size-4" />
                 New app password
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatsOpen(true)}>
+                <ChartColumn className="size-4" />
+                Stats
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIdentityCheckOpen(true)}>
                 <ShieldCheck className="size-4" />
@@ -223,6 +239,8 @@ export function AppCard({ app, onSecretMinted }: Readonly<AppCardProps>) {
             ))}
         </div>
       </div>
+
+      <AppStatsSheet app={app} open={statsOpen} onOpenChange={setStatsOpen} />
 
       <IdentityCheckDialog
         app={app}
