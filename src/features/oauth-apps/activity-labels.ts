@@ -56,7 +56,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 /**
  * One line describing the request and the answer, from the summaries the
- * server stored. The raw summary stays available in the tooltip.
+ * server stored. The full details are in the row's tooltip.
  */
 export function describeRequest(item: OAuthAppRequest): string {
   const { request, response } = item;
@@ -106,6 +106,92 @@ export function describeRequest(item: OAuthAppRequest): string {
   }
 
   return parts.join(" · ") || "—";
+}
+
+export type DetailRow = { label: string; value: string; mono?: boolean };
+
+const DETAIL_LABELS: Record<string, string> = {
+  phone: "Phone",
+  fields_sent: "Details given",
+  reference: "Their reference",
+  check_id: "Request ID",
+  grant_type: "Sign-in type",
+  redirect_uri: "Return address",
+  token_type_hint: "Access type",
+  scope: "Access given",
+  expires_in: "Valid for",
+  claims: "Details shared",
+  status: "Status",
+  recommendation: "Suggestion",
+  score: "Score",
+  error: "Error code",
+  description: "Reason",
+};
+
+/** Codes and ids read better in monospace; everything else is prose. */
+const MONO_KEYS = new Set(["check_id", "error", "redirect_uri"]);
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  accept: "Accept",
+  review: "Check by hand",
+  reject: "Refuse",
+};
+
+const GRANT_LABELS: Record<string, string> = {
+  authorization_code: "Code from the sign-in page",
+};
+
+/**
+ * A stored request or response summary as labelled rows, in the order the
+ * server wrote them. Unknown keys still show, with the key as the label.
+ */
+export function detailRows(summary: Record<string, unknown>): DetailRow[] {
+  return Object.entries(summary)
+    .filter(([, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => ({
+      label: DETAIL_LABELS[key] ?? key,
+      value: detailValue(key, value),
+      ...(MONO_KEYS.has(key) ? { mono: true } : {}),
+    }));
+}
+
+/** A stored value as text; objects (never expected) as JSON. */
+function plain(value: unknown): string {
+  return typeof value === "object" && value !== null
+    ? JSON.stringify(value)
+    : String(value);
+}
+
+const fromMap =
+  (map: Record<string, string>) =>
+  (value: unknown): string =>
+    map[plain(value)] ?? plain(value);
+
+function formatSeconds(value: unknown): string {
+  const seconds = Number(value);
+  if (seconds % 3600 !== 0) return `${Math.round(seconds / 60)} minutes`;
+  const hours = seconds / 3600;
+  return hours === 1 ? "1 hour" : `${hours} hours`;
+}
+
+/** How a field's value is written, when it needs more than `String()`. */
+const VALUE_FORMATTERS: Record<string, (value: unknown) => string> = {
+  status: fromMap(STATUS_LABELS),
+  recommendation: fromMap(RECOMMENDATION_LABELS),
+  grant_type: fromMap(GRANT_LABELS),
+  score: (value) => `${plain(value)} / 100`,
+  expires_in: formatSeconds,
+  scope: (value) => plain(value).replaceAll(" ", ", "),
+};
+
+function detailValue(key: string, value: unknown): string {
+  if (Array.isArray(value)) {
+    const label = key === "fields_sent" ? fromMap(FIELD_LABELS) : plain;
+    return value.length ? value.map((item) => label(item)).join(", ") : "—";
+  }
+  const format = VALUE_FORMATTERS[key];
+  if (format) return format(value);
+  return plain(value);
 }
 
 /** Milliseconds as a short duration: "45 ms", "1.2 s". */

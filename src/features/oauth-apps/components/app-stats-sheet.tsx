@@ -75,6 +75,8 @@ import {
   CALL_KIND_OPTIONS,
   callLabel,
   describeRequest,
+  detailRows,
+  type DetailRow,
   formatDuration,
   outcomeLabel,
 } from "../activity-labels";
@@ -222,11 +224,8 @@ function makeColumns(): ColumnDef<OAuthAppRequest>[] {
                   {text}
                 </span>
               </TooltipTrigger>
-              <TooltipContent
-                side="left"
-                className="max-w-md text-xs leading-relaxed whitespace-pre-wrap"
-              >
-                {`What the partner sent:\n${JSON.stringify(row.original.request, null, 2)}\n\nWhat Rabotka answered (${row.original.statusCode}):\n${JSON.stringify(row.original.response, null, 2)}`}
+              <TooltipContent side="left" className="w-80 p-0">
+                <RequestDetails item={row.original} />
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -234,6 +233,78 @@ function makeColumns(): ColumnDef<OAuthAppRequest>[] {
       },
     },
   ];
+}
+
+/** One labelled block of the tooltip: what was sent, or what came back. */
+function DetailBlock({
+  title,
+  aside,
+  rows,
+  empty,
+}: Readonly<{
+  title: string;
+  aside?: ReactNode;
+  rows: DetailRow[];
+  empty: string;
+}>) {
+  return (
+    <div className="space-y-2 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide opacity-60">
+          {title}
+        </p>
+        {aside}
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-xs opacity-60">{empty}</p>
+      ) : (
+        <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-1.5 text-xs">
+          {rows.map((row) => (
+            <div key={row.label} className="contents">
+              <dt className="opacity-60">{row.label}</dt>
+              <dd
+                className={`min-w-0 break-words font-medium ${row.mono ? "font-mono text-[11px] break-all" : ""}`}
+              >
+                {row.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+  );
+}
+
+/** The tooltip body: the request and the answer, as labelled fields. */
+function RequestDetails({ item }: Readonly<{ item: OAuthAppRequest }>) {
+  const ok = item.outcome === "ok";
+  return (
+    <div className="divide-y divide-current/10 text-left">
+      <div className="px-3 py-2.5">
+        <p className="text-sm font-semibold">{callLabel(item.kind)}</p>
+        <p className="text-xs opacity-60">
+          {formatDateTime(item.createdAt)} · {formatDuration(item.durationMs)}
+        </p>
+      </div>
+      <DetailBlock
+        title="What the partner sent"
+        rows={detailRows(item.request)}
+        empty="Nothing besides the app's sign-in details."
+      />
+      <DetailBlock
+        title="What Rabotka answered"
+        aside={
+          <span
+            className={`rounded px-1.5 py-0.5 text-[11px] font-semibold text-white ${ok ? "bg-emerald-500" : "bg-rose-600"}`}
+          >
+            {item.statusCode} · {outcomeLabel(item.outcome)}
+          </span>
+        }
+        rows={detailRows(item.response)}
+        empty="No details returned."
+      />
+    </div>
+  );
 }
 
 function Pagination({
