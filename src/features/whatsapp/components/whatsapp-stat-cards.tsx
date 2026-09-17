@@ -35,10 +35,14 @@ export function WhatsappStatCards({
           value: stats.sent.toLocaleString(),
           trend: null,
           trendPercentage: null,
-          description:
+          // Received messages ride along here rather than on a fifth card:
+          // the grid is four wide, and they are volume, not a delivery rate.
+          description: [
             stats.totals.QUEUED > 0
               ? `${stats.totals.QUEUED.toLocaleString()} still being prepared`
               : "accepted by WhatsApp",
+            `${stats.received.toLocaleString()} received`,
+          ].join(" · "),
         },
         {
           id: "delivered",

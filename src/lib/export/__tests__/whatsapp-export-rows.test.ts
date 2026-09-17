@@ -18,6 +18,7 @@ const base: WhatsappMessageItem = {
   toPhone: "+242065219464",
   profileId: "prof-1",
   profileName: "Alice Nkembo",
+  waProfileName: "Alice N.",
   kind: "template",
   templateKey: "kyc_v3",
   templateCategory: "MARKETING",
@@ -28,6 +29,7 @@ const base: WhatsappMessageItem = {
   deliveredAt: "2026-08-20T08:00:09.000Z",
   readAt: "2026-08-20T08:01:00.000Z",
   failedAt: null,
+  receivedAt: null,
   errorCode: null,
   errorProviderCode: null,
   errorMessage: null,
@@ -61,6 +63,11 @@ const inbound: WhatsappMessageItem = {
   ...base,
   id: "msg-3",
   direction: "INBOUND",
+  status: "RECEIVED",
+  profileId: null,
+  profileName: null,
+  waProfileName: "Jean K.",
+  receivedAt: "2026-08-20T09:00:00.000Z",
   kind: "text",
   templateKey: null,
   variables: {},
@@ -68,6 +75,15 @@ const inbound: WhatsappMessageItem = {
 };
 
 describe("whatsapp export rows", () => {
+  it("carries the WhatsApp name, which is all a non-member has", () => {
+    const [, , row] = whatsappItemsToStringRows([base, failed, inbound]);
+    expect(row[at("WhatsApp name")]).toBe("Jean K.");
+    expect(row[at("Profile name")]).toBe("");
+    expect(row[at("Direction")]).toBe("INBOUND");
+    const [typed] = whatsappItemsToTypedRows([{ ...failed, waProfileName: null }]);
+    expect(typed[at("WhatsApp name")]).toBe("");
+  });
+
   it("keeps both builders the same width as the headers", () => {
     const items = [base, failed, inbound];
     for (const row of whatsappItemsToStringRows(items)) {

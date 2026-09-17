@@ -36,6 +36,11 @@ const kindOptions = [
   { value: "flow", label: "Form" },
 ] as const;
 
+const directionOptions = [
+  { value: "INBOUND", label: "Received" },
+  { value: "OUTBOUND", label: "Sent" },
+] as const;
+
 const providerOptions = [
   { value: "cloud", label: "WhatsApp (Meta)" },
   { value: "twilio", label: "WhatsApp (Twilio)" },
@@ -99,8 +104,9 @@ function MessagesTableHeader({
       */}
       <TableHeaderToolbar
         searchParamKey="q"
-        searchPlaceholder="Search by phone, message text or reference..."
+        searchPlaceholder="Search by phone, WhatsApp name, text or reference..."
         filters={[
+          { id: "direction", label: "Direction", options: directionOptions },
           { id: "status", label: "Status", options: whatsappStatusOptions },
           { id: "kind", label: "Type", options: kindOptions },
           ...(templateOptions.length > 0
@@ -183,7 +189,7 @@ export default function WhatsappPage() {
         */}
         <PageListHeader
           title="WhatsApp"
-          description="Every message sent, who it went to, what it said, and whether it arrived."
+          description="Every message sent and received: who it was with, what it said, and whether it arrived."
           actions={
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground hidden text-xs sm:inline">
