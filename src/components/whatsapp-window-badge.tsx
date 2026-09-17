@@ -71,6 +71,7 @@ function describe(state: WhatsAppWindowState) {
     tooltip:
       `This person hasn't written to us in the last 24 hours, so WhatsApp only ` +
       `allows an approved message. Yours is placed inside it on one line, with ` +
-      `blank lines shown as "·". At most ${ADMIN_MESSAGE_VAR_MAX} characters.`,
+      `blank lines shown as "·", under a Rabotka heading and above a team ` +
+      `signature. At most ${ADMIN_MESSAGE_VAR_MAX} characters.`,
   };
 }
