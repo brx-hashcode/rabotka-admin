@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { OAuthAppRequest } from "#/lib/api/oauth-apps-controller";
 import {
   callLabel,
+  detailRows,
   describeRequest,
   formatDuration,
   outcomeLabel,
@@ -69,6 +70,38 @@ describe("activity labels", () => {
         }),
       ),
     ).toBe("Client authentication failed.");
+  });
+
+  it("turns a request summary into labelled rows", () => {
+    expect(
+      detailRows({
+        phone: "••12",
+        fields_sent: ["first_name", "last_name"],
+        check_id: "2218",
+      }),
+    ).toEqual([
+      { label: "Phone", value: "••12" },
+      { label: "Details given", value: "first name, last name" },
+      { label: "Request ID", value: "2218", mono: true },
+    ]);
+  });
+
+  it("turns an answer into plain values", () => {
+    expect(
+      detailRows({
+        status: "pending_consent",
+        recommendation: "review",
+        score: 91,
+        expires_in: 3600,
+        scope: "openid phone",
+      }),
+    ).toEqual([
+      { label: "Status", value: "waiting for the person" },
+      { label: "Suggestion", value: "Check by hand" },
+      { label: "Score", value: "91 / 100" },
+      { label: "Valid for", value: "1 hour" },
+      { label: "Access given", value: "openid, phone" },
+    ]);
   });
 
   it("formats durations", () => {
