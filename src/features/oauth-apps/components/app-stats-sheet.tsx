@@ -224,7 +224,12 @@ function makeColumns(): ColumnDef<OAuthAppRequest>[] {
                   {text}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="left" className="w-80 p-0">
+              <TooltipContent
+                side="left"
+                // The shared tooltip is inverted for short hints; this panel
+                // follows the theme like a popover, arrow included.
+                className="bg-popover text-popover-foreground shadow-soft w-80 p-0 [&_svg]:bg-popover [&_svg]:fill-popover"
+              >
                 <RequestDetails item={row.original} />
               </TooltipContent>
             </Tooltip>
@@ -250,18 +255,18 @@ function DetailBlock({
   return (
     <div className="space-y-2 px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide opacity-60">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
         </p>
         {aside}
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs opacity-60">{empty}</p>
+        <p className="text-muted-foreground text-xs">{empty}</p>
       ) : (
         <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-1.5 text-xs">
           {rows.map((row) => (
             <div key={row.label} className="contents">
-              <dt className="opacity-60">{row.label}</dt>
+              <dt className="text-muted-foreground">{row.label}</dt>
               <dd
                 className={`min-w-0 break-words font-medium ${row.mono ? "font-mono text-[11px] break-all" : ""}`}
               >
@@ -279,10 +284,10 @@ function DetailBlock({
 function RequestDetails({ item }: Readonly<{ item: OAuthAppRequest }>) {
   const ok = item.outcome === "ok";
   return (
-    <div className="divide-y divide-current/10 text-left">
+    <div className="divide-border divide-y text-left">
       <div className="px-3 py-2.5">
         <p className="text-sm font-semibold">{callLabel(item.kind)}</p>
-        <p className="text-xs opacity-60">
+        <p className="text-muted-foreground text-xs">
           {formatDateTime(item.createdAt)} · {formatDuration(item.durationMs)}
         </p>
       </div>
@@ -295,12 +300,19 @@ function RequestDetails({ item }: Readonly<{ item: OAuthAppRequest }>) {
         title="What Rabotka answered"
         aside={
           <span
-            className={`rounded px-1.5 py-0.5 text-[11px] font-semibold text-white ${ok ? "bg-emerald-500" : "bg-rose-600"}`}
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums ${ok ? "bg-emerald-500" : "bg-rose-600"}`}
           >
-            {item.statusCode} · {outcomeLabel(item.outcome)}
+            {item.statusCode} · {ok ? "OK" : "Refused"}
           </span>
         }
-        rows={detailRows(item.response)}
+        rows={
+          ok
+            ? detailRows(item.response)
+            : [
+                { label: "Result", value: outcomeLabel(item.outcome) },
+                ...detailRows(item.response),
+              ]
+        }
         empty="No details returned."
       />
     </div>
