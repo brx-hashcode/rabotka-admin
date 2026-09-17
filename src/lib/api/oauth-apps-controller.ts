@@ -109,6 +109,52 @@ export type UpdateOAuthAppPayload = Partial<
   Omit<CreateOAuthAppPayload, "isSandbox">
 >;
 
+export type PartnerApiCallKind =
+  | "TOKEN"
+  | "USERINFO"
+  | "REVOKE"
+  | "IDENTITY_CHECK_CREATE"
+  | "IDENTITY_CHECK_READ";
+
+/** A partner app's activity figures, for the Stats drawer. */
+export type OAuthAppStats = {
+  signIns: number;
+  identityChecks: {
+    total: number;
+    completed: number;
+    notCompleted: number;
+    pending: number;
+  };
+  connectedPeople: number;
+  verifiedConnected: number;
+  verifiedByCheck: number;
+  /** One row per day, oldest first, for the last 30 days. */
+  timeline: { date: string; signIns: number; identityChecks: number }[];
+};
+
+/**
+ * One call from the partner's server, as a readable summary. The server never
+ * stores tokens or secrets, and masks phone numbers.
+ */
+export type OAuthAppRequest = {
+  id: string;
+  kind: PartnerApiCallKind;
+  statusCode: number;
+  /** `ok`, or the error code the partner received. */
+  outcome: string;
+  durationMs: number;
+  request: Record<string, unknown>;
+  response: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type OAuthAppRequestPage = {
+  data: OAuthAppRequest[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 class OAuthAppsController extends AdminBaseController {
   async list(): Promise<OAuthApp[]> {
     const url = this.createURL("/admin/oauth-apps", new URLSearchParams());
@@ -194,6 +240,27 @@ class OAuthAppsController extends AdminBaseController {
     return this.post<{ success: boolean }>(url, {});
   }
 
+  async stats(id: string): Promise<OAuthAppStats> {
+    const url = this.createURL(
+      `/admin/oauth-apps/${id}/stats`,
+      new URLSearchParams(),
+    );
+    return this.get<OAuthAppStats>(url);
+  }
+
+  async requests(
+    id: string,
+    params: { page: number; limit: number; kind?: PartnerApiCallKind },
+  ): Promise<OAuthAppRequestPage> {
+    const search = new URLSearchParams({
+      page: String(params.page),
+      limit: String(params.limit),
+    });
+    if (params.kind) search.set("kind", params.kind);
+    const url = this.createURL(`/admin/oauth-apps/${id}/requests`, search);
+    return this.get<OAuthAppRequestPage>(url);
+  }
+
   async remove(id: string): Promise<{ success: boolean }> {
     const url = this.createURL(
       `/admin/oauth-apps/${id}`,
@@ -218,3 +285,5 @@ export const revokePreviousOAuthSecret =
 export const suspendOAuthApp = controller.suspend.bind(controller);
 export const reactivateOAuthApp = controller.reactivate.bind(controller);
 export const deleteOAuthApp = controller.remove.bind(controller);
+export const getOAuthAppStats = controller.stats.bind(controller);
+export const listOAuthAppRequests = controller.requests.bind(controller);
