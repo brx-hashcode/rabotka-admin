@@ -144,6 +144,23 @@ function StatCard({
   );
 }
 
+/** A titled group of cards: one per product (sign-in, identity check). */
+function CardGroup({
+  title,
+  description,
+  children,
+}: Readonly<{ title: string; description: string; children: ReactNode }>) {
+  return (
+    <section className="bg-muted/40 space-y-3 rounded-lg p-3">
+      <div className="px-1">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="text-muted-foreground text-xs">{description}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">{children}</div>
+    </section>
+  );
+}
+
 function makeColumns(): ColumnDef<OAuthAppRequest>[] {
   return [
     {
@@ -418,46 +435,68 @@ export function AppStatsSheet({ open, onOpenChange, app }: Readonly<Props>) {
               </p>
             )}
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <StatCard
-                title="Sign-ins"
-                value={data?.signIns ?? null}
-                description="Completed with Login with Rabotka"
-                icon={<LogIn className="size-3.5" />}
-                iconClassName="bg-blue-500/10 text-blue-500"
-              />
-              <StatCard
-                title="Identity checks"
-                value={data?.identityChecks.total ?? null}
-                description={
-                  data
-                    ? `${data.identityChecks.completed} completed · ${data.identityChecks.notCompleted} not completed · ${data.identityChecks.pending} waiting`
-                    : "Requested by this app"
-                }
-                icon={<ShieldCheck className="size-3.5" />}
-                iconClassName="bg-violet-500/10 text-violet-500"
-              />
-              <StatCard
-                title="People signed in"
-                value={data?.connectedPeople ?? null}
-                description="Currently connected to this app"
-                icon={<Users className="size-3.5" />}
-                iconClassName="bg-amber-500/10 text-amber-600"
-              />
-              <StatCard
-                title="Verified people signed in"
-                value={data?.verifiedConnected ?? null}
-                description="Of those, identity verified by our team"
-                icon={<UserCheck className="size-3.5" />}
-                iconClassName="bg-emerald-500/10 text-emerald-600"
-              />
-              <StatCard
-                title="Identity checks verified"
-                value={data?.verifiedByCheck ?? null}
-                description="Approved by a person whose identity is verified"
-                icon={<BadgeCheck className="size-3.5" />}
-                iconClassName="bg-teal-500/10 text-teal-600"
-              />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <CardGroup
+                title="Login with Rabotka"
+                description="People signing in to this app with their Rabotka account."
+              >
+                <StatCard
+                  title="Sign-ins"
+                  value={data?.signIns ?? null}
+                  description="Completed sign-ins"
+                  icon={<LogIn className="size-3.5" />}
+                  iconClassName="bg-blue-500/10 text-blue-500"
+                />
+                <StatCard
+                  title="People signed in"
+                  value={data?.connectedPeople ?? null}
+                  description="Currently connected"
+                  icon={<Users className="size-3.5" />}
+                  iconClassName="bg-amber-500/10 text-amber-600"
+                />
+                <StatCard
+                  title="Verified"
+                  value={data?.verifiedConnected ?? null}
+                  description="Of those, identity checked by our team"
+                  icon={<UserCheck className="size-3.5" />}
+                  iconClassName="bg-emerald-500/10 text-emerald-600"
+                />
+              </CardGroup>
+
+              <CardGroup
+                title="Identity check (KYC)"
+                description="Requests from this app to confirm who someone is."
+              >
+                <StatCard
+                  title="Requested"
+                  value={data?.identityChecks.total ?? null}
+                  description={
+                    data
+                      ? `${data.identityChecks.pending} waiting for an answer`
+                      : "Sent by this app"
+                  }
+                  icon={<ShieldCheck className="size-3.5" />}
+                  iconClassName="bg-violet-500/10 text-violet-500"
+                />
+                <StatCard
+                  title="Answered"
+                  value={data?.identityChecks.completed ?? null}
+                  description={
+                    data
+                      ? `Approved by the person · ${data.identityChecks.notCompleted} not completed`
+                      : "Approved by the person"
+                  }
+                  icon={<BadgeCheck className="size-3.5" />}
+                  iconClassName="bg-sky-500/10 text-sky-600"
+                />
+                <StatCard
+                  title="Verified"
+                  value={data?.verifiedByCheck ?? null}
+                  description="Approved by someone whose identity we checked"
+                  icon={<UserCheck className="size-3.5" />}
+                  iconClassName="bg-teal-500/10 text-teal-600"
+                />
+              </CardGroup>
             </div>
 
             {stats.isLoading ? (
