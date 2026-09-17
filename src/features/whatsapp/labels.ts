@@ -10,6 +10,16 @@ const KIND: Record<string, string> = {
   flow: "Form",
   interactive: "Message with a button",
   interactive_cta: "Message with a button",
+  // What people send us.
+  interactive_reply: "Button tap",
+  image: "Image",
+  video: "Video",
+  audio: "Voice note",
+  document: "Document",
+  location: "Location",
+  reaction: "Reaction",
+  flow_reply: "Form answer",
+  unsupported: "Other",
 };
 
 const SERVICE: Record<string, string> = {
