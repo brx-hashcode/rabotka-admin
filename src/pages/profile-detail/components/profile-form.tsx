@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { IconUser, IconCamera, IconLoader2 } from "@tabler/icons-react";
+import {
+  IconUser,
+  IconCamera,
+  IconLoader2,
+  IconZoomIn,
+} from "@tabler/icons-react";
 
 import type {
   AdminProfileDetailResponse,
@@ -20,6 +25,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { GeoCombobox } from "#/components/geo-combobox";
+import type { ViewerDocument } from "./document-viewer-drawer";
 import { useCities, useCountries } from "#/hooks/use-geo";
 
 type FormData = {
@@ -63,6 +69,13 @@ type ProfileFormProps = {
   onAvatarChange?: (file: File) => Promise<unknown>;
   isUploadingAvatar?: boolean;
   readOnly?: boolean;
+  /**
+   * Opens the photo in the page's shared viewer, which zooms and rotates.
+   *
+   * A 80px avatar is not enough to tell whether the person in it matches the
+   * KYC selfie two tabs over, which is the question an admin actually has.
+   */
+  onPreviewDoc?: (doc: ViewerDocument) => void;
 };
 
 export function ProfileForm({
@@ -72,6 +85,7 @@ export function ProfileForm({
   onAvatarChange,
   isUploadingAvatar = false,
   readOnly = false,
+  onPreviewDoc,
 }: Readonly<ProfileFormProps>) {
   const [form, setForm] = useState<FormData>({
     firstName: "",
@@ -93,6 +107,19 @@ export function ProfileForm({
     if (!readOnly && onAvatarChange && !isUploadingAvatar) {
       fileInputRef.current?.click();
     }
+  };
+
+  // Only a real photo can be enlarged — the fallback is two initials.
+  const canZoomAvatar = !!profile.avatarUrl && !!onPreviewDoc;
+
+  const handleAvatarZoom = () => {
+    if (!profile.avatarUrl || !onPreviewDoc) return;
+    onPreviewDoc({
+      url: profile.avatarUrl,
+      title: `${profile.firstName} ${profile.lastName}`.trim() || "Profile",
+      description: "Profile photo",
+      fileType: "image",
+    });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,19 +210,40 @@ export function ProfileForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="mb-6 flex items-center gap-4">
+          {/* Clicking a photo enlarges it — the gesture everyone already has.
+              Changing it is the rarer, deliberate act, so it moved off the
+              face of the avatar and onto its own badge rather than the two
+              sharing one square and racing for the same click. */}
           <div className="relative shrink-0">
-            <Avatar className="border-border size-20 border-4 shadow-md">
-              {profile.avatarUrl ? (
-                <AvatarImage
-                  src={profile.avatarUrl}
-                  alt={`${profile.firstName} ${profile.lastName}`}
-                  className="object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="text-xl">
-                {initials || <IconUser className="size-8" />}
-              </AvatarFallback>
-            </Avatar>
+            <button
+              type="button"
+              onClick={canZoomAvatar ? handleAvatarZoom : undefined}
+              disabled={!canZoomAvatar}
+              aria-label={
+                canZoomAvatar
+                  ? `View photo of ${profile.firstName} ${profile.lastName}`
+                  : undefined
+              }
+              className="group relative block rounded-full enabled:cursor-zoom-in"
+            >
+              <Avatar className="border-border size-20 border-4 shadow-md">
+                {profile.avatarUrl ? (
+                  <AvatarImage
+                    src={profile.avatarUrl}
+                    alt={`${profile.firstName} ${profile.lastName}`}
+                    className="object-cover"
+                  />
+                ) : null}
+                <AvatarFallback className="text-xl">
+                  {initials || <IconUser className="size-8" />}
+                </AvatarFallback>
+              </Avatar>
+              {canZoomAvatar && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <IconZoomIn className="size-6 text-white" />
+                </span>
+              )}
+            </button>
 
             {!readOnly && onAvatarChange && (
               <>
@@ -204,12 +252,12 @@ export function ProfileForm({
                   onClick={handleAvatarClick}
                   disabled={isUploadingAvatar}
                   aria-label="Change avatar"
-                  className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 disabled:cursor-not-allowed"
+                  className="bg-background border-border absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border shadow-md transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isUploadingAvatar ? (
-                    <IconLoader2 className="size-6 animate-spin text-white" />
+                    <IconLoader2 className="size-4 animate-spin" />
                   ) : (
-                    <IconCamera className="size-6 text-white" />
+                    <IconCamera className="size-4" />
                   )}
                 </button>
                 <input

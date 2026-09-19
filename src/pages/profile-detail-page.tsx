@@ -357,6 +357,7 @@ export default function ProfileDetailPage({
                 onAvatarChange={submitAvatarUpdate}
                 isUploadingAvatar={isUploadingAvatar}
                 readOnly={!canManageContent}
+                onPreviewDoc={handlePreviewDoc}
               />
             </div>
             <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
