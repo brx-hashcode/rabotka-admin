@@ -10,7 +10,6 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
-import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import {
@@ -102,7 +101,7 @@ type CardProps = {
   item: AdminPortfolioItem;
   canManage: boolean;
   onPreviewDoc: (doc: ViewerDocument) => void;
-  onSave: (data: { title: string; description: string }) => Promise<unknown>;
+  onSave: (data: { description: string }) => Promise<unknown>;
   isSaving: boolean;
   onDeleteItem: () => Promise<unknown>;
   isDeletingItem: boolean;
@@ -129,10 +128,16 @@ function PortfolioItemCard({
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <div className="flex items-start justify-between gap-2 border-b p-4">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{item.title}</p>
-          <p className="text-muted-foreground mt-1 text-xs whitespace-pre-line">
-            {item.description}
-          </p>
+          {/* The text is the publication now — there is no title to head the
+              card with. A publication that is only photos says so, rather
+              than rendering an empty line where a title used to be. */}
+          {item.description ? (
+            <p className="text-sm whitespace-pre-line">{item.description}</p>
+          ) : (
+            <p className="text-muted-foreground text-sm italic">
+              {photoLabel(item.images.length)}
+            </p>
+          )}
           <p className="text-muted-foreground mt-2 text-[11px]">
             {formatDate(item.createdAt)}
           </p>
@@ -173,7 +178,7 @@ function PortfolioItemCard({
                 onPreview={() =>
                   onPreviewDoc({
                     url: img.imageUrl,
-                    title: item.title,
+                    title: postHeading(item),
                     description: `Image ${index + 1}`,
                     fileType: "image",
                   })
@@ -229,6 +234,27 @@ function PortfolioItemCard({
       />
     </Card>
   );
+}
+
+/** "3 photos" — what a publication with no text is. */
+function photoLabel(count: number): string {
+  if (count === 0) return "Empty publication";
+  return count === 1 ? "1 photo, no text" : `${count} photos, no text`;
+}
+
+/**
+ * A line naming a publication, for the viewer's heading and its print title.
+ *
+ * The title used to serve this. With it gone the first line of the text does,
+ * and a publication without text falls back to naming its photos — an empty
+ * heading reads as a bug.
+ */
+function postHeading(item: AdminPortfolioItem): string {
+  const firstLine = item.description?.trim().split("\n")[0].trim();
+  if (firstLine) {
+    return firstLine.length > 60 ? `${firstLine.slice(0, 60).trimEnd()}…` : firstLine;
+  }
+  return photoLabel(item.images.length);
 }
 
 function PortfolioImageTile({
@@ -292,41 +318,30 @@ function EditItemDialog({
   onOpenChange: (open: boolean) => void;
   item: AdminPortfolioItem;
   isSaving: boolean;
-  onSave: (data: { title: string; description: string }) => Promise<void>;
+  onSave: (data: { description: string }) => Promise<void>;
 }>) {
-  const [title, setTitle] = useState(item.title);
-  const [description, setDescription] = useState(item.description);
+  const [description, setDescription] = useState(item.description ?? "");
 
-  const isDirty = title.trim() !== item.title || description.trim() !== item.description;
-  const isValid = title.trim().length >= 3 && description.trim().length >= 3;
+  const isDirty = description.trim() !== (item.description ?? "");
+  // A publication is text or photos, never neither — so the text may only be
+  // emptied while photos remain. Mirrors the rule the API enforces.
+  const isValid = description.trim().length > 0 || item.images.length > 0;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (next) {
-          setTitle(item.title);
-          setDescription(item.description);
-        }
+        if (next) setDescription(item.description ?? "");
         onOpenChange(next);
       }}
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit portfolio item</DialogTitle>
+          <DialogTitle>Edit publication</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="portfolio-title">Title</Label>
-            <Input
-              id="portfolio-title"
-              value={title}
-              maxLength={120}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="portfolio-description">Description</Label>
+            <Label htmlFor="portfolio-description">Text</Label>
             <Textarea
               id="portfolio-description"
               value={description}
@@ -343,10 +358,7 @@ function EditItemDialog({
           <Button
             disabled={!isDirty || !isValid || isSaving}
             onClick={() =>
-              void onSave({
-                title: title.trim(),
-                description: description.trim(),
-              })
+              void onSave({ description: description.trim() })
             }
           >
             {isSaving ? "Saving..." : "Save Changes"}

@@ -8,15 +8,15 @@ export type AdminPortfolioImage = {
 
 export type AdminPortfolioItem = {
   id: string;
-  title: string;
-  description: string;
+  /** Null on an images-only publication. Publications have no title. */
+  description: string | null;
   position: number;
   createdAt: string;
   images: AdminPortfolioImage[];
 };
 
 export type AdminUpdatePortfolioItemParams = {
-  title?: string;
+  /** An empty string clears the text, leaving an images-only publication. */
   description?: string;
 };
 
