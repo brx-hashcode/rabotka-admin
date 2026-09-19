@@ -16,6 +16,7 @@ import {
   getVerificationStatusBadgeClass,
 } from "#/features/applications/components/profile-columns";
 import { Link } from "@tanstack/react-router";
+import { IconStar } from "@tabler/icons-react";
 
 type Props = {
   profile: AdminProfileDetailResponse;
@@ -204,6 +205,24 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
               {profile.reliabilityScore != null
                 ? `${profile.reliabilityScore}/100`
                 : "—"}
+            </Row>
+            {/* Both directions land here: workers are rated by employers and
+                employers by workers, into the same two columns. An unrated
+                profile shows a dash, never 0.0 — never rated and rated badly
+                are opposite facts and must not share a rendering. The count
+                is what says whether the average means anything. */}
+            <Row label="Rating">
+              {profile.ratingAvg != null && profile.ratingCount > 0 ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <IconStar className="size-3.5 fill-current text-amber-500" />
+                  {profile.ratingAvg.toFixed(1)}
+                  <span className="text-muted-foreground font-normal">
+                    ({profile.ratingCount})
+                  </span>
+                </span>
+              ) : (
+                "—"
+              )}
             </Row>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">
