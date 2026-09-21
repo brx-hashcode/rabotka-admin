@@ -43,8 +43,15 @@ export default function BroadcastsPage() {
           title="Broadcasts"
           description="One message to a segment of workers or employers."
         />
+        {/*
+          Outline rather than the default variant: that one is a hardcoded
+          `from-whatsapp to-whatsapp-dark` gradient with a glow, which belongs
+          on the send itself rather than on a link that opens a form. Outline
+          draws from the theme's border, surface and foreground tokens, so it
+          follows light and dark mode with the rest of the page.
+        */}
         {canManageContent ? (
-          <Button render={<Link to="/broadcasts/new" />}>
+          <Button variant="outline" render={<Link to="/broadcasts/new" />}>
             <Plus className="size-4" />
             New broadcast
           </Button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
+import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import {
   previewBroadcastAudience,
@@ -31,7 +32,43 @@ const fmt = (n: number) => n.toLocaleString("fr-FR");
 type Props = {
   audience: AudienceFilters;
   channels: BroadcastChannel[];
+  /** Clears every filter. Absent means the panel is read-only. */
+  onClear?: () => void;
 };
+
+/**
+ * The filters currently narrowing the audience, in words.
+ *
+ * Exists for the zero case. "Nobody matches these filters yet" is true but
+ * useless when the reason is a trade that almost no profile has set — the
+ * admin needs to see WHICH filter emptied it, without scrolling back through
+ * the builder to hunt for the one they touched.
+ */
+function activeFilters(audience: AudienceFilters): string[] {
+  const labels: string[] = [];
+  const count = (arr: unknown[] | undefined) => arr?.length ?? 0;
+
+  if (count(audience.profile_types))
+    labels.push(audience.profile_types!.join(" + ").toLowerCase());
+  if (count(audience.statuses))
+    labels.push(`status: ${audience.statuses!.length} selected`);
+  if (count(audience.verification_statuses))
+    labels.push(
+      `identity check: ${audience.verification_statuses!.join(", ").toLowerCase()}`,
+    );
+  if (count(audience.country_codes))
+    labels.push(`country: ${audience.country_codes!.join(", ")}`);
+  if (count(audience.cities)) labels.push(`city: ${audience.cities!.join(", ")}`);
+  if (count(audience.category_ids))
+    labels.push(`trade: ${audience.category_ids!.length} selected`);
+  if (audience.active_within_days)
+    labels.push(`signed in within ${audience.active_within_days} days`);
+  if (audience.created_from) labels.push("signed up after a date");
+  if (audience.whatsapp_connected) labels.push("WhatsApp connected");
+  if (audience.has_email) labels.push("has an email");
+
+  return labels;
+}
 
 /**
  * How many people this reaches, and what it costs, before anything is sent.
@@ -41,7 +78,7 @@ type Props = {
  * WhatsApp recipients who are inside the free 24h window from the ones who need
  * a paid template, because that difference is the whole cost of the send.
  */
-export function AudienceSummary({ audience, channels }: Props) {
+export function AudienceSummary({ audience, channels, onClear }: Props) {
   const debounced = useDebounced(audience, DEBOUNCE_MS);
   const settling = debounced !== audience;
 
@@ -102,12 +139,56 @@ export function AudienceSummary({ audience, channels }: Props) {
       ) : null}
 
       {data.total === 0 ? (
-        <p className="text-muted-foreground text-xs">
-          Nobody matches these filters yet.
-        </p>
+        <EmptyAudience audience={audience} onClear={onClear} />
       ) : (
         <Sample sample={data.sample} total={data.total} />
       )}
+    </div>
+  );
+}
+
+/**
+ * Why the count is zero, and how to undo it.
+ *
+ * Most profiles here carry no trade and no city, so a single tick in either
+ * list empties the audience — which looks identical to a broken page unless
+ * the panel says what it is filtering on.
+ */
+function EmptyAudience({
+  audience,
+  onClear,
+}: Readonly<{ audience: AudienceFilters; onClear?: () => void }>) {
+  const filters = activeFilters(audience);
+
+  if (filters.length === 0) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        No active account matches. Every profile is either inactive, deleted or
+        opted out.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground text-xs">
+        Nobody matches all of these at once:
+      </p>
+      <ul className="flex flex-wrap gap-1.5">
+        {filters.map((filter) => (
+          <li
+            key={filter}
+            className="bg-muted rounded-md px-2 py-0.5 text-xs"
+          >
+            {filter}
+          </li>
+        ))}
+      </ul>
+      {onClear ? (
+        <Button variant="outline" size="sm" onClick={onClear}>
+          Clear filters
+        </Button>
+      ) : null}
     </div>
   );
 }

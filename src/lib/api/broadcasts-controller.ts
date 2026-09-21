@@ -75,6 +75,22 @@ export type BroadcastRecipient = {
   };
 };
 
+export type BroadcastDeliveryStat = {
+  channel: BroadcastChannel;
+  status: RecipientStatus;
+  count: number;
+};
+
+/** One minute of the delivery curve, cumulative per channel. */
+export type BroadcastTimelinePoint = {
+  at: string;
+} & Partial<Record<BroadcastChannel, number>>;
+
+export type BroadcastStats = {
+  byChannel: BroadcastDeliveryStat[];
+  timeline: BroadcastTimelinePoint[];
+};
+
 export type BroadcastsListParams = {
   page?: number;
   limit?: number;
@@ -131,6 +147,22 @@ export class AdminBroadcastsController extends AdminBaseController {
   }
 
  
+  async getStats(id: string): Promise<BroadcastStats> {
+    return this.get<BroadcastStats>(
+      this.createURL(`/admin/broadcasts/${id}/stats`, new URLSearchParams()),
+    );
+  }
+
+  /** How many profiles each trade reaches, under the other filters. */
+  async audienceFacets(
+    audience: AudienceFilters,
+  ): Promise<{ categoryId: string; count: number }[]> {
+    return this.post<{ categoryId: string; count: number }[]>(
+      this.createURL("/admin/broadcasts/audience/facets", new URLSearchParams()),
+      { audience },
+    );
+  }
+
   async previewAudience(audience: AudienceFilters): Promise<AudiencePreview> {
     return this.post<AudiencePreview>(
       this.createURL("/admin/broadcasts/audience/preview", new URLSearchParams()),
@@ -171,6 +203,13 @@ export class AdminBroadcastsController extends AdminBaseController {
     );
   }
 
+  async retry(id: string): Promise<{ retried: number }> {
+    return this.post<{ retried: number }>(
+      this.createURL(`/admin/broadcasts/${id}/retry`, new URLSearchParams()),
+      {},
+    );
+  }
+
   async cancel(id: string): Promise<Broadcast> {
     return this.post<Broadcast>(
       this.createURL(`/admin/broadcasts/${id}/cancel`, new URLSearchParams()),
@@ -184,10 +223,14 @@ const controller = new AdminBroadcastsController();
 export const getBroadcastsList = controller.getList.bind(controller);
 export const getBroadcastById = controller.getById.bind(controller);
 export const getBroadcastRecipients = controller.getRecipients.bind(controller);
+export const getBroadcastStats = controller.getStats.bind(controller);
+export const getBroadcastAudienceFacets =
+  controller.audienceFacets.bind(controller);
 export const previewBroadcastAudience =
   controller.previewAudience.bind(controller);
 export const createBroadcast = controller.create.bind(controller);
 export const updateBroadcast = controller.update.bind(controller);
 export const deleteBroadcast = controller.remove.bind(controller);
 export const sendBroadcast = controller.send.bind(controller);
+export const retryBroadcast = controller.retry.bind(controller);
 export const cancelBroadcast = controller.cancel.bind(controller);

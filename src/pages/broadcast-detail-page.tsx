@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { PageListHeader } from "#/components/page-list-header";
@@ -18,11 +18,13 @@ import {
   AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { BROADCAST_STATUS_LABELS } from "#/features/broadcasts/components/broadcast-columns";
+import { DeliveryChart } from "#/features/broadcasts/components/delivery-chart";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   cancelBroadcast,
   getBroadcastById,
   getBroadcastRecipients,
+  retryBroadcast,
   sendBroadcast,
   type Broadcast,
   type RecipientStatus,
@@ -63,8 +65,19 @@ export default function BroadcastDetailPage() {
     enabled: Boolean(broadcast && broadcast.recipient_count > 0),
   });
 
+  /**
+   * Refresh everything this page shows.
+   *
+   * The list key is a prefix of the detail and stats keys, so one invalidation
+   * covers all three — but `refetchType: "all"` is what makes the inactive
+   * ones (the chart, while it is not polling) actually re-fetch rather than
+   * merely being marked stale.
+   */
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["admin", "broadcasts"] });
+    queryClient.invalidateQueries({
+      queryKey: ["admin", "broadcasts"],
+      refetchType: "all",
+    });
 
   const sendNow = useMutation({
     mutationFn: () => sendBroadcast(broadcastId),
@@ -73,6 +86,25 @@ export default function BroadcastDetailPage() {
       await invalidate();
     },
     onError: (err) => toast.error(friendlyError(err, "The broadcast was not sent")),
+  });
+
+  /**
+   * Re-queues only the failed rows, each on its own channel.
+   *
+   * Worth its own button rather than "send again": sending again would message
+   * everyone who already received it, which on WhatsApp is both a second bill
+   * and a second interruption.
+   */
+  const retry = useMutation({
+    mutationFn: () => retryBroadcast(broadcastId),
+    onSuccess: async (result) => {
+      toast.success(
+        `Retrying ${fmt(result.retried)} failed deliver${result.retried === 1 ? "y" : "ies"}`,
+      );
+      await invalidate();
+    },
+    onError: (err) =>
+      toast.error(friendlyError(err, "The retry could not be queued")),
   });
 
   const stop = useMutation({
@@ -120,10 +152,25 @@ export default function BroadcastDetailPage() {
               Cancel
             </Button>
           ) : null}
+          {broadcast.failed_count > 0 && !canStop && canManageContent ? (
+            <Button
+              variant="outline"
+              disabled={retry.isPending}
+              onClick={() => retry.mutate()}
+            >
+              {retry.isPending
+                ? "Retrying…"
+                : `Retry ${fmt(broadcast.failed_count)} failed`}
+            </Button>
+          ) : null}
         </div>
       </div>
 
       <Counters broadcast={broadcast} />
+
+      {broadcast.recipient_count > 0 ? (
+        <DeliveryChart broadcastId={broadcastId} live={canStop} />
+      ) : null}
 
       <section className="bg-card shadow-soft space-y-2 rounded-lg p-4">
         <h2 className="text-sm font-medium">Message</h2>
@@ -145,9 +192,17 @@ export default function BroadcastDetailPage() {
                   key={recipient.id}
                   className="flex items-center justify-between gap-3 py-2"
                 >
-                  <span className="truncate">
+                  {/* The name is the way into the profile: a delivery that
+                      failed is almost always a question about the person —
+                      wrong number, suspended account — and retyping their name
+                      into the profiles search is the long way round. */}
+                  <Link
+                    to="/profiles/$profileId"
+                    params={{ profileId: recipient.profile.id }}
+                    className="truncate font-medium hover:underline"
+                  >
                     {recipient.profile.first_name} {recipient.profile.last_name}
-                  </span>
+                  </Link>
                   <span className="text-muted-foreground shrink-0 text-xs">
                     {recipient.channel.toLowerCase().replace("_", "-")} ·{" "}
                     {RECIPIENT_STATUS_LABELS[recipient.status]}

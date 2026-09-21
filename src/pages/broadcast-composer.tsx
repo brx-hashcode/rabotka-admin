@@ -36,7 +36,25 @@ import { useRole } from "#/hooks/use-role";
 /** Matches BROADCAST_MESSAGE_VAR_MAX on the server. */
 const BODY_MAX = 700;
 
-const CHANNELS: { value: BroadcastChannel; label: string; hint: string }[] = [
+/**
+ * Turn WhatsApp broadcasts back on by deleting this flag and the `disabled`
+ * line below.
+ *
+ * Off for now at the team's request. The channel is left ON SCREEN rather than
+ * removed on purpose: an option that vanishes looks like a missing feature,
+ * while a disabled one with a reason tells the next admin what is going on and
+ * that it is coming back. Nothing about the backend leg is removed — a
+ * broadcast created through the API can still carry WHATSAPP.
+ */
+const WHATSAPP_ENABLED = false;
+
+const CHANNELS: {
+  value: BroadcastChannel;
+  label: string;
+  hint: string;
+  disabled?: boolean;
+  disabledReason?: string;
+}[] = [
   {
     value: "IN_APP",
     label: "In-app",
@@ -46,6 +64,8 @@ const CHANNELS: { value: BroadcastChannel; label: string; hint: string }[] = [
     value: "WHATSAPP",
     label: "WhatsApp",
     hint: "Free for anyone who wrote to us in the last 24h, billed for the rest.",
+    disabled: !WHATSAPP_ENABLED,
+    disabledReason: "Temporarily unavailable.",
   },
   {
     value: "EMAIL",
@@ -72,12 +92,17 @@ export default function BroadcastComposerPage() {
 
   const ready = title.trim() && body.trim() && channels.length > 0;
 
-  const toggleChannel = (channel: BroadcastChannel) =>
+  const toggleChannel = (channel: BroadcastChannel) => {
+    // Belt and braces: the checkbox is disabled, and a disabled channel can
+    // never enter the payload even if something else flips it.
+    if (CHANNELS.find((c) => c.value === channel)?.disabled) return;
+
     setChannels((current) =>
       current.includes(channel)
         ? current.filter((c) => c !== channel)
         : [...current, channel],
     );
+  };
 
   /**
    * Counted again at confirm time rather than reusing what the panel shows.
@@ -203,17 +228,27 @@ export default function BroadcastComposerPage() {
               <label
                 key={channel.value}
                 htmlFor={`channel-${channel.value}`}
-                className="bg-muted/40 flex items-start gap-3 rounded-lg p-3"
+                className={`bg-muted/40 flex items-start gap-3 rounded-lg p-3 ${
+                  channel.disabled ? "opacity-50" : ""
+                }`}
               >
                 <Checkbox
                   id={`channel-${channel.value}`}
                   className="mt-0.5"
-                  checked={channels.includes(channel.value)}
+                  disabled={channel.disabled}
+                  checked={
+                    !channel.disabled && channels.includes(channel.value)
+                  }
                   onCheckedChange={() => toggleChannel(channel.value)}
                 />
                 <span className="space-y-0.5">
                   <span className="block text-sm font-medium">
                     {channel.label}
+                    {channel.disabled ? (
+                      <span className="text-muted-foreground ml-2 text-xs font-normal">
+                        {channel.disabledReason}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="text-muted-foreground block text-xs">
                     {channel.hint}
@@ -228,10 +263,25 @@ export default function BroadcastComposerPage() {
           </section>
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <AudienceSummary audience={audience} channels={channels} />
+        {/*
+          Clears the sticky header block above it: SiteHeader is
+          `--header-height` (3rem) and the breadcrumb row adds ~2.25rem, so the
+          old `top-4` parked this card underneath both. 7rem leaves a gap
+          rather than sitting flush against the breadcrumb.
+        */}
+        <div className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+          <AudienceSummary
+            audience={audience}
+            channels={channels}
+            onClear={() => setAudience({})}
+          />
 
-          <MessagePreview title={title} body={body} />
+          <MessagePreview
+            title={title}
+            body={body}
+            link={link}
+            channels={channels}
+          />
 
           <div className="flex flex-col gap-2">
             <Button
