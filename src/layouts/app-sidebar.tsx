@@ -18,6 +18,7 @@ import {
   IconStar,
   IconTag,
   IconPackage,
+  IconBroadcast,
   IconSpeakerphone,
   IconGridDots,
   IconMessage,
@@ -188,6 +189,17 @@ const documents: NavItem[] = [
     url: "/events",
     icon: IconCalendar,
     roles: [...LADDER, "FINANCE"],
+  },
+  {
+    // MANAGER+, matching the endpoint's @Roles: a broadcast is the one screen
+    // that can reach thousands of people and spend money in one click.
+    title: "Broadcasts",
+    url: "/broadcasts",
+    icon: IconBroadcast,
+    // MANAGER_UP only, with no lateral role: the backend's LATERAL_ACCESS does
+    // not list `admin/broadcasts`, so offering it to FINANCE or SUPPORT would
+    // render a page whose every request comes back 403.
+    roles: [...MANAGER_UP],
   },
   {
     title: "WhatsApp",
