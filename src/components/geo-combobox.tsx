@@ -89,10 +89,17 @@ export function GeoCombobox({
       </PopoverTrigger>
       {/* `--anchor-width` is base-ui's variable — the Radix name this started
           with does not exist here, so the panel took its own width and sat
-          narrower than, and offset from, the field above it. */}
+          narrower than, and offset from, the field above it.
+
+          MIN-width rather than width: pinned to the trigger exactly, a field in
+          a two-column grid is narrower than its own options, and
+          "Congo-Brazzaville" wrapped onto two lines and lost its last letter to
+          the panel's `overflow-hidden`. It now starts at the field's width and
+          grows to fit the longest label, capped at what the viewport allows so
+          it can never run off-screen. */}
       <PopoverContent
         align="start"
-        className="w-(--anchor-width) p-0 [--viewport-inline-padding:0px]"
+        className="min-w-(--anchor-width) w-max max-w-(--available-width) p-0 [--viewport-inline-padding:0px]"
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -116,11 +123,14 @@ export function GeoCombobox({
                 >
                   <Check
                     className={cn(
-                      "mr-2 size-4",
+                      "mr-2 size-4 shrink-0",
                       value === o.value ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  {o.label}
+                  {/* One line per option: a wrapped city name reads as two
+                      entries, and the row's height stops matching its
+                      neighbours. */}
+                  <span className="truncate">{o.label}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -18,6 +18,9 @@ import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedApplicationsApplicationIdRouteImport } from './routes/_authenticated/applications/$applicationId'
+import { Route as AuthenticatedBroadcastsIndexRouteImport } from './routes/_authenticated/broadcasts/index'
+import { Route as AuthenticatedBroadcastsBroadcastIdRouteImport } from './routes/_authenticated/broadcasts/$broadcastId'
+import { Route as AuthenticatedBroadcastsNewRouteImport } from './routes/_authenticated/broadcasts/new'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedContactRecordsIndexRouteImport } from './routes/_authenticated/contact-records/index'
@@ -91,6 +94,24 @@ const AuthenticatedApplicationsApplicationIdRoute =
   AuthenticatedApplicationsApplicationIdRouteImport.update({
     id: '/applications/$applicationId',
     path: '/applications/$applicationId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBroadcastsIndexRoute =
+  AuthenticatedBroadcastsIndexRouteImport.update({
+    id: '/broadcasts/',
+    path: '/broadcasts/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBroadcastsBroadcastIdRoute =
+  AuthenticatedBroadcastsBroadcastIdRouteImport.update({
+    id: '/broadcasts/$broadcastId',
+    path: '/broadcasts/$broadcastId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBroadcastsNewRoute =
+  AuthenticatedBroadcastsNewRouteImport.update({
+    id: '/broadcasts/new',
+    path: '/broadcasts/new',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
@@ -249,6 +270,8 @@ export interface FileRoutesByFullPath {
   '/auth/phone-pair': typeof AuthPhonePairRoute
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
+  '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
+  '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
@@ -256,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
@@ -285,6 +309,8 @@ export interface FileRoutesByTo {
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/': typeof AuthenticatedIndexRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
+  '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
+  '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
@@ -292,6 +318,7 @@ export interface FileRoutesByTo {
   '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/broadcasts': typeof AuthenticatedBroadcastsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/contact-records': typeof AuthenticatedContactRecordsIndexRoute
@@ -323,6 +350,8 @@ export interface FileRoutesById {
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
+  '/_authenticated/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
+  '/_authenticated/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/_authenticated/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
@@ -330,6 +359,7 @@ export interface FileRoutesById {
   '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
@@ -361,6 +391,8 @@ export interface FileRouteTypes {
     | '/auth/phone-pair'
     | '/auth/qr-confirm'
     | '/applications/$applicationId'
+    | '/broadcasts/$broadcastId'
+    | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
@@ -368,6 +400,7 @@ export interface FileRouteTypes {
     | '/ads-bundles/'
     | '/advertisements/'
     | '/applications/'
+    | '/broadcasts/'
     | '/chat/'
     | '/claim/'
     | '/contact-records/'
@@ -397,6 +430,8 @@ export interface FileRouteTypes {
     | '/auth/qr-confirm'
     | '/'
     | '/applications/$applicationId'
+    | '/broadcasts/$broadcastId'
+    | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
@@ -404,6 +439,7 @@ export interface FileRouteTypes {
     | '/ads-bundles'
     | '/advertisements'
     | '/applications'
+    | '/broadcasts'
     | '/chat'
     | '/claim'
     | '/contact-records'
@@ -434,6 +470,8 @@ export interface FileRouteTypes {
     | '/auth/qr-confirm'
     | '/_authenticated/'
     | '/_authenticated/applications/$applicationId'
+    | '/_authenticated/broadcasts/$broadcastId'
+    | '/_authenticated/broadcasts/new'
     | '/_authenticated/contact-records/$contactRecordId'
     | '/_authenticated/jobs/$jobId'
     | '/_authenticated/penalties/$penaltyId'
@@ -441,6 +479,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ads-bundles/'
     | '/_authenticated/advertisements/'
     | '/_authenticated/applications/'
+    | '/_authenticated/broadcasts/'
     | '/_authenticated/chat/'
     | '/_authenticated/claim/'
     | '/_authenticated/contact-records/'
@@ -535,6 +574,27 @@ declare module '@tanstack/react-router' {
       path: '/applications/$applicationId'
       fullPath: '/applications/$applicationId'
       preLoaderRoute: typeof AuthenticatedApplicationsApplicationIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/broadcasts/': {
+      id: '/_authenticated/broadcasts/'
+      path: '/broadcasts'
+      fullPath: '/broadcasts/'
+      preLoaderRoute: typeof AuthenticatedBroadcastsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/broadcasts/$broadcastId': {
+      id: '/_authenticated/broadcasts/$broadcastId'
+      path: '/broadcasts/$broadcastId'
+      fullPath: '/broadcasts/$broadcastId'
+      preLoaderRoute: typeof AuthenticatedBroadcastsBroadcastIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/broadcasts/new': {
+      id: '/_authenticated/broadcasts/new'
+      path: '/broadcasts/new'
+      fullPath: '/broadcasts/new'
+      preLoaderRoute: typeof AuthenticatedBroadcastsNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chat/': {
@@ -725,6 +785,8 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedApplicationsApplicationIdRoute: typeof AuthenticatedApplicationsApplicationIdRoute
+  AuthenticatedBroadcastsBroadcastIdRoute: typeof AuthenticatedBroadcastsBroadcastIdRoute
+  AuthenticatedBroadcastsNewRoute: typeof AuthenticatedBroadcastsNewRoute
   AuthenticatedContactRecordsContactRecordIdRoute: typeof AuthenticatedContactRecordsContactRecordIdRoute
   AuthenticatedJobsJobIdRoute: typeof AuthenticatedJobsJobIdRoute
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
@@ -732,6 +794,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
   AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedBroadcastsIndexRoute: typeof AuthenticatedBroadcastsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedContactRecordsIndexRoute: typeof AuthenticatedContactRecordsIndexRoute
@@ -760,6 +823,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedApplicationsApplicationIdRoute:
     AuthenticatedApplicationsApplicationIdRoute,
+  AuthenticatedBroadcastsBroadcastIdRoute:
+    AuthenticatedBroadcastsBroadcastIdRoute,
+  AuthenticatedBroadcastsNewRoute: AuthenticatedBroadcastsNewRoute,
   AuthenticatedContactRecordsContactRecordIdRoute:
     AuthenticatedContactRecordsContactRecordIdRoute,
   AuthenticatedJobsJobIdRoute: AuthenticatedJobsJobIdRoute,
@@ -768,6 +834,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
   AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedBroadcastsIndexRoute: AuthenticatedBroadcastsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedContactRecordsIndexRoute: AuthenticatedContactRecordsIndexRoute,
