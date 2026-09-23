@@ -25,6 +25,8 @@ import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedContactRecordsIndexRouteImport } from './routes/_authenticated/contact-records/index'
 import { Route as AuthenticatedContactRecordsContactRecordIdRouteImport } from './routes/_authenticated/contact-records/$contactRecordId'
+import { Route as AuthenticatedConversationsIndexRouteImport } from './routes/_authenticated/conversations/index'
+import { Route as AuthenticatedConversationsConversationIdRouteImport } from './routes/_authenticated/conversations/$conversationId'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback/index'
@@ -134,6 +136,18 @@ const AuthenticatedContactRecordsContactRecordIdRoute =
   AuthenticatedContactRecordsContactRecordIdRouteImport.update({
     id: '/contact-records/$contactRecordId',
     path: '/contact-records/$contactRecordId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedConversationsIndexRoute =
+  AuthenticatedConversationsIndexRouteImport.update({
+    id: '/conversations/',
+    path: '/conversations/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedConversationsConversationIdRoute =
+  AuthenticatedConversationsConversationIdRouteImport.update({
+    id: '/conversations/$conversationId',
+    path: '/conversations/$conversationId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDocumentsIndexRoute =
@@ -273,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
+  '/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -283,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
+  '/conversations/': typeof AuthenticatedConversationsIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
@@ -312,6 +328,7 @@ export interface FileRoutesByTo {
   '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
+  '/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -322,6 +339,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/contact-records': typeof AuthenticatedContactRecordsIndexRoute
+  '/conversations': typeof AuthenticatedConversationsIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
@@ -353,6 +371,7 @@ export interface FileRoutesById {
   '/_authenticated/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/_authenticated/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/_authenticated/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
+  '/_authenticated/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
   '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -363,6 +382,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
+  '/_authenticated/conversations/': typeof AuthenticatedConversationsIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
@@ -394,6 +414,7 @@ export interface FileRouteTypes {
     | '/broadcasts/$broadcastId'
     | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
+    | '/conversations/$conversationId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
@@ -404,6 +425,7 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/claim/'
     | '/contact-records/'
+    | '/conversations/'
     | '/documents/'
     | '/events/'
     | '/feedback/'
@@ -433,6 +455,7 @@ export interface FileRouteTypes {
     | '/broadcasts/$broadcastId'
     | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
+    | '/conversations/$conversationId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
@@ -443,6 +466,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/claim'
     | '/contact-records'
+    | '/conversations'
     | '/documents'
     | '/events'
     | '/feedback'
@@ -473,6 +497,7 @@ export interface FileRouteTypes {
     | '/_authenticated/broadcasts/$broadcastId'
     | '/_authenticated/broadcasts/new'
     | '/_authenticated/contact-records/$contactRecordId'
+    | '/_authenticated/conversations/$conversationId'
     | '/_authenticated/jobs/$jobId'
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
@@ -483,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/'
     | '/_authenticated/claim/'
     | '/_authenticated/contact-records/'
+    | '/_authenticated/conversations/'
     | '/_authenticated/documents/'
     | '/_authenticated/events/'
     | '/_authenticated/feedback/'
@@ -623,6 +649,20 @@ declare module '@tanstack/react-router' {
       path: '/contact-records/$contactRecordId'
       fullPath: '/contact-records/$contactRecordId'
       preLoaderRoute: typeof AuthenticatedContactRecordsContactRecordIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/conversations/': {
+      id: '/_authenticated/conversations/'
+      path: '/conversations'
+      fullPath: '/conversations/'
+      preLoaderRoute: typeof AuthenticatedConversationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/conversations/$conversationId': {
+      id: '/_authenticated/conversations/$conversationId'
+      path: '/conversations/$conversationId'
+      fullPath: '/conversations/$conversationId'
+      preLoaderRoute: typeof AuthenticatedConversationsConversationIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/documents/': {
@@ -788,6 +828,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBroadcastsBroadcastIdRoute: typeof AuthenticatedBroadcastsBroadcastIdRoute
   AuthenticatedBroadcastsNewRoute: typeof AuthenticatedBroadcastsNewRoute
   AuthenticatedContactRecordsContactRecordIdRoute: typeof AuthenticatedContactRecordsContactRecordIdRoute
+  AuthenticatedConversationsConversationIdRoute: typeof AuthenticatedConversationsConversationIdRoute
   AuthenticatedJobsJobIdRoute: typeof AuthenticatedJobsJobIdRoute
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
@@ -798,6 +839,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedContactRecordsIndexRoute: typeof AuthenticatedContactRecordsIndexRoute
+  AuthenticatedConversationsIndexRoute: typeof AuthenticatedConversationsIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedFeedbackIndexRoute: typeof AuthenticatedFeedbackIndexRoute
@@ -828,6 +870,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBroadcastsNewRoute: AuthenticatedBroadcastsNewRoute,
   AuthenticatedContactRecordsContactRecordIdRoute:
     AuthenticatedContactRecordsContactRecordIdRoute,
+  AuthenticatedConversationsConversationIdRoute:
+    AuthenticatedConversationsConversationIdRoute,
   AuthenticatedJobsJobIdRoute: AuthenticatedJobsJobIdRoute,
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
@@ -838,6 +882,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedContactRecordsIndexRoute: AuthenticatedContactRecordsIndexRoute,
+  AuthenticatedConversationsIndexRoute: AuthenticatedConversationsIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedFeedbackIndexRoute: AuthenticatedFeedbackIndexRoute,

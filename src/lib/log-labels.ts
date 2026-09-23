@@ -20,6 +20,8 @@ const RECORD_TYPES: Record<string, string> = {
   Invoice: "Invoice",
   Advertisement: "Ad",
   Document: "Document",
+  ProfileConversation: "Conversation",
+  RedactionReport: "Redaction report",
 };
 
 /** Words inside action codes that read better replaced. */
