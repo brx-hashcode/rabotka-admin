@@ -22,6 +22,7 @@ import {
   IconSpeakerphone,
   IconGridDots,
   IconMessage,
+  IconMessages,
   IconTopologyStar3,
   IconAddressBook,
   IconKey,
@@ -177,6 +178,16 @@ const documents: NavItem[] = [
     url: "/claim",
     icon: IconReport,
     roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    // LADDER only for now. SUPPORT is a separate decision, because on this
+    // route `read` is not a narrow grant: the role ceiling would also let them
+    // open message bodies. Add them here and in LATERAL_ACCESS + LATERAL_ROUTES
+    // together, or the link renders and every request 403s.
+    title: "Conversations",
+    url: "/conversations",
+    icon: IconMessages,
+    roles: [...LADDER],
   },
   {
     title: "Feedback",
