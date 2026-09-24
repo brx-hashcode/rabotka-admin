@@ -20,6 +20,7 @@ import {
   flattenForTemplateVariable,
   ADMIN_MESSAGE_VAR_MAX,
 } from "#/lib/whatsapp-template-text";
+import { IconRobot, IconRobotOff } from "@tabler/icons-react";
 import { MessageExportMenu } from "#/features/profiles/components/message-export-menu";
 import { ChatDoodleBg } from "./chat-doodle-bg";
 import { QuickMessagePicker } from "#/components/quick-message-picker";
@@ -32,6 +33,13 @@ type Props = {
   profileType?: string | null;
   /** Fills `{{prenom}}` in a picked template. */
   firstName?: string | null;
+  /**
+   * When VoVa goes quiet for this profile, or null. A DEADLINE — a date in the
+   * past means the pause lapsed and the bot is answering again.
+   */
+  botPausedUntil?: string | null;
+  onBotPausedChange?: (paused: boolean) => void;
+  isTogglingBotPause?: boolean;
 };
 
 function formatTime(v: string) {
@@ -50,7 +58,14 @@ export function ProfileMessagesContent({
   profileName,
   profileType,
   firstName,
+  botPausedUntil,
+  onBotPausedChange,
+  isTogglingBotPause,
 }: Readonly<Props>) {
+  // Judged against the clock, not on the field being set: the column is only
+  // cleared when somebody toggles it off, so a lapsed pause still has a date
+  // in it and would otherwise read as "paused" for ever.
+  const botPaused = !!botPausedUntil && new Date(botPausedUntil) > new Date();
   const queryClient = useQueryClient();
   const { data: adminMe } = useAdminMe();
   const { canManageContent } = useRole();
@@ -232,6 +247,13 @@ export function ProfileMessagesContent({
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-5 py-3 shrink-0">
         <span className="font-semibold uppercase">Messages</span>
+        {onBotPausedChange && (
+          <BotPauseToggle
+            paused={botPaused}
+            disabled={!!isTogglingBotPause}
+            onChange={onBotPausedChange}
+          />
+        )}
         <span className="text-muted-foreground text-xs ml-auto">
           {messages.length} message{messages.length === 1 ? "" : "s"}
         </span>
@@ -295,5 +317,53 @@ function MessageBubble({
         {formatTime(message.createdAt)}
       </span>
     </div>
+  );
+}
+
+/**
+ * "I'm answering this one — VoVa, stay out of it."
+ *
+ * Beside the title rather than in the Actions menu, because the decision is
+ * made while looking at the conversation, and a control you have to go hunting
+ * for is one nobody remembers exists.
+ *
+ * Deliberately states what is true right now rather than what the click will
+ * do. A switch labelled with its own action ("Disable VoVa") is ambiguous the
+ * moment you look away and come back.
+ */
+function BotPauseToggle({
+  paused,
+  disabled,
+  onChange,
+}: Readonly<{
+  paused: boolean;
+  disabled: boolean;
+  onChange: (paused: boolean) => void;
+}>) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onChange(!paused)}
+      title={
+        paused
+          ? "VoVa is not replying to this profile. Click to hand the conversation back."
+          : "VoVa is replying to this profile. Click to answer it yourself."
+      }
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        paused
+          ? "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 dark:text-amber-400"
+          : "bg-muted text-muted-foreground hover:bg-muted/70",
+      )}
+    >
+      {paused ? (
+        <IconRobotOff className="size-3.5" />
+      ) : (
+        <IconRobot className="size-3.5" />
+      )}
+      {paused ? "VoVa off" : "VoVa on"}
+    </button>
   );
 }
