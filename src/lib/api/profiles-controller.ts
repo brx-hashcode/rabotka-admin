@@ -77,6 +77,15 @@ export type AdminProfileListItem = {
   status: string;
   profileType: string;
   whatsappConnected: boolean;
+  /**
+   * When VoVa stops being silent for this profile, or null if it was never
+   * paused.
+   *
+   * A DEADLINE, not a flag: a date in the past means the pause has lapsed and
+   * the bot is answering again. Compare it with the clock — do not test for
+   * its presence.
+   */
+  botPausedUntil: string | null;
   verificationStatus: string;
   verifiedBy: string | null;
   verifiedAt: string | null;
@@ -438,6 +447,31 @@ export class AdminProfilesController extends AdminBaseController {
     return this.get<AdminProfileMessage[]>(url);
   }
 
+  /**
+   * Take this conversation over: VoVa goes quiet for THIS profile only.
+   *
+   * Returns the deadline the pause now runs to. It is refreshed by every
+   * message an admin sends, and lapses on its own if nobody comes back — so
+   * the UI has to compare it with the clock rather than treat its presence as
+   * "paused".
+   */
+  async pauseBot(id: string): Promise<{ botPausedUntil: string }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/bot-pause`,
+      new URLSearchParams(),
+    );
+    return this.post<{ botPausedUntil: string }>(url, {});
+  }
+
+  /** Hand the conversation back before the pause lapses on its own. */
+  async resumeBot(id: string): Promise<{ botPausedUntil: null }> {
+    const url = this.createURL(
+      `/admin/profiles/${id}/bot-pause`,
+      new URLSearchParams(),
+    );
+    return this.delete<{ botPausedUntil: null }>(url);
+  }
+
   async getVovaMemory(id: string): Promise<AdminVovaMemory> {
     const url = this.createURL(
       `/admin/profiles/${id}/vova-memory`,
@@ -576,6 +610,8 @@ export const getProfileLogs = controller.getLogs.bind(controller);
 export const getProfilePaymentRequests = controller.getPaymentRequests.bind(controller);
 export const sendProfileMessage = controller.sendMessage.bind(controller);
 export const getProfileMessages = controller.getMessages.bind(controller);
+export const pauseProfileBot = controller.pauseBot.bind(controller);
+export const resumeProfileBot = controller.resumeBot.bind(controller);
 export const getProfileVovaMemory = controller.getVovaMemory.bind(controller);
 export const eraseProfileVovaMemory =
   controller.eraseVovaMemory.bind(controller);

@@ -7,6 +7,8 @@ import {
   updateProfileStatus,
   getProfileLogs,
   updateProfileAvatar,
+  pauseProfileBot,
+  resumeProfileBot,
   type AdminProfileDetailResponse,
   type AdminUpdateProfileParams,
   type AdminVerifyProfileParams,
@@ -86,6 +88,40 @@ export function useProfileDetail(profileId: string) {
     },
   });
 
+  /**
+   * Take the conversation over, or hand it back.
+   *
+   * One mutation rather than two, because the UI has one control: the boolean
+   * it is given is the state the admin is asking FOR, which keeps the caller
+   * from having to know which endpoint means which.
+   *
+   * The result is written straight into the cache — the deadline it returns is
+   * the authority, and refetching to learn something the server just told us
+   * would only make the switch feel slow.
+   */
+  const botPauseMutation = useMutation<
+    { botPausedUntil: string | null },
+    Error,
+    boolean
+  >({
+    mutationFn: (paused: boolean) =>
+      paused ? pauseProfileBot(profileId) : resumeProfileBot(profileId),
+    onSuccess: ({ botPausedUntil }) => {
+      queryClient.setQueryData<AdminProfileDetailResponse>(queryKey, (prev) =>
+        prev ? { ...prev, botPausedUntil } : prev,
+      );
+      invalidateLogs();
+      toast.success(
+        botPausedUntil
+          ? "VoVa is off for this profile — you're answering"
+          : "VoVa is back on for this profile",
+      );
+    },
+    onError: (error) => {
+      toast.error(friendlyError(error, "Couldn't change VoVa for this profile."));
+    },
+  });
+
   return {
     profile: query.data ?? null,
     isLoading: query.isLoading,
@@ -102,5 +138,7 @@ export function useProfileDetail(profileId: string) {
     isLoadingLogs: logsQuery.isLoading,
     updateAvatar: avatarMutation.mutateAsync,
     isUploadingAvatar: avatarMutation.isPending,
+    setBotPaused: botPauseMutation.mutateAsync,
+    isTogglingBotPause: botPauseMutation.isPending,
   };
 }

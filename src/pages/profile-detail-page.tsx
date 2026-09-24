@@ -96,6 +96,8 @@ export default function ProfileDetailPage({
     isUploadingAvatar,
     logs,
     isLoadingLogs,
+    setBotPaused,
+    isTogglingBotPause,
   } = useProfileDetail(profileId);
 
   const [sendVerifLinkOpen, setSendVerifLinkOpen] = useState(false);
@@ -392,6 +394,9 @@ export default function ProfileDetailPage({
             profileName={`${profile.firstName} ${profile.lastName}`}
             profileType={profile.profileType}
             firstName={profile.firstName}
+            botPausedUntil={profile.botPausedUntil}
+            onBotPausedChange={(paused) => void setBotPaused(paused)}
+            isTogglingBotPause={isTogglingBotPause}
           />
           {/* Under the transcript, because a puzzling answer up there is usually
               explained by a line down here. */}
