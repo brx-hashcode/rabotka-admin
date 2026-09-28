@@ -6,6 +6,7 @@ export const NOTIFICATION_ENTITY_LABELS: Record<string, string> = {
   event: "Event",
   payment: "Payment",
   penalty: "Penalty",
+  conversation: "Conversation",
 };
 
 export function getNotificationHref(
@@ -21,6 +22,9 @@ export function getNotificationHref(
       return `/applications/${entityId}`;
     case "penalty":
       return `/penalties/${entityId}`;
+    // A held message: the thread, where the admin can read it and close it.
+    case "conversation":
+      return `/conversations/${entityId}`;
     case "claim":
       return "/claim";
     case "event":
