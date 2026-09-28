@@ -1,4 +1,5 @@
 import type { AdminProfileMessage } from "#/lib/api/profiles-controller";
+import { messageSenderLabel } from "#/lib/message-sender-label";
 
 /**
  * One conversation, oldest first, for offline analysis.
@@ -34,8 +35,8 @@ function senderOf(
   message: AdminProfileMessage,
   profileName: string,
 ): string {
-  if (message.direction === "INBOUND") return profileName;
-  return message.sentByName ?? "System";
+  // Same wording as the Messages panel, so the export matches the screen.
+  return messageSenderLabel(message, profileName);
 }
 
 /**
