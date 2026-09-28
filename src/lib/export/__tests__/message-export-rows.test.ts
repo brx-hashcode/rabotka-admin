@@ -46,12 +46,12 @@ describe("message export rows", () => {
    * Automated sends have no author. Labelling them as staff would inflate any
    * measure of how much human support a user actually received.
    */
-  it("labels automated outbound messages as System", () => {
+  it("labels automated outbound messages as Rabotka, like the panel", () => {
     const row = messageItemsToStringRows(
       [msg({ direction: "OUTBOUND", sentByName: null })],
       PROFILE,
     )[0];
-    expect(cell(row, "Sender")).toBe("System");
+    expect(cell(row, "Sender")).toBe("Rabotka");
   });
 
   /** A conversation read out of order is not a conversation. */

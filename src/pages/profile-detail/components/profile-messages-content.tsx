@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconMessageCircle, IconSend } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { cn } from "#/lib/utils";
+import { messageSenderLabel } from "#/lib/message-sender-label";
 import { Card, CardContent } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
@@ -13,7 +14,6 @@ import {
   type AdminProfileMessage,
   type MessageChannel,
 } from "#/lib/api/profiles-controller";
-import { useAdminMe } from "#/hooks/use-admin-me";
 import { useRole } from "#/hooks/use-role";
 import { WhatsAppWindowBadge } from "#/components/whatsapp-window-badge";
 import {
@@ -67,9 +67,7 @@ export function ProfileMessagesContent({
   // in it and would otherwise read as "paused" for ever.
   const botPaused = !!botPausedUntil && new Date(botPausedUntil) > new Date();
   const queryClient = useQueryClient();
-  const { data: adminMe } = useAdminMe();
   const { canManageContent } = useRole();
-  const adminName = `${adminMe?.firstName} ${adminMe?.lastName}`;
   const [channel, setChannel] = useState<MessageChannel>("EMAIL");
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -269,7 +267,6 @@ export function ProfileMessagesContent({
               key={msg.id}
               message={msg}
               profileName={profileName}
-              adminName={adminName}
             />
           ))}
           <div ref={bottomRef} />
@@ -285,11 +282,9 @@ export function ProfileMessagesContent({
 function MessageBubble({
   message,
   profileName,
-  adminName,
 }: Readonly<{
   message: AdminProfileMessage;
   profileName: string;
-  adminName: string;
 }>) {
   const isOutbound = message.direction === "OUTBOUND";
 
@@ -301,7 +296,7 @@ function MessageBubble({
       )}
     >
       <span className="text-xs text-muted-foreground px-1">
-        {isOutbound ? (message.sentByName ?? adminName) : profileName}
+        {messageSenderLabel(message, profileName)}
       </span>
       <div
         className={cn(
