@@ -20,6 +20,7 @@ const ENTITY_COLORS: Record<string, string> = {
   event: "bg-pink-500",
   payment: "bg-green-500",
   penalty: "bg-red-500",
+  conversation: "bg-orange-500",
 };
 
 function timeAgo(timestamp: string): string {

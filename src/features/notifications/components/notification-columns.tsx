@@ -25,6 +25,8 @@ function getEntityBadgeClass(entity: string): string {
       return "bg-green-500 text-white border-transparent";
     case "penalty":
       return "bg-rose-600 text-white border-transparent";
+    case "conversation":
+      return "bg-orange-500 text-white border-transparent";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
