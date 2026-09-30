@@ -38,6 +38,13 @@ import type {
 } from "#/lib/api/wallet-controller";
 import { useWalletTransactions } from "#/hooks/use-wallet-transactions";
 import { useWalletPayments } from "#/hooks/use-wallet-payments";
+import {
+  WALLET_STATS_FROM_KEY,
+  WALLET_STATS_TO_KEY,
+  useWalletStatsRange,
+} from "#/hooks/use-wallet-stats-range";
+import { RangePresetToggle } from "#/components/range-preset-toggle";
+import { describeRange } from "#/lib/range-presets";
 
 const TX_TYPE_OPTIONS = [
   { value: "CREDIT_PENALTY", label: "Penalty" },
@@ -239,12 +246,29 @@ export default function WalletPage() {
       DEFAULT_WALLET_TAB,
     ),
   );
+  const statsRange = useWalletStatsRange();
+  const statsWindowLabel = describeRange(
+    statsRange.created_from ?? "",
+    statsRange.created_to ?? "",
+    "all time",
+  );
 
   return (
     <div className="flex flex-col gap-6 pt-6">
       <PageListHeader
         title="Finance"
         description="Revenue, payments and wallet movements across the platform."
+        actions={
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground hidden text-xs sm:inline">
+              {statsWindowLabel}
+            </span>
+            <RangePresetToggle
+              fromKey={WALLET_STATS_FROM_KEY}
+              toKey={WALLET_STATS_TO_KEY}
+            />
+          </div>
+        }
       />
       <WalletInfoCard />
       <div className="grid grid-cols-12 items-stretch gap-4">
