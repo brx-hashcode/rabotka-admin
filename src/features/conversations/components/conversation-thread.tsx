@@ -5,6 +5,7 @@ import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Spinner } from "#/components/ui/spinner";
 import { dayHeading } from "#/lib/date-grouping";
+import { scrollToBottom } from "#/lib/scroll-to-bottom";
 import { useConversationThread } from "#/hooks/use-conversation-thread";
 import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
 import { AdminMessageBubble } from "./admin-message-bubble";
@@ -50,7 +51,7 @@ export function ConversationThread({
   useEffect(() => {
     if (settled.current || messages.length === 0) return;
     settled.current = true;
-    bottomRef.current?.scrollIntoView();
+    scrollToBottom(bottomRef.current);
   }, [messages.length]);
 
   const footer = (
