@@ -4,6 +4,7 @@ import { IconMessageCircle, IconSend } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { cn } from "#/lib/utils";
 import { messageSenderLabel } from "#/lib/message-sender-label";
+import { scrollToBottom } from "#/lib/scroll-to-bottom";
 import { Card, CardContent } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
@@ -109,7 +110,7 @@ export function ProfileMessagesContent({
         queryKey: ["admin", "profiles", profileId, "messages"],
       });
       setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+        () => scrollToBottom(bottomRef.current, "smooth"),
         100,
       );
     },
@@ -119,7 +120,7 @@ export function ProfileMessagesContent({
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "instant" });
+    scrollToBottom(bottomRef.current, "instant");
   }, [messages]);
 
   const canSend =

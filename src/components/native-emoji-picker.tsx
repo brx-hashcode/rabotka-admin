@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactElement } from "react";
 
 import {
   Popover,
@@ -62,7 +62,7 @@ export const EMOJI_GROUPS: ReadonlyArray<{
 
 type Props = Readonly<{
   /** The clickable element that opens the picker. */
-  trigger: ReactNode;
+  trigger: ReactElement;
   onPick: (emoji: string) => void;
   /** Close the popover after a pick (single-select). Default false. */
   closeOnSelect?: boolean;
@@ -84,7 +84,10 @@ export function NativeEmojiPicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      {/* `render`, not `asChild`: this popover is Base UI, which has no
+          asChild. With it the trigger rendered its own <button> AROUND the
+          caller's, and a button inside a button is invalid HTML. */}
+      <PopoverTrigger render={trigger} />
       <PopoverContent side={side} align={align} className="w-80 p-2">
         <div className="max-h-64 space-y-3 overflow-y-auto overflow-x-hidden pr-1">
           {EMOJI_GROUPS.map((group) => (
