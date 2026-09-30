@@ -138,8 +138,13 @@ export type AdminPaymentsListResponse = {
 };
 
 class AdminWalletController extends AdminBaseController {
-  async getInfo(): Promise<AdminWalletInfo> {
-    const url = this.createURL("/admin/wallet/revenue", new URLSearchParams());
+  async getInfo(
+    params: { created_from?: string; created_to?: string } = {},
+  ): Promise<AdminWalletInfo> {
+    const query = new URLSearchParams();
+    if (params.created_from) query.set("created_from", params.created_from);
+    if (params.created_to) query.set("created_to", params.created_to);
+    const url = this.createURL("/admin/wallet/revenue", query);
     return this.get<AdminWalletInfo>(url);
   }
 
