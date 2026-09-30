@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { CalendarClock, Send } from "lucide-react";
 
 import { PageListHeader } from "#/components/page-list-header";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
 import {
   AlertDialog,
@@ -24,6 +25,11 @@ import { AudienceBuilder } from "#/features/broadcasts/components/audience-build
 import { AudienceSummary } from "#/features/broadcasts/components/audience-summary";
 import { MessagePreview } from "#/features/broadcasts/components/message-preview";
 import { friendlyError } from "#/lib/api/friendly-error";
+import {
+  formatSchedule,
+  parseSchedule,
+  toLocalInputValue,
+} from "#/lib/broadcast-schedule";
 import {
   createBroadcast,
   previewBroadcastAudience,
@@ -90,7 +96,15 @@ export default function BroadcastComposerPage() {
     billable: number;
   } | null>(null);
 
-  const ready = title.trim() && body.trim() && channels.length > 0;
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduledFor, setScheduledFor] = useState("");
+
+  const scheduledAt = scheduling ? parseSchedule(scheduledFor) : null;
+  const ready =
+    title.trim() &&
+    body.trim() &&
+    channels.length > 0 &&
+    (!scheduling || scheduledAt !== null);
 
   const toggleChannel = (channel: BroadcastChannel) => {
     // Belt and braces: the checkbox is disabled, and a disabled channel can
@@ -126,6 +140,13 @@ export default function BroadcastComposerPage() {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
+      // Read again rather than trusting the render: the dialog can sit open
+      // past the chosen minute, and finding that out before the draft exists
+      // beats leaving an orphan draft behind a refused send.
+      const at = scheduling ? parseSchedule(scheduledFor) : null;
+      if (scheduling && !at) {
+        throw new Error("That time has passed — pick a later one.");
+      }
       const broadcast = await createBroadcast({
         title: title.trim(),
         body: body.trim(),
@@ -133,12 +154,18 @@ export default function BroadcastComposerPage() {
         channels,
         audience,
       });
-      const result = await sendBroadcast(broadcast.id);
-      return { broadcast, result };
+      const result = await sendBroadcast(
+        broadcast.id,
+        at ? { scheduled_at: at.toISOString() } : {},
+      );
+      return { broadcast, result, at };
     },
-    onSuccess: async ({ broadcast, result }) => {
+    onSuccess: async ({ broadcast, result, at }) => {
+      const deliveries = result.recipientCount.toLocaleString("fr-FR");
       toast.success(
-        `Sending to ${result.recipientCount.toLocaleString("fr-FR")} deliveries`,
+        at
+          ? `Scheduled for ${formatSchedule(at)} — ${deliveries} deliveries`
+          : `Sending to ${deliveries} deliveries`,
       );
       await queryClient.invalidateQueries({
         queryKey: ["admin", "broadcasts"],
@@ -170,6 +197,10 @@ export default function BroadcastComposerPage() {
     },
     onError: (err) => toast.error(friendlyError(err, "The draft was not saved")),
   });
+
+  const confirmLabel = scheduledAt
+    ? sendMutation.isPending ? "Scheduling…" : "Schedule"
+    : sendMutation.isPending ? "Sending…" : "Send now";
 
   return (
     <div>
@@ -283,13 +314,45 @@ export default function BroadcastComposerPage() {
             channels={channels}
           />
 
+          <section className="bg-card shadow-soft space-y-3 rounded-lg p-4">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="schedule-toggle">Schedule for later</Label>
+              <Switch
+                id="schedule-toggle"
+                checked={scheduling}
+                onCheckedChange={setScheduling}
+              />
+            </div>
+            {scheduling ? (
+              <div className="space-y-2">
+                <Input
+                  id="scheduled-for"
+                  type="datetime-local"
+                  aria-label="Send at"
+                  value={scheduledFor}
+                  min={toLocalInputValue(new Date())}
+                  onChange={(e) => setScheduledFor(e.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  {scheduledFor && !scheduledAt
+                    ? "That time has passed — pick a later one."
+                    : "Your local time. The audience is frozen when you schedule, not when it sends."}
+                </p>
+              </div>
+            ) : null}
+          </section>
+
           <div className="flex flex-col gap-2">
             <Button
               disabled={!ready || !canManageContent || sendMutation.isPending}
               onClick={openConfirm}
             >
-              <Send className="size-4" />
-              Send
+              {scheduling ? (
+                <CalendarClock className="size-4" />
+              ) : (
+                <Send className="size-4" />
+              )}
+              {scheduling ? "Schedule" : "Send"}
             </Button>
             <Button
               variant="ghost"
@@ -311,11 +374,18 @@ export default function BroadcastComposerPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Send to {(confirmCounts?.total ?? 0).toLocaleString("fr-FR")}{" "}
-              people?
+              {scheduledAt ? "Schedule for" : "Send to"}{" "}
+              {(confirmCounts?.total ?? 0).toLocaleString("fr-FR")} people?
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
+                {scheduledAt ? (
+                  <p>
+                    It goes out on {formatSchedule(scheduledAt)}, to the people
+                    who match now. Anyone who joins before then is not
+                    included. You can cancel it until it starts.
+                  </p>
+                ) : null}
                 <p>
                   Channels: {channels.join(", ").toLowerCase().replace(/_/g, "-")}.
                 </p>
@@ -343,7 +413,7 @@ export default function BroadcastComposerPage() {
                 sendMutation.mutate();
               }}
             >
-              {sendMutation.isPending ? "Sending…" : "Send now"}
+              {confirmLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
