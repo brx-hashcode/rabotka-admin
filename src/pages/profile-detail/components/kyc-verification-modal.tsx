@@ -6,7 +6,7 @@ import {
   IconRefresh,
   IconAlertTriangle,
 } from "@tabler/icons-react";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type {
@@ -26,7 +26,6 @@ import { Badge } from "#/components/ui/badge";
 import { ReasonField } from "#/components/reason-field";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -37,6 +36,7 @@ import {
 import { docCategoryLabel, docTypeLabel } from "../helpers";
 import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { ImageUploadZone } from "./image-upload-zone";
+import { DocumentViewerDrawer, toKycViewerDoc } from "./document-viewer-drawer";
 import { cn } from "#/lib/utils";
 import { friendlyError } from "#/lib/api/friendly-error";
 
@@ -117,9 +117,12 @@ export function KycVerificationModal({
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
   const [items, setItems] = useState<UploadItem[]>([]);
+  // The document stays set while the drawer closes, so its contents do not
+  // vanish mid-animation; `previewOpen` is what opens and closes it.
   const [previewDoc, setPreviewDoc] = useState<AdminKycDocumentItem | null>(
     null,
   );
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const uploadImage = useUploadVerificationImage(profile.id).mutateAsync;
 
@@ -156,6 +159,7 @@ export function KycVerificationModal({
       setReason("");
       setReasonError(false);
       clearItems();
+      setPreviewOpen(false);
       setPreviewDoc(null);
     }
   }, [open, clearItems]);
@@ -409,9 +413,11 @@ export function KycVerificationModal({
                         ? "Preview document"
                         : "Document file is missing"
                     }
-                    onClick={() =>
-                      doc.fileAvailable && setPreviewDoc(doc)
-                    }
+                    onClick={() => {
+                      if (!doc.fileAvailable) return;
+                      setPreviewDoc(doc);
+                      setPreviewOpen(true);
+                    }}
                     disabled={!doc.fileAvailable}
                     className="border-border bg-muted group relative h-14 w-14 shrink-0 overflow-hidden rounded-md border hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -493,48 +499,15 @@ export function KycVerificationModal({
         </DialogFooter>
       </DialogContent>
 
-      {/* Nested viewer: same pattern as claim detail — keeps KYC dialog open underneath */}
-      <Dialog
-        open={previewDoc != null}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setPreviewDoc(null);
-        }}
-      >
-        <DialogContent
-          className="w-full max-w-4xl border-0 bg-black/90 p-0"
-          showClose={false}
-        >
-          <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3">
-            <DialogTitle className="text-sm text-white">
-              {previewDoc ? docCategoryLabel(previewDoc.documentCategory) : ""}
-            </DialogTitle>
-            <DialogClose asChild>
-              <button
-                type="button"
-                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
-              >
-                <X className="h-4 w-4 text-white" />
-                <span className="sr-only">Close</span>
-              </button>
-            </DialogClose>
-          </DialogHeader>
-          <div className="flex min-h-96 items-center justify-center bg-black/50 p-4">
-            {previewDoc?.contentKind === "image" && (
-              <img
-                src={kycDocumentRawUrl(profile.id, previewDoc.id)}
-                alt="ID document"
-                className="max-h-[70vh] max-w-full rounded object-contain"
-              />
-            )}
-            {previewDoc != null && previewDoc.contentKind !== "image" && (
-              <p className="text-muted-foreground text-sm">
-                Preview is only available for images. Open the document from the
-                "Identity check (KYC)" tab to see it in full.
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* The app's shared viewer, opened over this dialog — which stays open
+          underneath, so the reviewer comes back to their decision and reason
+          exactly as they left them. It used to be a second dialog here showing
+          a fixed-size image with none of the viewer's zoom, rotate or download. */}
+      <DocumentViewerDrawer
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        document={previewDoc ? toKycViewerDoc(profile.id, previewDoc) : null}
+      />
     </Dialog>
   );
 }
