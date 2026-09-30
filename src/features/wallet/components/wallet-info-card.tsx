@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   IconWallet,
   IconCircleCheck,
@@ -6,6 +6,7 @@ import {
 } from "@tabler/icons-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
+import { useWalletStatsRange } from "#/hooks/use-wallet-stats-range";
 import { getWalletInfo } from "#/lib/api/wallet-controller";
 
 function StatCard({
@@ -35,9 +36,11 @@ function StatCard({
 }
 
 export function WalletInfoCard() {
+  const range = useWalletStatsRange();
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "wallet", "info"],
-    queryFn: getWalletInfo,
+    queryKey: ["admin", "wallet", "info", range],
+    queryFn: () => getWalletInfo(range),
+    placeholderData: keepPreviousData,
   });
 
   return (

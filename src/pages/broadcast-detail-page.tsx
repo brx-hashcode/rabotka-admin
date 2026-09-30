@@ -20,6 +20,7 @@ import {
 import { BROADCAST_STATUS_LABELS } from "#/features/broadcasts/components/broadcast-columns";
 import { DeliveryChart } from "#/features/broadcasts/components/delivery-chart";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { formatSchedule } from "#/lib/broadcast-schedule";
 import {
   cancelBroadcast,
   getBroadcastById,
@@ -135,7 +136,11 @@ export default function BroadcastDetailPage() {
       <div className="flex items-start justify-between gap-4">
         <PageListHeader
           title={broadcast.title}
-          description={`Created ${new Date(broadcast.created_at).toLocaleDateString("fr-FR")}`}
+          description={
+            broadcast.status === "SCHEDULED" && broadcast.scheduled_at
+              ? `Scheduled for ${formatSchedule(broadcast.scheduled_at)}`
+              : `Created ${new Date(broadcast.created_at).toLocaleDateString("fr-FR")}`
+          }
         />
         <div className="flex items-center gap-2">
           <Badge>{BROADCAST_STATUS_LABELS[broadcast.status]}</Badge>
