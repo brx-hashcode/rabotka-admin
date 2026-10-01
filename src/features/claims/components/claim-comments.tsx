@@ -22,6 +22,7 @@ import {
 import { compressImage } from "#/lib/media/image-compress";
 import { reportUploadRejections } from "#/lib/media/upload-rejection-toast";
 import { isLikelyImageAsset } from "#/lib/media/is-likely-image-asset";
+import { scrollToBottom } from "#/lib/scroll-to-bottom";
 import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
 const MAX_ATTACHMENTS = 3;
@@ -77,7 +78,9 @@ export function ClaimComments({
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // The list scrolls inside the claim sheet; `scrollIntoView` would drag
+    // the sheet along with it to show the newest comment.
+    scrollToBottom(bottomRef.current, "smooth");
   }, [comments.length]);
 
   const addFiles = useCallback((accepted: File[]) => {
