@@ -61,6 +61,7 @@ import {
 } from "./new-conversation-dialog";
 import { EmojiPicker } from "./emoji-picker";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { scrollToBottom } from "#/lib/scroll-to-bottom";
 
 /** Same-day grouping key for the date separators in a thread. */
 function dayKey(iso: string): string {
@@ -324,7 +325,7 @@ function ChatThread({
 
   // Scroll to newest on message change.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollToBottom(bottomRef.current, "smooth");
   }, [messages.length]);
 
   const typingNames = useMemo(() => {
