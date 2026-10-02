@@ -19,6 +19,7 @@ type FormState = {
   maxNotificationWorkers: string;
   notificationCooldownMinutes: string;
   recommendationMinScore: string;
+  agentCandidateMinScore: string;
   reliabilityThreshold: string;
 };
 
@@ -30,6 +31,7 @@ const EMPTY: FormState = {
   maxNotificationWorkers: "20",
   notificationCooldownMinutes: "60",
   recommendationMinScore: "30",
+  agentCandidateMinScore: "30",
   reliabilityThreshold: "50",
 };
 
@@ -62,6 +64,8 @@ export function MatchingCard() {
         data.notificationCooldownMinutes = item.value;
       if (item.key === "matching.recommendation_min_score")
         data.recommendationMinScore = toPercent(item.value);
+      if (item.key === "agent.candidate_min_score")
+        data.agentCandidateMinScore = toPercent(item.value);
       if (item.key === "matching.reliability_threshold")
         data.reliabilityThreshold = item.value;
     }
@@ -88,6 +92,11 @@ export function MatchingCard() {
       toast.error("The minimum match for employers must be between 0 and 100%.");
       return;
     }
+    const agentScore = fromPercent(form.agentCandidateMinScore);
+    if (agentScore === null) {
+      toast.error("The minimum match for agents must be between 0 and 100%.");
+      return;
+    }
     const maxWorkers = parseInt(form.maxNotificationWorkers, 10);
     if (isNaN(maxWorkers) || maxWorkers < 1) {
       toast.error("At least 1 worker must be alerted per job.");
@@ -112,6 +121,7 @@ export function MatchingCard() {
       "matching.max_notification_workers": String(maxWorkers),
       "matching.notification_cooldown_minutes": String(cooldown),
       "matching.recommendation_min_score": String(recoScore),
+      "agent.candidate_min_score": String(agentScore),
       "matching.reliability_threshold": String(reliability),
     });
     setInitial(form);
@@ -241,6 +251,38 @@ export function MatchingCard() {
             step={5}
             value={form.recommendationMinScore}
             onChange={(e) => set("recommendationMinScore", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        {/* Its own threshold, not the employers' one above: a strict value
+            chosen for what employers see must not silently empty the list
+            agents are meant to call through. */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label
+              htmlFor="agent-candidate-min-score"
+              className="text-sm font-medium"
+            >
+              Minimum match for agents' suggestions (%)
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              How well a worker must suit a job to be suggested to the field
+              agents covering its city. Lower gives agents more people to
+              call. Usual value: 30%.
+            </p>
+          </div>
+          <Input
+            id="agent-candidate-min-score"
+            type="number"
+            min={0}
+            max={100}
+            step={5}
+            value={form.agentCandidateMinScore}
+            onChange={(e) => set("agentCandidateMinScore", e.target.value)}
             disabled={disabled}
             className="w-24 text-right"
           />
