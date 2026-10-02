@@ -45,6 +45,8 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/network": "full",
     "/feedback": "full",
     "/logs": "full",
+    // Rabotka pays agents, so finance needs the whole picture.
+    "/agents": "full",
     // NOT PRESENT, deliberately: /team, /settings and /oauth-apps.
     //
     // /oauth-apps is SUPER_ADMIN-only for everyone, ADMIN included, so leaving
@@ -74,6 +76,9 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     // Post-unlock sentiment is context for the claim next to it. The server has
     // always granted this; only this file was out of step.
     "/feedback": "read",
+    // "Is this caller really one of our agents?" — read only: creating and
+    // suspending agents stays with MANAGER and above, as on the server.
+    "/agents": "read",
   },
 };
 

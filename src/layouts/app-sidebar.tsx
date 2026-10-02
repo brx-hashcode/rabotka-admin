@@ -26,6 +26,7 @@ import {
   IconTopologyStar3,
   IconAddressBook,
   IconKey,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -104,6 +105,14 @@ const navMain: NavItem[] = [
     // Matches `admin/contact-records`: MODERATOR+ on the ladder, and both
     // lateral roles read-only — support fields "I paid and never got the
     // contact", finance reconciles the fees behind it.
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    title: "Agents",
+    url: "/agents",
+    icon: IconUsersGroup,
+    // Matches `admin/agents`: MODERATOR+ reads, MANAGER+ creates and changes
+    // status. FINANCE in full (Rabotka pays agents), SUPPORT read-only.
     roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {

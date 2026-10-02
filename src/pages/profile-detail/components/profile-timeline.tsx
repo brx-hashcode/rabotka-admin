@@ -13,6 +13,13 @@ import {
   IconCoin,
   IconCashBanknote,
   IconAlertTriangle,
+  IconBan,
+  IconEye,
+  IconFileUpload,
+  IconLogin,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconUserPlus,
 } from "@tabler/icons-react";
 
 import type { AdminLogEntry } from "#/lib/api/profiles-controller";
@@ -94,6 +101,52 @@ const ACTION_CONFIG: Record<
     label: "Payment failed",
     icon: IconAlertTriangle,
     color: "text-rose-500",
+  },
+  // Field agents (admin/agents). Same timeline, same component.
+  AGENT_CREATED: {
+    label: "Agent created",
+    icon: IconUserPlus,
+    color: "text-emerald-500",
+  },
+  AGENT_UPDATED: {
+    label: "Details updated",
+    icon: IconEdit,
+    color: "text-amber-500",
+  },
+  AGENT_SUSPENDED: {
+    label: "Suspended",
+    icon: IconPlayerPause,
+    color: "text-amber-500",
+  },
+  AGENT_REACTIVATED: {
+    label: "Reactivated",
+    icon: IconPlayerPlay,
+    color: "text-emerald-500",
+  },
+  AGENT_REVOKED: {
+    label: "Revoked",
+    icon: IconBan,
+    color: "text-rose-500",
+  },
+  AGENT_LOGIN: {
+    label: "Signed in to the agent app",
+    icon: IconLogin,
+    color: "text-sky-500",
+  },
+  AGENT_AVATAR_REPLACED: {
+    label: "Photo replaced",
+    icon: IconPhoto,
+    color: "text-sky-500",
+  },
+  AGENT_KYC_DOCUMENT_REPLACED: {
+    label: "Identity document replaced",
+    icon: IconFileUpload,
+    color: "text-violet-500",
+  },
+  AGENT_KYC_VIEWED: {
+    label: "Identity document viewed",
+    icon: IconEye,
+    color: "text-muted-foreground",
   },
 };
 
@@ -194,6 +247,37 @@ const METADATA_RENDERERS: Record<
       <p className="text-muted-foreground mt-1.5 text-xs">{note}</p>
     ) : null;
   },
+};
+
+// Agent entries. `fields` is a list of changed field names here, not the
+// object PROFILE_UPDATED carries.
+METADATA_RENDERERS.AGENT_UPDATED = (meta) => {
+  const fields = Array.isArray(meta.fields)
+    ? meta.fields.filter((f): f is string => typeof f === "string")
+    : [];
+  if (fields.length === 0) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {fields.map((field) => (
+        <Badge key={field} variant="secondary" className="font-normal">
+          {humanize(field)}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+METADATA_RENDERERS.AGENT_SUSPENDED = (meta) => {
+  const reason = toStringOrNull(meta.reason);
+  return reason ? <Note>{reason}</Note> : null;
+};
+METADATA_RENDERERS.AGENT_REVOKED = METADATA_RENDERERS.AGENT_SUSPENDED;
+METADATA_RENDERERS.AGENT_KYC_DOCUMENT_REPLACED = (meta) => {
+  const category = toStringOrNull(meta.category);
+  return category ? (
+    <Badge variant="secondary" className="mt-1.5 font-normal">
+      {humanize(category)}
+    </Badge>
+  ) : null;
 };
 
 // Same shape, same renderer.

@@ -34,6 +34,7 @@ export function PopoverPopup({
   alignOffset = 0,
   tooltipStyle = false,
   anchor,
+  container,
   ...props
 }: PopoverPrimitive.Popup.Props & {
   side?: PopoverPrimitive.Positioner.Props["side"];
@@ -42,9 +43,16 @@ export function PopoverPopup({
   alignOffset?: PopoverPrimitive.Positioner.Props["alignOffset"];
   tooltipStyle?: boolean;
   anchor?: PopoverPrimitive.Positioner.Props["anchor"];
+  /**
+   * Where to portal the popup. Defaults to <body>. Inside a (Radix) modal
+   * Dialog, pass an element INSIDE the dialog content: the modal blocks
+   * pointer events and traps focus everywhere else, so a popup portalled to
+   * <body> can be seen but not clicked or typed into.
+   */
+  container?: PopoverPrimitive.Portal.Props["container"];
 }): React.ReactElement {
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
