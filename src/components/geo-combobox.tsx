@@ -32,6 +32,13 @@ type Props = {
   readonly placeholder?: string;
   readonly searchPlaceholder?: string;
   readonly disabled?: boolean;
+  /**
+   * Portal target for the list. Pass an element inside the dialog when this is
+   * rendered in a modal Dialog — see `PopoverContent`'s `container`.
+   */
+  readonly container?: HTMLElement | null;
+  /** Draws the field as in error, e.g. from a react-hook-form fieldState. */
+  readonly invalid?: boolean;
 };
 
 /**
@@ -53,6 +60,8 @@ export function GeoCombobox({
   placeholder = "Select…",
   searchPlaceholder = "Search…",
   disabled,
+  container,
+  invalid,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -80,6 +89,7 @@ export function GeoCombobox({
           "border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 py-1 text-sm shadow-xs",
           "focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none",
           "disabled:cursor-not-allowed disabled:opacity-50",
+          invalid && "border-destructive",
         )}
       >
         <span className={cn("truncate", !selected && "text-muted-foreground")}>
@@ -99,6 +109,7 @@ export function GeoCombobox({
           it can never run off-screen. */}
       <PopoverContent
         align="start"
+        container={container}
         className="min-w-(--anchor-width) w-max max-w-(--available-width) p-0 [--viewport-inline-padding:0px]"
       >
         <Command shouldFilter={false}>

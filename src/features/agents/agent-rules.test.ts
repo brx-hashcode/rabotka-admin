@@ -1,0 +1,125 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  availableStatusActions,
+  kycRefsFor,
+  missingKycCategories,
+  requiredKycCategories,
+  zoneFilterOptions,
+  zonesSchema,
+} from "./agent-rules";
+
+describe("agent identity documents", () => {
+  it("needs no back for a passport, all three otherwise", () => {
+    expect(requiredKycCategories("PASSPORT")).toEqual(["DOCUMENT", "SELFIE"]);
+    expect(requiredKycCategories("IDENTITY_CARD")).toEqual([
+      "DOCUMENT",
+      "DOCUMENT_BACK",
+      "SELFIE",
+    ]);
+  });
+
+  it("lists what is still missing", () => {
+    expect(
+      missingKycCategories("IDENTITY_CARD", { DOCUMENT: "k1", SELFIE: "k3" }),
+    ).toEqual(["DOCUMENT_BACK"]);
+    expect(
+      missingKycCategories("PASSPORT", { DOCUMENT: "k1", SELFIE: "k3" }),
+    ).toEqual([]);
+  });
+
+  it("drops a back uploaded before switching to Passport", () => {
+    // The server refuses a DOCUMENT_BACK for a passport.
+    expect(
+      kycRefsFor("PASSPORT", {
+        DOCUMENT: "k1",
+        DOCUMENT_BACK: "k2",
+        SELFIE: "k3",
+      }),
+    ).toEqual([
+      { category: "DOCUMENT", key: "k1" },
+      { category: "SELFIE", key: "k3" },
+    ]);
+  });
+});
+
+describe("agent zones schema", () => {
+  const bzv = { countryCode: "CG", city: "Brazzaville" };
+
+  it("accepts complete, distinct rows", () => {
+    const pnr = { countryCode: "CG", city: "Pointe-Noire" };
+    expect(zonesSchema.safeParse([bzv, pnr]).success).toBe(true);
+  });
+
+  it("needs at least one city", () => {
+    expect(zonesSchema.safeParse([]).success).toBe(false);
+  });
+
+  it("flags a row with no city on that row", () => {
+    const result = zonesSchema.safeParse([bzv, { countryCode: "CG", city: "" }]);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual([1, "city"]);
+  });
+
+  it("flags the same city twice, whatever its case, on the second row", () => {
+    const result = zonesSchema.safeParse([
+      bzv,
+      { countryCode: "CG", city: "brazzaville" },
+    ]);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual([1, "city"]);
+  });
+
+  it("keeps the same city name in two countries apart", () => {
+    const other = { countryCode: "CD", city: "Brazzaville" };
+    expect(zonesSchema.safeParse([bzv, other]).success).toBe(true);
+  });
+});
+
+describe("agent status actions", () => {
+  it("offers only legal moves, and nothing for a revoked agent", () => {
+    expect(availableStatusActions("ACTIVE")).toEqual(["suspend", "revoke"]);
+    expect(availableStatusActions("SUSPENDED")).toEqual([
+      "reactivate",
+      "revoke",
+    ]);
+    expect(availableStatusActions("REVOKED")).toEqual([]);
+  });
+});
+
+describe("zone filter options", () => {
+  const zones = [
+    { countryCode: "CG", city: "Brazzaville", agents: 3 },
+    { countryCode: "CG", city: "Pointe-Noire", agents: 1 },
+    { countryCode: "CD", city: "Brazzaville", agents: 2 },
+  ];
+  const names: Record<string, string> = {
+    CG: "Congo-Brazzaville",
+    CD: "Congo-Kinshasa",
+  };
+  const name = (code: string) => names[code] ?? code;
+
+  it("lists each covered country once, with its agent total", () => {
+    expect(zoneFilterOptions(zones, name, []).countries).toEqual([
+      { value: "CG", label: "Congo-Brazzaville (4)" },
+      { value: "CD", label: "Congo-Kinshasa (2)" },
+    ]);
+  });
+
+  it("keeps same-name cities in two countries apart", () => {
+    const { cities } = zoneFilterOptions(zones, name, []);
+    expect(cities.map((c) => c.value)).toEqual([
+      "CD:Brazzaville",
+      "CG:Brazzaville",
+      "CG:Pointe-Noire",
+    ]);
+  });
+
+  it("narrows cities to the selected countries", () => {
+    const { cities } = zoneFilterOptions(zones, name, ["CG"]);
+    expect(cities.map((c) => c.value)).toEqual([
+      "CG:Brazzaville",
+      "CG:Pointe-Noire",
+    ]);
+  });
+});
