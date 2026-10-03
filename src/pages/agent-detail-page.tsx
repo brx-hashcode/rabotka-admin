@@ -7,6 +7,7 @@ import { canSeeAgentWallet } from "#/features/agents/agent-rules";
 import { AgentActionsMenu } from "#/features/agents/components/agent-actions-menu";
 import { AgentForm } from "#/features/agents/components/agent-form";
 import { AgentKycContent } from "#/features/agents/components/agent-kyc-content";
+import { AgentLeadsContent } from "#/features/agents/components/agent-leads-content";
 import { AgentSummary } from "#/features/agents/components/agent-summary";
 import { AgentWalletContent } from "#/features/agents/components/agent-wallet-content";
 import {
@@ -21,10 +22,11 @@ import {
 } from "./profile-detail/components/document-viewer-drawer";
 import { ProfileTimeline } from "./profile-detail/components/profile-timeline";
 
-type AgentTab = "general" | "kyc" | "wallet";
+type AgentTab = "general" | "leads" | "kyc" | "wallet";
 
 const AGENT_TABS: { label: string; value: AgentTab }[] = [
   { label: "General", value: "general" },
+  { label: "Leads & calls", value: "leads" },
   { label: "Identity (KYC)", value: "kyc" },
   { label: "Wallet", value: "wallet" },
 ];
@@ -138,6 +140,10 @@ export default function AgentDetailPage({
               />
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="leads">
+          <AgentLeadsContent agentId={agent.id} />
         </TabsContent>
 
         <TabsContent value="kyc">

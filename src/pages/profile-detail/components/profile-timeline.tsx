@@ -20,6 +20,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconUserPlus,
+  IconUserX,
 } from "@tabler/icons-react";
 
 import type { AdminLogEntry } from "#/lib/api/profiles-controller";
@@ -147,6 +148,22 @@ const ACTION_CONFIG: Record<
     label: "Identity document viewed",
     icon: IconEye,
     color: "text-muted-foreground",
+  },
+  // Agent invitations: on the agent's timeline and the worker's alike.
+  AGENT_INVITE_SENT: {
+    label: "Agent invitation sent",
+    icon: IconSend,
+    color: "text-sky-500",
+  },
+  AGENT_INVITE_ACCEPTED: {
+    label: "Agent invitation accepted",
+    icon: IconUserCheck,
+    color: "text-emerald-500",
+  },
+  AGENT_INVITE_DECLINED: {
+    label: "Agent invitation declined",
+    icon: IconUserX,
+    color: "text-rose-500",
   },
 };
 

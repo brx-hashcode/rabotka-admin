@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   availableStatusActions,
   kycRefsFor,
+  leadTotals,
   missingKycCategories,
   requiredKycCategories,
   zoneFilterOptions,
@@ -121,5 +122,18 @@ describe("zone filter options", () => {
       "CG:Brazzaville",
       "CG:Pointe-Noire",
     ]);
+  });
+});
+
+describe("leadTotals", () => {
+  it("groups statuses into in progress, applied and closed", () => {
+    expect(
+      leadTotals({ CLAIMED: 3, INVITED: 2, CONFIRMED: 4, DECLINED: 3, UNREACHABLE: 1 }),
+    ).toEqual({ total: 13, inProgress: 5, applied: 4, closed: 4, conversion: 50 });
+  });
+
+  it("has no conversion before any lead is finished", () => {
+    expect(leadTotals({ CLAIMED: 2 }).conversion).toBeNull();
+    expect(leadTotals({}).total).toBe(0);
   });
 });
