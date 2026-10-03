@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   availableStatusActions,
+  canCancelAgentCommission,
+  isCancellableCommission,
   kycRefsFor,
   leadTotals,
   missingKycCategories,
@@ -135,5 +137,23 @@ describe("leadTotals", () => {
   it("has no conversion before any lead is finished", () => {
     expect(leadTotals({ CLAIMED: 2 }).conversion).toBeNull();
     expect(leadTotals({}).total).toBe(0);
+  });
+});
+
+describe("commission cancellation", () => {
+  it("is for ADMIN and above, and FINANCE", () => {
+    expect(canCancelAgentCommission("ADMIN")).toBe(true);
+    expect(canCancelAgentCommission("SUPER_ADMIN")).toBe(true);
+    expect(canCancelAgentCommission("FINANCE")).toBe(true);
+    expect(canCancelAgentCommission("MANAGER")).toBe(false);
+    expect(canCancelAgentCommission("SUPPORT")).toBe(false);
+    expect(canCancelAgentCommission(undefined)).toBe(false);
+  });
+
+  it("only applies to money still on the books", () => {
+    expect(isCancellableCommission("PENDING")).toBe(true);
+    expect(isCancellableCommission("AVAILABLE")).toBe(true);
+    expect(isCancellableCommission("CANCELLED")).toBe(false);
+    expect(isCancellableCommission("INELIGIBLE")).toBe(false);
   });
 });

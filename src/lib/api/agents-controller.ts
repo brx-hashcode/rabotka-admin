@@ -79,6 +79,34 @@ export type AgentWallet = {
   entries: Paginated<AgentLedgerEntry>;
 };
 
+export type AgentCommissionStatus =
+  | "PENDING"
+  | "AVAILABLE"
+  | "CANCELLED"
+  | "INELIGIBLE";
+
+/** One placement's commission: what it pays, and where it stands. */
+export type AgentCommission = {
+  id: string;
+  status: AgentCommissionStatus;
+  amount: number;
+  createdAt: string;
+  /** When it becomes withdrawable; null while waiting for the mission. */
+  availableAt: string | null;
+  releasedAt: string | null;
+  cancelledAt: string | null;
+  /** Why it is ineligible or cancelled. */
+  reason: string | null;
+  applicationId: string;
+  job: { id: string; title: string | null; city: string | null };
+  worker: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    avatarUrl: string | null;
+  };
+};
+
 export type AgentLeadStatus =
   | "SUGGESTED"
   | "CLAIMED"
@@ -303,6 +331,34 @@ export class AdminAgentsController extends AdminBaseController {
     );
   }
 
+  async getCommissions(
+    id: string,
+    params: { status?: AgentCommissionStatus; page?: number; limit?: number } = {},
+  ): Promise<Paginated<AgentCommission>> {
+    const query = this.buildSearchParams({
+      status: params.status,
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+    });
+    return this.get<Paginated<AgentCommission>>(
+      this.createURL(`/admin/agents/${id}/commissions`, query),
+    );
+  }
+
+  async cancelCommission(
+    id: string,
+    commissionId: string,
+    reason: string,
+  ): Promise<AgentCommission> {
+    return this.post<AgentCommission>(
+      this.createURL(
+        `/admin/agents/${id}/commissions/${commissionId}/cancel`,
+        new URLSearchParams(),
+      ),
+      { reason },
+    );
+  }
+
   async getReveals(id: string, page = 1, limit = 20): Promise<AgentReveals> {
     const query = this.buildSearchParams({ page, limit });
     return this.get<AgentReveals>(
@@ -389,6 +445,9 @@ export const getAgentLogs = controller.getLogs.bind(controller);
 export const getAgentWallet = controller.getWallet.bind(controller);
 export const getAgentLeads = controller.getLeads.bind(controller);
 export const getAgentReveals = controller.getReveals.bind(controller);
+export const getAgentCommissions = controller.getCommissions.bind(controller);
+export const cancelAgentCommission =
+  controller.cancelCommission.bind(controller);
 export const createAgent = controller.create.bind(controller);
 export const updateAgent = controller.update.bind(controller);
 export const changeAgentStatus = controller.changeStatus.bind(controller);
