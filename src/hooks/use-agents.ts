@@ -10,6 +10,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { appConfig } from "#/config";
 import {
   getAgent,
+  getAgentCommissions,
   getAgentLeads,
   getAgentLogs,
   getAgentReveals,
@@ -120,6 +121,20 @@ export function useAgentLeads(
     queryKey: [...agentsQueryKey, "detail", agentId, "leads", status, page],
     queryFn: () => getAgentLeads(agentId, { status, page, limit: 20 }),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** Off for roles the server refuses, like the wallet it sits in. */
+export function useAgentCommissions(
+  agentId: string,
+  page: number,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...agentsQueryKey, "detail", agentId, "commissions", page],
+    queryFn: () => getAgentCommissions(agentId, { page, limit: 10 }),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 }
 

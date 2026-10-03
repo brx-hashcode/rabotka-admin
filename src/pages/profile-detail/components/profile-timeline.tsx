@@ -21,6 +21,8 @@ import {
   IconPlayerPlay,
   IconUserPlus,
   IconUserX,
+  IconCoinOff,
+  IconCash,
 } from "@tabler/icons-react";
 
 import type { AdminLogEntry } from "#/lib/api/profiles-controller";
@@ -165,6 +167,26 @@ const ACTION_CONFIG: Record<
     icon: IconUserX,
     color: "text-rose-500",
   },
+  AGENT_COMMISSION_EARNED: {
+    label: "Commission earned",
+    icon: IconCoin,
+    color: "text-amber-500",
+  },
+  AGENT_COMMISSION_RELEASED: {
+    label: "Commission withdrawable",
+    icon: IconCash,
+    color: "text-emerald-500",
+  },
+  AGENT_COMMISSION_CANCELLED: {
+    label: "Commission cancelled",
+    icon: IconCoinOff,
+    color: "text-rose-500",
+  },
+  AGENT_COMMISSION_INELIGIBLE: {
+    label: "Placement not paid",
+    icon: IconCoinOff,
+    color: "text-muted-foreground",
+  },
 };
 
 /** Sentence case, so an unmapped action reads as text rather than shouting. */
@@ -296,6 +318,20 @@ METADATA_RENDERERS.AGENT_KYC_DOCUMENT_REPLACED = (meta) => {
     </Badge>
   ) : null;
 };
+
+// Commissions: the amount, and the reason when it pays nothing.
+METADATA_RENDERERS.AGENT_COMMISSION_EARNED = (meta) =>
+  typeof meta.amount === "number" ? (
+    <Badge variant="secondary" className="mt-1.5 font-normal">
+      {`${meta.amount.toLocaleString("fr-FR")} FCFA`}
+    </Badge>
+  ) : null;
+METADATA_RENDERERS.AGENT_COMMISSION_RELEASED =
+  METADATA_RENDERERS.AGENT_COMMISSION_EARNED;
+METADATA_RENDERERS.AGENT_COMMISSION_CANCELLED =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
+METADATA_RENDERERS.AGENT_COMMISSION_INELIGIBLE =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
 
 // Same shape, same renderer.
 METADATA_RENDERERS.KYC_REJECTED = METADATA_RENDERERS.KYC_APPROVED;

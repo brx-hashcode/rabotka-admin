@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type {
   AgentCallOutcome,
+  AgentCommissionStatus,
   AgentDocumentType,
   AgentKycCategory,
   AgentLeadStatus,
@@ -334,4 +335,41 @@ export function leadTotals(counts: Partial<Record<AgentLeadStatus, number>>) {
     conversion:
       applied + closed === 0 ? null : Math.round((applied / (applied + closed)) * 100),
   };
+}
+
+// ── Commissions ─────────────────────────────────────────────────────────────
+
+export const COMMISSION_STATUS_LABELS: Record<AgentCommissionStatus, string> = {
+  PENDING: "Waiting",
+  AVAILABLE: "Withdrawable",
+  CANCELLED: "Cancelled",
+  INELIGIBLE: "Not paid",
+};
+
+export function commissionStatusBadgeClass(
+  status: AgentCommissionStatus,
+): string {
+  switch (status) {
+    case "PENDING":
+      return "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-transparent";
+    case "AVAILABLE":
+      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-transparent";
+    case "CANCELLED":
+      return "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-transparent";
+    default:
+      return "bg-muted text-muted-foreground border-transparent";
+  }
+}
+
+/**
+ * Who may take a commission back. The server gates it at ADMIN; FINANCE
+ * reaches ADMIN level inside the agents area, which it fully owns.
+ */
+export function canCancelAgentCommission(role: string | undefined): boolean {
+  return role === "ADMIN" || role === "SUPER_ADMIN" || role === "FINANCE";
+}
+
+/** Only money still on the books can be taken back. */
+export function isCancellableCommission(status: AgentCommissionStatus): boolean {
+  return status === "PENDING" || status === "AVAILABLE";
 }

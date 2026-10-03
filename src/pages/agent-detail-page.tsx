@@ -3,7 +3,10 @@ import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
-import { canSeeAgentWallet } from "#/features/agents/agent-rules";
+import {
+  canCancelAgentCommission,
+  canSeeAgentWallet,
+} from "#/features/agents/agent-rules";
 import { AgentActionsMenu } from "#/features/agents/components/agent-actions-menu";
 import { AgentForm } from "#/features/agents/components/agent-form";
 import { AgentKycContent } from "#/features/agents/components/agent-kyc-content";
@@ -156,7 +159,10 @@ export default function AgentDetailPage({
 
         {showWallet && (
           <TabsContent value="wallet">
-            <AgentWalletContent agentId={agent.id} />
+            <AgentWalletContent
+              agentId={agent.id}
+              canCancelCommissions={canCancelAgentCommission(role)}
+            />
           </TabsContent>
         )}
       </Tabs>

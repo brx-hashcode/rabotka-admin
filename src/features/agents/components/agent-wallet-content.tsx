@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useAgentWallet } from "#/hooks/use-agents";
 import { formatDateTime } from "#/pages/profile-detail/helpers";
+import { AgentCommissionsCard } from "./agent-commissions-card";
 import {
   LEDGER_BUCKET_LABELS,
   LEDGER_KIND_LABELS,
@@ -63,7 +64,10 @@ function StatCard({
  * those figures. Read-only — balances are computed from the append-only ledger
  * on the server; nothing here edits them.
  */
-export function AgentWalletContent({ agentId }: Readonly<{ agentId: string }>) {
+export function AgentWalletContent({
+  agentId,
+  canCancelCommissions,
+}: Readonly<{ agentId: string; canCancelCommissions: boolean }>) {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useAgentWallet(agentId, page, true);
   const balance = data?.balance;
@@ -115,6 +119,11 @@ export function AgentWalletContent({ agentId }: Readonly<{ agentId: string }>) {
           isLoading={isLoading}
         />
       </div>
+
+      <AgentCommissionsCard
+        agentId={agentId}
+        canCancel={canCancelCommissions}
+      />
 
       <Card>
         <CardHeader>
