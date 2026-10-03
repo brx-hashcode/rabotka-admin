@@ -6,7 +6,8 @@ export type ConfigCategory =
   | "MATCHING"
   | "STORAGE"
   | "TWILIO"
-  | "GENERAL";
+  | "GENERAL"
+  | "AGENT";
 
 export type SystemConfigItem = {
   key: string;

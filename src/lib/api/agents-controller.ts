@@ -79,6 +79,72 @@ export type AgentWallet = {
   entries: Paginated<AgentLedgerEntry>;
 };
 
+export type AgentLeadStatus =
+  | "SUGGESTED"
+  | "CLAIMED"
+  | "INVITED"
+  | "CONFIRMED"
+  | "DECLINED"
+  | "UNREACHABLE";
+
+export type AgentCallOutcome =
+  | "INTERESTED"
+  | "NOT_AVAILABLE"
+  | "NOT_INTERESTED"
+  | "UNREACHABLE"
+  | "WRONG_NUMBER"
+  | "CALL_BACK";
+
+export type AgentLeadWorker = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+};
+
+/** One worker an agent took for one job, with every call they logged. */
+export type AgentLead = {
+  id: string;
+  status: AgentLeadStatus;
+  /** The agent still holds the claim (not lapsed). */
+  mine: boolean;
+  claimExpiresAt: string | null;
+  invitedAt: string | null;
+  inviteExpiresAt: string | null;
+  inviteLapsed: boolean;
+  applicationId: string | null;
+  decidedAt: string | null;
+  updatedAt: string;
+  job: { id: string; title: string; city: string | null };
+  worker: AgentLeadWorker & { city: string | null };
+  calls: {
+    id: string;
+    outcome: AgentCallOutcome;
+    note: string | null;
+    at: string;
+  }[];
+  revealCount: number;
+};
+
+export type AgentLeads = Paginated<AgentLead> & {
+  counts: Partial<Record<AgentLeadStatus, number>>;
+};
+
+export type AgentPhoneReveal = {
+  id: string;
+  at: string;
+  ipAddress: string | null;
+  worker: AgentLeadWorker;
+  leadId: string;
+  job: { id: string; title: string };
+};
+
+export type AgentReveals = Paginated<AgentPhoneReveal> & {
+  /** Distinct workers revealed today, Brazzaville time. */
+  today: number;
+  dailyCap: number;
+};
+
 export type AgentCoveredZone = {
   countryCode: string;
   city: string;
@@ -223,6 +289,27 @@ export class AdminAgentsController extends AdminBaseController {
     );
   }
 
+  async getLeads(
+    id: string,
+    params: { status?: AgentLeadStatus; page?: number; limit?: number } = {},
+  ): Promise<AgentLeads> {
+    const query = this.buildSearchParams({
+      status: params.status,
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+    });
+    return this.get<AgentLeads>(
+      this.createURL(`/admin/agents/${id}/leads`, query),
+    );
+  }
+
+  async getReveals(id: string, page = 1, limit = 20): Promise<AgentReveals> {
+    const query = this.buildSearchParams({ page, limit });
+    return this.get<AgentReveals>(
+      this.createURL(`/admin/agents/${id}/reveals`, query),
+    );
+  }
+
   async create(payload: CreateAgentPayload): Promise<AdminAgentDetail> {
     return this.post<AdminAgentDetail>(
       this.createURL("/admin/agents", new URLSearchParams()),
@@ -300,6 +387,8 @@ export const getAgentTimeseries = controller.getTimeseries.bind(controller);
 export const getAgent = controller.getById.bind(controller);
 export const getAgentLogs = controller.getLogs.bind(controller);
 export const getAgentWallet = controller.getWallet.bind(controller);
+export const getAgentLeads = controller.getLeads.bind(controller);
+export const getAgentReveals = controller.getReveals.bind(controller);
 export const createAgent = controller.create.bind(controller);
 export const updateAgent = controller.update.bind(controller);
 export const changeAgentStatus = controller.changeStatus.bind(controller);

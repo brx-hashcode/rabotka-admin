@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 import type {
+  AgentCallOutcome,
   AgentDocumentType,
   AgentKycCategory,
+  AgentLeadStatus,
   AgentStatus,
   AgentStatusAction,
   AgentZone,
@@ -266,4 +268,70 @@ export function zoneFilterOptions(
     .sort((a, b) => a.label.localeCompare(b.label));
 
   return { countries, cities };
+}
+
+// ── Leads & calls ───────────────────────────────────────────────────────────
+
+/** The lead statuses an agent can hold, in the order they happen. */
+export const LEAD_STATUSES: AgentLeadStatus[] = [
+  "CLAIMED",
+  "INVITED",
+  "CONFIRMED",
+  "DECLINED",
+  "UNREACHABLE",
+];
+
+export const LEAD_STATUS_LABELS: Record<AgentLeadStatus, string> = {
+  SUGGESTED: "Suggested",
+  CLAIMED: "Calling",
+  INVITED: "Invited",
+  CONFIRMED: "Applied",
+  DECLINED: "Declined",
+  UNREACHABLE: "Unreachable",
+};
+
+/** Borderless tints: the badge sits on a card, not a table row. */
+export function leadStatusBadgeClass(status: AgentLeadStatus): string {
+  switch (status) {
+    case "CLAIMED":
+      return "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-transparent";
+    case "INVITED":
+      return "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-transparent";
+    case "CONFIRMED":
+      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-transparent";
+    case "DECLINED":
+      return "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-transparent";
+    default:
+      return "bg-muted text-muted-foreground border-transparent";
+  }
+}
+
+export const CALL_OUTCOME_LABELS: Record<AgentCallOutcome, string> = {
+  INTERESTED: "Interested",
+  NOT_AVAILABLE: "Not available now",
+  NOT_INTERESTED: "Not interested",
+  UNREACHABLE: "No answer",
+  WRONG_NUMBER: "Wrong number",
+  CALL_BACK: "Call back",
+};
+
+/**
+ * The four figures above an agent's leads. "In progress" is a worker still
+ * being called or holding an invitation; "closed" is a no either way.
+ */
+export function leadTotals(counts: Partial<Record<AgentLeadStatus, number>>) {
+  const n = (s: AgentLeadStatus) => counts[s] ?? 0;
+  const inProgress = n("CLAIMED") + n("INVITED");
+  const applied = n("CONFIRMED");
+  const closed = n("DECLINED") + n("UNREACHABLE");
+  const total = inProgress + applied + closed;
+  return {
+    total,
+    inProgress,
+    applied,
+    closed,
+    /** Share of finished leads that became an application; null before any. */
+    conversion:
+      applied + closed === 0 ? null : Math.round((applied / (applied + closed)) * 100),
+  };
 }

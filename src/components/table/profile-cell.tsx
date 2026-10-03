@@ -2,7 +2,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 
 type ProfileCellProps = {
   name: string;
-  email: string;
+  /** Second line. Leave it out for a name alone; an empty string shows "—". */
+  email?: string;
   avatarUrl: string | null;
 };
 
@@ -37,9 +38,11 @@ export function ProfileCell({
       </Avatar>
       <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{displayName}</span>
-        <span className="text-muted-foreground truncate text-xs">
-          {email || "—"}
-        </span>
+        {email !== undefined && (
+          <span className="text-muted-foreground truncate text-xs">
+            {email || "—"}
+          </span>
+        )}
       </div>
     </div>
   );

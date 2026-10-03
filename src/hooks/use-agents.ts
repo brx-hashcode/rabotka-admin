@@ -6,16 +6,19 @@ import {
   useQueryState,
   useQueryStates,
 } from "nuqs";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { appConfig } from "#/config";
 import {
   getAgent,
+  getAgentLeads,
   getAgentLogs,
+  getAgentReveals,
   getAgentStats,
   getAgentZones,
   getAgentTimeseries,
   getAgentWallet,
   getAgents,
+  type AgentLeadStatus,
   type AgentStatus,
   type AgentTimeseriesRange,
 } from "#/lib/api/agents-controller";
@@ -105,6 +108,26 @@ export function useAgentWallet(agentId: string, page: number, enabled: boolean) 
     queryKey: [...agentsQueryKey, "detail", agentId, "wallet", page],
     queryFn: () => getAgentWallet(agentId, page, 20),
     enabled,
+  });
+}
+
+export function useAgentLeads(
+  agentId: string,
+  status: AgentLeadStatus | undefined,
+  page: number,
+) {
+  return useQuery({
+    queryKey: [...agentsQueryKey, "detail", agentId, "leads", status, page],
+    queryFn: () => getAgentLeads(agentId, { status, page, limit: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAgentReveals(agentId: string, page: number) {
+  return useQuery({
+    queryKey: [...agentsQueryKey, "detail", agentId, "reveals", page],
+    queryFn: () => getAgentReveals(agentId, page, 20),
+    placeholderData: keepPreviousData,
   });
 }
 

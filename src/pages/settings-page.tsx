@@ -1,3 +1,4 @@
+import { AgentsCard } from "./settings/agents-card";
 import { ContactCard } from "./settings/contact-card";
 import { FeesCard } from "./settings/fees-card";
 import { MatchingCard } from "./settings/matching-card";
@@ -10,6 +11,7 @@ export default function SettingsPage() {
       <ContactCard />
       <FeesCard />
       <MatchingCard />
+      <AgentsCard />
       <VovaCard />
       <StorageCard />
     </div>
