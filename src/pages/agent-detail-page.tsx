@@ -5,6 +5,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import {
   canCancelAgentCommission,
+  canProcessAgentWithdrawal,
   canSeeAgentWallet,
 } from "#/features/agents/agent-rules";
 import { AgentActionsMenu } from "#/features/agents/components/agent-actions-menu";
@@ -162,6 +163,7 @@ export default function AgentDetailPage({
             <AgentWalletContent
               agentId={agent.id}
               canCancelCommissions={canCancelAgentCommission(role)}
+              canProcessWithdrawals={canProcessAgentWithdrawal(role)}
             />
           </TabsContent>
         )}

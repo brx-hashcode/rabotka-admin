@@ -187,6 +187,21 @@ const ACTION_CONFIG: Record<
     icon: IconCoinOff,
     color: "text-muted-foreground",
   },
+  AGENT_WITHDRAWAL_REQUESTED: {
+    label: "Withdrawal requested",
+    icon: IconCashBanknote,
+    color: "text-amber-500",
+  },
+  AGENT_WITHDRAWAL_PAID: {
+    label: "Withdrawal paid",
+    icon: IconCash,
+    color: "text-emerald-500",
+  },
+  AGENT_WITHDRAWAL_REJECTED: {
+    label: "Withdrawal rejected",
+    icon: IconCoinOff,
+    color: "text-rose-500",
+  },
 };
 
 /** Sentence case, so an unmapped action reads as text rather than shouting. */
@@ -331,6 +346,24 @@ METADATA_RENDERERS.AGENT_COMMISSION_RELEASED =
 METADATA_RENDERERS.AGENT_COMMISSION_CANCELLED =
   METADATA_RENDERERS.AGENT_SUSPENDED;
 METADATA_RENDERERS.AGENT_COMMISSION_INELIGIBLE =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
+
+METADATA_RENDERERS.AGENT_WITHDRAWAL_REQUESTED =
+  METADATA_RENDERERS.AGENT_COMMISSION_EARNED;
+METADATA_RENDERERS.AGENT_WITHDRAWAL_PAID = (meta) => {
+  const reference = toStringOrNull(meta.reference);
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {METADATA_RENDERERS.AGENT_COMMISSION_EARNED!(meta)}
+      {reference && (
+        <Badge variant="secondary" className="font-normal">
+          Ref. {reference}
+        </Badge>
+      )}
+    </div>
+  );
+};
+METADATA_RENDERERS.AGENT_WITHDRAWAL_REJECTED =
   METADATA_RENDERERS.AGENT_SUSPENDED;
 
 // Same shape, same renderer.

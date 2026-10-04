@@ -93,15 +93,17 @@ export function AgentSummary({
               <div className="space-y-4 text-sm">
                 <Row label="Available">
                   <span className="text-emerald-600">
-                    {formatFcfa(balance.available)}
+                    {formatFcfa(balance.available + balance.locked)}
                   </span>
                 </Row>
-                <Row label="Pending">{formatFcfa(balance.pending)}</Row>
+                {/* Still the agent's money until an admin pays it — see the
+                    Wallet tab. */}
                 {balance.locked > 0 && (
-                  <Row label="Withdrawal in progress">
+                  <Row label="Of which requested">
                     {formatFcfa(balance.locked)}
                   </Row>
                 )}
+                <Row label="Pending">{formatFcfa(balance.pending)}</Row>
                 <Row label="Paid out">{formatFcfa(balance.paidOut)}</Row>
                 <Row label="Total earned">
                   {formatFcfa(balance.totalEarned)}

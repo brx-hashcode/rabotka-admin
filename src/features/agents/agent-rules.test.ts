@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   availableStatusActions,
   canCancelAgentCommission,
+  canProcessAgentWithdrawal,
+  canSeeAgentPayouts,
   isCancellableCommission,
   kycRefsFor,
   leadTotals,
@@ -155,5 +157,22 @@ describe("commission cancellation", () => {
     expect(isCancellableCommission("AVAILABLE")).toBe(true);
     expect(isCancellableCommission("CANCELLED")).toBe(false);
     expect(isCancellableCommission("INELIGIBLE")).toBe(false);
+  });
+});
+
+describe("agent payouts", () => {
+  it("are visible to MANAGER and above, and FINANCE", () => {
+    for (const role of ["MANAGER", "ADMIN", "SUPER_ADMIN", "FINANCE"]) {
+      expect(canSeeAgentPayouts(role)).toBe(true);
+    }
+    for (const role of ["MODERATOR", "SUPPORT", undefined]) {
+      expect(canSeeAgentPayouts(role)).toBe(false);
+    }
+  });
+
+  it("are paid or rejected by ADMIN and above, and FINANCE — not MANAGER", () => {
+    expect(canProcessAgentWithdrawal("FINANCE")).toBe(true);
+    expect(canProcessAgentWithdrawal("ADMIN")).toBe(true);
+    expect(canProcessAgentWithdrawal("MANAGER")).toBe(false);
   });
 });

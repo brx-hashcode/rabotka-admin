@@ -26,6 +26,7 @@ type FormState = {
   requiresMomoWorker: string;
   requiresMomoEmployer: string;
   multiSeatMode: string;
+  withdrawalMin: string;
 };
 
 const EMPTY: FormState = {
@@ -38,6 +39,7 @@ const EMPTY: FormState = {
   requiresMomoWorker: "true",
   requiresMomoEmployer: "true",
   multiSeatMode: "PER_PLACEMENT",
+  withdrawalMin: "2000",
 };
 
 const KEYS: Record<keyof FormState, string> = {
@@ -50,6 +52,7 @@ const KEYS: Record<keyof FormState, string> = {
   requiresMomoWorker: "agent.commission_requires_momo_worker",
   requiresMomoEmployer: "agent.commission_requires_momo_employer",
   multiSeatMode: "agent.commission_multi_seat_mode",
+  withdrawalMin: "agent.withdrawal_min_fcfa",
 };
 
 /**
@@ -111,6 +114,12 @@ export function AgentsCard() {
       return;
     }
 
+    const withdrawalMin = positiveInt(form.withdrawalMin);
+    if (withdrawalMin === null) {
+      toast.error("The minimum withdrawal must be at least 1 FCFA.");
+      return;
+    }
+
     // The server also refuses a commission at or above the two unlock fees
     // together, and says so; that check needs the Fees card's values.
     await saveChanges({
@@ -123,6 +132,7 @@ export function AgentsCard() {
       [KEYS.requiresMomoWorker]: form.requiresMomoWorker,
       [KEYS.requiresMomoEmployer]: form.requiresMomoEmployer,
       [KEYS.multiSeatMode]: form.multiSeatMode,
+      [KEYS.withdrawalMin]: String(withdrawalMin),
     });
     setInitial(form);
   }
@@ -384,6 +394,31 @@ export function AgentsCard() {
               <SelectItem value="FIRST_ONLY">One place only</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="withdrawal-min" className="text-sm font-medium">
+              Minimum withdrawal (FCFA)
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              The smallest amount an agent can ask to be paid. Each payout is
+              a Mobile Money transfer someone sends by hand, so very small ones
+              cost more than they are worth. Usual value: 2 000.
+            </p>
+          </div>
+          <Input
+            id="withdrawal-min"
+            type="number"
+            min={1}
+            step={500}
+            value={form.withdrawalMin}
+            onChange={(e) => set("withdrawalMin", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
         </div>
       </CardContent>
     </Card>

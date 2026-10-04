@@ -47,6 +47,8 @@ const LATERAL_ROUTES: Record<LateralRole, Record<string, AreaAccess>> = {
     "/logs": "full",
     // Rabotka pays agents, so finance needs the whole picture.
     "/agents": "full",
+    // Paying agents' withdrawals is finance's job.
+    "/agent-payouts": "full",
     // NOT PRESENT, deliberately: /team, /settings and /oauth-apps.
     //
     // /oauth-apps is SUPER_ADMIN-only for everyone, ADMIN included, so leaving
