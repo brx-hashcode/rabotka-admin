@@ -74,9 +74,45 @@ export type AgentLedgerEntry = {
   description: string | null;
 };
 
+export type AgentLedgerBucket = AgentLedgerEntry["bucket"];
+export type AgentLedgerKind = AgentLedgerEntry["kind"];
+
+/**
+ * One event in the agent's money, as the server groups the ledger: the rows
+ * one movement wrote (e.g. −PENDING and +AVAILABLE) read back as one line,
+ * with what it concerns.
+ */
+export type AgentMovement = {
+  id: string;
+  kind: AgentLedgerKind;
+  at: string;
+  /** Signed FCFA per bucket. */
+  moves: Partial<Record<AgentLedgerBucket, number>>;
+  /** The size of the movement, whatever direction it went. */
+  amount: number;
+  description: string | null;
+  referenceType: string;
+  referenceId: string | null;
+  commission: {
+    status: AgentCommissionStatus;
+    reason: string | null;
+    job: { id: string; title: string | null };
+    worker: { id: string; name: string | null };
+  } | null;
+  withdrawal: {
+    status: AgentWithdrawalStatus;
+    momoPhone: string;
+    momoOperator: AgentMomoOperator;
+    providerReference: string | null;
+    rejectionReason: string | null;
+    processedAt: string | null;
+    processedBy?: string | null;
+  } | null;
+};
+
 export type AgentWallet = {
   balance: AgentBalance;
-  entries: Paginated<AgentLedgerEntry>;
+  movements: Paginated<AgentMovement>;
 };
 
 export type AgentCommissionStatus =
@@ -121,6 +157,8 @@ export type AgentWithdrawal = {
   processedAt: string | null;
   providerReference: string | null;
   rejectionReason: string | null;
+  /** The admin who paid or rejected it. */
+  processedBy?: string | null;
   agent: {
     id: string;
     firstName: string;

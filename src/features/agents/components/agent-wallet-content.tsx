@@ -1,26 +1,18 @@
 import { useState } from "react";
 import {
-  IconArrowDownLeft,
-  IconArrowUpRight,
   IconCash,
   IconClock,
   IconReceipt,
   IconWallet,
 } from "@tabler/icons-react";
 
-import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useAgentWallet } from "#/hooks/use-agents";
-import { formatDateTime } from "#/pages/profile-detail/helpers";
 import { AgentCommissionsCard } from "./agent-commissions-card";
+import { AgentMovementsCard } from "./agent-movements-card";
 import { AgentWithdrawalsList } from "./agent-withdrawals-list";
-import {
-  LEDGER_BUCKET_LABELS,
-  LEDGER_KIND_LABELS,
-  formatFcfa,
-} from "../agent-rules";
+import { formatFcfa } from "../agent-rules";
 
 function StatCard({
   title,
@@ -77,8 +69,7 @@ export function AgentWalletContent({
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useAgentWallet(agentId, page, true);
   const balance = data?.balance;
-  const entries = data?.entries;
-  const pages = entries ? Math.max(Math.ceil(entries.total / entries.limit), 1) : 1;
+  const movements = data?.movements;
 
   if (isError) {
     return (
@@ -150,104 +141,12 @@ export function AgentWalletContent({
         canCancel={canCancelCommissions}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Movements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading && (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={`s-${i + 1}`} className="h-10 w-full" />
-              ))}
-            </div>
-          )}
-
-          {!isLoading && entries?.data.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-10 text-center">
-              <IconWallet className="text-muted-foreground size-10" />
-              <p className="text-sm font-medium">No movement yet</p>
-              <p className="text-muted-foreground max-w-sm text-xs">
-                Commissions appear here once a worker this agent placed has paid,
-                and withdrawals once the agent requests one.
-              </p>
-            </div>
-          )}
-
-          {!isLoading && !!entries?.data.length && (
-            <div className="divide-border divide-y">
-              {entries.data.map((e) => {
-                const incoming = e.amount >= 0;
-                const Icon = incoming ? IconArrowDownLeft : IconArrowUpRight;
-                return (
-                  <div
-                    key={e.id}
-                    className="flex items-center justify-between gap-4 py-3"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span
-                        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
-                          incoming
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <Icon className="size-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {LEDGER_KIND_LABELS[e.kind] ?? e.kind}
-                        </p>
-                        <p className="text-muted-foreground truncate text-xs">
-                          {formatDateTime(e.createdAt)}
-                          {e.description ? ` · ${e.description}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <Badge variant="outline" className="font-normal">
-                        {LEDGER_BUCKET_LABELS[e.bucket] ?? e.bucket}
-                      </Badge>
-                      <span
-                        className={`text-sm font-semibold tabular-nums ${
-                          incoming ? "text-emerald-600" : ""
-                        }`}
-                      >
-                        {incoming ? "+" : ""}
-                        {formatFcfa(e.amount)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {pages > 1 && (
-            <div className="mt-4 flex items-center justify-end gap-2 text-sm">
-              <span className="text-muted-foreground">
-                Page {page} of {pages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page <= 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= pages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AgentMovementsCard
+        movements={movements}
+        isLoading={isLoading}
+        page={page}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

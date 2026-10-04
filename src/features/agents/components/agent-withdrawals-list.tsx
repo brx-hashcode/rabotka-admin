@@ -46,12 +46,6 @@ const agentName = (w: AgentWithdrawal) =>
 
 /** The transfer to send, laid out to be copied into the Mobile Money app. */
 function TransferDetails({ withdrawal }: Readonly<{ withdrawal: AgentWithdrawal }>) {
-  const copy = (text: string) => {
-    void navigator.clipboard
-      ?.writeText(text)
-      .then(() => toast.success("Copied."))
-      .catch(() => undefined);
-  };
   return (
     <div className="bg-muted/50 space-y-2 rounded-md px-4 py-3 text-sm">
       <div className="flex items-center justify-between gap-4">
@@ -268,6 +262,86 @@ function RejectDialog({
   );
 }
 
+function copy(text: string) {
+  void navigator.clipboard
+    ?.writeText(text)
+    .then(() => toast.success("Copied."))
+    .catch(() => undefined);
+}
+
+function Fact({
+  label,
+  children,
+  wide,
+}: Readonly<{ label: string; children: React.ReactNode; wide?: boolean }>) {
+  return (
+    <div className={`min-w-0 ${wide ? "col-span-2 sm:col-span-4" : ""}`}>
+      <dt className="text-muted-foreground text-[11px] uppercase tracking-wide">
+        {label}
+      </dt>
+      <dd className="truncate text-xs">{children}</dd>
+    </div>
+  );
+}
+
+/** The payout facts as labelled fields rather than one run-on line. */
+function WithdrawalFacts({
+  withdrawal: w,
+  indent,
+}: Readonly<{ withdrawal: AgentWithdrawal; indent: boolean }>) {
+  return (
+    <dl
+      className={`grid grid-cols-2 gap-x-6 gap-y-2 pt-1 sm:grid-cols-4 ${indent ? "pl-11" : ""}`}
+    >
+      <Fact label="Sent to">
+        {MOMO_OPERATOR_LABELS[w.momoOperator]} ·{" "}
+        <button
+          type="button"
+          onClick={() => copy(w.momoPhone)}
+          className="tabular-nums hover:underline"
+          title="Copy the number"
+        >
+          {w.momoPhone}
+        </button>
+      </Fact>
+      <Fact label="Requested">{formatDateTime(w.createdAt)}</Fact>
+      {w.status === "PAID" && (
+        <>
+          <Fact label="Paid">{formatDateTime(w.processedAt)}</Fact>
+          <Fact label="Reference">
+            {w.providerReference ? (
+              <button
+                type="button"
+                onClick={() => copy(w.providerReference!)}
+                className="inline-flex items-center gap-1 font-mono hover:underline"
+                title="Copy the reference"
+              >
+                {w.providerReference}
+                <IconCopy className="text-muted-foreground size-3" />
+              </button>
+            ) : (
+              "—"
+            )}
+          </Fact>
+        </>
+      )}
+      {w.status === "REJECTED" && (
+        <Fact label="Rejected">{formatDateTime(w.processedAt)}</Fact>
+      )}
+      {w.processedBy && (
+        <Fact label={w.status === "PAID" ? "Paid by" : "Rejected by"}>
+          {w.processedBy}
+        </Fact>
+      )}
+      {w.rejectionReason && (
+        <Fact label="Reason" wide>
+          <span className="whitespace-normal">{w.rejectionReason}</span>
+        </Fact>
+      )}
+    </dl>
+  );
+}
+
 const STATUS_FILTERS: { label: string; value: AgentWithdrawalStatus | undefined }[] = [
   { label: "To pay", value: "REQUESTED" },
   { label: "Paid", value: "PAID" },
@@ -384,23 +458,7 @@ export function AgentWithdrawalsList({
                       {WITHDRAWAL_STATUS_LABELS[w.status]}
                     </Badge>
                   </div>
-                  <p
-                    className={`text-muted-foreground text-xs ${agentId ? "" : "pl-11"}`}
-                  >
-                    {MOMO_OPERATOR_LABELS[w.momoOperator]} · {w.momoPhone} ·
-                    requested {formatDateTime(w.createdAt)}
-                    {w.status === "PAID" &&
-                      ` · paid ${formatDateTime(w.processedAt)} · ref. ${w.providerReference}`}
-                    {w.status === "REJECTED" &&
-                      ` · rejected ${formatDateTime(w.processedAt)}`}
-                  </p>
-                  {w.rejectionReason && (
-                    <p
-                      className={`text-muted-foreground text-xs ${agentId ? "" : "pl-11"}`}
-                    >
-                      {w.rejectionReason}
-                    </p>
-                  )}
+                  <WithdrawalFacts withdrawal={w} indent={!agentId} />
                 </div>
 
                 {actionable && (

@@ -6,7 +6,9 @@ import type {
   AgentDocumentType,
   AgentKycCategory,
   AgentLeadStatus,
+  AgentLedgerBucket,
   AgentMomoOperator,
+  AgentMovement,
   AgentWithdrawalStatus,
   AgentStatus,
   AgentStatusAction,
@@ -210,23 +212,6 @@ export function canSeeAgentWallet(role: string | undefined): boolean {
   return !!role && role !== "MODERATOR";
 }
 
-export const LEDGER_KIND_LABELS: Record<string, string> = {
-  COMMISSION_EARNED: "Commission earned",
-  COMMISSION_RELEASED: "Commission released",
-  COMMISSION_CANCELLED: "Commission cancelled",
-  WITHDRAWAL_REQUESTED: "Withdrawal requested",
-  WITHDRAWAL_PAID: "Withdrawal paid",
-  WITHDRAWAL_REJECTED: "Withdrawal rejected",
-  ADJUSTMENT: "Adjustment",
-};
-
-export const LEDGER_BUCKET_LABELS: Record<string, string> = {
-  PENDING: "Pending",
-  AVAILABLE: "Available",
-  LOCKED: "In withdrawal",
-  PAID_OUT: "Paid out",
-};
-
 /** The `zone` query value for a city: its country, a colon, the stored city. */
 export const zoneParam = (countryCode: string, city: string) =>
   `${countryCode}:${city}`;
@@ -417,3 +402,70 @@ export function canSeeAgentPayouts(role: string | undefined): boolean {
 
 /** Who pays or rejects one — moving money, gated at ADMIN like a cancel. */
 export const canProcessAgentWithdrawal = canCancelAgentCommission;
+
+// ── Movements ───────────────────────────────────────────────────────────────
+
+/** Bucket names as the wallet cards say them. */
+export const BUCKET_LABELS: Record<AgentLedgerBucket, string> = {
+  PENDING: "Waiting",
+  AVAILABLE: "Available",
+  LOCKED: "Requested",
+  PAID_OUT: "Paid out",
+};
+
+const BUCKET_ORDER: AgentLedgerBucket[] = [
+  "PENDING",
+  "AVAILABLE",
+  "LOCKED",
+  "PAID_OUT",
+];
+
+/**
+ * Where the money went, in words: "Waiting → Available", "→ Waiting" for new
+ * money, "Waiting → removed" for money taken back.
+ */
+export function movementFlow(moves: AgentMovement["moves"]): string {
+  const from = BUCKET_ORDER.filter((b) => (moves[b] ?? 0) < 0).map(
+    (b) => BUCKET_LABELS[b],
+  );
+  const to = BUCKET_ORDER.filter((b) => (moves[b] ?? 0) > 0).map(
+    (b) => BUCKET_LABELS[b],
+  );
+  if (from.length === 0) return `→ ${to.join(", ")}`;
+  if (to.length === 0) return `${from.join(", ")} → removed`;
+  return `${from.join(", ")} → ${to.join(", ")}`;
+}
+
+export type MovementTone = "gain" | "loss" | "neutral";
+
+/**
+ * How a movement reads from the agent's side. Earned and released money is a
+ * gain; a cancelled commission a loss; a withdrawal only moves money the agent
+ * already had — requested, paid or handed back.
+ */
+export function movementView(m: AgentMovement): {
+  title: string;
+  tone: MovementTone;
+} {
+  switch (m.kind) {
+    case "COMMISSION_EARNED":
+      return { title: "Commission earned", tone: "gain" };
+    case "COMMISSION_RELEASED":
+      return { title: "Commission now withdrawable", tone: "gain" };
+    case "COMMISSION_CANCELLED":
+      return { title: "Commission cancelled", tone: "loss" };
+    case "WITHDRAWAL_REQUESTED":
+      return { title: "Withdrawal requested", tone: "neutral" };
+    case "WITHDRAWAL_PAID":
+      return { title: "Withdrawal paid", tone: "neutral" };
+    case "WITHDRAWAL_REJECTED":
+      return { title: "Withdrawal rejected", tone: "neutral" };
+    default: {
+      const net = Object.values(m.moves).reduce((a, v) => a + (v ?? 0), 0);
+      return {
+        title: m.description ? `Adjustment — ${m.description}` : "Adjustment",
+        tone: net > 0 ? "gain" : net < 0 ? "loss" : "neutral",
+      };
+    }
+  }
+}
