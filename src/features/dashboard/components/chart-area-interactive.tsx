@@ -1,4 +1,4 @@
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryState } from "nuqs";
 
@@ -11,116 +11,159 @@ import {
 } from "#/components/ui/card";
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "#/components/ui/chart";
 import { TIME_RANGE_QUERY_KEY, timeRangeParser } from "./chart-area-filter";
 import { getJobActivity } from "#/lib/api/dashboard-controller";
+import {
+  JOB_STATUSES,
+  JOB_STATUS_STACK_ORDER,
+  JOB_STATUS_STYLE,
+  jobStatusChartConfig,
+  type JobStatus,
+} from "../job-status-colors";
 
-const chartConfig = {
-  jobs: { label: "Jobs" },
-  jobCreated: { label: "Job created", color: "#3b82f6" },
-  jobFilled: { label: "Job filled", color: "var(--primary)" },
-} satisfies ChartConfig;
+const chartConfig = jobStatusChartConfig satisfies ChartConfig;
 
-const DESCRIPTION_LABELS: Record<string, string> = {
-  "90d": "Jobs posted vs filled — last 3 months",
-  "30d": "Jobs posted vs filled — last 30 days",
-  "7d": "Jobs posted vs filled — last 7 days",
+const RANGE_LABELS: Record<string, string> = {
+  "90d": "last 3 months",
+  "30d": "last 30 days",
+  "7d": "last 7 days",
 };
 
+const formatDay = (value: string, withYear = false) =>
+  new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(withYear ? { year: "numeric" } : {}),
+  });
+
+type Row = { date: string; total: number } & Record<JobStatus, number>;
+
+/** Every status with a non-zero count that day, in lifecycle order, plus the total. */
+function DayTooltip({
+  active,
+  payload,
+}: Readonly<{ active?: boolean; payload?: { payload: Row }[] }>) {
+  const row = payload?.[0]?.payload;
+  if (!active || !row) return null;
+  const present = JOB_STATUSES.filter((s) => row[s] > 0);
+  return (
+    <div className="bg-background grid min-w-44 gap-1.5 rounded-lg px-2.5 py-1.5 text-xs shadow-xl">
+      <p className="font-medium">{formatDay(row.date, true)}</p>
+      {present.length === 0 ? (
+        <p className="text-muted-foreground">No job posted</p>
+      ) : (
+        <>
+          {present.map((s) => (
+            <div key={s} className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="size-2.5 rounded-[2px]"
+                  style={{ background: `var(--color-${s})` }}
+                />
+                <span className="text-muted-foreground">
+                  {JOB_STATUS_STYLE[s].label}
+                </span>
+              </span>
+              <span className="font-mono font-medium tabular-nums">{row[s]}</span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between gap-4 pt-0.5">
+            <span className="text-muted-foreground">Posted that day</span>
+            <span className="font-mono font-medium tabular-nums">{row.total}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Jobs posted per day, each bar split by the status those jobs are in today.
+ *
+ * It used to be "posted vs filled": two stacked areas, so "filled" was drawn
+ * on top of "posted" and the top line was their sum; a smoothing curve that
+ * dipped below zero between days; and "filled" counted by `updated_at`, which
+ * moves on any edit. The server keeps no status history, so the honest view of
+ * every status is this one — and stacking is right here: the segments of a
+ * bar add up to that day's postings.
+ */
 export function ChartAreaInteractive() {
   const [timeRange] = useQueryState(TIME_RANGE_QUERY_KEY, timeRangeParser);
   const range = timeRange ?? "90d";
 
-  const { data: chartData = [] } = useQuery({
-    queryKey: ["admin", "dashboard", "job-activity", range],
+  const { data = [] } = useQuery({
+    queryKey: ["admin", "dashboard", "job-activity", "by-status", range],
     queryFn: () => getJobActivity({ range }),
   });
+
+  const rows: Row[] = data.map((d) => ({
+    date: d.date,
+    total: d.jobCreated,
+    ...d.byStatus,
+  }));
+  const posted = rows.reduce((sum, r) => sum + r.total, 0);
 
   return (
     <Card className="@container/card h-full">
       <CardHeader>
-        <CardTitle>Jobs posted vs filled</CardTitle>
-        <CardDescription>{DESCRIPTION_LABELS[range]}</CardDescription>
+        <CardTitle>Jobs posted, by status</CardTitle>
+        <CardDescription>
+          {posted.toLocaleString("en-US")} jobs posted, {RANGE_LABELS[range]} —
+          each bar is one day, split by the status those jobs are in today
+        </CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="fillJobCreated" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-jobCreated)"
-                  stopOpacity={1}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-jobCreated)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillJobFilled" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-jobFilled)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-jobFilled)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
+          <BarChart data={rows} barCategoryGap="15%">
+            <CartesianGrid vertical={false} strokeOpacity={0.5} />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
+              tickFormatter={(value: string) => formatDay(value)}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={28}
+              allowDecimals={false}
+              tickCount={4}
             />
             <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }
-                  indicator="dot"
-                />
-              }
+              cursor={{ fillOpacity: 0.08 }}
+              content={<DayTooltip />}
             />
-            <Area
-              dataKey="jobFilled"
-              type="natural"
-              fill="url(#fillJobFilled)"
-              stroke="var(--color-jobFilled)"
-              stackId="a"
+            {JOB_STATUS_STACK_ORDER.map((s) => (
+              <Bar
+                key={s}
+                dataKey={s}
+                stackId="status"
+                fill={`var(--color-${s})`}
+                // A thin surface-coloured edge keeps touching segments apart.
+                stroke="var(--card)"
+                strokeWidth={1}
+              />
+            ))}
+            <ChartLegend
+              content={<ChartLegendContent className="flex-wrap gap-y-1" />}
+              payload={JOB_STATUSES.map((s) => ({
+                value: s,
+                dataKey: s,
+                type: "square" as const,
+                color: `var(--color-${s})`,
+              }))}
             />
-            <Area
-              dataKey="jobCreated"
-              type="natural"
-              fill="url(#fillJobCreated)"
-              stroke="var(--color-jobCreated)"
-              stackId="a"
-            />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
