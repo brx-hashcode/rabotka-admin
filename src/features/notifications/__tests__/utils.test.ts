@@ -20,7 +20,10 @@ describe("getNotificationHref", () => {
     expect(getNotificationHref("profile", "p-1")).toBe("/profiles/p-1");
   });
 
-  it("opens the agent for a placement, and the payout queue for a withdrawal", () => {
+  it("opens the application for a placement, and the payout queue for a withdrawal", () => {
+    expect(getNotificationHref("agent-placement", "app-1")).toBe(
+      "/applications/app-1",
+    );
     expect(getNotificationHref("agent", "a-1")).toBe("/agents/a-1");
     expect(getNotificationHref("agent-withdrawal", "w-1")).toBe(
       "/agent-payouts",

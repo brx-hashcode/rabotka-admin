@@ -22,6 +22,7 @@ const ENTITY_COLORS: Record<string, string> = {
   penalty: "bg-red-500",
   conversation: "bg-orange-500",
   agent: "bg-violet-600",
+  "agent-placement": "bg-violet-600",
   "agent-withdrawal": "bg-teal-500",
 };
 
