@@ -8,6 +8,7 @@ export const NOTIFICATION_ENTITY_LABELS: Record<string, string> = {
   penalty: "Penalty",
   conversation: "Conversation",
   agent: "Agent",
+  "agent-placement": "Agent placement",
   "agent-withdrawal": "Agent payout",
 };
 
@@ -27,9 +28,11 @@ export function getNotificationHref(
     // A held message: the thread, where the admin can read it and close it.
     case "conversation":
       return `/conversations/${entityId}`;
-    // A placement: the agent who made it.
     case "agent":
       return `/agents/${entityId}`;
+    // A placement: the application it created, whose detail names the agent.
+    case "agent-placement":
+      return `/applications/${entityId}`;
     // A withdrawal request waits in the payout queue.
     case "agent-withdrawal":
       return "/agent-payouts";

@@ -18,6 +18,10 @@ const ENTITY_QUERY_KEYS: Record<string, string[][]> = {
   payment: [["admin", "payments"]],
   penalty: [["admin", "penalties"]],
   agent: [["admin", "agents"]],
+  "agent-placement": [
+    ["admin", "applications"],
+    ["admin", "agents"],
+  ],
   "agent-withdrawal": [["admin", "agents"]],
 };
 
