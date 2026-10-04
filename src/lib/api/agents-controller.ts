@@ -167,9 +167,42 @@ export type AgentWithdrawal = {
   };
 };
 
+/** The figures above the payout queue, whatever the filter. */
+export type AgentWithdrawalSummary = {
+  counts: Record<AgentWithdrawalStatus, number>;
+  open: {
+    count: number;
+    amount: number;
+    /** The request that has waited longest. */
+    oldestAt: string | null;
+    byOperator: Record<AgentMomoOperator, { count: number; amount: number }>;
+  };
+  /** Paid since the 1st of this month, Brazzaville time. */
+  paidThisMonth: { count: number; amount: number };
+};
+
+export type PayoutTimeseriesRange = 7 | 30 | 90 | 180;
+
+type CountAmount = { count: number; amount: number };
+
+/** One Brazzaville day of the payout queue. */
+export type PayoutTimeseriesPoint = {
+  date: string;
+  /** Still waiting at the end of the day. */
+  toPay: CountAmount;
+  /** Paid that day. */
+  paid: CountAmount;
+  /** Rejected that day. */
+  rejected: CountAmount;
+};
+
+export type PayoutTimeseries = {
+  days: PayoutTimeseriesRange;
+  points: PayoutTimeseriesPoint[];
+};
+
 export type AgentWithdrawals = Paginated<AgentWithdrawal> & {
-  /** Waiting for an admin, whatever the filter. */
-  open: { count: number; amount: number };
+  summary: AgentWithdrawalSummary;
 };
 
 export type AgentLeadStatus =
@@ -443,6 +476,15 @@ export class AdminAgentsController extends AdminBaseController {
     );
   }
 
+  async getWithdrawalTimeseries(days: PayoutTimeseriesRange): Promise<PayoutTimeseries> {
+    return this.get<PayoutTimeseries>(
+      this.createURL(
+        "/admin/agent-withdrawals/timeseries",
+        this.buildSearchParams({ days }),
+      ),
+    );
+  }
+
   async payWithdrawal(id: string, reference: string): Promise<AgentWithdrawal> {
     return this.post<AgentWithdrawal>(
       this.createURL(`/admin/agent-withdrawals/${id}/pay`, new URLSearchParams()),
@@ -549,6 +591,8 @@ export const getAgentReveals = controller.getReveals.bind(controller);
 export const getAgentCommissions = controller.getCommissions.bind(controller);
 export const getAgentWithdrawals = controller.getWithdrawals.bind(controller);
 export const payAgentWithdrawal = controller.payWithdrawal.bind(controller);
+export const getWithdrawalTimeseries =
+  controller.getWithdrawalTimeseries.bind(controller);
 export const rejectAgentWithdrawal =
   controller.rejectWithdrawal.bind(controller);
 export const cancelAgentCommission =

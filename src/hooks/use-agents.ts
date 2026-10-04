@@ -15,6 +15,7 @@ import {
   getAgentLogs,
   getAgentReveals,
   getAgentWithdrawals,
+  getWithdrawalTimeseries,
   getAgentStats,
   getAgentZones,
   getAgentTimeseries,
@@ -23,6 +24,7 @@ import {
   type AgentLeadStatus,
   type AgentStatus,
   type AgentWithdrawalStatus,
+  type PayoutTimeseriesRange,
   type AgentTimeseriesRange,
 } from "#/lib/api/agents-controller";
 
@@ -168,6 +170,16 @@ export function useAgentWithdrawals(params: {
     placeholderData: keepPreviousData,
     refetchInterval: 60_000,
     enabled: params.enabled ?? true,
+  });
+}
+
+/** The payout queue per day — shares the withdrawals key, so a pay or a
+ * reject (which invalidates agentsQueryKey) redraws it. */
+export function useWithdrawalTimeseries(days: PayoutTimeseriesRange) {
+  return useQuery({
+    queryKey: [...agentsQueryKey, "withdrawals", "timeseries", days],
+    queryFn: () => getWithdrawalTimeseries(days),
+    placeholderData: (previous) => previous,
   });
 }
 

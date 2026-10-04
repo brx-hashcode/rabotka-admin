@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import { ReasonField } from "#/components/reason-field";
 import { ProfileCell } from "#/components/table/profile-cell";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
@@ -25,6 +26,14 @@ import {
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Skeleton } from "#/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table";
 import { agentsQueryKey, useAgentWithdrawals } from "#/hooks/use-agents";
 import {
   payAgentWithdrawal,
@@ -38,6 +47,9 @@ import {
   MOMO_OPERATOR_LABELS,
   WITHDRAWAL_STATUS_LABELS,
   formatFcfa,
+  isOverdueWithdrawal,
+  operatorBadgeClass,
+  waitedFor,
   withdrawalStatusBadgeClass,
 } from "../agent-rules";
 
@@ -342,6 +354,151 @@ function WithdrawalFacts({
   );
 }
 
+/** The queue across agents: one row per request, what to send and where. */
+function WithdrawalsTable({
+  rows,
+  canProcess,
+  onPay,
+  onReject,
+}: Readonly<{
+  rows: AgentWithdrawal[];
+  canProcess: boolean;
+  onPay: (w: AgentWithdrawal) => void;
+  onReject: (w: AgentWithdrawal) => void;
+}>) {
+  return (
+    <div className="-mx-2 overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Agent</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>Send to</TableHead>
+            <TableHead>Requested</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((w) => {
+            const open = w.status === "REQUESTED";
+            const overdue = open && isOverdueWithdrawal(w.createdAt);
+            const name = agentName(w);
+            return (
+              <TableRow key={w.id}>
+                <TableCell>
+                  <Link
+                    to="/agents/$agentId"
+                    params={{ agentId: w.agent.id }}
+                    search={{ tab: "wallet" }}
+                    className="flex items-center gap-2.5 hover:opacity-80"
+                  >
+                    <Avatar className="size-8">
+                      {w.agent.avatarUrl && (
+                        <AvatarImage
+                          src={w.agent.avatarUrl}
+                          alt={name}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                        {`${w.agent.firstName[0] ?? ""}${w.agent.lastName[0] ?? ""}`.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">{name}</span>
+                  </Link>
+                </TableCell>
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
+                  {formatFcfa(w.amount)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Badge className={operatorBadgeClass(w.momoOperator)}>
+                      {w.momoOperator === "MTN" ? "MTN" : "Airtel"}
+                    </Badge>
+                    <button
+                      type="button"
+                      onClick={() => copy(w.momoPhone)}
+                      className="inline-flex items-center gap-1 text-sm tabular-nums hover:underline"
+                      title="Copy the number"
+                    >
+                      {w.momoPhone}
+                      <IconCopy className="text-muted-foreground size-3" />
+                    </button>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <p
+                    className={`text-sm ${overdue ? "font-medium text-amber-600 dark:text-amber-400" : ""}`}
+                  >
+                    {open ? `Waiting ${waitedFor(w.createdAt)}` : waitedFor(w.createdAt) + " ago"}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatDateTime(w.createdAt)}
+                  </p>
+                </TableCell>
+                <TableCell className="max-w-64">
+                  <Badge className={withdrawalStatusBadgeClass(w.status)}>
+                    {WITHDRAWAL_STATUS_LABELS[w.status]}
+                  </Badge>
+                  {w.status === "PAID" && (
+                    <p className="text-muted-foreground mt-1 truncate text-xs">
+                      {w.providerReference && (
+                        <button
+                          type="button"
+                          onClick={() => copy(w.providerReference!)}
+                          className="font-mono hover:underline"
+                          title="Copy the reference"
+                        >
+                          {w.providerReference}
+                        </button>
+                      )}
+                      {w.processedBy && ` · ${w.processedBy}`}
+                    </p>
+                  )}
+                  {w.status === "REJECTED" && w.rejectionReason && (
+                    <p
+                      className="text-muted-foreground mt-1 truncate text-xs"
+                      title={w.rejectionReason}
+                    >
+                      {w.rejectionReason}
+                    </p>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  {canProcess && open && (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive"
+                        onClick={() => onReject(w)}
+                      >
+                        <IconX />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="shadow-none"
+                        onClick={() => onPay(w)}
+                      >
+                        <IconCash />
+                        Pay
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 const STATUS_FILTERS: { label: string; value: AgentWithdrawalStatus | undefined }[] = [
   { label: "To pay", value: "REQUESTED" },
   { label: "Paid", value: "PAID" },
@@ -357,10 +514,13 @@ export function AgentWithdrawalsList({
   agentId,
   defaultStatus,
   canProcess,
+  layout = "list",
 }: Readonly<{
   agentId?: string;
   defaultStatus?: AgentWithdrawalStatus;
   canProcess: boolean;
+  /** `table` for the cross-agent queue; `list` inside an agent's wallet. */
+  layout?: "list" | "table";
 }>) {
   const [status, setStatus] = useState<AgentWithdrawalStatus | undefined>(
     defaultStatus,
@@ -389,9 +549,11 @@ export function AgentWithdrawalsList({
             }}
           >
             {f.label}
-            {f.value === "REQUESTED" && !!data?.open.count && (
+            {data?.summary && (
               <span className="text-muted-foreground tabular-nums">
-                {data.open.count}
+                {f.value
+                  ? data.summary.counts[f.value]
+                  : Object.values(data.summary.counts).reduce((a, n) => a + n, 0)}
               </span>
             )}
           </Button>
@@ -425,7 +587,16 @@ export function AgentWithdrawalsList({
         </div>
       )}
 
-      {!!data?.data.length && (
+      {!!data?.data.length && layout === "table" && (
+        <WithdrawalsTable
+          rows={data.data}
+          canProcess={canProcess}
+          onPay={setPaying}
+          onReject={setRejecting}
+        />
+      )}
+
+      {!!data?.data.length && layout === "list" && (
         <div className="divide-border divide-y">
           {data.data.map((w) => {
             const actionable = canProcess && w.status === "REQUESTED";
