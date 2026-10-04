@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconCoin, IconLoader2 } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconCoin,
+  IconDots,
+  IconLoader2,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ReasonField } from "#/components/reason-field";
-import { ProfileCell } from "#/components/table/profile-cell";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import {
   Dialog,
@@ -17,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { Skeleton } from "#/components/ui/skeleton";
 import { agentsQueryKey, useAgentCommissions } from "#/hooks/use-agents";
 import {
@@ -32,21 +43,28 @@ import {
   isCancellableCommission,
 } from "../agent-rules";
 
-/** Where the commission stands in time, in one line. */
-function commissionTiming(c: AgentCommission): string {
+/** What the status means for this one, in a sentence. */
+function commissionStatusSentence(c: AgentCommission): string {
   switch (c.status) {
     case "PENDING":
       return c.availableAt
-        ? `Withdrawable from ${formatDateTime(c.availableAt)}`
-        : "Waiting for the mission to be done";
+        ? `Becomes withdrawable on ${formatDateTime(c.availableAt)} — unless the worker doesn't show up or the mission is cancelled.`
+        : "Becomes withdrawable once the mission is marked done.";
     case "AVAILABLE":
-      return `Withdrawable since ${formatDateTime(c.releasedAt)}`;
+      return `Counts in the agent's available balance since ${formatDateTime(c.releasedAt)}.`;
     case "CANCELLED":
-      return `Cancelled ${formatDateTime(c.cancelledAt)}`;
+      return `Taken back on ${formatDateTime(c.cancelledAt)}${c.reason ? `: ${c.reason}` : "."}`;
     default:
-      return `Placement of ${formatDateTime(c.createdAt)}`;
+      return `This placement earns nothing${c.reason ? `: ${c.reason}` : "."}`;
   }
 }
+
+const STATUS_GUIDE: { status: AgentCommission["status"]; text: string }[] = [
+  { status: "PENDING", text: "both sides paid, in the waiting time" },
+  { status: "AVAILABLE", text: "in the agent's available balance" },
+  { status: "CANCELLED", text: "taken back (no-show, cancelled mission, admin)" },
+  { status: "INELIGIBLE", text: "the placement didn't qualify" },
+];
 
 function CancelCommissionDialog({
   agentId,
@@ -68,7 +86,7 @@ function CancelCommissionDialog({
       void queryClient.invalidateQueries({
         queryKey: [...agentsQueryKey, "detail", agentId],
       });
-      toast.success("Commission cancelled.");
+      toast.success("Commission taken back.");
       setReason("");
       setAttempted(false);
       onClose();
@@ -93,7 +111,7 @@ function CancelCommissionDialog({
         {commission && (
           <>
             <DialogHeader>
-              <DialogTitle>Cancel this commission?</DialogTitle>
+              <DialogTitle>Take back this commission?</DialogTitle>
               <DialogDescription>
                 {formatFcfa(commission.amount)} for placing{" "}
                 <span className="text-foreground font-medium">
@@ -142,7 +160,7 @@ function CancelCommissionDialog({
                 {mutation.isPending && (
                   <IconLoader2 className="size-4 animate-spin" />
                 )}
-                Cancel commission
+                Take it back
               </Button>
             </DialogFooter>
           </>
@@ -170,8 +188,23 @@ export function AgentCommissionsCard({
       <CardHeader>
         <CardTitle className="text-sm">Commissions</CardTitle>
         <p className="text-muted-foreground text-xs">
-          One per worker this agent placed.
+          Each time a worker this agent invited is hired and both sides pay,
+          the agent earns a commission. It waits a few days in case the worker
+          doesn't show up, then becomes withdrawable.
         </p>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
+          {STATUS_GUIDE.map((g) => (
+            <span
+              key={g.status}
+              className="text-muted-foreground flex items-center gap-1.5 text-xs"
+            >
+              <Badge className={commissionStatusBadgeClass(g.status)}>
+                {COMMISSION_STATUS_LABELS[g.status]}
+              </Badge>
+              {g.text}
+            </span>
+          ))}
+        </div>
       </CardHeader>
       <CardContent>
         {isError && (
@@ -201,65 +234,99 @@ export function AgentCommissionsCard({
 
         {!!data?.data.length && (
           <div className="divide-border divide-y">
-            {data.data.map((c) => (
-              <div key={c.id} className="space-y-1.5 py-3">
-                <div className="flex items-center justify-between gap-4">
-                  <Link
-                    to="/profiles/$profileId"
-                    params={{ profileId: c.worker.id }}
-                    className="min-w-0 hover:opacity-80"
-                  >
-                    <ProfileCell
-                      name={`${c.worker.firstName ?? ""} ${c.worker.lastName ?? ""}`.trim()}
-                      avatarUrl={c.worker.avatarUrl}
-                    />
-                  </Link>
-                  <div className="flex shrink-0 items-center gap-3">
+            {data.data.map((c) => {
+              const name =
+                `${c.worker.firstName ?? ""} ${c.worker.lastName ?? ""}`.trim() ||
+                "a worker";
+              const earnsNothing =
+                c.status === "CANCELLED" || c.status === "INELIGIBLE";
+              return (
+                <div key={c.id} className="flex items-start gap-3 py-4">
+                  <Avatar className="mt-0.5 size-8">
+                    {c.worker.avatarUrl && (
+                      <AvatarImage
+                        src={c.worker.avatarUrl}
+                        alt={name}
+                        className="object-cover"
+                      />
+                    )}
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                      {name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-sm">
+                      Placed{" "}
+                      <Link
+                        to="/profiles/$profileId"
+                        params={{ profileId: c.worker.id }}
+                        className="font-medium hover:underline"
+                      >
+                        {name}
+                      </Link>{" "}
+                      on{" "}
+                      {c.job.title ? (
+                        <Link
+                          to="/jobs/$jobId"
+                          params={{ jobId: c.job.id }}
+                          className="font-medium hover:underline"
+                        >
+                          « {c.job.title} »
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">a removed job</span>
+                      )}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {commissionStatusSentence(c)}
+                    </p>
+                    <p className="text-muted-foreground/70 text-[11px]">
+                      Placement of {formatDateTime(c.createdAt)}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
                     <Badge className={commissionStatusBadgeClass(c.status)}>
                       {COMMISSION_STATUS_LABELS[c.status]}
                     </Badge>
                     <span
-                      className={`text-sm font-semibold tabular-nums ${
-                        c.status === "CANCELLED" || c.status === "INELIGIBLE"
-                          ? "text-muted-foreground line-through"
-                          : ""
+                      className={`w-24 text-right text-sm font-semibold tabular-nums ${
+                        earnsNothing ? "text-muted-foreground line-through" : ""
                       }`}
                     >
                       {formatFcfa(c.amount)}
                     </span>
+                    {canCancel && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Commission actions"
+                            disabled={!isCancellableCommission(c.status)}
+                            className={
+                              isCancellableCommission(c.status) ? "" : "invisible"
+                            }
+                          >
+                            <IconDots className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setCancelling(c)}
+                          >
+                            <IconArrowBackUp className="size-4" />
+                            Take back commission…
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
-                <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 pl-11 text-xs">
-                  {c.job.title ? (
-                    <Link
-                      to="/jobs/$jobId"
-                      params={{ jobId: c.job.id }}
-                      className="text-foreground font-medium hover:underline"
-                    >
-                      {c.job.title}
-                    </Link>
-                  ) : (
-                    <span>Job removed</span>
-                  )}
-                  <span>· {commissionTiming(c)}</span>
-                  {canCancel && isCancellableCommission(c.status) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive ml-auto h-6 px-2 text-xs"
-                      onClick={() => setCancelling(c)}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-                {c.reason && (
-                  <p className="text-muted-foreground pl-11 text-xs">
-                    {c.reason}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

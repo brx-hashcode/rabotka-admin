@@ -5,6 +5,7 @@ import {
   canCancelAgentCommission,
   canProcessAgentWithdrawal,
   canSeeAgentPayouts,
+  movementFlow,
   isCancellableCommission,
   kycRefsFor,
   leadTotals,
@@ -174,5 +175,21 @@ describe("agent payouts", () => {
     expect(canProcessAgentWithdrawal("FINANCE")).toBe(true);
     expect(canProcessAgentWithdrawal("ADMIN")).toBe(true);
     expect(canProcessAgentWithdrawal("MANAGER")).toBe(false);
+  });
+});
+
+describe("movementFlow", () => {
+  it("reads a release, new money and money taken back", () => {
+    expect(movementFlow({ PENDING: -400, AVAILABLE: 400 })).toBe(
+      "Waiting → Available",
+    );
+    expect(movementFlow({ PENDING: 400 })).toBe("→ Waiting");
+    expect(movementFlow({ AVAILABLE: -400 })).toBe("Available → removed");
+  });
+
+  it("reads a withdrawal being paid", () => {
+    expect(movementFlow({ LOCKED: -1000, PAID_OUT: 1000 })).toBe(
+      "Requested → Paid out",
+    );
   });
 });
