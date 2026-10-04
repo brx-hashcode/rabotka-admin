@@ -27,6 +27,7 @@ type FormState = {
   requiresMomoEmployer: string;
   multiSeatMode: string;
   withdrawalMin: string;
+  inviteWhatsApp: string;
 };
 
 const EMPTY: FormState = {
@@ -40,6 +41,7 @@ const EMPTY: FormState = {
   requiresMomoEmployer: "true",
   multiSeatMode: "PER_PLACEMENT",
   withdrawalMin: "2000",
+  inviteWhatsApp: "false",
 };
 
 const KEYS: Record<keyof FormState, string> = {
@@ -53,6 +55,7 @@ const KEYS: Record<keyof FormState, string> = {
   requiresMomoEmployer: "agent.commission_requires_momo_employer",
   multiSeatMode: "agent.commission_multi_seat_mode",
   withdrawalMin: "agent.withdrawal_min_fcfa",
+  inviteWhatsApp: "agent.invite_whatsapp_enabled",
 };
 
 /**
@@ -133,6 +136,7 @@ export function AgentsCard() {
       [KEYS.requiresMomoEmployer]: form.requiresMomoEmployer,
       [KEYS.multiSeatMode]: form.multiSeatMode,
       [KEYS.withdrawalMin]: String(withdrawalMin),
+      [KEYS.inviteWhatsApp]: form.inviteWhatsApp,
     });
     setInitial(form);
   }
@@ -236,6 +240,28 @@ export function AgentsCard() {
             onChange={(e) => set("inviteExpiryHours", e.target.value)}
             disabled={disabled}
             className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="invite-whatsapp" className="text-sm font-medium">
+              Send invitations to workers by WhatsApp
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              When an agent invites a worker, Rabotka sends the worker a
+              WhatsApp message with a button to the offer. Turn on only once
+              the template « rabotka_agent_invitation_v1 » is approved by
+              Meta. When off, the agent sends the link from their own phone.
+            </p>
+          </div>
+          <Switch
+            id="invite-whatsapp"
+            checked={form.inviteWhatsApp === "true"}
+            onCheckedChange={(v) => set("inviteWhatsApp", String(v))}
+            disabled={disabled}
           />
         </div>
 
