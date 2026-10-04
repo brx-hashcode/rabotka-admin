@@ -1,9 +1,22 @@
 import { AdminBaseController } from "./base-controller";
 
+/**
+ * One day of jobs posted, split by the status those jobs are in TODAY (the
+ * server keeps no status history to say what happened on that day).
+ */
 export type JobActivityDataPoint = {
   date: string;
   jobCreated: number;
-  jobFilled: number;
+  byStatus: Record<
+    | "ACTIVE"
+    | "PARTIALLY_FILLED"
+    | "FILLED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "EXPIRED",
+    number
+  >;
 };
 
 export type DashboardMetrics = {

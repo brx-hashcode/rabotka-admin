@@ -11,6 +11,7 @@ import {
   zoneFilterOptions,
 } from "#/features/agents/agent-rules";
 import { agentColumns } from "#/features/agents/components/agent-columns";
+import { AgentCoverageMap } from "#/features/agents/components/agent-coverage-map";
 import { AgentMetricsChart } from "#/features/agents/components/agent-metrics-chart";
 import { AgentStatsCards } from "#/features/agents/components/agent-stats-cards";
 import { CreateAgentDialog } from "#/features/agents/components/create-agent-dialog";
@@ -97,7 +98,13 @@ export default function AgentsPage() {
         }
       />
       <AgentStatsCards />
-      <AgentMetricsChart />
+      {/* Activity over time beside where agents work. */}
+      <div className="grid gap-4 xl:grid-cols-3">
+        <div className="min-w-0 xl:col-span-2">
+          <AgentMetricsChart />
+        </div>
+        <AgentCoverageMap />
+      </div>
       <DataTable
         isPaginated
         enableRowSelection

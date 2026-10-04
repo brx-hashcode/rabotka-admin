@@ -276,6 +276,8 @@ export type AgentCoveredZone = {
   city: string;
   /** Non-revoked agents covering it. */
   agents: number;
+  /** Who they are — to count an agent once per department. */
+  agentIds: string[];
 };
 
 export type AgentStats = {
