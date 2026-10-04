@@ -110,7 +110,7 @@ export function AgentMetricsChart() {
   const allZero = points.every((p) => p.value === 0);
 
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="flex h-full flex-col gap-0 overflow-hidden py-0">
       <div className="flex flex-col gap-3 px-6 pt-5 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col justify-center gap-1">
           <CardTitle>{current.label}</CardTitle>
@@ -170,7 +170,7 @@ export function AgentMetricsChart() {
         </Button>
       </div>
 
-      <CardContent className="px-2 pt-4 pb-4 sm:px-6">
+      <CardContent className="flex flex-1 flex-col px-2 pt-4 pb-4 sm:px-6">
         {isLoading && <Skeleton className="h-[260px] w-full" />}
 
         {!isLoading && asTable && (
@@ -182,10 +182,10 @@ export function AgentMetricsChart() {
         )}
 
         {!isLoading && !asTable && (
-          <div className="relative">
+          <div className="relative min-h-[260px] flex-1">
             <ChartContainer
               config={chartConfig}
-              className="aspect-auto h-[260px] w-full"
+              className="aspect-auto h-full min-h-[260px] w-full"
             >
               <BarChart
                 accessibilityLayer
