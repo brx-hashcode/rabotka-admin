@@ -49,6 +49,26 @@ export type AdminApplicationDetailResponse = AdminApplicationListItem & {
   penalties: AdminApplicationPenaltyItem[];
   completionNote: string | null;
   contractId: string | null;
+  /** The field agent whose invitation the worker accepted, if any. */
+  agent: AdminApplicationAgent | null;
+};
+
+export type AdminApplicationAgent = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  phone: string;
+  status: string;
+  invitedAt: string | null;
+  acceptedAt: string | null;
+  commission: {
+    id: string;
+    status: "PENDING" | "AVAILABLE" | "CANCELLED" | "INELIGIBLE";
+    amount: number;
+    availableAt: string | null;
+    reason: string | null;
+  } | null;
 };
 
 export type AdminApplicationsListParams = {
