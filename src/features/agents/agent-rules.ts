@@ -387,6 +387,33 @@ export const MOMO_OPERATOR_LABELS: Record<AgentMomoOperator, string> = {
   AIRTEL: "Airtel Money",
 };
 
+/** Network colours people recognise: MTN yellow, Airtel red. */
+export function operatorBadgeClass(op: AgentMomoOperator): string {
+  return op === "MTN"
+    ? "bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 border-transparent"
+    : "bg-red-500/10 text-red-700 dark:text-red-300 border-transparent";
+}
+
+/** A request waiting longer than this is flagged in the queue. */
+export const WITHDRAWAL_OVERDUE_HOURS = 48;
+
+/** How long since `iso`, short: "40 min", "5 h", "2 days". */
+export function waitedFor(iso: string, now: Date = new Date()): string {
+  const minutes = Math.max(
+    Math.floor((now.getTime() - new Date(iso).getTime()) / 60000),
+    0,
+  );
+  if (minutes < 60) return `${Math.max(minutes, 1)} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} h`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? "1 day" : `${days} days`;
+}
+
+export function isOverdueWithdrawal(iso: string, now: Date = new Date()) {
+  return now.getTime() - new Date(iso).getTime() > WITHDRAWAL_OVERDUE_HOURS * 3600_000;
+}
+
 /**
  * Who sees agents' withdrawals: MANAGER and above, and FINANCE (which owns
  * the payout page). MODERATOR and SUPPORT are refused by the server.

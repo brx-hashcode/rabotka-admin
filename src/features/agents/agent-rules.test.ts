@@ -5,6 +5,8 @@ import {
   canCancelAgentCommission,
   canProcessAgentWithdrawal,
   canSeeAgentPayouts,
+  isOverdueWithdrawal,
+  waitedFor,
   movementFlow,
   isCancellableCommission,
   kycRefsFor,
@@ -191,5 +193,21 @@ describe("movementFlow", () => {
     expect(movementFlow({ LOCKED: -1000, PAID_OUT: 1000 })).toBe(
       "Requested → Paid out",
     );
+  });
+});
+
+describe("waiting time", () => {
+  const now = new Date("2026-10-04T12:00:00Z");
+  it("reads short", () => {
+    expect(waitedFor("2026-10-04T11:20:00Z", now)).toBe("40 min");
+    expect(waitedFor("2026-10-04T07:00:00Z", now)).toBe("5 h");
+    expect(waitedFor("2026-10-03T11:00:00Z", now)).toBe("1 day");
+    expect(waitedFor("2026-10-02T09:00:00Z", now)).toBe("2 days");
+    expect(waitedFor("2026-10-04T12:00:30Z", now)).toBe("1 min");
+  });
+
+  it("flags a request waiting more than two days", () => {
+    expect(isOverdueWithdrawal("2026-10-02T09:00:00Z", now)).toBe(true);
+    expect(isOverdueWithdrawal("2026-10-03T09:00:00Z", now)).toBe(false);
   });
 });
