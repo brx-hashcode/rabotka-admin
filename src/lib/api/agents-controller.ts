@@ -107,6 +107,33 @@ export type AgentCommission = {
   };
 };
 
+export type AgentWithdrawalStatus = "REQUESTED" | "PAID" | "REJECTED";
+export type AgentMomoOperator = "MTN" | "AIRTEL";
+
+/** An agent asking to be paid; paid by hand over Mobile Money. */
+export type AgentWithdrawal = {
+  id: string;
+  createdAt: string;
+  amount: number;
+  momoPhone: string;
+  momoOperator: AgentMomoOperator;
+  status: AgentWithdrawalStatus;
+  processedAt: string | null;
+  providerReference: string | null;
+  rejectionReason: string | null;
+  agent: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  };
+};
+
+export type AgentWithdrawals = Paginated<AgentWithdrawal> & {
+  /** Waiting for an admin, whatever the filter. */
+  open: { count: number; amount: number };
+};
+
 export type AgentLeadStatus =
   | "SUGGESTED"
   | "CLAIMED"
@@ -359,6 +386,42 @@ export class AdminAgentsController extends AdminBaseController {
     );
   }
 
+  async getWithdrawals(
+    params: {
+      agentId?: string;
+      status?: AgentWithdrawalStatus;
+      page?: number;
+      limit?: number;
+    } = {},
+  ): Promise<AgentWithdrawals> {
+    const query = this.buildSearchParams({
+      agentId: params.agentId,
+      status: params.status,
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+    });
+    return this.get<AgentWithdrawals>(
+      this.createURL("/admin/agent-withdrawals", query),
+    );
+  }
+
+  async payWithdrawal(id: string, reference: string): Promise<AgentWithdrawal> {
+    return this.post<AgentWithdrawal>(
+      this.createURL(`/admin/agent-withdrawals/${id}/pay`, new URLSearchParams()),
+      { reference },
+    );
+  }
+
+  async rejectWithdrawal(id: string, reason: string): Promise<AgentWithdrawal> {
+    return this.post<AgentWithdrawal>(
+      this.createURL(
+        `/admin/agent-withdrawals/${id}/reject`,
+        new URLSearchParams(),
+      ),
+      { reason },
+    );
+  }
+
   async getReveals(id: string, page = 1, limit = 20): Promise<AgentReveals> {
     const query = this.buildSearchParams({ page, limit });
     return this.get<AgentReveals>(
@@ -446,6 +509,10 @@ export const getAgentWallet = controller.getWallet.bind(controller);
 export const getAgentLeads = controller.getLeads.bind(controller);
 export const getAgentReveals = controller.getReveals.bind(controller);
 export const getAgentCommissions = controller.getCommissions.bind(controller);
+export const getAgentWithdrawals = controller.getWithdrawals.bind(controller);
+export const payAgentWithdrawal = controller.payWithdrawal.bind(controller);
+export const rejectAgentWithdrawal =
+  controller.rejectWithdrawal.bind(controller);
 export const cancelAgentCommission =
   controller.cancelCommission.bind(controller);
 export const createAgent = controller.create.bind(controller);

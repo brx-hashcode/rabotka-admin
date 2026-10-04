@@ -14,6 +14,7 @@ import {
   getAgentLeads,
   getAgentLogs,
   getAgentReveals,
+  getAgentWithdrawals,
   getAgentStats,
   getAgentZones,
   getAgentTimeseries,
@@ -21,6 +22,7 @@ import {
   getAgents,
   type AgentLeadStatus,
   type AgentStatus,
+  type AgentWithdrawalStatus,
   type AgentTimeseriesRange,
 } from "#/lib/api/agents-controller";
 
@@ -135,6 +137,37 @@ export function useAgentCommissions(
     queryFn: () => getAgentCommissions(agentId, { page, limit: 10 }),
     placeholderData: keepPreviousData,
     enabled,
+  });
+}
+
+/**
+ * Withdrawals — the payout queue across agents, or one agent's history.
+ * Refreshed every minute: requests arrive from the agent app.
+ */
+export function useAgentWithdrawals(params: {
+  agentId?: string;
+  status?: AgentWithdrawalStatus;
+  page: number;
+  enabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: [
+      ...agentsQueryKey,
+      "withdrawals",
+      params.agentId ?? "all",
+      params.status ?? "any",
+      params.page,
+    ],
+    queryFn: () =>
+      getAgentWithdrawals({
+        agentId: params.agentId,
+        status: params.status,
+        page: params.page,
+        limit: 20,
+      }),
+    placeholderData: keepPreviousData,
+    refetchInterval: 60_000,
+    enabled: params.enabled ?? true,
   });
 }
 

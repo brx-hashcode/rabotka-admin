@@ -16,6 +16,7 @@ import { Route as AuthPhonePairRouteImport } from './routes/auth/phone-pair'
 import { Route as AuthQrConfirmRouteImport } from './routes/auth/qr-confirm'
 import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
 import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
+import { Route as AuthenticatedAgentPayoutsIndexRouteImport } from './routes/_authenticated/agent-payouts/index'
 import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated/agents/index'
 import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated/agents/$agentId'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
@@ -86,6 +87,12 @@ const AuthenticatedAdvertisementsIndexRoute =
   AuthenticatedAdvertisementsIndexRouteImport.update({
     id: '/advertisements/',
     path: '/advertisements/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgentPayoutsIndexRoute =
+  AuthenticatedAgentPayoutsIndexRouteImport.update({
+    id: '/agent-payouts/',
+    path: '/agent-payouts/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAgentsIndexRoute =
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
+  '/agent-payouts/': typeof AuthenticatedAgentPayoutsIndexRoute
   '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
@@ -351,6 +359,7 @@ export interface FileRoutesByTo {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
+  '/agent-payouts': typeof AuthenticatedAgentPayoutsIndexRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts': typeof AuthenticatedBroadcastsIndexRoute
@@ -396,6 +405,7 @@ export interface FileRoutesById {
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
+  '/_authenticated/agent-payouts/': typeof AuthenticatedAgentPayoutsIndexRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/ads-bundles/'
     | '/advertisements/'
+    | '/agent-payouts/'
     | '/agents/'
     | '/applications/'
     | '/broadcasts/'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/ads-bundles'
     | '/advertisements'
+    | '/agent-payouts'
     | '/agents'
     | '/applications'
     | '/broadcasts'
@@ -528,6 +540,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/ads-bundles/'
     | '/_authenticated/advertisements/'
+    | '/_authenticated/agent-payouts/'
     | '/_authenticated/agents/'
     | '/_authenticated/applications/'
     | '/_authenticated/broadcasts/'
@@ -612,6 +625,13 @@ declare module '@tanstack/react-router' {
       path: '/advertisements'
       fullPath: '/advertisements/'
       preLoaderRoute: typeof AuthenticatedAdvertisementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agent-payouts/': {
+      id: '/_authenticated/agent-payouts/'
+      path: '/agent-payouts'
+      fullPath: '/agent-payouts/'
+      preLoaderRoute: typeof AuthenticatedAgentPayoutsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/agents/': {
@@ -875,6 +895,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
   AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
+  AuthenticatedAgentPayoutsIndexRoute: typeof AuthenticatedAgentPayoutsIndexRoute
   AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedBroadcastsIndexRoute: typeof AuthenticatedBroadcastsIndexRoute
@@ -920,6 +941,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
   AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
+  AuthenticatedAgentPayoutsIndexRoute: AuthenticatedAgentPayoutsIndexRoute,
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedBroadcastsIndexRoute: AuthenticatedBroadcastsIndexRoute,

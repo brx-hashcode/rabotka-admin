@@ -15,6 +15,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { useAgentWallet } from "#/hooks/use-agents";
 import { formatDateTime } from "#/pages/profile-detail/helpers";
 import { AgentCommissionsCard } from "./agent-commissions-card";
+import { AgentWithdrawalsList } from "./agent-withdrawals-list";
 import {
   LEDGER_BUCKET_LABELS,
   LEDGER_KIND_LABELS,
@@ -67,7 +68,12 @@ function StatCard({
 export function AgentWalletContent({
   agentId,
   canCancelCommissions,
-}: Readonly<{ agentId: string; canCancelCommissions: boolean }>) {
+  canProcessWithdrawals,
+}: Readonly<{
+  agentId: string;
+  canCancelCommissions: boolean;
+  canProcessWithdrawals: boolean;
+}>) {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useAgentWallet(agentId, page, true);
   const balance = data?.balance;
@@ -85,11 +91,19 @@ export function AgentWalletContent({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* A requested withdrawal is set aside in the ledger (LOCKED) so the
+            agent cannot ask for it twice, but it is still the agent's money
+            until an admin pays it — so it counts here, and leaves only when
+            the payment is confirmed. */}
         <StatCard
           title="Available"
           icon={IconWallet}
-          value={balance?.available ?? 0}
-          hint="Can be withdrawn now"
+          value={(balance?.available ?? 0) + (balance?.locked ?? 0)}
+          hint={
+            balance?.locked
+              ? `Including ${formatFcfa(balance.locked)} requested — paid out when you confirm`
+              : "Can be withdrawn now"
+          }
           isLoading={isLoading}
           accent="text-emerald-600"
         />
@@ -104,11 +118,7 @@ export function AgentWalletContent({
           title="Paid out"
           icon={IconCash}
           value={balance?.paidOut ?? 0}
-          hint={
-            balance?.locked
-              ? `${formatFcfa(balance.locked)} in a withdrawal in progress`
-              : "Transferred by Rabotka"
-          }
+          hint="Transferred by Rabotka"
           isLoading={isLoading}
         />
         <StatCard
@@ -119,6 +129,21 @@ export function AgentWalletContent({
           isLoading={isLoading}
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Withdrawals</CardTitle>
+          <p className="text-muted-foreground text-xs">
+            What the agent asked to be paid, and what was sent.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <AgentWithdrawalsList
+            agentId={agentId}
+            canProcess={canProcessWithdrawals}
+          />
+        </CardContent>
+      </Card>
 
       <AgentCommissionsCard
         agentId={agentId}

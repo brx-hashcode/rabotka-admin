@@ -27,6 +27,7 @@ import {
   IconAddressBook,
   IconKey,
   IconUsersGroup,
+  IconCashBanknote,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -153,6 +154,12 @@ const documents: NavItem[] = [
     url: "/wallet",
     icon: IconWallet,
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
+  },
+  {
+    title: "Agent payouts",
+    url: "/agent-payouts",
+    icon: IconCashBanknote,
+    roles: [...MANAGER_UP, "FINANCE"],
   },
   {
     title: "Parrainage",

@@ -6,6 +6,8 @@ import type {
   AgentDocumentType,
   AgentKycCategory,
   AgentLeadStatus,
+  AgentMomoOperator,
+  AgentWithdrawalStatus,
   AgentStatus,
   AgentStatusAction,
   AgentZone,
@@ -373,3 +375,45 @@ export function canCancelAgentCommission(role: string | undefined): boolean {
 export function isCancellableCommission(status: AgentCommissionStatus): boolean {
   return status === "PENDING" || status === "AVAILABLE";
 }
+
+// ── Withdrawals ─────────────────────────────────────────────────────────────
+
+export const WITHDRAWAL_STATUS_LABELS: Record<AgentWithdrawalStatus, string> = {
+  REQUESTED: "To pay",
+  PAID: "Paid",
+  REJECTED: "Rejected",
+};
+
+export function withdrawalStatusBadgeClass(
+  status: AgentWithdrawalStatus,
+): string {
+  switch (status) {
+    case "REQUESTED":
+      return "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-transparent";
+    case "PAID":
+      return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-transparent";
+    default:
+      return "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-transparent";
+  }
+}
+
+export const MOMO_OPERATOR_LABELS: Record<AgentMomoOperator, string> = {
+  MTN: "MTN Mobile Money",
+  AIRTEL: "Airtel Money",
+};
+
+/**
+ * Who sees agents' withdrawals: MANAGER and above, and FINANCE (which owns
+ * the payout page). MODERATOR and SUPPORT are refused by the server.
+ */
+export function canSeeAgentPayouts(role: string | undefined): boolean {
+  return (
+    role === "MANAGER" ||
+    role === "ADMIN" ||
+    role === "SUPER_ADMIN" ||
+    role === "FINANCE"
+  );
+}
+
+/** Who pays or rejects one — moving money, gated at ADMIN like a cancel. */
+export const canProcessAgentWithdrawal = canCancelAgentCommission;
