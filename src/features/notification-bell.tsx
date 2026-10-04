@@ -21,6 +21,9 @@ const ENTITY_COLORS: Record<string, string> = {
   payment: "bg-green-500",
   penalty: "bg-red-500",
   conversation: "bg-orange-500",
+  agent: "bg-violet-600",
+  "agent-placement": "bg-violet-600",
+  "agent-withdrawal": "bg-teal-500",
 };
 
 function timeAgo(timestamp: string): string {

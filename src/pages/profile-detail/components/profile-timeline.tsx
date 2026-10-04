@@ -13,6 +13,16 @@ import {
   IconCoin,
   IconCashBanknote,
   IconAlertTriangle,
+  IconBan,
+  IconEye,
+  IconFileUpload,
+  IconLogin,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconUserPlus,
+  IconUserX,
+  IconCoinOff,
+  IconCash,
 } from "@tabler/icons-react";
 
 import type { AdminLogEntry } from "#/lib/api/profiles-controller";
@@ -93,6 +103,103 @@ const ACTION_CONFIG: Record<
   PAYMENT_FAILED: {
     label: "Payment failed",
     icon: IconAlertTriangle,
+    color: "text-rose-500",
+  },
+  // Field agents (admin/agents). Same timeline, same component.
+  AGENT_CREATED: {
+    label: "Agent created",
+    icon: IconUserPlus,
+    color: "text-emerald-500",
+  },
+  AGENT_UPDATED: {
+    label: "Details updated",
+    icon: IconEdit,
+    color: "text-amber-500",
+  },
+  AGENT_SUSPENDED: {
+    label: "Suspended",
+    icon: IconPlayerPause,
+    color: "text-amber-500",
+  },
+  AGENT_REACTIVATED: {
+    label: "Reactivated",
+    icon: IconPlayerPlay,
+    color: "text-emerald-500",
+  },
+  AGENT_REVOKED: {
+    label: "Revoked",
+    icon: IconBan,
+    color: "text-rose-500",
+  },
+  AGENT_LOGIN: {
+    label: "Signed in to the agent app",
+    icon: IconLogin,
+    color: "text-sky-500",
+  },
+  AGENT_AVATAR_REPLACED: {
+    label: "Photo replaced",
+    icon: IconPhoto,
+    color: "text-sky-500",
+  },
+  AGENT_KYC_DOCUMENT_REPLACED: {
+    label: "Identity document replaced",
+    icon: IconFileUpload,
+    color: "text-violet-500",
+  },
+  AGENT_KYC_VIEWED: {
+    label: "Identity document viewed",
+    icon: IconEye,
+    color: "text-muted-foreground",
+  },
+  // Agent invitations: on the agent's timeline and the worker's alike.
+  AGENT_INVITE_SENT: {
+    label: "Agent invitation sent",
+    icon: IconSend,
+    color: "text-sky-500",
+  },
+  AGENT_INVITE_ACCEPTED: {
+    label: "Agent invitation accepted",
+    icon: IconUserCheck,
+    color: "text-emerald-500",
+  },
+  AGENT_INVITE_DECLINED: {
+    label: "Agent invitation declined",
+    icon: IconUserX,
+    color: "text-rose-500",
+  },
+  AGENT_COMMISSION_EARNED: {
+    label: "Commission earned",
+    icon: IconCoin,
+    color: "text-amber-500",
+  },
+  AGENT_COMMISSION_RELEASED: {
+    label: "Commission withdrawable",
+    icon: IconCash,
+    color: "text-emerald-500",
+  },
+  AGENT_COMMISSION_CANCELLED: {
+    label: "Commission cancelled",
+    icon: IconCoinOff,
+    color: "text-rose-500",
+  },
+  AGENT_COMMISSION_INELIGIBLE: {
+    label: "Placement not paid",
+    icon: IconCoinOff,
+    color: "text-muted-foreground",
+  },
+  AGENT_WITHDRAWAL_REQUESTED: {
+    label: "Withdrawal requested",
+    icon: IconCashBanknote,
+    color: "text-amber-500",
+  },
+  AGENT_WITHDRAWAL_PAID: {
+    label: "Withdrawal paid",
+    icon: IconCash,
+    color: "text-emerald-500",
+  },
+  AGENT_WITHDRAWAL_REJECTED: {
+    label: "Withdrawal rejected",
+    icon: IconCoinOff,
     color: "text-rose-500",
   },
 };
@@ -195,6 +302,69 @@ const METADATA_RENDERERS: Record<
     ) : null;
   },
 };
+
+// Agent entries. `fields` is a list of changed field names here, not the
+// object PROFILE_UPDATED carries.
+METADATA_RENDERERS.AGENT_UPDATED = (meta) => {
+  const fields = Array.isArray(meta.fields)
+    ? meta.fields.filter((f): f is string => typeof f === "string")
+    : [];
+  if (fields.length === 0) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {fields.map((field) => (
+        <Badge key={field} variant="secondary" className="font-normal">
+          {humanize(field)}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+METADATA_RENDERERS.AGENT_SUSPENDED = (meta) => {
+  const reason = toStringOrNull(meta.reason);
+  return reason ? <Note>{reason}</Note> : null;
+};
+METADATA_RENDERERS.AGENT_REVOKED = METADATA_RENDERERS.AGENT_SUSPENDED;
+METADATA_RENDERERS.AGENT_KYC_DOCUMENT_REPLACED = (meta) => {
+  const category = toStringOrNull(meta.category);
+  return category ? (
+    <Badge variant="secondary" className="mt-1.5 font-normal">
+      {humanize(category)}
+    </Badge>
+  ) : null;
+};
+
+// Commissions: the amount, and the reason when it pays nothing.
+METADATA_RENDERERS.AGENT_COMMISSION_EARNED = (meta) =>
+  typeof meta.amount === "number" ? (
+    <Badge variant="secondary" className="mt-1.5 font-normal">
+      {`${meta.amount.toLocaleString("fr-FR")} FCFA`}
+    </Badge>
+  ) : null;
+METADATA_RENDERERS.AGENT_COMMISSION_RELEASED =
+  METADATA_RENDERERS.AGENT_COMMISSION_EARNED;
+METADATA_RENDERERS.AGENT_COMMISSION_CANCELLED =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
+METADATA_RENDERERS.AGENT_COMMISSION_INELIGIBLE =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
+
+METADATA_RENDERERS.AGENT_WITHDRAWAL_REQUESTED =
+  METADATA_RENDERERS.AGENT_COMMISSION_EARNED;
+METADATA_RENDERERS.AGENT_WITHDRAWAL_PAID = (meta) => {
+  const reference = toStringOrNull(meta.reference);
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {METADATA_RENDERERS.AGENT_COMMISSION_EARNED!(meta)}
+      {reference && (
+        <Badge variant="secondary" className="font-normal">
+          Ref. {reference}
+        </Badge>
+      )}
+    </div>
+  );
+};
+METADATA_RENDERERS.AGENT_WITHDRAWAL_REJECTED =
+  METADATA_RENDERERS.AGENT_SUSPENDED;
 
 // Same shape, same renderer.
 METADATA_RENDERERS.KYC_REJECTED = METADATA_RENDERERS.KYC_APPROVED;

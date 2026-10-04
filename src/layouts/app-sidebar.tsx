@@ -26,6 +26,8 @@ import {
   IconTopologyStar3,
   IconAddressBook,
   IconKey,
+  IconUsersGroup,
+  IconCashBanknote,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -58,10 +60,7 @@ export type NavItem = {
 
 const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
 
-/**
- * The ladder without MODERATOR, for areas a moderator has no business in:
- * money, the WhatsApp delivery log, the audit trail and the document library.
- */
+
 const MANAGER_UP: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
 
 const navMain: NavItem[] = [
@@ -87,8 +86,6 @@ const navMain: NavItem[] = [
     title: "Domains",
     url: "/job-categories",
     icon: IconTag,
-    // admin/job-categories resolves to MANAGER+, and editing a domain
-    // re-buckets the whole marketplace.
     roles: [...MANAGER_UP, "FINANCE"],
   },
   {
@@ -101,9 +98,12 @@ const navMain: NavItem[] = [
     title: "Paid contacts",
     url: "/contact-records",
     icon: IconAddressBook,
-    // Matches `admin/contact-records`: MODERATOR+ on the ladder, and both
-    // lateral roles read-only — support fields "I paid and never got the
-    // contact", finance reconciles the fees behind it.
+    roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    title: "Agents",
+    url: "/agents",
+    icon: IconUsersGroup,
     roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
@@ -122,28 +122,18 @@ const navMain: NavItem[] = [
     title: "Network",
     url: "/network",
     icon: IconTopologyStar3,
-    // The collaboration graph is neither a finance nor a support surface.
     roles: [...LADDER, "FINANCE"],
   },
   {
     title: "Team",
     url: "/team",
     icon: IconUsers,
-    // Team management is served by the `user` controller, which no lateral
-    // role may reach at all — the list itself 403s, not just the mutations.
     roles: [...LADDER],
   },
 ];
 
 const navSecondary: NavItem[] = [
   {
-    // "Partner apps", NOT "Applications": that label is already taken by
-    // `/applications`, the job applications board, and two identical entries in
-    // one sidebar is a support ticket waiting to happen.
-    //
-    // SUPER_ADMIN-only, matching the endpoint's @Roles — registering an app
-    // decides who Rabotka vouches for its users' identities to, which is the
-    // same class of decision as team management, not an operational one.
     title: "Partner apps",
     url: "/oauth-apps",
     icon: IconKey,
@@ -166,8 +156,12 @@ const documents: NavItem[] = [
     roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
   },
   {
-    // MANAGER+, matching the endpoint's @Roles. This is support-desk data —
-    // "why was my parrainage not paid?" — rather than revenue.
+    title: "Agent payouts",
+    url: "/agent-payouts",
+    icon: IconCashBanknote,
+    roles: [...MANAGER_UP, "FINANCE"],
+  },
+  {
     title: "Parrainage",
     url: "/referrals",
     icon: IconGift,
@@ -180,10 +174,6 @@ const documents: NavItem[] = [
     roles: [...LADDER, "FINANCE", "SUPPORT"],
   },
   {
-    // LADDER only for now. SUPPORT is a separate decision, because on this
-    // route `read` is not a narrow grant: the role ceiling would also let them
-    // open message bodies. Add them here and in LATERAL_ACCESS + LATERAL_ROUTES
-    // together, or the link renders and every request 403s.
     title: "Conversations",
     url: "/conversations",
     icon: IconMessages,
@@ -202,14 +192,9 @@ const documents: NavItem[] = [
     roles: [...LADDER, "FINANCE"],
   },
   {
-    // MANAGER+, matching the endpoint's @Roles: a broadcast is the one screen
-    // that can reach thousands of people and spend money in one click.
     title: "Broadcasts",
     url: "/broadcasts",
     icon: IconBroadcast,
-    // MANAGER_UP only, with no lateral role: the backend's LATERAL_ACCESS does
-    // not list `admin/broadcasts`, so offering it to FINANCE or SUPPORT would
-    // render a page whose every request comes back 403.
     roles: [...MANAGER_UP],
   },
   {
@@ -222,7 +207,6 @@ const documents: NavItem[] = [
     title: "Logs",
     url: "/logs",
     icon: IconFileWord,
-    // The audit log is every admin action on every record; MANAGER+.
     roles: [...MANAGER_UP, "FINANCE"],
   },
   {

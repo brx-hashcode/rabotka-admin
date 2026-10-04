@@ -16,6 +16,9 @@ import { Route as AuthPhonePairRouteImport } from './routes/auth/phone-pair'
 import { Route as AuthQrConfirmRouteImport } from './routes/auth/qr-confirm'
 import { Route as AuthenticatedAdsBundlesIndexRouteImport } from './routes/_authenticated/ads-bundles/index'
 import { Route as AuthenticatedAdvertisementsIndexRouteImport } from './routes/_authenticated/advertisements/index'
+import { Route as AuthenticatedAgentPayoutsIndexRouteImport } from './routes/_authenticated/agent-payouts/index'
+import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated/agents/index'
+import { Route as AuthenticatedAgentsAgentIdRouteImport } from './routes/_authenticated/agents/$agentId'
 import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthenticatedApplicationsApplicationIdRouteImport } from './routes/_authenticated/applications/$applicationId'
 import { Route as AuthenticatedBroadcastsIndexRouteImport } from './routes/_authenticated/broadcasts/index'
@@ -84,6 +87,24 @@ const AuthenticatedAdvertisementsIndexRoute =
   AuthenticatedAdvertisementsIndexRouteImport.update({
     id: '/advertisements/',
     path: '/advertisements/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgentPayoutsIndexRoute =
+  AuthenticatedAgentPayoutsIndexRouteImport.update({
+    id: '/agent-payouts/',
+    path: '/agent-payouts/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgentsIndexRoute =
+  AuthenticatedAgentsIndexRouteImport.update({
+    id: '/agents/',
+    path: '/agents/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgentsAgentIdRoute =
+  AuthenticatedAgentsAgentIdRouteImport.update({
+    id: '/agents/$agentId',
+    path: '/agents/$agentId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedApplicationsIndexRoute =
@@ -283,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/phone-pair': typeof AuthPhonePairRoute
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
@@ -293,6 +315,8 @@ export interface FileRoutesByFullPath {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
+  '/agent-payouts/': typeof AuthenticatedAgentPayoutsIndexRoute
+  '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -324,6 +348,7 @@ export interface FileRoutesByTo {
   '/auth/phone-pair': typeof AuthPhonePairRoute
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/': typeof AuthenticatedIndexRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
@@ -334,6 +359,8 @@ export interface FileRoutesByTo {
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/ads-bundles': typeof AuthenticatedAdsBundlesIndexRoute
   '/advertisements': typeof AuthenticatedAdvertisementsIndexRoute
+  '/agent-payouts': typeof AuthenticatedAgentPayoutsIndexRoute
+  '/agents': typeof AuthenticatedAgentsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts': typeof AuthenticatedBroadcastsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -367,6 +394,7 @@ export interface FileRoutesById {
   '/auth/phone-pair': typeof AuthPhonePairRoute
   '/auth/qr-confirm': typeof AuthQrConfirmRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/_authenticated/broadcasts/$broadcastId': typeof AuthenticatedBroadcastsBroadcastIdRoute
   '/_authenticated/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
@@ -377,6 +405,8 @@ export interface FileRoutesById {
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
   '/_authenticated/ads-bundles/': typeof AuthenticatedAdsBundlesIndexRoute
   '/_authenticated/advertisements/': typeof AuthenticatedAdvertisementsIndexRoute
+  '/_authenticated/agent-payouts/': typeof AuthenticatedAgentPayoutsIndexRoute
+  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -410,6 +440,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/phone-pair'
     | '/auth/qr-confirm'
+    | '/agents/$agentId'
     | '/applications/$applicationId'
     | '/broadcasts/$broadcastId'
     | '/broadcasts/new'
@@ -420,6 +451,8 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/ads-bundles/'
     | '/advertisements/'
+    | '/agent-payouts/'
+    | '/agents/'
     | '/applications/'
     | '/broadcasts/'
     | '/chat/'
@@ -451,6 +484,7 @@ export interface FileRouteTypes {
     | '/auth/phone-pair'
     | '/auth/qr-confirm'
     | '/'
+    | '/agents/$agentId'
     | '/applications/$applicationId'
     | '/broadcasts/$broadcastId'
     | '/broadcasts/new'
@@ -461,6 +495,8 @@ export interface FileRouteTypes {
     | '/profiles/$profileId'
     | '/ads-bundles'
     | '/advertisements'
+    | '/agent-payouts'
+    | '/agents'
     | '/applications'
     | '/broadcasts'
     | '/chat'
@@ -493,6 +529,7 @@ export interface FileRouteTypes {
     | '/auth/phone-pair'
     | '/auth/qr-confirm'
     | '/_authenticated/'
+    | '/_authenticated/agents/$agentId'
     | '/_authenticated/applications/$applicationId'
     | '/_authenticated/broadcasts/$broadcastId'
     | '/_authenticated/broadcasts/new'
@@ -503,6 +540,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles/$profileId'
     | '/_authenticated/ads-bundles/'
     | '/_authenticated/advertisements/'
+    | '/_authenticated/agent-payouts/'
+    | '/_authenticated/agents/'
     | '/_authenticated/applications/'
     | '/_authenticated/broadcasts/'
     | '/_authenticated/chat/'
@@ -586,6 +625,27 @@ declare module '@tanstack/react-router' {
       path: '/advertisements'
       fullPath: '/advertisements/'
       preLoaderRoute: typeof AuthenticatedAdvertisementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agent-payouts/': {
+      id: '/_authenticated/agent-payouts/'
+      path: '/agent-payouts'
+      fullPath: '/agent-payouts/'
+      preLoaderRoute: typeof AuthenticatedAgentPayoutsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agents/': {
+      id: '/_authenticated/agents/'
+      path: '/agents'
+      fullPath: '/agents/'
+      preLoaderRoute: typeof AuthenticatedAgentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agents/$agentId': {
+      id: '/_authenticated/agents/$agentId'
+      path: '/agents/$agentId'
+      fullPath: '/agents/$agentId'
+      preLoaderRoute: typeof AuthenticatedAgentsAgentIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/applications/': {
@@ -824,6 +884,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAgentsAgentIdRoute: typeof AuthenticatedAgentsAgentIdRoute
   AuthenticatedApplicationsApplicationIdRoute: typeof AuthenticatedApplicationsApplicationIdRoute
   AuthenticatedBroadcastsBroadcastIdRoute: typeof AuthenticatedBroadcastsBroadcastIdRoute
   AuthenticatedBroadcastsNewRoute: typeof AuthenticatedBroadcastsNewRoute
@@ -834,6 +895,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
   AuthenticatedAdsBundlesIndexRoute: typeof AuthenticatedAdsBundlesIndexRoute
   AuthenticatedAdvertisementsIndexRoute: typeof AuthenticatedAdvertisementsIndexRoute
+  AuthenticatedAgentPayoutsIndexRoute: typeof AuthenticatedAgentPayoutsIndexRoute
+  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedBroadcastsIndexRoute: typeof AuthenticatedBroadcastsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -863,6 +926,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAgentsAgentIdRoute: AuthenticatedAgentsAgentIdRoute,
   AuthenticatedApplicationsApplicationIdRoute:
     AuthenticatedApplicationsApplicationIdRoute,
   AuthenticatedBroadcastsBroadcastIdRoute:
@@ -877,6 +941,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
   AuthenticatedAdsBundlesIndexRoute: AuthenticatedAdsBundlesIndexRoute,
   AuthenticatedAdvertisementsIndexRoute: AuthenticatedAdvertisementsIndexRoute,
+  AuthenticatedAgentPayoutsIndexRoute: AuthenticatedAgentPayoutsIndexRoute,
+  AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedBroadcastsIndexRoute: AuthenticatedBroadcastsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,

@@ -42,6 +42,7 @@ actions are hidden. Blank = not shown.
 | Job Offers | `/jobs` | ✓ | ✓ | ✓ | ✓ | | read |
 | Domains | `/job-categories` | ✓ | ✓ | ✓ | | | |
 | Applications | `/applications` | ✓ | ✓ | ✓ | ✓ | | read |
+| Agents | `/agents` | ✓ | ✓ | ✓ | read | ✓ | read |
 | Chat | `/chat` | ✓ | ✓ | ✓ | ✓ | | ✓ |
 | Penalties | `/penalties` | ✓ | ✓ | ✓ | ✓ | ✓ | |
 | Network | `/network` | ✓ | ✓ | ✓ | ✓ | | |
