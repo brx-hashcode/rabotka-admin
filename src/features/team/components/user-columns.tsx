@@ -68,9 +68,19 @@ const userDataColumns: ColumnDef<AdminUser, unknown>[] = [
     accessorKey: "role",
     header: "Role",
     cell: ({ row }) => (
-      <Badge className={getRoleBadgeClass(row.original.role)}>
-        {labelOf(TEAM_ROLE_LABELS, row.original.role)}
-      </Badge>
+      <div className="flex items-center gap-1.5">
+        <Badge className={getRoleBadgeClass(row.original.role)}>
+          {labelOf(TEAM_ROLE_LABELS, row.original.role)}
+        </Badge>
+        {row.original.kycReviewer && (
+          <Badge
+            variant="secondary"
+            title="In the KYC verification group: emailed to review each new profile"
+          >
+            KYC
+          </Badge>
+        )}
+      </div>
     ),
   },
   {
