@@ -185,7 +185,7 @@ export function AgentMetricsChart() {
           <div className="relative min-h-[260px] flex-1">
             <ChartContainer
               config={chartConfig}
-              className="aspect-auto h-full min-h-[260px] w-full"
+              className="absolute inset-0 aspect-auto h-full w-full"
             >
               <BarChart
                 accessibilityLayer
