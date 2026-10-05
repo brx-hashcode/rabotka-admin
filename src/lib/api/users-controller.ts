@@ -7,6 +7,8 @@ export type AdminUserListItem = {
   email: string;
   role: string;
   isActive: boolean;
+  /** In the KYC verification group: emailed to review each new profile. */
+  kycReviewer: boolean;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -68,6 +70,17 @@ export class AdminUsersController extends AdminBaseController {
     return this.patch<AdminUserListItem>(url, data);
   }
 
+  async setKycReviewer(
+    id: string,
+    enabled: boolean,
+  ): Promise<AdminUserListItem> {
+    const url = this.createURL(
+      `/user/${id}/kyc-reviewer`,
+      new URLSearchParams(),
+    );
+    return this.patch<AdminUserListItem>(url, { enabled });
+  }
+
   async activate(id: string): Promise<AdminUserListItem> {
     const url = this.createURL(`/user/${id}/activate`, new URLSearchParams());
     return this.patch<AdminUserListItem>(url, {});
@@ -107,6 +120,8 @@ export const bulkPurgeUsers = controller.bulkPurge.bind(controller);
 export const createAdminUser = controller.create.bind(controller);
 export const updateAdminUser = (id: string, data: UpdateAdminUserParams) =>
   controller.update(id, data);
+export const setKycReviewer = (id: string, enabled: boolean) =>
+  controller.setKycReviewer(id, enabled);
 export const activateAdminUser = (id: string) => controller.activate(id);
 export const deactivateAdminUser = (id: string) => controller.deactivate(id);
 export const deleteAdminUser = (id: string) => controller.remove(id);

@@ -23,6 +23,7 @@ import {
   userColumns,
   userRoleOptions,
   UserModal,
+  KycReviewersCard,
   type AdminUser,
 } from "#/features/team";
 
@@ -111,6 +112,7 @@ export default function TeamPage() {
         title="Team Members"
         description="Manage admin users, roles and access to the back office."
       />
+      <KycReviewersCard canManage={canManageTeam} />
       <DataTable
         isPaginated
         enableRowSelection
