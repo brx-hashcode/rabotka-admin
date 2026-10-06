@@ -202,6 +202,11 @@ const ACTION_CONFIG: Record<
     icon: IconCoinOff,
     color: "text-rose-500",
   },
+  AGENT_WITHDRAWAL_CANCELLED: {
+    label: "Withdrawal cancelled by the agent",
+    icon: IconCoinOff,
+    color: "text-muted-foreground",
+  },
 };
 
 /** Sentence case, so an unmapped action reads as text rather than shouting. */

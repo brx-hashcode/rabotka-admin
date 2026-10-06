@@ -367,6 +367,7 @@ export const WITHDRAWAL_STATUS_LABELS: Record<AgentWithdrawalStatus, string> = {
   REQUESTED: "To pay",
   PAID: "Paid",
   REJECTED: "Rejected",
+  CANCELLED: "Cancelled by agent",
 };
 
 export function withdrawalStatusBadgeClass(
@@ -377,6 +378,8 @@ export function withdrawalStatusBadgeClass(
       return "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-transparent";
     case "PAID":
       return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-transparent";
+    case "CANCELLED":
+      return "bg-muted text-muted-foreground border-transparent";
     default:
       return "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-transparent";
   }
@@ -487,6 +490,8 @@ export function movementView(m: AgentMovement): {
       return { title: "Withdrawal paid", tone: "neutral" };
     case "WITHDRAWAL_REJECTED":
       return { title: "Withdrawal rejected", tone: "neutral" };
+    case "WITHDRAWAL_CANCELLED":
+      return { title: "Withdrawal cancelled by the agent", tone: "neutral" };
     default: {
       const net = Object.values(m.moves).reduce((a, v) => a + (v ?? 0), 0);
       return {
