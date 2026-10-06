@@ -65,6 +65,7 @@ export type AgentLedgerEntry = {
     | "WITHDRAWAL_REQUESTED"
     | "WITHDRAWAL_PAID"
     | "WITHDRAWAL_REJECTED"
+    | "WITHDRAWAL_CANCELLED"
     | "ADJUSTMENT";
   bucket: "PENDING" | "AVAILABLE" | "LOCKED" | "PAID_OUT";
   /** Signed FCFA: positive into the bucket, negative out of it. */
@@ -143,7 +144,7 @@ export type AgentCommission = {
   };
 };
 
-export type AgentWithdrawalStatus = "REQUESTED" | "PAID" | "REJECTED";
+export type AgentWithdrawalStatus = "REQUESTED" | "PAID" | "REJECTED" | "CANCELLED";
 export type AgentMomoOperator = "MTN" | "AIRTEL";
 
 /** An agent asking to be paid; paid by hand over Mobile Money. */

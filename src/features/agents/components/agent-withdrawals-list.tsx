@@ -340,6 +340,11 @@ function WithdrawalFacts({
       {w.status === "REJECTED" && (
         <Fact label="Rejected">{formatDateTime(w.processedAt)}</Fact>
       )}
+      {w.status === "CANCELLED" && (
+        <Fact label="Cancelled by the agent">
+          {formatDateTime(w.processedAt)}
+        </Fact>
+      )}
       {w.processedBy && (
         <Fact label={w.status === "PAID" ? "Paid by" : "Rejected by"}>
           {w.processedBy}
@@ -503,6 +508,7 @@ const STATUS_FILTERS: { label: string; value: AgentWithdrawalStatus | undefined 
   { label: "To pay", value: "REQUESTED" },
   { label: "Paid", value: "PAID" },
   { label: "Rejected", value: "REJECTED" },
+  { label: "Cancelled", value: "CANCELLED" },
   { label: "All", value: undefined },
 ];
 
