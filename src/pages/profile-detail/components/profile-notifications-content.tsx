@@ -10,6 +10,7 @@ import {
   IconLockOpen,
   IconMessage,
   IconStar,
+  IconTrendingUp,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 import type { IconProps } from "@tabler/icons-react";
@@ -42,6 +43,7 @@ const TYPE_LABELS: Record<string, string> = {
   PAYMENT_FAILED: "Payment failed",
   CLAIM_COMMENTED: "Claim reply",
   CLAIM_STATUS_CHANGED: "Claim status changed",
+  SIMILAR_PROFILE_HIRED: "Similar profile hired",
 };
 
 const TYPE_ICONS: Record<string, ComponentType<IconProps>> = {
@@ -59,6 +61,7 @@ const TYPE_ICONS: Record<string, ComponentType<IconProps>> = {
   PAYMENT_FAILED: IconCircleX,
   CLAIM_COMMENTED: IconMessage,
   CLAIM_STATUS_CHANGED: IconMessage,
+  SIMILAR_PROFILE_HIRED: IconTrendingUp,
 };
 
 /** Whose action it was, in the admin's words — the actor can be either role. */
