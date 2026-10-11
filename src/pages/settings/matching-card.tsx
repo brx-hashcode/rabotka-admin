@@ -21,6 +21,8 @@ type FormState = {
   recommendationMinScore: string;
   agentCandidateMinScore: string;
   reliabilityThreshold: string;
+  pairCancelPenalty: string;
+  pairCancelDecayDays: string;
 };
 
 const EMPTY: FormState = {
@@ -33,6 +35,9 @@ const EMPTY: FormState = {
   recommendationMinScore: "30",
   agentCandidateMinScore: "30",
   reliabilityThreshold: "50",
+  // Stored as 0–1, shown as a percentage like the match scores.
+  pairCancelPenalty: "25",
+  pairCancelDecayDays: "180",
 };
 
 export function MatchingCard() {
@@ -68,6 +73,10 @@ export function MatchingCard() {
         data.agentCandidateMinScore = toPercent(item.value);
       if (item.key === "matching.reliability_threshold")
         data.reliabilityThreshold = item.value;
+      if (item.key === "matching.pair_cancel_penalty")
+        data.pairCancelPenalty = toPercent(item.value);
+      if (item.key === "matching.pair_cancel_decay_days")
+        data.pairCancelDecayDays = item.value;
     }
     setForm(data);
     setInitial(data);
@@ -114,6 +123,17 @@ export function MatchingCard() {
       return;
     }
 
+    const pairPenalty = fromPercent(form.pairCancelPenalty);
+    if (pairPenalty === null) {
+      toast.error("The match drop per cancellation must be between 0 and 100%.");
+      return;
+    }
+    const pairDecay = parseInt(form.pairCancelDecayDays, 10);
+    if (isNaN(pairDecay) || pairDecay < 1) {
+      toast.error("A cancellation must count for at least 1 day.");
+      return;
+    }
+
     await saveChanges({
       "matching.use_embeddings": String(form.useEmbeddings),
       "matching.recommendations_enabled": String(form.recommendationsEnabled),
@@ -123,6 +143,8 @@ export function MatchingCard() {
       "matching.recommendation_min_score": String(recoScore),
       "agent.candidate_min_score": String(agentScore),
       "matching.reliability_threshold": String(reliability),
+      "matching.pair_cancel_penalty": String(pairPenalty),
+      "matching.pair_cancel_decay_days": String(pairDecay),
     });
     setInitial(form);
   }
@@ -313,6 +335,57 @@ export function MatchingCard() {
             step={1}
             value={form.reliabilityThreshold}
             onChange={(e) => set("reliabilityThreshold", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="pair-cancel-penalty" className="text-sm font-medium">
+              Match drop per cancellation (%)
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              When a worker cancels on an employer, at any time, their match
+              with that employer goes down by this much — in both directions,
+              and in the match % shown. Several cancellations add up. Other
+              employers are not affected. Usual value: 25%.
+            </p>
+          </div>
+          <Input
+            id="pair-cancel-penalty"
+            type="number"
+            min={0}
+            max={100}
+            step={5}
+            value={form.pairCancelPenalty}
+            onChange={(e) => set("pairCancelPenalty", e.target.value)}
+            disabled={disabled}
+            className="w-24 text-right"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="pair-cancel-decay" className="text-sm font-medium">
+              Cancellation counts for (days)
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              The drop fades out evenly over this many days, then the
+              cancellation no longer counts. Usual value: 180 days.
+            </p>
+          </div>
+          <Input
+            id="pair-cancel-decay"
+            type="number"
+            min={1}
+            step={1}
+            value={form.pairCancelDecayDays}
+            onChange={(e) => set("pairCancelDecayDays", e.target.value)}
             disabled={disabled}
             className="w-24 text-right"
           />

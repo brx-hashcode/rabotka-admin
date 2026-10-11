@@ -21,6 +21,8 @@ type FormState = {
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
   "fees.penalty_suspension_threshold": string;
+  "fees.cancellation_suspension_count": string;
+  "fees.cancellation_suspension_window_days": string;
   "fees.penalty_hard_block_days": string;
   "fees.penalty_max_notifications": string;
   "fees.penalty_notification_interval_hours": string;
@@ -53,6 +55,8 @@ const EMPTY: FormState = {
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
   "fees.penalty_suspension_threshold": "",
+  "fees.cancellation_suspension_count": "",
+  "fees.cancellation_suspension_window_days": "",
   "fees.penalty_hard_block_days": "",
   "fees.penalty_max_notifications": "",
   "fees.penalty_notification_interval_hours": "",
@@ -497,6 +501,40 @@ export function FeesCard() {
             <NumericInput
               value={form["fees.penalty_hard_block_days"]}
               onChange={(v) => set("fees.penalty_hard_block_days", v)}
+              suffix="days"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Repeated cancellations
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          A worker who cancels this many missions within the period is
+          suspended, early or late alike, penalty or not. Only missions they
+          were accepted on count — withdrawing an application nobody has
+          answered yet does not. The worker is warned before the last one.
+          Paying penalties does not lift this suspension; only an admin can.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <FieldLabel>Cancellations before suspension</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_suspension_count"]}
+              onChange={(v) => set("fees.cancellation_suspension_count", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Counted over</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_suspension_window_days"]}
+              onChange={(v) =>
+                set("fees.cancellation_suspension_window_days", v)
+              }
               suffix="days"
               min={1}
             />
