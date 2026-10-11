@@ -5,6 +5,7 @@ import {
   updateJobOffer,
   updateJobOfferStatus,
   deleteJobOffer,
+  bulkRestoreJobOffers,
   type AdminJobOfferDetailResponse,
   type AdminUpdateJobOfferParams,
 } from "#/lib/api/jobs-controller";
@@ -43,6 +44,18 @@ export function useJobDetail(jobId: string) {
     },
   });
 
+  // Brings back the offer and the applications deleted with it.
+  const restoreMutation = useMutation({
+    mutationFn: () => bulkRestoreJobOffers([jobId]),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "job-offers"] });
+      toast.success("Job offer restored");
+    },
+    onError: (error) => {
+      toast.error(friendlyError(error, "Couldn't restore this job. Try again."));
+    },
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: (status: string) => updateJobOfferStatus(jobId, status),
     onSuccess: (data) => {
@@ -66,5 +79,7 @@ export function useJobDetail(jobId: string) {
     isUpdatingStatus: updateStatusMutation.isPending,
     deleteJob: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
+    restoreJob: restoreMutation.mutateAsync,
+    isRestoring: restoreMutation.isPending,
   };
 }

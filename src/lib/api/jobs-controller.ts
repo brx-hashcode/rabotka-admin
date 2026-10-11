@@ -30,6 +30,12 @@ export type AdminJobOfferListItem = {
   applicationsCount: number;
   createdAt: string;
   updatedAt: string;
+  /**
+   * Set when the offer was deleted by its employer or archived by an admin.
+   * `status` keeps whatever it was, so this is what says the offer is gone.
+   * Optional: an older API leaves it out.
+   */
+  deletedAt?: string | null;
   vectorIndexedAt: string | null;
 
   /**
