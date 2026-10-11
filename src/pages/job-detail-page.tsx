@@ -5,7 +5,9 @@ import {
   IconBan,
   IconTrash,
   IconChevronDown,
+  IconRestore,
 } from "@tabler/icons-react";
+import { format } from "date-fns";
 
 import { useJobDetail } from "#/hooks/use-job-detail";
 import type { AdminUpdateJobOfferParams } from "#/lib/api/jobs-controller";
@@ -46,14 +48,19 @@ export default function JobDetailPage({
     isUpdatingStatus,
     deleteJob,
     isDeleting,
+    restoreJob,
+    isRestoring,
   } = useJobDetail(jobId);
 
   const [activateOpen, setActivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
 
-  const isEditable = job?.status === "ACTIVE";
+  // Deleting keeps the status as it was — `deletedAt` is what says it is gone.
+  const isDeleted = !!job?.deletedAt;
+  const isEditable = job?.status === "ACTIVE" && !isDeleted;
 
   const canActivate = useMemo(
     () =>
@@ -140,40 +147,63 @@ export default function JobDetailPage({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem
-                disabled={!canActivate}
-                onClick={() => canActivate && setActivateOpen(true)}
-              >
-                <IconPlayerPlay className="size-4" />
-                Activate
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canDeactivate}
-                onClick={() => canDeactivate && setDeactivateOpen(true)}
-              >
-                <IconPlayerPause className="size-4" />
-                Deactivate
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canCancel}
-                onClick={() => canCancel && setCancelOpen(true)}
-              >
-                <IconBan className="size-4" />
-                Cancel
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteOpen(true)}
-              >
-                <IconTrash className="size-4" />
-                Delete
-              </DropdownMenuItem>
+              {isDeleted ? (
+                <DropdownMenuItem onClick={() => setRestoreOpen(true)}>
+                  <IconRestore className="size-4" />
+                  Restore
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuItem
+                    disabled={!canActivate}
+                    onClick={() => canActivate && setActivateOpen(true)}
+                  >
+                    <IconPlayerPlay className="size-4" />
+                    Activate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!canDeactivate}
+                    onClick={() => canDeactivate && setDeactivateOpen(true)}
+                  >
+                    <IconPlayerPause className="size-4" />
+                    Deactivate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!canCancel}
+                    onClick={() => canCancel && setCancelOpen(true)}
+                  >
+                    <IconBan className="size-4" />
+                    Cancel
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <IconTrash className="size-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
       </div>
+
+      {isDeleted && job.deletedAt && (
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
+          <p className="font-medium">
+            Deleted on {format(new Date(job.deletedAt), "PPp")}
+          </p>
+          <p className="text-muted-foreground mt-1">
+            Hidden from workers, the employer and matching. Its applications
+            and the notifications that led to it went with it. The status
+            below is the one it had when it was deleted. Restore it from the
+            Actions menu.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
@@ -236,7 +266,7 @@ export default function JobDetailPage({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete job offer"
-        description="This will permanently delete the job offer and all its applications. This action cannot be undone."
+        description="This hides the job offer from workers, the employer and matching. It can be restored later from the Deleted filter."
         actionLabel="Delete"
         onConfirm={() =>
           deleteJob().then((res) => {
@@ -248,6 +278,17 @@ export default function JobDetailPage({
         }
         isPending={isDeleting}
         variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={restoreOpen}
+        onOpenChange={setRestoreOpen}
+        title="Restore job offer"
+        description="This brings the job offer back, with the applications that were deleted with it. Its status is unchanged — check it before reactivating."
+        actionLabel="Restore"
+        onConfirm={() => restoreJob().then(() => setRestoreOpen(false))}
+        isPending={isRestoring}
+        variant="default"
       />
     </div>
   );
