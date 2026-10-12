@@ -177,6 +177,16 @@ export type AdminProfileDetailResponse = AdminProfileListItem & {
   referredBy: AdminProfileReferredBy | null;
   /** How many people this profile has invited, in any payout state. */
   referralsMadeCount: number;
+  /**
+   * A worker's committed cancellations in the current window, against the
+   * repeated-cancellation suspension threshold. Null for an employer or when
+   * the rule is off; absent from an older API.
+   */
+  cancellations?: {
+    inWindow: number;
+    threshold: number;
+    windowDays: number;
+  } | null;
 };
 
 export type AdminUpdateProfileParams = {
