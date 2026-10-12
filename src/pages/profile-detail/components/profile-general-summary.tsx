@@ -206,8 +206,8 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 ? `${profile.reliabilityScore}/100`
                 : "—"}
             </Row>
-            {/* Missions cancelled after being accepted, against the
-                repeated-cancellation suspension. Workers only. */}
+            {/* Their own cancellations — missions and pending applications —
+                against the repeated-cancellation suspension. Workers only. */}
             {profile.cancellations && (
               <Row label={`Cancellations (${profile.cancellations.windowDays} days)`}>
                 <span

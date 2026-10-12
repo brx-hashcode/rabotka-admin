@@ -289,7 +289,8 @@ export function FeesCard() {
           Reliability points lost every time a worker cancels a mission they
           were accepted on, early or late. A late cancellation also loses the
           score deduction above, so it costs both. Withdrawing an application
-          nobody has answered yet costs nothing. Set to 0 to turn it off.
+          nobody has answered yet costs no points (it still counts toward the
+          suspension below). Set to 0 to turn it off.
         </p>
         <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
@@ -536,11 +537,12 @@ export function FeesCard() {
           Repeated cancellations
         </p>
         <p className="text-muted-foreground mb-4 text-xs">
-          A worker who cancels this many missions within the period is
-          suspended, early or late alike, penalty or not. Only missions they
-          were accepted on count — withdrawing an application nobody has
-          answered yet does not. The worker is warned before the last one.
-          Paying penalties does not lift this suspension; only an admin can.
+          A worker who cancels this many times within the period is
+          suspended, early or late alike, penalty or not. Every cancellation
+          counts: a mission they were accepted on, and withdrawing an
+          application still waiting for an answer too. The worker is warned
+          before the last one. Paying penalties does not lift this
+          suspension; only an admin can.
         </p>
         <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
           <div className="space-y-1.5">
