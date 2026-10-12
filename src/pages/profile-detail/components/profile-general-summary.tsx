@@ -206,6 +206,23 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 ? `${profile.reliabilityScore}/100`
                 : "—"}
             </Row>
+            {/* Missions cancelled after being accepted, against the
+                repeated-cancellation suspension. Workers only. */}
+            {profile.cancellations && (
+              <Row label={`Cancellations (${profile.cancellations.windowDays} days)`}>
+                <span
+                  className={
+                    profile.cancellations.inWindow >=
+                    profile.cancellations.threshold - 1
+                      ? "text-destructive"
+                      : undefined
+                  }
+                >
+                  {profile.cancellations.inWindow} /{" "}
+                  {profile.cancellations.threshold}
+                </span>
+              </Row>
+            )}
             {/* Both directions land here: workers are rated by employers and
                 employers by workers, into the same two columns. An unrated
                 profile shows a dash, never 0.0 — never rated and rated badly

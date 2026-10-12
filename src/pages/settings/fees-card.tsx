@@ -21,6 +21,7 @@ type FormState = {
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
   "fees.penalty_suspension_threshold": string;
+  "fees.cancellation_score_deduction": string;
   "fees.cancellation_suspension_count": string;
   "fees.cancellation_suspension_window_days": string;
   "fees.penalty_hard_block_days": string;
@@ -55,6 +56,7 @@ const EMPTY: FormState = {
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
   "fees.penalty_suspension_threshold": "",
+  "fees.cancellation_score_deduction": "",
   "fees.cancellation_suspension_count": "",
   "fees.cancellation_suspension_window_days": "",
   "fees.penalty_hard_block_days": "",
@@ -276,6 +278,27 @@ export function FeesCard() {
               value={form["fees.cancellation_threshold_hours"]}
               onChange={(v) => set("fees.cancellation_threshold_hours", v)}
               suffix="h"
+            />
+          </div>
+        </div>
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Worker – any cancellation
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Reliability points lost every time a worker cancels a mission they
+          were accepted on, early or late. A late cancellation also loses the
+          score deduction above, so it costs both. Withdrawing an application
+          nobody has answered yet costs nothing. Set to 0 to turn it off.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <FieldLabel>Score deduction</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_score_deduction"]}
+              onChange={(v) => set("fees.cancellation_score_deduction", v)}
+              suffix="pts"
+              min={0}
             />
           </div>
         </div>
