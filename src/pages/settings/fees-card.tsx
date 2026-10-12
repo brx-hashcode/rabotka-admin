@@ -21,6 +21,9 @@ type FormState = {
   "fees.employer_late_cancel_score_deduction": string;
   "fees.billing_block_threshold": string;
   "fees.penalty_suspension_threshold": string;
+  "fees.cancellation_score_deduction": string;
+  "fees.cancellation_suspension_count": string;
+  "fees.cancellation_suspension_window_days": string;
   "fees.penalty_hard_block_days": string;
   "fees.penalty_max_notifications": string;
   "fees.penalty_notification_interval_hours": string;
@@ -53,6 +56,9 @@ const EMPTY: FormState = {
   "fees.employer_late_cancel_score_deduction": "",
   "fees.billing_block_threshold": "",
   "fees.penalty_suspension_threshold": "",
+  "fees.cancellation_score_deduction": "",
+  "fees.cancellation_suspension_count": "",
+  "fees.cancellation_suspension_window_days": "",
   "fees.penalty_hard_block_days": "",
   "fees.penalty_max_notifications": "",
   "fees.penalty_notification_interval_hours": "",
@@ -272,6 +278,28 @@ export function FeesCard() {
               value={form["fees.cancellation_threshold_hours"]}
               onChange={(v) => set("fees.cancellation_threshold_hours", v)}
               suffix="h"
+            />
+          </div>
+        </div>
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Worker – any cancellation
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Reliability points lost every time a worker cancels a mission they
+          were accepted on, early or late. A late cancellation also loses the
+          score deduction above, so it costs both. Withdrawing an application
+          nobody has answered yet costs no points (it still counts toward the
+          suspension below). Set to 0 to turn it off.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <FieldLabel>Score deduction</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_score_deduction"]}
+              onChange={(v) => set("fees.cancellation_score_deduction", v)}
+              suffix="pts"
+              min={0}
             />
           </div>
         </div>
@@ -497,6 +525,41 @@ export function FeesCard() {
             <NumericInput
               value={form["fees.penalty_hard_block_days"]}
               onChange={(v) => set("fees.penalty_hard_block_days", v)}
+              suffix="days"
+              min={1}
+            />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Repeated cancellations
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          A worker who cancels this many times within the period is
+          suspended, early or late alike, penalty or not. Every cancellation
+          counts: a mission they were accepted on, and withdrawing an
+          application still waiting for an answer too. The worker is warned
+          before the last one. Paying penalties does not lift this
+          suspension; only an admin can.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <FieldLabel>Cancellations before suspension</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_suspension_count"]}
+              onChange={(v) => set("fees.cancellation_suspension_count", v)}
+              min={1}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Counted over</FieldLabel>
+            <NumericInput
+              value={form["fees.cancellation_suspension_window_days"]}
+              onChange={(v) =>
+                set("fees.cancellation_suspension_window_days", v)
+              }
               suffix="days"
               min={1}
             />

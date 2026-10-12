@@ -101,9 +101,17 @@ export function JobSummary({ job }: Readonly<Props>) {
 
           <div className="divide-y">
             <Field label="Status">
-              <Badge className={getStatusBadgeClass(job.status)}>
-                {getJobOfferStatusLabel(job.status)}
-              </Badge>
+              {/* A deleted offer keeps its old status; saying « Active » for
+                  it is what made it look live. */}
+              {job.deletedAt ? (
+                <Badge className="bg-destructive/15 text-destructive">
+                  Deleted
+                </Badge>
+              ) : (
+                <Badge className={getStatusBadgeClass(job.status)}>
+                  {getJobOfferStatusLabel(job.status)}
+                </Badge>
+              )}
             </Field>
 
             {/* The fact that explains an Expired badge, and it was missing
