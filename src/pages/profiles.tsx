@@ -70,6 +70,7 @@ function ProfilesTableHeader({
               purgeFn={bulkPurgeProfiles}
               queryKey={["admin", "profiles"]}
               entityLabel="profile"
+              note="Their KYC documents, photos and uploaded files are deleted from storage too. Profiles that made or attempted a payment are kept."
               disabled={!canPurge}
             />
           </>
