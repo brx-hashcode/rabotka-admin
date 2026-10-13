@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { Table as TableInstance } from "@tanstack/react-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconAlertTriangle, IconTrashX } from "@tabler/icons-react";
@@ -18,6 +18,8 @@ type BulkPurgeButtonProps<TData> = Readonly<{
   queryKey: readonly unknown[];
   entityLabel: string;
   disabled?: boolean;
+  /** Resource-specific detail shown under the warning (what else goes, what is kept). */
+  note?: ReactNode;
 }>;
 
 /**
@@ -25,8 +27,7 @@ type BulkPurgeButtonProps<TData> = Readonly<{
  * `disabled` from `canPurge`.
  *
  * The server refuses rows carrying records that must outlive them (payments,
- * invoices, KYC documents, ledger entries) and answers 409 with per-relation
- * counts. Those counts are surfaced verbatim: "delete failed" would leave the
+ * invoices, ledger entries) and answers 409 with per-relation counts. Those counts are surfaced verbatim: "delete failed" would leave the
  * admin with no idea what to do next, and retrying will never help.
  */
 export function BulkPurgeButton<TData>({
@@ -35,6 +36,7 @@ export function BulkPurgeButton<TData>({
   queryKey,
   entityLabel,
   disabled = false,
+  note,
 }: BulkPurgeButtonProps<TData>) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -114,16 +116,20 @@ export function BulkPurgeButton<TData>({
               </p>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <IconAlertTriangle
-                className="text-destructive mt-0.5 size-4 shrink-0"
-                aria-hidden
-              />
-              <span>
-                This cannot be undone. The selected {entityLabel}
-                {plural} and everything attached to{" "}
-                {count === 1 ? "it" : "them"} will be erased from the database.
-              </span>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <IconAlertTriangle
+                  className="text-destructive mt-0.5 size-4 shrink-0"
+                  aria-hidden
+                />
+                <span>
+                  This cannot be undone. The selected {entityLabel}
+                  {plural} and everything attached to{" "}
+                  {count === 1 ? "it" : "them"} will be erased from the
+                  database.
+                </span>
+              </div>
+              {note ? <p className="text-muted-foreground">{note}</p> : null}
             </div>
           )
         }
