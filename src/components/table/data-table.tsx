@@ -1,3 +1,4 @@
+import { cn } from "#/lib/utils";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -26,6 +27,8 @@ export type DataTableProps<TData, TValue> = Readonly<{
   emptyMessage?: string;
   getRowId?: (row: TData) => string;
   enableRowSelection?: boolean;
+  /** Fill the parent's height and scroll inside — see `Table`'s `fillHeight`. */
+  fillHeight?: boolean;
 }>;
 
 export function DataTable<TData, TValue>({
@@ -40,6 +43,7 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results.",
   getRowId,
   enableRowSelection = false,
+  fillHeight = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -68,12 +72,18 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="flex flex-col gap-0 overflow-hidden rounded-lg">
+    <div
+      className={cn(
+        "flex flex-col gap-0 overflow-hidden rounded-lg",
+        fillHeight && "h-full min-h-0",
+      )}
+    >
       {headerContent != null && <TableHeader>{headerContent}</TableHeader>}
       <Table<TData>
         table={table}
         isLoading={isLoading}
         emptyMessage={emptyMessage}
+        fillHeight={fillHeight}
       />
       {showFooter && (
         <TableFooter>

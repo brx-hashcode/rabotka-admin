@@ -41,16 +41,72 @@ export type AdminPaymentItem = {
 
 export type MonthlyRevenuePoint = { month: string; revenue: number };
 
+export type AmountCount = { amount: number; count: number };
+
+export type MobileNetworkKey = "MTN" | "AIRTEL" | "ORANGE" | "OTHER";
+
 export type AdminMobileMoneyBalanceResult = {
+  /** Rabotka's own ledger: mobile money in, minus withdrawals. */
   balance: number;
   transactionCount: number;
+  credits: AmountCount;
+  withdrawals: AmountCount;
+  /** Inflows per network, the same network named once across gateways. */
+  networks: Array<{ key: MobileNetworkKey; label: string } & AmountCount>;
+  /** Inflows per gateway, retired ones included. */
+  gateways: Array<{ key: string } & AmountCount>;
+  /** @deprecated Raw operator codes; use `networks`. */
   byOperator: Record<string, number>;
+  /** @deprecated Use `gateways`. */
   byGateway: Record<string, number>;
+};
+
+/** One wallet on the live gateway account (e.g. pawaPay), as it reports it. */
+export type GatewayBalance = {
+  country: string;
+  currency: string;
+  balance: string;
+  operator?: string;
+};
+
+export type GatewayCountry = { code: string; name: string };
+
+export type PayoutStatus = "PENDING" | "COMPLETED" | "FAILED";
+
+/** Money sent from the gateway account to a mobile-money number. */
+export type AdminPayoutItem = {
+  id: string;
+  createdAt: string;
+  amount: number;
+  currency: string;
+  phone: string;
+  operator: string;
+  country: string;
+  note: string | null;
+  status: PayoutStatus;
+  gateway: string;
+  gatewayRef: string | null;
+  gatewayTxId: string | null;
+  failureReason: string | null;
+  completedAt: string | null;
+  requestedBy: string | null;
+};
+
+export type SendPayoutBody = {
+  /** One per dialog: resubmitting it never sends twice. */
+  clientRequestId: string;
+  amount: number;
+  confirmAmount: number;
+  phone: string;
+  operator: string;
+  note?: string;
 };
 
 export type PaymentOperatorMetadata = {
   code: string;
   label: string;
+  /** ISO 3166-1 alpha-3 country the network serves, when the gateway says. */
+  country?: string;
 };
 
 export type PaymentGatewayMetadata = {
@@ -79,7 +135,17 @@ export type AdminMobileMoneyTransactionItem = {
   referenceId: string | null;
   gateway: string | null;
   operator: string | null;
+  network: MobileNetworkKey | null;
   description: string | null;
+  payerName: string | null;
+  payerProfileId: string | null;
+  payerProfileType: string | null;
+  payerPhone: string | null;
+  requestType: string | null;
+  paymentRequestId: string | null;
+  gatewayRef: string | null;
+  gatewayTxId: string | null;
+  invoiceId: string | null;
   status: string;
   createdAt: string;
 };
@@ -89,6 +155,9 @@ export type AdminMobileMoneyTransactionsParams = {
   limit?: number;
   gateway?: string;
   operator?: string;
+  network?: MobileNetworkKey;
+  /** Payer name or phone. */
+  q?: string;
   type?: string;
   created_from?: string;
   created_to?: string;
@@ -217,6 +286,59 @@ class AdminWalletController extends AdminBaseController {
     return this.get<PaymentGatewaysResponse>(url);
   }
 
+  /** Countries the live gateway account holds wallets in; COG by default. */
+  async getGatewayBalanceCountries(): Promise<{
+    countries: GatewayCountry[];
+    default: string;
+  }> {
+    const url = this.createURL(
+      "/admin/wallet/gateway/balance-countries",
+      new URLSearchParams(),
+    );
+    return this.get<{ countries: GatewayCountry[]; default: string }>(url);
+  }
+
+  /** Live balances of the gateway account in one country (ISO3). */
+  async getGatewayBalances(
+    country: string,
+  ): Promise<{ country: string; balances: GatewayBalance[] }> {
+    const url = this.createURL(
+      "/admin/wallet/gateway/balances",
+      new URLSearchParams({ country }),
+    );
+    return this.get<{ country: string; balances: GatewayBalance[] }>(url);
+  }
+
+  async listPayouts(params: {
+    page?: number;
+    limit?: number;
+    status?: PayoutStatus;
+  }): Promise<{ data: AdminPayoutItem[]; total: number; page: number; limit: number }> {
+    const query = this.buildSearchParams({
+      ...(params.page ? { page: params.page } : {}),
+      ...(params.limit ? { limit: params.limit } : {}),
+      ...(params.status ? { status: params.status } : {}),
+    });
+    const url = this.createURL("/admin/wallet/mobile-money/payouts", query);
+    return this.get(url);
+  }
+
+  async sendPayout(body: SendPayoutBody): Promise<AdminPayoutItem> {
+    const url = this.createURL(
+      "/admin/wallet/mobile-money/payouts",
+      new URLSearchParams(),
+    );
+    return this.post<AdminPayoutItem>(url, body);
+  }
+
+  async refreshPayout(id: string): Promise<AdminPayoutItem> {
+    const url = this.createURL(
+      `/admin/wallet/mobile-money/payouts/${encodeURIComponent(id)}/refresh`,
+      new URLSearchParams(),
+    );
+    return this.post<AdminPayoutItem>(url, {});
+  }
+
   async recordMobileMoneyWithdrawal(body: {
     amount: number;
     description?: string;
@@ -237,6 +359,8 @@ class AdminWalletController extends AdminBaseController {
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.gateway) searchParams.gateway = params.gateway;
     if (params.operator) searchParams.operator = params.operator;
+    if (params.network) searchParams.network = params.network;
+    if (params.q) searchParams.q = params.q;
     if (params.type) searchParams.type = params.type;
     if (params.created_from) searchParams.created_from = params.created_from;
     if (params.created_to) searchParams.created_to = params.created_to;
@@ -315,6 +439,13 @@ export const getMobileMoneyTransactions =
   controller.getMobileMoneyTransactions.bind(controller);
 export const recordMobileMoneyWithdrawal =
   controller.recordMobileMoneyWithdrawal.bind(controller);
+export const getGatewayBalanceCountries =
+  controller.getGatewayBalanceCountries.bind(controller);
+export const getGatewayBalances =
+  controller.getGatewayBalances.bind(controller);
+export const listPayouts = controller.listPayouts.bind(controller);
+export const sendPayout = controller.sendPayout.bind(controller);
+export const refreshPayout = controller.refreshPayout.bind(controller);
 
 const EXPORT_PAGE_SIZE = 100;
 
