@@ -4,12 +4,12 @@ import type { PaymentGatewayMetadata } from "#/lib/api/wallet-controller";
 
 const registry: PaymentGatewayMetadata[] = [
   {
-    key: "MONETBIL",
-    label: "Monetbil",
+    key: "PAWAPAY",
+    label: "pawaPay",
     requiresOperator: true,
     operators: [
-      { code: "CG_MTNMOBILEMONEY", label: "MTN Mobile Money" },
-      { code: "CG_AIRTELMONEY", label: "Airtel Money" },
+      { code: "MTN_MOMO_COG", label: "MTN Mobile Money" },
+      { code: "AIRTEL_COG", label: "Airtel Money" },
     ],
   },
   {
@@ -25,9 +25,9 @@ describe("buildLabelLookup", () => {
     // The point of the endpoint: adding a provider must not require shipping a
     // matching constant in this app.
     const labelFor = buildLabelLookup(registry);
-    expect(labelFor("MONETBIL")).toBe("Monetbil");
+    expect(labelFor("PAWAPAY")).toBe("pawaPay");
     expect(labelFor("MTN_MOMO")).toBe("MTN MoMo");
-    expect(labelFor("CG_AIRTELMONEY")).toBe("Airtel Money");
+    expect(labelFor("AIRTEL_COG")).toBe("Airtel Money");
   });
 
   it("shows the raw key for a gateway this build no longer ships", () => {
@@ -35,7 +35,7 @@ describe("buildLabelLookup", () => {
     // renders rows whose gateway has left the registry. Blanking them would
     // make the money look like it came from nowhere.
     const labelFor = buildLabelLookup(registry);
-    expect(labelFor("ORANGE_MONEY")).toBe("ORANGE_MONEY");
+    expect(labelFor("MONETBIL")).toBe("MONETBIL");
   });
 
   it("names the backend's placeholder for a transaction with no gateway", () => {

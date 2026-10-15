@@ -34,6 +34,11 @@ export function useRole() {
      * would only produce a 403.
      */
     canPurge: role === "SUPER_ADMIN",
+    /**
+     * Sending money out of the gateway account (Finance › Mobile Money). Same
+     * rule as the server: SUPER_ADMIN or FINANCE, nobody else.
+     */
+    canSendPayouts: role === "SUPER_ADMIN" || role === "FINANCE",
     isLateral: isLateralRole(role),
     /**
      * Write access for a named area, e.g. `canEditArea("/penalties")`. Prefer

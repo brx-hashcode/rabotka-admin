@@ -23,6 +23,11 @@ type TableProps<TData> = Readonly<{
   table: TableInstance<TData>;
   isLoading?: boolean;
   emptyMessage?: string;
+  /**
+   * Fill the parent's height and scroll inside, header pinned, instead of
+   * growing with its rows. The parent must have a bounded height.
+   */
+  fillHeight?: boolean;
 }>;
 
 const SKELETON_ROWS = 4;
@@ -94,12 +99,20 @@ export function Table<TData>({
   table,
   isLoading = false,
   emptyMessage = "No results.",
+  fillHeight = false,
 }: TableProps<TData>) {
   const columnCount = table.getAllColumns().length;
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <UITable>
+    <div
+      className={cn(
+        "overflow-hidden rounded-lg border",
+        fillHeight && "flex min-h-0 flex-1 flex-col",
+      )}
+    >
+      {/* With fillHeight the container is the vertical scroller too, so the
+          sticky header sticks to it rather than to a parent that never moves. */}
+      <UITable containerClassName={fillHeight ? "min-h-0 flex-1 overflow-auto" : undefined}>
         <TableHeader className="bg-muted sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
