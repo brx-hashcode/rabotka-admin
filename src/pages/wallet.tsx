@@ -207,6 +207,8 @@ function renderPaymentsTableHeader(table: TableInstance<AdminPaymentItem>) {
   return <PaymentsTableHeader table={table} />;
 }
 
+const TABLE_VIEWPORT = "flex max-h-[calc(100dvh-10rem)] min-h-0 flex-col";
+
 function WalletTransactionsTable() {
   const { data, total, isLoading } = useWalletTransactions();
   return (
@@ -219,6 +221,7 @@ function WalletTransactionsTable() {
       totalCount={total}
       isLoading={isLoading}
       getRowId={(row) => row.id}
+      fillHeight
     />
   );
 }
@@ -235,6 +238,7 @@ function WalletPaymentsTable() {
       totalCount={total}
       isLoading={isLoading}
       getRowId={(row) => row.id}
+      fillHeight
     />
   );
 }
@@ -299,10 +303,12 @@ export default function WalletPage() {
               />
             </div>
           </div>
-          <TabsContent value="transactions">
+          {/* Capped at the viewport so rows scroll inside the table under a
+              fixed column header, instead of the header leaving with the page. */}
+          <TabsContent value="transactions" className={TABLE_VIEWPORT}>
             <WalletTransactionsTable />
           </TabsContent>
-          <TabsContent value="payments">
+          <TabsContent value="payments" className={TABLE_VIEWPORT}>
             <WalletPaymentsTable />
           </TabsContent>
         </Tabs>
