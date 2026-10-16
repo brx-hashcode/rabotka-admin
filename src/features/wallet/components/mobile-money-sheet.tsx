@@ -56,7 +56,6 @@ import {
 } from "#/components/ui/select";
 import {
   downloadAdminInvoice,
-  getGatewayBalances,
   getMobileMoneyBalance,
   getMobileMoneyTransactions,
   getPaymentGateways,
@@ -72,11 +71,9 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
 import { useRole } from "#/hooks/use-role";
 import { SendPayoutDialog } from "./send-payout-dialog";
+import { GatewayBalanceCard } from "./gateway-balance-card";
 
 const LIMIT = 15;
-
-/** The gateway balance shown, for now. ISO 3166-1 alpha-3. */
-const BALANCE_COUNTRY = "COG";
 
 /**
  * Written by the backend when a transaction carries no gateway, so it is ours
@@ -349,107 +346,6 @@ function Stat({
         <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
       </CardContent>
     </Card>
-  );
-}
-
-/**
- * The live balance on the gateway account (pawaPay), per country. Not the
- * same figure as the ledger above: it is what the gateway actually holds,
- * after its own fees and any payout made outside Rabotka.
- */
-function GatewayBalanceCard({
-  open,
-  gatewayLabel,
-}: Readonly<{ open: boolean; gatewayLabel: string }>) {
-  // Congo only for now; the backend already lists every country on the
-  // account (balance-countries) for when the picker comes back.
-  const balancesQuery = useQuery({
-    queryKey: ["admin", "wallet", "gateway", "balances", BALANCE_COUNTRY],
-    queryFn: () => getGatewayBalances(BALANCE_COUNTRY),
-    enabled: open,
-    retry: false,
-  });
-
-  const balances = balancesQuery.data?.balances ?? [];
-  const loading = balancesQuery.isLoading;
-  // 409: the active gateway reports no balance (e.g. MTN MoMo).
-  const unsupported = /409|n'expose pas de solde/i.test(
-    String((balancesQuery.error as Error | null)?.message ?? ""),
-  );
-
-  return (
-    // shrink-0: in the sheet's scrolling column an overflow-hidden item is
-    // allowed to shrink to nothing, which hid the balance under the header.
-    <div className="relative flex h-full shrink-0 flex-col overflow-hidden rounded-xl bg-[#0d0f0d] px-4 py-3 text-white shadow-lg">
-      {/* The glow: emerald into lime into amber, drifting in the corner. */}
-      <div
-        aria-hidden
-        className="balance-card-glow pointer-events-none absolute -right-24 -top-28 size-64 rounded-full opacity-80 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle at 45% 65%, #f59e0b 0%, #d9f99d 28%, #34d399 52%, transparent 72%)",
-        }}
-      />
-      {/* The sheen, passing over every few seconds. */}
-      <div
-        aria-hidden
-        className="balance-card-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent"
-      />
-
-      <div className="relative flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-white/90">
-          {gatewayLabel} balance <span className="text-white/50">· Live · Congo</span>
-        </p>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="size-7 text-white/70 hover:bg-white/10 hover:text-white"
-          onClick={() => void balancesQuery.refetch()}
-          disabled={balancesQuery.isFetching}
-          aria-label="Refresh"
-        >
-          <IconRefresh
-            className={cn("size-4", balancesQuery.isFetching && "animate-spin")}
-          />
-        </Button>
-      </div>
-
-      <div className="relative mt-auto pt-1">
-        {loading ? (
-          <>
-            <div className="h-6 w-32 animate-pulse rounded bg-white/15" />
-          </>
-        ) : balancesQuery.isError ? (
-          <p className={cn("text-sm", unsupported ? "text-white/60" : "text-red-300")}>
-            {unsupported
-              ? "The active gateway doesn't report a balance."
-              : friendlyError(
-                  balancesQuery.error,
-                  "The gateway didn't answer. Try again.",
-                )}
-          </p>
-        ) : balances.length === 0 ? (
-          <p className="text-sm text-white/60">No wallet in Congo.</p>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {balances.map((b) => (
-              <div key={`${b.currency}-${b.operator ?? ""}`}>
-                <p
-                  className="font-mono text-lg font-semibold leading-tight tracking-tight tabular-nums"
-                  style={{ textShadow: "0 0 16px rgba(255,255,255,0.28)" }}
-                >
-                  <span className="mr-1.5 text-white/70">{b.currency}</span>
-                  {Number(b.balance).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
   );
 }
 
