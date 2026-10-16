@@ -442,39 +442,3 @@ body::-webkit-scrollbar,
   transform: rotate(3deg) translate(0, -4px);
 }
 
-/* Gateway balance card (wallet › Mobile Money): a slow drifting glow and a
-   light sheen passing over the dark card. Off for reduced motion. */
-@keyframes balance-glow-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-8%, 10%) scale(1.1);
-  }
-}
-
-@keyframes balance-shimmer {
-  0% {
-    transform: translateX(-150%) skewX(-18deg);
-  }
-  55%,
-  100% {
-    transform: translateX(450%) skewX(-18deg);
-  }
-}
-
-.balance-card-glow {
-  animation: balance-glow-drift 10s ease-in-out infinite;
-}
-
-.balance-card-shimmer {
-  animation: balance-shimmer 6s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .balance-card-glow,
-  .balance-card-shimmer {
-    animation: none;
-  }
-}
