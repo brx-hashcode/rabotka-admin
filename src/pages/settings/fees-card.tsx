@@ -137,9 +137,14 @@ function ReferralPayoutNote({
   );
 }
 
+// One line, so every field in a row starts at the same height; the full text
+// stays on hover if a column gets too narrow.
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+    <label
+      className="text-muted-foreground block truncate text-xs font-medium uppercase tracking-wide"
+      title={typeof children === "string" ? children : undefined}
+    >
       {children}
     </label>
   );
@@ -445,7 +450,7 @@ export function FeesCard() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Referral credit – Referrer</FieldLabel>
+            <FieldLabel>Referrer credit</FieldLabel>
             <NumericInput
               value={form["fees.referral_credit_referrer"]}
               onChange={(v) => set("fees.referral_credit_referrer", v)}
@@ -454,7 +459,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Referral credit – Referee</FieldLabel>
+            <FieldLabel>Referee credit</FieldLabel>
             <NumericInput
               value={form["fees.referral_credit_referee"]}
               onChange={(v) => set("fees.referral_credit_referee", v)}
@@ -463,7 +468,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Max rewarded per referrer</FieldLabel>
+            <FieldLabel>Rewards per referrer</FieldLabel>
             <NumericInput
               value={form["fees.referral_max_rewarded_per_referrer"]}
               onChange={(v) =>
@@ -636,7 +641,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Rating 1★ adjustment</FieldLabel>
+            <FieldLabel>Rating 1★</FieldLabel>
             <NumericInput
               value={form["fees.rating_score_delta_1"]}
               onChange={(v) => set("fees.rating_score_delta_1", v)}
@@ -645,7 +650,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Rating 2★ adjustment</FieldLabel>
+            <FieldLabel>Rating 2★</FieldLabel>
             <NumericInput
               value={form["fees.rating_score_delta_2"]}
               onChange={(v) => set("fees.rating_score_delta_2", v)}
@@ -654,7 +659,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Rating 3★ adjustment</FieldLabel>
+            <FieldLabel>Rating 3★</FieldLabel>
             <NumericInput
               value={form["fees.rating_score_delta_3"]}
               onChange={(v) => set("fees.rating_score_delta_3", v)}
@@ -663,7 +668,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Rating 4★ adjustment</FieldLabel>
+            <FieldLabel>Rating 4★</FieldLabel>
             <NumericInput
               value={form["fees.rating_score_delta_4"]}
               onChange={(v) => set("fees.rating_score_delta_4", v)}
@@ -672,7 +677,7 @@ export function FeesCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel>Rating 5★ adjustment</FieldLabel>
+            <FieldLabel>Rating 5★</FieldLabel>
             <NumericInput
               value={form["fees.rating_score_delta_5"]}
               onChange={(v) => set("fees.rating_score_delta_5", v)}
