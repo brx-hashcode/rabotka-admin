@@ -1,6 +1,6 @@
 import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "./csrf-token";
+import { guardedFetch } from "./guarded-fetch";
 
 export type AdminWalletInfo = {
   totalRevenue: number;
@@ -373,7 +373,7 @@ class AdminWalletController extends AdminBaseController {
   }
 
   async fetchInvoiceBlob(invoiceId: string): Promise<Blob> {
-    const response = await fetchWithCsrfRetry(
+    const response = await guardedFetch(
       `${appConfig.apiUrl}/admin/invoices/${invoiceId}/download`,
       { credentials: "include" },
     );

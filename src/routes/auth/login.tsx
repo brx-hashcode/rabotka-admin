@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   createFileRoute,
   redirect,
@@ -7,7 +7,6 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { fetchAndSetCsrfToken } from "#/lib/api/csrf-token";
 
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
@@ -80,10 +79,6 @@ function LoginPage() {
   const [pendingToken, setPendingToken] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [qrOpen, setQrOpen] = useState(false);
-
-  useEffect(() => {
-    void fetchAndSetCsrfToken();
-  }, []);
 
   const sendOtp = useSendOtpMutation();
   const verifyOtp = useVerifyOtpMutation();
