@@ -38,7 +38,7 @@ import {
   type Advertisement,
 } from "#/lib/api/advertisements-controller";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
+import { guardedFetch } from "#/lib/api/guarded-fetch";
 import { IconPlus } from "@tabler/icons-react";
 import { friendlyError } from "#/lib/api/friendly-error";
 
@@ -66,7 +66,7 @@ async function uploadImages(files: File[]): Promise<string[]> {
   if (files.length === 0) return [];
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
-  const res = await fetchWithCsrfRetry(
+  const res = await guardedFetch(
     `${appConfig.apiUrl}/file/upload?is_multipl=true`,
     { method: "POST", body: formData, credentials: "include" },
   );

@@ -4,7 +4,6 @@ import { routeTree } from './routeTree.gen'
 import { attachTopLoader } from './lib/top-loader'
 import { attachAssetReload } from './lib/asset-reload'
 import { registerSessionTeardown } from './lib/auth/session'
-import { setCsrfToken } from './lib/api/csrf-token'
 import { getQueryClient } from './app/providers'
 import { AppError } from './components/app-error'
 
@@ -19,7 +18,6 @@ attachTopLoader(router)
 attachAssetReload()
 
 registerSessionTeardown(() => {
-  setCsrfToken(null)
   getQueryClient().clear()
 })
 

@@ -1,6 +1,6 @@
 import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "./csrf-token";
+import { guardedFetch } from "./guarded-fetch";
 
 /** What the assistant carries about someone between conversations. */
 export type AdminVovaMemoryFact = {
@@ -550,7 +550,7 @@ export class AdminProfilesController extends AdminBaseController {
   }
 
   async downloadProfileAgreement(profileId: string): Promise<Blob> {
-    const response = await fetchWithCsrfRetry(
+    const response = await guardedFetch(
       `${appConfig.apiUrl}/admin/profiles/${profileId}/agreement/download`,
       { credentials: "include" },
     );

@@ -163,7 +163,7 @@ class AdminClaimsController extends AdminBaseController {
   /**
    * Upload claim images and get back urls to reference.
    *
-   * Replaces the hand-rolled `fetchWithCsrfRetry` + FormData helper that sat
+   * Replaces the hand-rolled `fetch` + FormData helper that sat
    * inside `create-claim-modal.tsx` and pointed at the generic `/file/upload`,
    * which accepts any mime type. `AdminBaseController` already accepts a
    * FormData body, so this belongs here like `chat-controller`'s.
