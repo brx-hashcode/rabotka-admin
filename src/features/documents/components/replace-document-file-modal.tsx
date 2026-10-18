@@ -11,7 +11,7 @@ import {
 } from "#/components/ui/dialog";
 import { Button } from "#/components/ui/button";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
+import { guardedFetch } from "#/lib/api/guarded-fetch";
 import {
   replaceDocumentFile,
   type AdminDocumentItem,
@@ -23,7 +23,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 async function uploadToStorage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("files", file);
-  const res = await fetchWithCsrfRetry(
+  const res = await guardedFetch(
     `${appConfig.apiUrl}/file/upload?is_multipl=true&access=public`,
     { method: "POST", body: formData, credentials: "include" },
   );

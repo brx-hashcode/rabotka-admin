@@ -29,7 +29,7 @@ import { useRole } from "#/hooks/use-role";
 import type { AdminApplicationAgent } from "#/lib/api/applications-controller";
 import type { AgentStatus } from "#/lib/api/agents-controller";
 import { formatDateTime } from "#/pages/profile-detail/helpers";
-import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
+import { guardedFetch } from "#/lib/api/guarded-fetch";
 import { DocumentViewerDrawer } from "#/pages/profile-detail/components/document-viewer-drawer";
 import type { ViewerDocument } from "#/pages/profile-detail/components/document-viewer-drawer";
 
@@ -46,7 +46,7 @@ type Props = {
 };
 
 async function fetchAdminPdfBlob(path: string): Promise<Blob> {
-  const res = await fetchWithCsrfRetry(`${appConfig.apiUrl}${path}`, {
+  const res = await guardedFetch(`${appConfig.apiUrl}${path}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("The file couldn't be downloaded. Try again.");

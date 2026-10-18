@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { getMe, type Admin } from "#/lib/api/auth-controller";
-import { ensureCsrfToken } from "#/lib/api/csrf-token";
 import { getQueryClient } from "#/app/providers";
 import { canViewRoute, landingRouteFor } from "#/lib/role-access";
 import { isExpiring } from "#/lib/auth/session";
@@ -13,7 +12,6 @@ export const Route = createFileRoute("/_authenticated")({
         queryKey: ["admin", "me"],
         queryFn: getMe,
       });
-      await ensureCsrfToken();
     } catch (error) {
       if (isExpiring()) {
         throw redirect({

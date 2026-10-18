@@ -1,6 +1,6 @@
 import { AdminBaseController } from "./base-controller";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "./csrf-token";
+import { guardedFetch } from "./guarded-fetch";
 
 /**
  * The WhatsApp message log (sent and received) and its analytics.
@@ -262,7 +262,7 @@ export class AdminWhatsappController extends AdminBaseController {
   ): Promise<{ blob: Blob; filename: string }> {
     const query = this.buildSearchParams(rangeParams(params));
     const search = query.toString();
-    const response = await fetchWithCsrfRetry(
+    const response = await guardedFetch(
       `${appConfig.apiUrl}/admin/whatsapp/billing/report.pdf${
         search ? `?${search}` : ""
       }`,

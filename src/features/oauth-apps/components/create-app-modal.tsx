@@ -27,7 +27,7 @@ import { Switch } from "#/components/ui/switch";
 import { Button } from "#/components/ui/button";
 import { LogoPicker } from "./logo-picker";
 import { appConfig } from "#/config";
-import { fetchWithCsrfRetry } from "#/lib/api/csrf-token";
+import { guardedFetch } from "#/lib/api/guarded-fetch";
 import {
   createOAuthApp,
   type MintedSecret,
@@ -48,7 +48,7 @@ async function uploadLogo(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("files", file);
 
-  const res = await fetchWithCsrfRetry(
+  const res = await guardedFetch(
     `${appConfig.apiUrl}/file/upload?is_multipl=true`,
     { method: "POST", body: formData, credentials: "include" },
   );
