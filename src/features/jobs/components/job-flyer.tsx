@@ -30,6 +30,7 @@ const FLYER_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
  * job-status.ts) so the two surfaces word the cadence identically.
  */
 const FLYER_PAYMENT_FLOW_LABELS: Record<string, string> = {
+  TASK: "la tâche",
   HOURLY: "par heure",
   DAILY: "par jour",
   MONTHLY: "par mois",

@@ -40,6 +40,8 @@ export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {
  * filter at all.
  */
 export const PAYMENT_FLOW_LABELS: Record<string, string> = {
+  // A fixed price for the whole job — « par tâche » in the apps.
+  TASK: "Per task",
   HOURLY: "Hourly",
   DAILY: "Daily",
   MONTHLY: "Monthly",

@@ -41,6 +41,7 @@ import { Route as AuthenticatedLogsIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedNetworkIndexRouteImport } from './routes/_authenticated/network/index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedOauthAppsIndexRouteImport } from './routes/_authenticated/oauth-apps/index'
+import { Route as AuthenticatedOnboardingDropoffsIndexRouteImport } from './routes/_authenticated/onboarding-dropoffs/index'
 import { Route as AuthenticatedPaymentRequestsIndexRouteImport } from './routes/_authenticated/payment-requests/index'
 import { Route as AuthenticatedPenaltiesIndexRouteImport } from './routes/_authenticated/penalties/index'
 import { Route as AuthenticatedPenaltiesPenaltyIdRouteImport } from './routes/_authenticated/penalties/$penaltyId'
@@ -233,6 +234,12 @@ const AuthenticatedOauthAppsIndexRoute =
     path: '/oauth-apps/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedOnboardingDropoffsIndexRoute =
+  AuthenticatedOnboardingDropoffsIndexRouteImport.update({
+    id: '/onboarding-dropoffs/',
+    path: '/onboarding-dropoffs/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPaymentRequestsIndexRoute =
   AuthenticatedPaymentRequestsIndexRouteImport.update({
     id: '/payment-requests/',
@@ -333,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/network/': typeof AuthenticatedNetworkIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
+  '/onboarding-dropoffs/': typeof AuthenticatedOnboardingDropoffsIndexRoute
   '/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
@@ -377,6 +385,7 @@ export interface FileRoutesByTo {
   '/network': typeof AuthenticatedNetworkIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/oauth-apps': typeof AuthenticatedOauthAppsIndexRoute
+  '/onboarding-dropoffs': typeof AuthenticatedOnboardingDropoffsIndexRoute
   '/payment-requests': typeof AuthenticatedPaymentRequestsIndexRoute
   '/penalties': typeof AuthenticatedPenaltiesIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
@@ -423,6 +432,7 @@ export interface FileRoutesById {
   '/_authenticated/network/': typeof AuthenticatedNetworkIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/oauth-apps/': typeof AuthenticatedOauthAppsIndexRoute
+  '/_authenticated/onboarding-dropoffs/': typeof AuthenticatedOnboardingDropoffsIndexRoute
   '/_authenticated/payment-requests/': typeof AuthenticatedPaymentRequestsIndexRoute
   '/_authenticated/penalties/': typeof AuthenticatedPenaltiesIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/network/'
     | '/notifications/'
     | '/oauth-apps/'
+    | '/onboarding-dropoffs/'
     | '/payment-requests/'
     | '/penalties/'
     | '/profile/'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/network'
     | '/notifications'
     | '/oauth-apps'
+    | '/onboarding-dropoffs'
     | '/payment-requests'
     | '/penalties'
     | '/profile'
@@ -558,6 +570,7 @@ export interface FileRouteTypes {
     | '/_authenticated/network/'
     | '/_authenticated/notifications/'
     | '/_authenticated/oauth-apps/'
+    | '/_authenticated/onboarding-dropoffs/'
     | '/_authenticated/payment-requests/'
     | '/_authenticated/penalties/'
     | '/_authenticated/profile/'
@@ -802,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOauthAppsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/onboarding-dropoffs/': {
+      id: '/_authenticated/onboarding-dropoffs/'
+      path: '/onboarding-dropoffs'
+      fullPath: '/onboarding-dropoffs/'
+      preLoaderRoute: typeof AuthenticatedOnboardingDropoffsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/payment-requests/': {
       id: '/_authenticated/payment-requests/'
       path: '/payment-requests'
@@ -913,6 +933,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNetworkIndexRoute: typeof AuthenticatedNetworkIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedOauthAppsIndexRoute: typeof AuthenticatedOauthAppsIndexRoute
+  AuthenticatedOnboardingDropoffsIndexRoute: typeof AuthenticatedOnboardingDropoffsIndexRoute
   AuthenticatedPaymentRequestsIndexRoute: typeof AuthenticatedPaymentRequestsIndexRoute
   AuthenticatedPenaltiesIndexRoute: typeof AuthenticatedPenaltiesIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
@@ -959,6 +980,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNetworkIndexRoute: AuthenticatedNetworkIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedOauthAppsIndexRoute: AuthenticatedOauthAppsIndexRoute,
+  AuthenticatedOnboardingDropoffsIndexRoute:
+    AuthenticatedOnboardingDropoffsIndexRoute,
   AuthenticatedPaymentRequestsIndexRoute:
     AuthenticatedPaymentRequestsIndexRoute,
   AuthenticatedPenaltiesIndexRoute: AuthenticatedPenaltiesIndexRoute,

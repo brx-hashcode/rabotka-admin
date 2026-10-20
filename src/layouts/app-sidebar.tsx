@@ -28,6 +28,7 @@ import {
   IconKey,
   IconUsersGroup,
   IconCashBanknote,
+  IconUserX,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -184,6 +185,13 @@ const documents: NavItem[] = [
     url: "/feedback",
     icon: IconStar,
     roles: [...LADDER, "FINANCE", "SUPPORT"],
+  },
+  {
+    // Sign-ups that stopped halfway, to call. Support's work as much as ours.
+    title: "Sign-up drop-offs",
+    url: "/onboarding-dropoffs",
+    icon: IconUserX,
+    roles: [...LADDER, "SUPPORT"],
   },
   {
     title: "Events",
