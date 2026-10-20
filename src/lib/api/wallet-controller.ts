@@ -5,13 +5,23 @@ import { guardedFetch } from "./guarded-fetch";
 export type AdminWalletInfo = {
   totalRevenue: number;
   balance: number;
+  /** Completed revenue payments — the ones `totalRevenue` sums. */
   completedCount: number;
+  /** Completed payments of every type, top-ups included, like pending/failed. */
+  completedPaymentsCount: number;
   pendingCount: number;
   failedCount: number;
   revenueByType: {
     penalty: number;
     contactUnlock: number;
   };
+  contactUnlockByMethod: {
+    mobileMoney: number;
+    wallet: number;
+    other: number;
+  };
+  /** Deposits — deliberately not part of `totalRevenue`. */
+  walletTopUps: { amount: number; count: number };
 };
 
 export type AdminWalletTransactionItem = {
