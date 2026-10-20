@@ -42,6 +42,8 @@ export function WalletInfoCard() {
     queryFn: () => getWalletInfo(range),
     placeholderData: keepPreviousData,
   });
+  const topUps = data?.walletTopUps?.amount ?? 0;
+  const unlockSplit = data?.contactUnlockByMethod;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -50,7 +52,9 @@ export function WalletInfoCard() {
           {(data?.totalRevenue ?? 0).toLocaleString()} FCFA
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Sum of all completed payments
+          {topUps > 0
+            ? `Excludes ${topUps.toLocaleString()} FCFA wallet top-ups (deposits)`
+            : "Sum of earned payments"}
         </p>
       </StatCard>
 
@@ -59,7 +63,9 @@ export function WalletInfoCard() {
         icon={IconCircleCheck}
         isLoading={isLoading}
       >
-        <p className="text-2xl font-bold">{data?.completedCount ?? 0}</p>
+        <p className="text-2xl font-bold">
+          {data?.completedPaymentsCount ?? data?.completedCount ?? 0}
+        </p>
         <p className="text-xs text-muted-foreground mt-1">
           {data?.pendingCount ?? 0} pending · {data?.failedCount ?? 0} failed
         </p>
@@ -87,7 +93,9 @@ export function WalletInfoCard() {
           {(data?.revenueByType.contactUnlock ?? 0).toLocaleString()} FCFA
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Via wallet credit &amp; mobile money
+          {unlockSplit
+            ? `${unlockSplit.mobileMoney.toLocaleString()} mobile money · ${unlockSplit.wallet.toLocaleString()} from wallet`
+            : "Via wallet credit & mobile money"}
         </p>
       </StatCard>
     </div>
