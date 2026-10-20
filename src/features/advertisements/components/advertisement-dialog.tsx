@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,12 @@ import { appConfig } from "#/config";
 import { guardedFetch } from "#/lib/api/guarded-fetch";
 import { IconPlus } from "@tabler/icons-react";
 import { friendlyError } from "#/lib/api/friendly-error";
+import {
+  UploadStatusOverlay,
+  uploadedUrls,
+  useImmediateUploads,
+} from "#/lib/media/use-immediate-uploads";
+import { reportUploadRejections } from "#/lib/media/upload-rejection-toast";
 
 /** Convert "HH:MM" UTC string to local HH:MM for display in the time input */
 function utcTimeToLocal(utcTime: string): string {
@@ -62,17 +68,31 @@ function localTimeToUtc(localTime: string): string {
   return `${uh}:${um}`;
 }
 
-async function uploadImages(files: File[]): Promise<string[]> {
-  if (files.length === 0) return [];
+/**
+ * Images per ad. Matches MAX_AD_IMAGES on the API
+ * (rabotka-backend advertisement.constants.ts).
+ */
+const MAX_AD_IMAGES = 3;
+
+/**
+ * One image, uploaded as soon as it is picked (see useImmediateUploads).
+ *
+ * They used to go up all together in one multipart request when « Create »
+ * was clicked, uncompressed — the admin sat on « Saving… » while the bytes
+ * went up, and one failure sank the whole ad. Now the ad itself is a small
+ * JSON request carrying the URLs.
+ */
+async function uploadAdImage(file: File): Promise<{ url: string }> {
   const formData = new FormData();
-  for (const file of files) formData.append("files", file);
-  const res = await guardedFetch(
-    `${appConfig.apiUrl}/file/upload?is_multipl=true`,
-    { method: "POST", body: formData, credentials: "include" },
-  );
+  formData.append("files", file);
+  const res = await guardedFetch(`${appConfig.apiUrl}/file/upload`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
   if (!res.ok) throw new Error("Image upload failed");
-  const json = (await res.json()) as { files: { file_url: string }[] };
-  return json.files.map((f) => f.file_url);
+  const json = (await res.json()) as { file_url: string };
+  return { url: json.file_url };
 }
 
 const schema = z.object({
@@ -135,28 +155,18 @@ export function AdvertisementDialog({
   const isEdit = advertisement != null;
   const { data: bundles } = useBundlesList();
 
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
-  const [existingCount, setExistingCount] = useState(0);
+  const {
+    items: images,
+    addFiles: handleAddImages,
+    removeItem: handleRemoveImage,
+    retryItem: retryImage,
+    seed: seedImages,
+    clear: clearImages,
+    inFlight: imagesInFlight,
+    failed: imagesFailed,
+  } = useImmediateUploads({ upload: uploadAdImage, active: open });
   const [tags, setTags] = useState<string[]>([]);
 
-  const handleAddImages = useCallback((newFiles: File[]) => {
-    setImageFiles((prev) => [...prev, ...newFiles]);
-    setImagePreviews((prev) => [
-      ...prev,
-      ...newFiles.map((f) => URL.createObjectURL(f)),
-    ]);
-  }, []);
-
-  const handleRemoveImage = useCallback((index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => {
-      const url = prev[index];
-      if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
-      return prev.filter((_, i) => i !== index);
-    });
-    setExistingCount((prev) => (index < prev ? prev - 1 : prev));
-  }, []);
   const [tagInput, setTagInput] = useState("");
 
   const form = useForm<FormValues>({
@@ -198,10 +208,8 @@ export function AdvertisementDialog({
           endDate: advertisement.end_date?.slice(0, 10) ?? "",
           dispatchTime: utcTimeToLocal(advertisement.dispatch_time ?? "08:00"),
         });
-        const existing = advertisement.image_urls ?? [];
-        setExistingCount(existing.length);
-        setImageFiles(existing.map(() => null));
-        setImagePreviews(existing);
+        // Already uploaded: shown as done, kept unless removed.
+        seedImages(advertisement.image_urls ?? []);
         setTags(advertisement.tags ?? []);
       } else {
         form.reset({
@@ -218,26 +226,17 @@ export function AdvertisementDialog({
           endDate: "",
           dispatchTime: "08:00",
         });
-        setExistingCount(0);
-        setImageFiles([]);
-        setImagePreviews((prev) => {
-          for (const u of prev) {
-            if (u.startsWith("blob:")) URL.revokeObjectURL(u);
-          }
-          return [];
-        });
+        clearImages();
         setTags([]);
         setTagInput("");
       }
     }
-  }, [open, advertisement, isEdit, form]);
+  }, [open, advertisement, isEdit, form, seedImages, clearImages]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
-      const existingUrls = imagePreviews.slice(0, existingCount);
-      const newFiles = imageFiles.filter((f): f is File => f instanceof File);
-      const newUrls = await uploadImages(newFiles);
-      const imageUrls = [...existingUrls, ...newUrls];
+      // Every image is already up; the ad is just JSON.
+      const imageUrls = uploadedUrls(images);
       const payload = {
         bundleId: values.bundleId,
         title: values.title,
@@ -301,13 +300,24 @@ export function AdvertisementDialog({
             <div className="flex flex-col gap-6 px-6 py-5 max-h-[70vh] overflow-y-auto">
               <div className="space-y-4">
                 <ImageUploadZone
-                  label="Images (up to 5)"
-                  files={imageFiles.map((f) => f ?? new File([], ""))}
-                  previews={imagePreviews}
+                  label={`Images (up to ${MAX_AD_IMAGES})`}
+                  files={images.map((item) => item.file ?? new File([], ""))}
+                  previews={images.map((item) => item.preview)}
                   onAdd={handleAddImages}
                   onRemove={handleRemoveImage}
-                  maxFiles={3}
+                  onReject={(rejections) =>
+                    reportUploadRejections(rejections, MAX_AD_IMAGES)
+                  }
+                  renderOverlay={(index) => (
+                    <UploadStatusOverlay item={images[index]} onRetry={retryImage} />
+                  )}
+                  maxFiles={MAX_AD_IMAGES}
                 />
+                {imagesFailed && (
+                  <p className="text-destructive text-xs">
+                    Retry or remove the failed image before saving.
+                  </p>
+                )}
 
                 <FormField
                   control={form.control}
@@ -625,8 +635,13 @@ export function AdvertisementDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {submitLabel(isPending, isEdit)}
+              <Button
+                type="submit"
+                disabled={isPending || imagesInFlight || imagesFailed}
+              >
+                {imagesInFlight && !isPending
+                  ? "Uploading images…"
+                  : submitLabel(isPending, isEdit)}
               </Button>
             </div>
           </form>
