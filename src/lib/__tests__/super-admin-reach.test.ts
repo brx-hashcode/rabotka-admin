@@ -21,6 +21,7 @@ const EVERY_ROUTE = [
   "/payment-requests",
   "/claim",
   "/feedback",
+  "/onboarding-dropoffs",
   "/events",
   "/whatsapp",
   "/logs",
