@@ -38,7 +38,7 @@ function getPaymentFlowBadgeClass(flow: string): string {
       return "bg-sky-500 text-white border-transparent";
     case "DAILY":
       return "bg-amber-500 text-white border-transparent";
-    case "FIXED":
+    case "TASK":
       return "bg-purple-600 text-white border-transparent";
     case "MONTHLY":
       return "bg-teal-600 text-white border-transparent";

@@ -391,6 +391,7 @@ export function JobForm({ job, onSave, isSaving, disabled }: Readonly<Props>) {
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="TASK">Per task</SelectItem>
                   <SelectItem value="HOURLY">Hourly</SelectItem>
                   <SelectItem value="DAILY">Daily</SelectItem>
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
