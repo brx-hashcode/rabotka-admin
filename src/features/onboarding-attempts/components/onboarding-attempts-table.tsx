@@ -72,10 +72,13 @@ export function OnboardingAttemptsTable({
   stats,
   stage,
   onClearStage,
+  window = {},
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
   stage: OnboardingStage | null;
   onClearStage: () => void;
+  /** The page's period: the list covers the same sign-ups as the numbers. */
+  window?: { startedFrom?: string; startedTo?: string };
 }>) {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState("");
@@ -91,13 +94,14 @@ export function OnboardingAttemptsTable({
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage],
+    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage, window],
     queryFn: () =>
       listOnboardingAttempts({
         page,
         limit: PAGE_SIZE,
         q: q || undefined,
         ...queryFor(tab, stage),
+        ...window,
       }),
     placeholderData: keepPreviousData,
   });
