@@ -8,7 +8,13 @@ import {
 import {
   IconBrandWhatsapp,
   IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
+  IconConfetti,
+  IconCopy,
+  IconPhone,
   IconPhoneCheck,
+  IconUserSearch,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -44,7 +50,15 @@ import {
   type AdminOnboardingStats,
   type OnboardingStage,
 } from "#/lib/api/onboarding-attempts-controller";
-import { STAGE_LABELS, stageIndex, timeAgo, whatsAppLink } from "../stage-labels";
+import {
+  STAGE_LABELS,
+  initials,
+  isWarmLead,
+  pageRange,
+  stageIndex,
+  timeAgo,
+  whatsAppFollowUpLink,
+} from "../stage-labels";
 
 const PAGE_SIZE = 20;
 
@@ -184,126 +198,85 @@ export function OnboardingAttemptsTable({
           <TableHeader>
             <TableRow>
               <TableHead>Personne</TableHead>
-              <TableHead className="w-[280px]">Progression</TableHead>
-              <TableHead className="w-[140px]">Dernière activité</TableHead>
-              <TableHead className="w-[220px] text-right">Suivi</TableHead>
+              <TableHead className="w-[260px]">Étape atteinte</TableHead>
+              <TableHead className="hidden w-[150px] lg:table-cell">Activité</TableHead>
+              <TableHead className="hidden w-[220px] md:table-cell">Suivi</TableHead>
+              <TableHead className="w-[150px] text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && rows.length === 0 ? (
-              Array.from({ length: 4 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={4}>
-                    <Skeleton className="h-9 w-full" />
+                  <TableCell colSpan={5}>
+                    <Skeleton className="h-11 w-full" />
                   </TableCell>
                 </TableRow>
               ))
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-muted-foreground py-12 text-center">
-                  {tab === "to-call"
-                    ? "Personne à rappeler ici. 🎉"
-                    : "Aucune inscription pour ces critères."}
+                <TableCell colSpan={5} className="py-14">
+                  <div className="text-muted-foreground flex flex-col items-center gap-2 text-center text-sm">
+                    <span className="bg-muted flex size-10 items-center justify-center rounded-full">
+                      {tab === "to-call" ? (
+                        <IconConfetti className="size-5" />
+                      ) : (
+                        <IconUserSearch className="size-5" />
+                      )}
+                    </span>
+                    {tab === "to-call"
+                      ? "Personne à rappeler sur cette période."
+                      : "Aucune inscription pour ces critères."}
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((row) => (
-                <TableRow
+                <AttemptRow
                   key={row.id}
-                  className="cursor-pointer"
-                  onClick={() => setOpenId(row.id)}
-                >
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="flex items-center gap-2 font-medium">
-                        {fullName(row) || (
-                          <span className="text-muted-foreground font-normal italic">
-                            Nom inconnu
-                          </span>
-                        )}
-                        {row.profileType && (
-                          <Badge variant="outline" className="font-normal">
-                            {row.profileType === "WORKER" ? "Travailleur" : "Employeur"}
-                          </Badge>
-                        )}
-                      </span>
-                      <span className="text-muted-foreground text-xs tabular-nums">
-                        {row.phone}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <StageProgress stage={row.stage} codeSends={row.codeSends} />
-                  </TableCell>
-                  <TableCell
-                    className="text-muted-foreground text-sm"
-                    title={new Date(row.lastActivityAt).toLocaleString("fr")}
-                  >
-                    {timeAgo(row.lastActivityAt)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {row.contactedAt && (
-                        <span
-                          className="text-muted-foreground inline-flex items-center gap-1 text-xs"
-                          title={row.contactNote ?? undefined}
-                        >
-                          <IconPhoneCheck className="size-4 text-emerald-600" />
-                          {timeAgo(row.contactedAt)}
-                        </span>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="size-8"
-                        onClick={(e) => e.stopPropagation()}
-                        render={
-                          <a
-                            href={whatsAppLink(row.phone)}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={`Écrire à ${fullName(row) || row.phone} sur WhatsApp`}
-                          />
-                        }
-                      >
-                        <IconBrandWhatsapp className="size-4" />
-                      </Button>
-                      {row.stage !== "COMPLETED" && (
-                        <Button
-                          size="sm"
-                          variant={row.contactedAt ? "ghost" : "secondary"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenId(row.id);
-                          }}
-                        >
-                          {row.contactedAt ? "Voir" : "Noter l'appel"}
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
+                  row={row}
+                  selected={row.id === openId}
+                  onOpen={() => setOpenId(row.id)}
+                />
               ))
             )}
           </TableBody>
         </Table>
 
-        {lastPage > 1 && (
-          <div className="flex items-center justify-end gap-2">
-            <span className="text-muted-foreground text-sm">
-              Page {page} sur {lastPage}
+        {total > 0 && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground text-sm tabular-nums">
+              {pageRange(page, PAGE_SIZE, total)}
             </span>
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              Précédent
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= lastPage}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Suivant
-            </Button>
+            {lastPage > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="size-8"
+                  aria-label="Page précédente"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <IconChevronLeft className="size-4" />
+                </Button>
+                <span className="text-muted-foreground px-2 text-sm tabular-nums">
+                  {page} / {lastPage}
+                </span>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="size-8"
+                  aria-label="Page suivante"
+                  disabled={page >= lastPage}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <IconChevronRight className="size-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -314,43 +287,227 @@ export function OnboardingAttemptsTable({
 }
 
 /**
- * Five segments, one per step, filled up to where they got — the drop-off
- * point reads at a glance, and lines up row to row.
+ * One person to call: who, how far they got, when, where the follow-up
+ * stands, and the three ways to act — call, WhatsApp, note the call.
  */
-function StageProgress({
+function AttemptRow({
+  row,
+  selected,
+  onOpen,
+}: Readonly<{
+  row: AdminOnboardingAttempt;
+  selected: boolean;
+  onOpen: () => void;
+}>) {
+  const name = fullName(row);
+  const done = row.stage === "COMPLETED";
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  return (
+    <TableRow
+      className={cn("group cursor-pointer", selected && "bg-muted/60")}
+      onClick={onOpen}
+      data-state={selected ? "selected" : undefined}
+    >
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+              done
+                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            {initials(row.firstName, row.lastName, row.phone)}
+          </span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="flex items-center gap-2 truncate font-medium">
+              {name || (
+                <span className="text-muted-foreground font-normal italic">
+                  Nom pas encore saisi
+                </span>
+              )}
+              {row.profileType && (
+                <Badge variant="outline" className="font-normal">
+                  {row.profileType === "WORKER" ? "Travailleur" : "Employeur"}
+                </Badge>
+              )}
+            </span>
+            <span className="text-muted-foreground flex items-center gap-1 text-xs tabular-nums">
+              {row.phone}
+              <button
+                type="button"
+                onClick={(e) => {
+                  stop(e);
+                  void navigator.clipboard
+                    ?.writeText(row.phone)
+                    .then(() => toast.success("Numéro copié"));
+                }}
+                aria-label="Copier le numéro"
+                className="hover:text-foreground rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              >
+                <IconCopy className="size-3" />
+              </button>
+            </span>
+          </div>
+        </div>
+      </TableCell>
+
+      <TableCell>
+        <StageCell stage={row.stage} codeSends={row.codeSends} />
+      </TableCell>
+
+      <TableCell className="hidden lg:table-cell">
+        <div className="flex flex-col text-xs">
+          <span title={new Date(row.lastActivityAt).toLocaleString("fr")}>
+            Active {timeAgo(row.lastActivityAt)}
+          </span>
+          <span
+            className="text-muted-foreground"
+            title={new Date(row.startedAt).toLocaleString("fr")}
+          >
+            Commencée {timeAgo(row.startedAt)}
+          </span>
+        </div>
+      </TableCell>
+
+      <TableCell className="hidden md:table-cell">
+        <FollowUpCell row={row} />
+      </TableCell>
+
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="size-8"
+            onClick={stop}
+            render={
+              <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
+            }
+          >
+            <IconPhone className="size-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="size-8 text-emerald-600"
+            onClick={stop}
+            render={
+              <a
+                href={whatsAppFollowUpLink(row.phone, row.firstName)}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Écrire à ${name || row.phone} sur WhatsApp`}
+              />
+            }
+          >
+            <IconBrandWhatsapp className="size-4" />
+          </Button>
+          {!done && (
+            <Button
+              size="sm"
+              variant={row.contactedAt ? "ghost" : "secondary"}
+              onClick={(e) => {
+                stop(e);
+                onOpen();
+              }}
+            >
+              {row.contactedAt ? "Voir" : "Noter"}
+            </Button>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+/**
+ * Where they stopped, as a pill and five segments that line up row to row,
+ * plus the two signals that change how to call: almost done, or a code that
+ * may never have arrived.
+ */
+function StageCell({
   stage,
   codeSends,
-}: Readonly<{
-  stage: OnboardingStage;
-  codeSends: number;
-}>) {
+}: Readonly<{ stage: OnboardingStage; codeSends: number }>) {
   const reached = stageIndex(stage);
   const done = stage === "COMPLETED";
-  const filled = done ? "bg-emerald-500" : "bg-primary";
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex gap-1" aria-hidden>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span
+          className={cn(
+            "rounded-md px-2 py-0.5 text-xs font-medium",
+            done
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+              : "bg-muted text-foreground",
+          )}
+        >
+          {done ? "Compte créé" : STAGE_LABELS[stage]}
+        </span>
+        {isWarmLead(stage) && (
+          <span
+            className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
+            title="Arrivée loin : un appel a de bonnes chances de finir l'inscription."
+          >
+            Presque fini
+          </span>
+        )}
+        {stage === "CODE_SENT" && codeSends > 1 && (
+          <span
+            className="bg-destructive/10 text-destructive rounded-md px-2 py-0.5 text-xs font-medium"
+            title={`${codeSends} codes demandés sans succès : le code n'arrive peut-être pas.`}
+          >
+            Code non reçu ?
+          </span>
+        )}
+      </div>
+      <div className="flex max-w-[200px] gap-1" aria-hidden>
         {ONBOARDING_STAGES.map((s, i) => (
           <span
             key={s}
             className={cn(
-              "h-1.5 flex-1 rounded-full",
-              i <= reached ? filled : "bg-muted",
+              "h-1 flex-1 rounded-full",
+              i <= reached ? (done ? "bg-emerald-500" : "bg-primary") : "bg-muted",
             )}
           />
         ))}
       </div>
-      <span className="text-xs">
-        {done ? "Compte créé" : `Arrêtée : ${STAGE_LABELS[stage]}`}
-        {stage === "CODE_SENT" && codeSends > 1 && (
-          <span
-            className="text-destructive ml-1.5"
-            title="Plusieurs codes demandés sans succès : le code n'arrive peut-être pas."
-          >
-            · {codeSends} codes demandés
-          </span>
-        )}
+    </div>
+  );
+}
+
+/** Where the follow-up stands, with the note's first line. */
+function FollowUpCell({ row }: Readonly<{ row: AdminOnboardingAttempt }>) {
+  if (row.stage === "COMPLETED") {
+    return <span className="text-muted-foreground text-xs">Terminée</span>;
+  }
+  if (!row.contactedAt) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+        <span className="size-1.5 rounded-full bg-amber-500" />
+        À rappeler
       </span>
+    );
+  }
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+        <IconPhoneCheck className="size-3.5" />
+        Contactée {timeAgo(row.contactedAt)}
+      </span>
+      {(row.contactNote || row.contactedBy) && (
+        <span
+          className="text-muted-foreground truncate text-xs"
+          title={row.contactNote ?? undefined}
+        >
+          {row.contactedBy && `${row.contactedBy} · `}
+          {row.contactNote}
+        </span>
+      )}
     </div>
   );
 }
@@ -466,7 +623,11 @@ function AttemptSheet({
                 variant="outline"
                 className="flex-1"
                 render={
-                  <a href={whatsAppLink(attempt.phone)} target="_blank" rel="noreferrer" />
+                  <a
+                    href={whatsAppFollowUpLink(attempt.phone, attempt.firstName)}
+                    target="_blank"
+                    rel="noreferrer"
+                  />
                 }
               >
                 <IconBrandWhatsapp className="size-4" />

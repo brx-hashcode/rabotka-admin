@@ -174,3 +174,45 @@ export function deltaLabel(current: number, previous: number | undefined): strin
   if (d === 0) return "=";
   return d > 0 ? `+${d}` : `−${Math.abs(d)}`;
 }
+
+/** « SG » for Seba Gedeon, the last two digits for someone with no name yet. */
+export function initials(
+  firstName: string | null,
+  lastName: string | null,
+  phone: string,
+): string {
+  const letters = [firstName, lastName]
+    .map((n) => n?.trim()?.[0] ?? "")
+    .join("")
+    .toUpperCase();
+  return letters || phone.replace(/\D/g, "").slice(-2);
+}
+
+/**
+ * Got far enough that a call is likely to finish the job: documents or the
+ * last screen. They go first in a busy call list.
+ */
+export function isWarmLead(stage: OnboardingStage): boolean {
+  return stage === "DOCUMENTS" || stage === "CONFIRMATION";
+}
+
+/**
+ * A wa.me link with the opening line already written, so reaching out is one
+ * tap and the person knows at once who is writing and why.
+ */
+export function whatsAppFollowUpLink(
+  phone: string,
+  firstName: string | null,
+): string {
+  const hello = firstName ? `Bonjour ${firstName.trim()}` : "Bonjour";
+  const text = `${hello}, c'est l'équipe Rabotka. Vous avez commencé votre inscription sans la terminer : est-ce qu'on peut vous aider à la finir ?`;
+  return `${whatsAppLink(phone)}?text=${encodeURIComponent(text)}`;
+}
+
+/** « 1–20 sur 47 ». */
+export function pageRange(page: number, pageSize: number, total: number): string {
+  if (total === 0) return "0 sur 0";
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  return `${from}–${to} sur ${total}`;
+}
