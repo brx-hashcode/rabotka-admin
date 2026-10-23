@@ -168,7 +168,7 @@ export function businessDocumentRawUrl(profileId: string, documentId: string) {
 
 export type VerificationDecision = "VERIFIED" | "REJECTED";
 
-export type AdminBusinessDocument = {
+export type AdminBusinessDocumentVersion = {
   id: string;
   documentType: string;
   label: string;
@@ -177,6 +177,39 @@ export type AdminBusinessDocument = {
   verificationStatus: string;
   rejectionReason: string | null;
   createdAt: string;
+  verifiedAt: string | null;
+};
+
+/** A current paper, with the versions it replaced (newest first). */
+export type AdminBusinessDocument = AdminBusinessDocumentVersion & {
+  /** Sent by the business to replace a refused or pending paper. */
+  resubmitted: boolean;
+  previousVersions: AdminBusinessDocumentVersion[];
+};
+
+/** `PATCH admin/profiles/:id/business`: only the fields that changed; null empties one. */
+export type AdminUpdateBusinessParams = Partial<{
+  name: string;
+  category: string;
+  legalForm: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+}>;
+
+/** `GET public/business/catalog`: the same tables the API checks against. */
+export type BusinessCatalog = {
+  categories: { value: string; label: string; legalForms: string[] }[];
+  legalForms: { value: string; label: string }[];
+  sizes: string[];
 };
 
 /** `GET admin/profiles/:id/business` (getBusinessForAdmin in rabotka-backend). */
@@ -415,6 +448,15 @@ export class AdminProfilesController extends AdminBaseController {
 
   getBusiness(id: string): Promise<AdminBusinessDetail> {
     return this.get(`/admin/profiles/${encodeURIComponent(id)}/business`);
+  }
+
+  /** Corrects the organisation; an admin's edit reopens no review. */
+  updateBusiness(id: string, data: AdminUpdateBusinessParams): Promise<AdminBusinessDetail> {
+    return this.patch(`/admin/profiles/${encodeURIComponent(id)}/business`, data);
+  }
+
+  getBusinessCatalog(): Promise<BusinessCatalog> {
+    return this.get("/public/business/catalog");
   }
 
   /** Approve or refuse the business — which verifies and activates the account. */
@@ -685,6 +727,8 @@ export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
 export const getProfileBusiness = controller.getBusiness.bind(controller);
+export const updateProfileBusiness = controller.updateBusiness.bind(controller);
+export const getBusinessCatalog = controller.getBusinessCatalog.bind(controller);
 export const verifyProfileBusiness = controller.verifyBusiness.bind(controller);
 export const verifyProfileBusinessDocument =
   controller.verifyBusinessDocument.bind(controller);
