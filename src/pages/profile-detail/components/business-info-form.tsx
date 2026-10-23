@@ -10,13 +10,6 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { GeoCombobox } from "#/components/geo-combobox";
@@ -41,8 +34,6 @@ type FormData = {
 
 /** Fields the API refuses empty: never sent as null. */
 const REQUIRED: (keyof FormData)[] = ["name", "category", "address", "countryCode"];
-/** Select value for "none": Radix refuses an empty-string item. */
-const NONE = "__none__";
 
 function toForm(b: AdminBusinessDetail): FormData {
   return {
@@ -184,38 +175,25 @@ export function BusinessInfoForm({
 
           <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>Type</FieldLabel>
-            <Select value={form.category} onValueChange={changeCategory} disabled={readOnly || !catalog.data}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={business.categoryLabel} />
-              </SelectTrigger>
-              <SelectContent>
-                {catalog.data?.categories.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <GeoCombobox
+              options={(catalog.data?.categories ?? []).map((c) => ({ value: c.value, label: c.label }))}
+              value={form.category || null}
+              onChange={(v) => v && changeCategory(v)}
+              placeholder={business.categoryLabel}
+              searchPlaceholder="Search types…"
+              disabled={readOnly || !catalog.data}
+            />
           </div>
           <div className="space-y-1.5 sm:col-span-3">
             <FieldLabel>Legal form</FieldLabel>
-            <Select
-              value={form.legalForm || NONE}
-              onValueChange={(v) => update("legalForm", v === NONE ? "" : v)}
+            <GeoCombobox
+              options={legalForms}
+              value={form.legalForm || null}
+              onChange={(v) => update("legalForm", v ?? "")}
+              placeholder="—"
+              searchPlaceholder="Search legal forms…"
               disabled={readOnly || !catalog.data}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={business.legalFormLabel ?? "—"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>—</SelectItem>
-                {legalForms.map((f) => (
-                  <SelectItem key={f.value} value={f.value}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {text("registrationNumber", "RCCM", "sm:col-span-2")}
@@ -248,23 +226,14 @@ export function BusinessInfoForm({
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <FieldLabel>Headcount</FieldLabel>
-            <Select
-              value={form.size || NONE}
-              onValueChange={(v) => update("size", v === NONE ? "" : v)}
+            <GeoCombobox
+              options={(catalog.data?.sizes ?? []).map((size) => ({ value: size, label: `${size} employees` }))}
+              value={form.size || null}
+              onChange={(v) => update("size", v ?? "")}
+              placeholder="—"
+              searchPlaceholder="Search…"
               disabled={readOnly || !catalog.data}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="—" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>—</SelectItem>
-                {catalog.data?.sizes.map((size) => (
-                  <SelectItem key={size} value={size}>
-                    {size} employees
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {text("address", "Address", "sm:col-span-6")}
