@@ -76,6 +76,8 @@ export type AdminProfileListItem = {
   description: string;
   status: string;
   profileType: string;
+  /** A business account: shows the « Business » tab instead of KYC. */
+  isBusiness: boolean;
   whatsappConnected: boolean;
   /**
    * When VoVa stops being silent for this profile, or null if it was never
@@ -158,6 +160,52 @@ export type AdminVerificationImageItem = {
 export function kycDocumentRawUrl(profileId: string, documentId: string) {
   return `${appConfig.apiUrl}/admin/profiles/${profileId}/kyc-documents/${documentId}/raw`;
 }
+
+/** A business document's bytes, same-origin behind the admin session (as KYC). */
+export function businessDocumentRawUrl(profileId: string, documentId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/business/documents/${documentId}/raw`;
+}
+
+export type VerificationDecision = "VERIFIED" | "REJECTED";
+
+export type AdminBusinessDocument = {
+  id: string;
+  documentType: string;
+  label: string;
+  fileName: string | null;
+  mimeType: string | null;
+  verificationStatus: string;
+  rejectionReason: string | null;
+  createdAt: string;
+};
+
+/** `GET admin/profiles/:id/business` (getBusinessForAdmin in rabotka-backend). */
+export type AdminBusinessDetail = {
+  id: string;
+  name: string;
+  category: string;
+  categoryLabel: string;
+  legalForm: string | null;
+  legalFormLabel: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  verificationStatus: string;
+  verifiedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  documents: AdminBusinessDocument[];
+  requiredDocuments: { type: string; label: string }[][];
+  missingDocuments: { type: string; label: string }[][];
+};
 
 export function kycVerificationImageRawUrl(profileId: string, imageId: string) {
   return `${appConfig.apiUrl}/admin/profiles/${profileId}/verification-images/${imageId}/raw`;
@@ -362,6 +410,29 @@ export class AdminProfilesController extends AdminBaseController {
       new URLSearchParams(),
     );
     return this.patch<AdminProfileDetailResponse>(url, data);
+  }
+
+  getBusiness(id: string): Promise<AdminBusinessDetail> {
+    return this.get(`/admin/profiles/${encodeURIComponent(id)}/business`);
+  }
+
+  /** Approve or refuse the business — which verifies and activates the account. */
+  verifyBusiness(
+    id: string,
+    data: { decision: VerificationDecision; reason?: string },
+  ): Promise<AdminBusinessDetail> {
+    return this.patch(`/admin/profiles/${encodeURIComponent(id)}/business/verify`, data);
+  }
+
+  verifyBusinessDocument(
+    id: string,
+    documentId: string,
+    data: { decision: VerificationDecision; reason?: string },
+  ): Promise<AdminBusinessDetail> {
+    return this.patch(
+      `/admin/profiles/${encodeURIComponent(id)}/business/documents/${encodeURIComponent(documentId)}/verify`,
+      data,
+    );
   }
 
   async verifyProfile(
@@ -612,6 +683,10 @@ export async function fetchAllProfiles(
 export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
+export const getProfileBusiness = controller.getBusiness.bind(controller);
+export const verifyProfileBusiness = controller.verifyBusiness.bind(controller);
+export const verifyProfileBusinessDocument =
+  controller.verifyBusinessDocument.bind(controller);
 export const uploadKycVerificationImage =
   controller.uploadVerificationImage.bind(controller);
 export const updateProfileStatus =
