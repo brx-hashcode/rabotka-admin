@@ -44,6 +44,7 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
+import { BusinessSubscriptionCard } from "./business-subscription-card";
 import type { ViewerDocument } from "./document-viewer-drawer";
 
 type Props = {
@@ -260,6 +261,8 @@ export function ProfileBusinessContent({
       </div>
 
       <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
+        <BusinessSubscriptionCard profileId={profileId} />
+
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Verification</CardTitle>
