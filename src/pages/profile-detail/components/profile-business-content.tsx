@@ -6,6 +6,7 @@ import {
   IconCheck,
   IconEye,
   IconFileText,
+  IconHistory,
   IconPhoto,
   IconX,
 } from "@tabler/icons-react";
@@ -14,10 +15,13 @@ import { toast } from "sonner";
 import {
   businessDocumentRawUrl,
   getProfileBusiness,
+  updateProfileBusiness,
   verifyProfileBusiness,
   verifyProfileBusinessDocument,
   type AdminBusinessDetail,
   type AdminBusinessDocument,
+  type AdminBusinessDocumentVersion,
+  type AdminUpdateBusinessParams,
   type VerificationDecision,
 } from "#/lib/api/profiles-controller";
 import { getVerificationStatusLabel } from "#/lib/status-labels";
@@ -33,14 +37,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
-import { Input } from "#/components/ui/input";
-import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate } from "../helpers";
+import { BusinessInfoForm } from "./business-info-form";
 import type { ViewerDocument } from "./document-viewer-drawer";
 
 type Props = {
@@ -59,35 +62,59 @@ function fileKind(mimeType: string | null): string | undefined {
   return undefined;
 }
 
-/** As profile-form.tsx: the small uppercase label above each field. */
-function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-      {children}
-    </label>
-  );
-}
-
-/** A read-only field, drawn like the General tab's inputs. */
-function Field({
-  label,
-  value,
-  className,
-}: Readonly<{ label: string; value: string | null | undefined; className?: string }>) {
-  return (
-    <div className={`space-y-1.5 ${className ?? ""}`}>
-      <FieldLabel>{label}</FieldLabel>
-      <Input value={value || "—"} readOnly disabled />
-    </div>
-  );
-}
-
 /** As profile-general-summary.tsx: one label/value line. */
 function Row({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="text-muted-foreground shrink-0">{label}</div>
       <div className="text-right font-medium">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * What the business sent before a replacement: kept so the reviewer can
+ * compare, with the reason each was refused. Folded by default.
+ */
+function PreviousVersions({
+  versions,
+  onPreview,
+}: Readonly<{
+  versions: AdminBusinessDocumentVersion[];
+  onPreview: (doc: AdminBusinessDocumentVersion) => void;
+}>) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2 pl-[52px]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center gap-1 text-xs"
+      >
+        <IconHistory className="size-3.5" />
+        {open ? "Hide" : "Show"} previous version{versions.length > 1 ? "s" : ""} ({versions.length})
+      </button>
+      {open && (
+        <ul className="mt-2 space-y-2">
+          {versions.map((v) => (
+            <li key={v.id} className="bg-muted/50 flex items-center gap-3 rounded-md p-2 opacity-80">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium">{v.fileName ?? "Document"}</p>
+                <p className="text-muted-foreground text-xs">Sent {formatDate(v.createdAt)}</p>
+                {v.rejectionReason && (
+                  <p className="text-destructive text-xs">Refused: {v.rejectionReason}</p>
+                )}
+              </div>
+              <Badge className={getVerificationStatusBadgeClass(v.verificationStatus)}>
+                {getVerificationStatusLabel(v.verificationStatus)}
+              </Badge>
+              <Button size="icon-sm" variant="outline" onClick={() => onPreview(v)} aria-label="Preview previous version">
+                <IconEye className="size-3.5" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -143,6 +170,15 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     onError: (err: Error) => toast.error(err.message || "The document could not be updated."),
   });
 
+  const saveDetails = useMutation({
+    mutationFn: (data: AdminUpdateBusinessParams) => updateProfileBusiness(profileId, data),
+    onSuccess: (next) => {
+      onSaved(next);
+      toast.success("Business details saved.");
+    },
+    onError: (err: Error) => toast.error(err.message || "The details could not be saved."),
+  });
+
   function confirmRefusal() {
     if (!refusing || !reason.trim()) return;
     if (refusing.kind === "business") {
@@ -164,7 +200,7 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     setApproving(null);
   }
 
-  function preview(doc: AdminBusinessDocument) {
+  function preview(doc: AdminBusinessDocumentVersion) {
     onPreviewDoc({
       url: businessDocumentRawUrl(profileId, doc.id),
       title: doc.label,
@@ -201,56 +237,12 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
   return (
     <div className="grid grid-cols-5 gap-6">
       <div className="col-span-5 min-w-0 lg:col-span-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase">Business Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="mb-6 flex items-center gap-4">
-              <div className="border-border bg-muted flex size-20 shrink-0 items-center justify-center rounded-full border-4 shadow-md">
-                <IconBuilding className="text-muted-foreground size-8" />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-lg font-semibold">{business.name}</p>
-                <p className="text-muted-foreground truncate text-sm">
-                  {business.categoryLabel}
-                  {business.legalFormLabel ? ` · ${business.legalFormLabel}` : ""}
-                </p>
-                <p className="text-muted-foreground truncate text-xs">
-                  {[business.email, business.phone].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-            </div>
-
-            <Separator className="mb-6" />
-
-            {/* Six columns, as the profile form: the identifiers three to a
-                row, the pairs (contact, location) at three apiece. */}
-            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
-              <Field label="Raison sociale" value={business.name} className="sm:col-span-6" />
-              <Field label="Type" value={business.categoryLabel} className="sm:col-span-3" />
-              <Field label="Legal form" value={business.legalFormLabel} className="sm:col-span-3" />
-              <Field label="RCCM" value={business.registrationNumber} className="sm:col-span-2" />
-              <Field label="NIU" value={business.taxId} className="sm:col-span-2" />
-              <Field label="SCIEN / SCIET" value={business.statisticalId} className="sm:col-span-2" />
-              <Field label="Contact email" value={business.email} className="sm:col-span-3" />
-              <Field label="Contact phone" value={business.phone} className="sm:col-span-3" />
-              <Field label="Country" value={business.countryName ?? business.countryCode} className="sm:col-span-2" />
-              <Field label="City" value={business.city} className="sm:col-span-2" />
-              <Field
-                label="Headcount"
-                value={business.size ? `${business.size} employees` : null}
-                className="sm:col-span-2"
-              />
-              <Field label="Address" value={business.address} className="sm:col-span-6" />
-              <Field label="Website" value={business.website} className="sm:col-span-6" />
-              <div className="space-y-1.5 sm:col-span-6">
-                <FieldLabel>Description</FieldLabel>
-                <Textarea value={business.description || "—"} readOnly disabled rows={5} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <BusinessInfoForm
+          business={business}
+          onSave={(data) => saveDetails.mutateAsync(data)}
+          isSaving={saveDetails.isPending}
+          readOnly={!canManageContent}
+        />
       </div>
 
       <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
@@ -329,7 +321,8 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
             ) : (
               <ul className="divide-border divide-y">
                 {business.documents.map((doc) => (
-                  <li key={doc.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <li key={doc.id} className="py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => preview(doc)}
@@ -347,7 +340,14 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
                       onClick={() => preview(doc)}
                       className="min-w-0 flex-1 cursor-pointer text-left"
                     >
-                      <p className="truncate text-sm font-medium hover:underline">{doc.label}</p>
+                      <p className="flex items-center gap-1.5 text-sm font-medium">
+                        <span className="truncate hover:underline">{doc.label}</span>
+                        {doc.resubmitted && (
+                          <Badge variant="outline" className="shrink-0 border-sky-500/40 text-sky-600 dark:text-sky-400">
+                            Resubmitted
+                          </Badge>
+                        )}
+                      </p>
                       <p className="text-muted-foreground truncate text-xs">{doc.fileName ?? "—"}</p>
                       {doc.rejectionReason && (
                         <p className="text-destructive truncate text-xs">{doc.rejectionReason}</p>
@@ -389,6 +389,10 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
                         </>
                       )}
                     </div>
+                  </div>
+                  {doc.previousVersions.length > 0 && (
+                    <PreviousVersions versions={doc.previousVersions} onPreview={preview} />
+                  )}
                   </li>
                 ))}
               </ul>
