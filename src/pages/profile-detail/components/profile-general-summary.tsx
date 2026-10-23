@@ -17,6 +17,12 @@ import {
 } from "#/features/applications/components/profile-columns";
 import { Link } from "@tanstack/react-router";
 import { IconStar } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessSubscription } from "#/lib/api/business-plans-controller";
+import {
+  businessSubscriptionKey,
+  SubscriptionStatusBadge,
+} from "./business-subscription-card";
 
 type Props = {
   profile: AdminProfileDetailResponse;
@@ -68,6 +74,7 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 </Badge>
               </Row>
             )}
+            {profile.isBusiness && <BusinessPlanRow profileId={profile.id} />}
             {/* A business has no personal KYC: this is its organisation's
                 review (Business tab). */}
             <Row label={profile.isBusiness ? "Verification" : "KYC"}>
@@ -302,5 +309,28 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/** A business's plan, as on its Business tab (same query, shared cache). */
+function BusinessPlanRow({ profileId }: Readonly<{ profileId: string }>) {
+  const { data } = useQuery({
+    queryKey: businessSubscriptionKey(profileId),
+    queryFn: () => getBusinessSubscription(profileId),
+  });
+  const e = data?.entitlements;
+  return (
+    <Row label="Plan">
+      {!e ? (
+        "—"
+      ) : e.plan && e.status ? (
+        <span className="inline-flex items-center gap-2">
+          {e.plan.name}
+          <SubscriptionStatusBadge status={e.status} />
+        </span>
+      ) : (
+        <span className="text-muted-foreground">No plan</span>
+      )}
+    </Row>
   );
 }

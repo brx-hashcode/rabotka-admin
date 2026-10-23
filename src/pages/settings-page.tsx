@@ -8,6 +8,7 @@ import {
   IconCoin,
   IconRobot,
   IconUsersGroup,
+  IconStack2,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -20,6 +21,7 @@ import {
 } from "#/components/ui/select";
 import { cn } from "#/lib/utils";
 import { AgentsCard } from "./settings/agents-card";
+import { BusinessPlansCard } from "./settings/business-plans-card";
 import { ContactCard } from "./settings/contact-card";
 import { FeesCard } from "./settings/fees-card";
 import { MatchingCard } from "./settings/matching-card";
@@ -46,6 +48,7 @@ const GROUPS: Array<{ label: string; sections: Section[] }> = [
     label: "Money",
     sections: [
       { id: "fees", label: "Fees & penalties", icon: IconCoin, card: <FeesCard /> },
+      { id: "business-plans", label: "Business plans", icon: IconStack2, card: <BusinessPlansCard /> },
     ],
   },
   {
