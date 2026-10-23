@@ -38,6 +38,7 @@ import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
+import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate } from "../helpers";
 import type { ViewerDocument } from "./document-viewer-drawer";
@@ -49,6 +50,8 @@ type Props = {
 
 /** What the refusal dialog is about: the business, or one of its papers. */
 type Refusing = { kind: "business" } | { kind: "document"; doc: AdminBusinessDocument };
+/** What the approval confirmation is about. */
+type Approving = { kind: "business" } | { kind: "document"; doc: AdminBusinessDocument };
 
 function fileKind(mimeType: string | null): string | undefined {
   if (mimeType === "application/pdf") return "pdf";
@@ -105,11 +108,14 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     queryFn: () => getProfileBusiness(profileId),
   });
   const [refusing, setRefusing] = useState<Refusing | null>(null);
+  const [approving, setApproving] = useState<Approving | null>(null);
   const [reason, setReason] = useState("");
 
   const onSaved = (next: AdminBusinessDetail) => {
     queryClient.setQueryData(queryKey, next);
-    // The decision changes the profile's own status and verification.
+    // Refetched too, and the profile with it: the decision changes the
+    // profile's own status and verification, shown in the other tabs.
+    void queryClient.invalidateQueries({ queryKey });
     void queryClient.invalidateQueries({ queryKey: ["admin", "profiles", profileId] });
   };
 
@@ -148,6 +154,16 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     setReason("");
   }
 
+  function confirmApproval() {
+    if (!approving) return;
+    if (approving.kind === "business") {
+      decideBusiness.mutate({ decision: "VERIFIED" });
+    } else {
+      decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" });
+    }
+    setApproving(null);
+  }
+
   function preview(doc: AdminBusinessDocument) {
     onPreviewDoc({
       url: businessDocumentRawUrl(profileId, doc.id),
@@ -178,6 +194,9 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
       </Card>
     );
   }
+
+  const verified = business.verificationStatus === "VERIFIED";
+  const refused = business.verificationStatus === "REJECTED";
 
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -271,19 +290,23 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
               </div>
             )}
 
-            {canManageContent && (
-              <div className="grid grid-cols-2 gap-2 pt-2">
+            {/* Decided is decided: no buttons once verified. A refused
+                business can still be approved after new papers. */}
+            {canManageContent && !verified && (
+              <div className={`grid gap-2 pt-2 ${refused ? "grid-cols-1" : "grid-cols-2"}`}>
+                {!refused && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setRefusing({ kind: "business" })}
+                    disabled={decideBusiness.isPending}
+                  >
+                    <IconX className="size-4" />
+                    Refuse
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
-                  onClick={() => setRefusing({ kind: "business" })}
-                  disabled={decideBusiness.isPending || business.verificationStatus === "REJECTED"}
-                >
-                  <IconX className="size-4" />
-                  Refuse
-                </Button>
-                <Button
-                  onClick={() => decideBusiness.mutate({ decision: "VERIFIED" })}
-                  disabled={decideBusiness.isPending || business.verificationStatus === "VERIFIED"}
+                  onClick={() => setApproving({ kind: "business" })}
+                  disabled={decideBusiness.isPending}
                 >
                   <IconCheck className="size-4" />
                   Approve
@@ -337,22 +360,26 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
                       <Button size="icon" variant="ghost" onClick={() => preview(doc)} aria-label="Preview">
                         <IconEye className="size-4" />
                       </Button>
-                      {canManageContent && (
+                      {/* Only what is still to decide: nothing once the
+                          business is verified or the paper accepted. */}
+                      {canManageContent && !verified && doc.verificationStatus !== "VERIFIED" && (
                         <>
+                          {doc.verificationStatus !== "REJECTED" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setRefusing({ kind: "document", doc })}
+                              disabled={decideDocument.isPending}
+                              aria-label="Refuse document"
+                            >
+                              <IconX className="size-4" />
+                            </Button>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => setRefusing({ kind: "document", doc })}
-                            disabled={decideDocument.isPending || doc.verificationStatus === "REJECTED"}
-                            aria-label="Refuse document"
-                          >
-                            <IconX className="size-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => decideDocument.mutate({ documentId: doc.id, decision: "VERIFIED" })}
-                            disabled={decideDocument.isPending || doc.verificationStatus === "VERIFIED"}
+                            onClick={() => setApproving({ kind: "document", doc })}
+                            disabled={decideDocument.isPending}
                             aria-label="Accept document"
                           >
                             <IconCheck className="size-4" />
@@ -367,6 +394,22 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={!!approving}
+        onOpenChange={(open) => {
+          if (!open) setApproving(null);
+        }}
+        title={approving?.kind === "document" ? `Accept « ${approving.doc.label} » ?` : `Approve ${business.name} ?`}
+        description={
+          approving?.kind === "document"
+            ? "This document will be marked as verified."
+            : "The business is verified and its account becomes active. Its pending documents are accepted, and the business is notified by email and in-app notification. This cannot be undone from here."
+        }
+        actionLabel={approving?.kind === "document" ? "Accept" : "Approve business"}
+        onConfirm={confirmApproval}
+        isPending={decideBusiness.isPending || decideDocument.isPending}
+      />
 
       <Dialog
         open={!!refusing}
