@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IconBuilding } from "@tabler/icons-react";
+import { IconBuilding, IconCamera, IconLoader2, IconZoomIn } from "@tabler/icons-react";
 
 import {
   getBusinessCatalog,
   type AdminBusinessDetail,
   type AdminUpdateBusinessParams,
 } from "#/lib/api/profiles-controller";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
@@ -14,6 +15,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { GeoCombobox } from "#/components/geo-combobox";
 import { useCities, useCountries } from "#/hooks/use-geo";
+import type { ViewerDocument } from "./document-viewer-drawer";
 
 type FormData = {
   name: string;
@@ -74,12 +76,21 @@ export function BusinessInfoForm({
   onSave,
   isSaving,
   readOnly = false,
+  logoUrl,
+  onLogoChange,
+  isUploadingLogo,
+  onPreviewDoc,
 }: Readonly<{
   business: AdminBusinessDetail;
   onSave: (data: AdminUpdateBusinessParams) => Promise<unknown>;
   isSaving: boolean;
   readOnly?: boolean;
+  logoUrl: string | null;
+  onLogoChange: (file: File) => Promise<unknown>;
+  isUploadingLogo: boolean;
+  onPreviewDoc: (doc: ViewerDocument) => void;
 }>) {
+  const logoInput = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<FormData>(() => toForm(business));
   const [initial, setInitial] = useState<FormData>(form);
 
@@ -153,8 +164,54 @@ export function BusinessInfoForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="mb-6 flex items-center gap-4">
-          <div className="border-border bg-muted flex size-20 shrink-0 items-center justify-center rounded-full border-4 shadow-md">
-            <IconBuilding className="text-muted-foreground size-8" />
+          {/* As the General tab's avatar: click to enlarge, the badge to change. */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() =>
+                logoUrl &&
+                onPreviewDoc({ url: logoUrl, title: business.name, description: "Logo", fileType: "image" })
+              }
+              disabled={!logoUrl}
+              aria-label={logoUrl ? `View the logo of ${business.name}` : undefined}
+              className="group relative block rounded-full enabled:cursor-zoom-in"
+            >
+              <Avatar className="border-border size-20 border-4 shadow-md">
+                {logoUrl ? <AvatarImage src={logoUrl} alt={business.name} className="object-cover" /> : null}
+                <AvatarFallback>
+                  <IconBuilding className="text-muted-foreground size-8" />
+                </AvatarFallback>
+              </Avatar>
+              {logoUrl && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <IconZoomIn className="size-6 text-white" />
+                </span>
+              )}
+            </button>
+            {!readOnly && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => logoInput.current?.click()}
+                  disabled={isUploadingLogo}
+                  aria-label="Change logo"
+                  className="bg-background border-border absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border shadow-md transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isUploadingLogo ? <IconLoader2 className="size-4 animate-spin" /> : <IconCamera className="size-4" />}
+                </button>
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) void onLogoChange(file);
+                  }}
+                />
+              </>
+            )}
           </div>
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold">{business.name}</p>
