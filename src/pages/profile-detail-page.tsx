@@ -28,6 +28,7 @@ import {
 import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
+import { ProfileBusinessContent } from "./profile-detail/components/profile-business-content";
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
 import { ProfileReferralsContent } from "./profile-detail/components/profile-referrals-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
@@ -52,6 +53,7 @@ import { useRole } from "#/hooks/use-role";
 
 type ProfileTab =
   | "general"
+  | "business"
   | "kyc"
   | "payments"
   | "invoices"
@@ -62,6 +64,7 @@ type ProfileTab =
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
+  { label: "Business", value: "business" },
   { label: "Identity check (KYC)", value: "kyc" },
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
@@ -260,8 +263,13 @@ export default function ProfileDetailPage({
   }
 
   const isWorker = profile.profileType === "WORKER";
+  // A business has no personal KYC: its organisation's papers, in the
+  // « Business » tab, are what get reviewed — so it shows one or the other.
   const visibleTabs = PROFILE_TABS.filter(
-    (t) => t.value !== "portfolio" || isWorker,
+    (t) =>
+      (t.value !== "portfolio" || isWorker) &&
+      (t.value !== "business" || profile.isBusiness) &&
+      (t.value !== "kyc" || !profile.isBusiness),
   );
 
   return (
@@ -368,6 +376,12 @@ export default function ProfileDetailPage({
             </div>
           </div>
         </TabsContent>
+
+        {profile.isBusiness && (
+          <TabsContent value="business">
+            <ProfileBusinessContent profileId={profileId} onPreviewDoc={handlePreviewDoc} />
+          </TabsContent>
+        )}
 
         <TabsContent value="kyc">
           <ProfileKycContent
