@@ -61,7 +61,16 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 {getAccountStatusLabel(profile.status)}
               </Badge>
             </Row>
-            <Row label="KYC">
+            {profile.isBusiness && (
+              <Row label="Type">
+                <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-300">
+                  Business
+                </Badge>
+              </Row>
+            )}
+            {/* A business has no personal KYC: this is its organisation's
+                review (Business tab). */}
+            <Row label={profile.isBusiness ? "Verification" : "KYC"}>
               <Badge
                 className={getVerificationStatusBadgeClass(
                   profile.verificationStatus,
