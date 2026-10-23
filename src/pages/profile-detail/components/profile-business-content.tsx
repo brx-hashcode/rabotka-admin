@@ -235,7 +235,7 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
               <Field label="SCIEN / SCIET" value={business.statisticalId} className="sm:col-span-2" />
               <Field label="Contact email" value={business.email} className="sm:col-span-3" />
               <Field label="Contact phone" value={business.phone} className="sm:col-span-3" />
-              <Field label="Country" value={business.countryCode} className="sm:col-span-2" />
+              <Field label="Country" value={business.countryName ?? business.countryCode} className="sm:col-span-2" />
               <Field label="City" value={business.city} className="sm:col-span-2" />
               <Field
                 label="Headcount"
