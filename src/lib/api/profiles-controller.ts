@@ -216,6 +216,8 @@ export type BusinessCatalog = {
 export type AdminBusinessDetail = {
   id: string;
   name: string;
+  /** The account's profile picture, used as the logo. */
+  logoUrl: string | null;
   category: string;
   categoryLabel: string;
   legalForm: string | null;

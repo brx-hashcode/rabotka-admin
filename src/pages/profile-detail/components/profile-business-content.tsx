@@ -49,6 +49,10 @@ import type { ViewerDocument } from "./document-viewer-drawer";
 type Props = {
   profileId: string;
   onPreviewDoc: (doc: ViewerDocument) => void;
+  /** The logo is the account's profile picture: the General tab's upload. */
+  logoUrl: string | null;
+  onLogoChange: (file: File) => Promise<unknown>;
+  isUploadingLogo: boolean;
 };
 
 /** What the refusal dialog is about: the business, or one of its papers. */
@@ -126,7 +130,13 @@ function PreviousVersions({
  * no personal KYC); the business is told by email and in-app notification —
  * business accounts get no WhatsApp.
  */
-export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Props>) {
+export function ProfileBusinessContent({
+  profileId,
+  onPreviewDoc,
+  logoUrl,
+  onLogoChange,
+  isUploadingLogo,
+}: Readonly<Props>) {
   const queryClient = useQueryClient();
   const { canManageContent } = useRole();
   const queryKey = ["admin-profile-business", profileId];
@@ -242,6 +252,10 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
           onSave={(data) => saveDetails.mutateAsync(data)}
           isSaving={saveDetails.isPending}
           readOnly={!canManageContent}
+          logoUrl={logoUrl}
+          onLogoChange={onLogoChange}
+          isUploadingLogo={isUploadingLogo}
+          onPreviewDoc={onPreviewDoc}
         />
       </div>
 

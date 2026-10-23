@@ -379,7 +379,13 @@ export default function ProfileDetailPage({
 
         {profile.isBusiness && (
           <TabsContent value="business">
-            <ProfileBusinessContent profileId={profileId} onPreviewDoc={handlePreviewDoc} />
+            <ProfileBusinessContent
+              profileId={profileId}
+              onPreviewDoc={handlePreviewDoc}
+              logoUrl={profile.avatarUrl}
+              onLogoChange={submitAvatarUpdate}
+              isUploadingLogo={isUploadingAvatar}
+            />
           </TabsContent>
         )}
 
