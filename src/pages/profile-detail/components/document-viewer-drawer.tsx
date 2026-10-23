@@ -335,6 +335,13 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
     if (/^(blob:|data:)/i.test(url.trim())) {
       return { url };
     }
+    // Our own api (a KYC or business document's raw route): same-origin and
+    // authenticated by the session cookie, so loaded directly. Through the
+    // proxy it failed — the proxy fetches server-side, without the admin's
+    // session, and got a 401 instead of the PDF.
+    if (url.trim().startsWith(`${appConfig.apiUrl}/`)) {
+      return { url: pdfDocumentUrl(url) };
+    }
     // Load through the same-origin file proxy: storage URLs are cross-origin and
     // usually lack CORS headers, so react-pdf's fetch is blocked when pointed at
     // them directly (unlike <img>, which isn't CORS-gated). The proxy is

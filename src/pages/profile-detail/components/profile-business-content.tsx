@@ -4,7 +4,9 @@ import {
   IconAlertTriangle,
   IconBuilding,
   IconCheck,
+  IconEye,
   IconFileText,
+  IconPhoto,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -31,6 +33,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { Input } from "#/components/ui/input";
+import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import { getVerificationStatusBadgeClass } from "#/features/applications/components/profile-columns";
@@ -52,11 +56,45 @@ function fileKind(mimeType: string | null): string | undefined {
   return undefined;
 }
 
+/** As profile-form.tsx: the small uppercase label above each field. */
+function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <label className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+      {children}
+    </label>
+  );
+}
+
+/** A read-only field, drawn like the General tab's inputs. */
+function Field({
+  label,
+  value,
+  className,
+}: Readonly<{ label: string; value: string | null | undefined; className?: string }>) {
+  return (
+    <div className={`space-y-1.5 ${className ?? ""}`}>
+      <FieldLabel>{label}</FieldLabel>
+      <Input value={value || "—"} readOnly disabled />
+    </div>
+  );
+}
+
+/** As profile-general-summary.tsx: one label/value line. */
+function Row({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="text-muted-foreground shrink-0">{label}</div>
+      <div className="text-right font-medium">{children}</div>
+    </div>
+  );
+}
+
 /**
- * The « Business » tab: the organisation behind a business profile, its
- * documents, and the decision — which, for a business, is what verifies and
- * activates the account (there is no personal KYC). The business is told by
- * email and in-app notification; business accounts get no WhatsApp.
+ * The « Business » tab, laid out as the General tab: the organisation's
+ * information on the left, its verification and documents on the right.
+ * Approving the business is what verifies and activates the account (there is
+ * no personal KYC); the business is told by email and in-app notification —
+ * business accounts get no WhatsApp.
  */
 export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Props>) {
   const queryClient = useQueryClient();
@@ -110,11 +148,23 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     setReason("");
   }
 
+  function preview(doc: AdminBusinessDocument) {
+    onPreviewDoc({
+      url: businessDocumentRawUrl(profileId, doc.id),
+      title: doc.label,
+      description: `${doc.fileName ?? "Document"} — Uploaded ${formatDate(doc.createdAt)}`,
+      fileType: fileKind(doc.mimeType),
+    });
+  }
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="grid grid-cols-5 gap-6">
+        <Skeleton className="col-span-5 h-[520px] lg:col-span-3" />
+        <div className="col-span-5 space-y-6 lg:col-span-2">
+          <Skeleton className="h-56" />
+          <Skeleton className="h-64" />
+        </div>
       </div>
     );
   }
@@ -129,145 +179,193 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
     );
   }
 
-  const decided = business.verificationStatus !== "PENDING";
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Business verification
-            </p>
-            <Badge className={`mt-2 ${getVerificationStatusBadgeClass(business.verificationStatus)}`}>
-              {getVerificationStatusLabel(business.verificationStatus)}
-            </Badge>
-          </CardContent>
-        </Card>
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Submitted
-            </p>
-            <p className="mt-2 text-sm font-medium">{formatDate(business.createdAt)}</p>
-          </CardContent>
-        </Card>
-        {business.verifiedAt && (
-          <Card className="gap-2 py-4">
-            <CardContent className="px-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                Decided
-              </p>
-              <p className="mt-2 text-sm font-medium">{formatDate(business.verifiedAt)}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {business.rejectionReason && (
+    <div className="grid grid-cols-5 gap-6">
+      <div className="col-span-5 min-w-0 lg:col-span-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Refusal reason</CardTitle>
+            <CardTitle className="text-sm font-semibold uppercase">Business Information</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="bg-destructive/10 text-destructive rounded p-3 text-sm">
-              {business.rejectionReason}
-            </p>
+          <CardContent className="space-y-6">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="border-border bg-muted flex size-20 shrink-0 items-center justify-center rounded-full border-4 shadow-md">
+                <IconBuilding className="text-muted-foreground size-8" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-lg font-semibold">{business.name}</p>
+                <p className="text-muted-foreground truncate text-sm">
+                  {business.categoryLabel}
+                  {business.legalFormLabel ? ` · ${business.legalFormLabel}` : ""}
+                </p>
+                <p className="text-muted-foreground truncate text-xs">
+                  {[business.email, business.phone].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+            </div>
+
+            <Separator className="mb-6" />
+
+            {/* Six columns, as the profile form: the identifiers three to a
+                row, the pairs (contact, location) at three apiece. */}
+            <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-6">
+              <Field label="Raison sociale" value={business.name} className="sm:col-span-6" />
+              <Field label="Type" value={business.categoryLabel} className="sm:col-span-3" />
+              <Field label="Legal form" value={business.legalFormLabel} className="sm:col-span-3" />
+              <Field label="RCCM" value={business.registrationNumber} className="sm:col-span-2" />
+              <Field label="NIU" value={business.taxId} className="sm:col-span-2" />
+              <Field label="SCIEN / SCIET" value={business.statisticalId} className="sm:col-span-2" />
+              <Field label="Contact email" value={business.email} className="sm:col-span-3" />
+              <Field label="Contact phone" value={business.phone} className="sm:col-span-3" />
+              <Field label="Country" value={business.countryCode} className="sm:col-span-2" />
+              <Field label="City" value={business.city} className="sm:col-span-2" />
+              <Field
+                label="Headcount"
+                value={business.size ? `${business.size} employees` : null}
+                className="sm:col-span-2"
+              />
+              <Field label="Address" value={business.address} className="sm:col-span-6" />
+              <Field label="Website" value={business.website} className="sm:col-span-6" />
+              <div className="space-y-1.5 sm:col-span-6">
+                <FieldLabel>Description</FieldLabel>
+                <Textarea value={business.description || "—"} readOnly disabled rows={5} />
+              </div>
+            </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-base">{business.name}</CardTitle>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {business.categoryLabel}
-              {business.legalFormLabel ? ` · ${business.legalFormLabel}` : ""}
-            </p>
-          </div>
-          {canManageContent && (
-            <div className="flex shrink-0 gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setRefusing({ kind: "business" })}
-                disabled={decideBusiness.isPending || business.verificationStatus === "REJECTED"}
-              >
-                <IconX className="size-4" />
-                Refuse
-              </Button>
-              <Button
-                onClick={() => decideBusiness.mutate({ decision: "VERIFIED" })}
-                disabled={decideBusiness.isPending || business.verificationStatus === "VERIFIED"}
-              >
-                <IconCheck className="size-4" />
-                {decided ? "Approve again" : "Approve business"}
-              </Button>
+      <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Verification</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4 text-sm">
+              <Row label="Business">
+                <Badge className={getVerificationStatusBadgeClass(business.verificationStatus)}>
+                  {getVerificationStatusLabel(business.verificationStatus)}
+                </Badge>
+              </Row>
+              <Row label="Submitted">{formatDate(business.createdAt)}</Row>
+              <Row label="Decided">{business.verifiedAt ? formatDate(business.verifiedAt) : "—"}</Row>
+              <Row label="Documents">
+                {business.documents.length} uploaded
+              </Row>
             </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <Field label="Headcount" value={business.size ? `${business.size} employees` : null} />
-            <Field label="RCCM" value={business.registrationNumber} />
-            <Field label="NIU" value={business.taxId} />
-            <Field label="SCIEN / SCIET" value={business.statisticalId} />
-            <Field label="Address" value={[business.address, business.city].filter(Boolean).join(", ")} />
-            <Field label="Country" value={business.countryCode} />
-            <Field label="Contact email" value={business.email} />
-            <Field label="Contact phone" value={business.phone} />
-            <Field label="Website" value={business.website} />
-          </dl>
-          {business.description && (
-            <p className="text-muted-foreground mt-6 whitespace-pre-line text-sm">{business.description}</p>
-          )}
-        </CardContent>
-      </Card>
 
-      {business.missingDocuments.length > 0 && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
-          <IconAlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
-          <p>
-            Required for this type and not provided:{" "}
-            <span className="font-medium">
-              {business.missingDocuments.map((g) => g.map((d) => d.label).join(" or ")).join(", ")}
-            </span>
-          </p>
-        </div>
-      )}
+            {business.rejectionReason && (
+              <p className="bg-destructive/10 text-destructive rounded p-3 text-sm">
+                {business.rejectionReason}
+              </p>
+            )}
 
-      <div>
-        <h3 className="mb-4 text-sm font-semibold uppercase">Business documents</h3>
-        {business.documents.length === 0 ? (
-          <Card className="py-8">
-            <CardContent className="flex flex-col items-center justify-center text-center">
-              <IconFileText className="text-muted-foreground mb-2 size-10" />
-              <p className="text-muted-foreground text-sm">No documents uploaded.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {business.documents.map((doc) => (
-              <BusinessDocumentCard
-                key={doc.id}
-                profileId={profileId}
-                doc={doc}
-                canDecide={canManageContent}
-                pending={decideDocument.isPending}
-                onPreview={() =>
-                  onPreviewDoc({
-                    url: businessDocumentRawUrl(profileId, doc.id),
-                    title: doc.label,
-                    description: `${doc.fileName ?? "Document"} — Uploaded ${formatDate(doc.createdAt)}`,
-                    fileType: fileKind(doc.mimeType),
-                  })
-                }
-                onAccept={() => decideDocument.mutate({ documentId: doc.id, decision: "VERIFIED" })}
-                onRefuse={() => setRefusing({ kind: "document", doc })}
-              />
-            ))}
-          </div>
-        )}
+            {business.missingDocuments.length > 0 && (
+              <div className="flex items-start gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                <IconAlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                <p>
+                  Missing for this type:{" "}
+                  <span className="font-medium">
+                    {business.missingDocuments.map((g) => g.map((d) => d.label).join(" or ")).join(", ")}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {canManageContent && (
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setRefusing({ kind: "business" })}
+                  disabled={decideBusiness.isPending || business.verificationStatus === "REJECTED"}
+                >
+                  <IconX className="size-4" />
+                  Refuse
+                </Button>
+                <Button
+                  onClick={() => decideBusiness.mutate({ decision: "VERIFIED" })}
+                  disabled={decideBusiness.isPending || business.verificationStatus === "VERIFIED"}
+                >
+                  <IconCheck className="size-4" />
+                  Approve
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Documents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {business.documents.length === 0 ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <IconFileText className="text-muted-foreground mb-2 size-8" />
+                <p className="text-muted-foreground text-sm">No documents uploaded.</p>
+              </div>
+            ) : (
+              <ul className="divide-border divide-y">
+                {business.documents.map((doc) => (
+                  <li key={doc.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <button
+                      type="button"
+                      onClick={() => preview(doc)}
+                      className="bg-muted hover:bg-accent flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors"
+                      aria-label={`Preview ${doc.label}`}
+                    >
+                      {fileKind(doc.mimeType) === "image" ? (
+                        <IconPhoto className="text-muted-foreground size-5" />
+                      ) : (
+                        <IconFileText className="text-muted-foreground size-5" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => preview(doc)}
+                      className="min-w-0 flex-1 cursor-pointer text-left"
+                    >
+                      <p className="truncate text-sm font-medium hover:underline">{doc.label}</p>
+                      <p className="text-muted-foreground truncate text-xs">{doc.fileName ?? "—"}</p>
+                      {doc.rejectionReason && (
+                        <p className="text-destructive truncate text-xs">{doc.rejectionReason}</p>
+                      )}
+                    </button>
+                    <Badge className={getVerificationStatusBadgeClass(doc.verificationStatus)}>
+                      {getVerificationStatusLabel(doc.verificationStatus)}
+                    </Badge>
+                    <div className="flex shrink-0 gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => preview(doc)} aria-label="Preview">
+                        <IconEye className="size-4" />
+                      </Button>
+                      {canManageContent && (
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setRefusing({ kind: "document", doc })}
+                            disabled={decideDocument.isPending || doc.verificationStatus === "REJECTED"}
+                            aria-label="Refuse document"
+                          >
+                            <IconX className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => decideDocument.mutate({ documentId: doc.id, decision: "VERIFIED" })}
+                            disabled={decideDocument.isPending || doc.verificationStatus === "VERIFIED"}
+                            aria-label="Accept document"
+                          >
+                            <IconCheck className="size-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog
@@ -308,98 +406,5 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function Field({ label, value }: Readonly<{ label: string; value: string | null | undefined }>) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-muted-foreground text-xs font-medium uppercase tracking-wide">{label}</dt>
-      <dd className="mt-1 break-words font-medium">{value || "—"}</dd>
-    </div>
-  );
-}
-
-function BusinessDocumentCard({
-  profileId,
-  doc,
-  canDecide,
-  pending,
-  onPreview,
-  onAccept,
-  onRefuse,
-}: Readonly<{
-  profileId: string;
-  doc: AdminBusinessDocument;
-  canDecide: boolean;
-  pending: boolean;
-  onPreview: () => void;
-  onAccept: () => void;
-  onRefuse: () => void;
-}>) {
-  const [failed, setFailed] = useState(false);
-  const isImage = fileKind(doc.mimeType) === "image" && !failed;
-
-  return (
-    <Card className="min-w-0 gap-0 overflow-hidden py-0">
-      <button
-        type="button"
-        onClick={onPreview}
-        className="bg-muted relative flex h-40 w-full cursor-pointer items-center justify-center"
-        aria-label={`Preview ${doc.label}`}
-      >
-        {isImage ? (
-          <img
-            src={businessDocumentRawUrl(profileId, doc.id)}
-            alt={doc.label}
-            className="h-full w-full object-cover"
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-1">
-            <IconFileText className="text-muted-foreground size-12" />
-            <span className="text-muted-foreground text-xs">{fileKind(doc.mimeType) === "pdf" ? "PDF" : "File"}</span>
-          </div>
-        )}
-        <Badge className={`absolute top-2 right-2 ${getVerificationStatusBadgeClass(doc.verificationStatus)}`}>
-          {getVerificationStatusLabel(doc.verificationStatus)}
-        </Badge>
-      </button>
-      <div className="space-y-3 p-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium">{doc.label}</p>
-          <p className="text-muted-foreground truncate text-xs">{doc.fileName ?? "—"}</p>
-          {doc.rejectionReason && (
-            <p className="text-destructive mt-1 text-xs">{doc.rejectionReason}</p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={onPreview} className="flex-1">
-            Preview
-          </Button>
-          {canDecide && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onRefuse}
-                disabled={pending || doc.verificationStatus === "REJECTED"}
-                aria-label="Refuse document"
-              >
-                <IconX className="size-4" />
-              </Button>
-              <Button
-                size="sm"
-                onClick={onAccept}
-                disabled={pending || doc.verificationStatus === "VERIFIED"}
-                aria-label="Accept document"
-              >
-                <IconCheck className="size-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </Card>
   );
 }
