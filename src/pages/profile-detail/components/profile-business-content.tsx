@@ -356,9 +356,9 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
                     <Badge className={getVerificationStatusBadgeClass(doc.verificationStatus)}>
                       {getVerificationStatusLabel(doc.verificationStatus)}
                     </Badge>
-                    <div className="flex shrink-0 gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => preview(doc)} aria-label="Preview">
-                        <IconEye className="size-4" />
+                    <div className="flex shrink-0 gap-1.5">
+                      <Button size="icon-sm" variant="outline" onClick={() => preview(doc)} aria-label="Preview">
+                        <IconEye className="size-3.5" />
                       </Button>
                       {/* Only what is still to decide: nothing once the
                           business is verified or the paper accepted. */}
@@ -366,23 +366,25 @@ export function ProfileBusinessContent({ profileId, onPreviewDoc }: Readonly<Pro
                         <>
                           {doc.verificationStatus !== "REJECTED" && (
                             <Button
-                              size="icon"
-                              variant="ghost"
+                              size="icon-sm"
+                              variant="outline"
                               onClick={() => setRefusing({ kind: "document", doc })}
                               disabled={decideDocument.isPending}
                               aria-label="Refuse document"
+                              className="hover:text-destructive"
                             >
-                              <IconX className="size-4" />
+                              <IconX className="size-3.5" />
                             </Button>
                           )}
                           <Button
-                            size="icon"
-                            variant="ghost"
+                            size="icon-sm"
+                            variant="outline"
                             onClick={() => setApproving({ kind: "document", doc })}
                             disabled={decideDocument.isPending}
                             aria-label="Accept document"
+                            className="hover:text-emerald-500"
                           >
-                            <IconCheck className="size-4" />
+                            <IconCheck className="size-3.5" />
                           </Button>
                         </>
                       )}
