@@ -52,6 +52,7 @@ const schema = z.object({
   cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(100, "100 at most"),
   cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
   cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
+  cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
   includesPreselection: z.boolean(),
   includesFieldAgents: z.boolean(),
   priorityVisibility: z.boolean(),
@@ -72,6 +73,7 @@ const CV_FIELDS = [
   { name: "cvBatchMax", label: "CVs per upload", min: 1, max: 100, placeholder: undefined },
   { name: "cvFileMaxMb", label: "Max file size (MB)", min: 1, max: 10, placeholder: undefined },
   { name: "cvRetentionDays", label: "Kept for (days)", min: 1, max: 365, placeholder: undefined },
+  { name: "cvChatQuestions", label: "Questions per CV (chat)", min: 0, max: 200, placeholder: undefined },
 ] as const;
 
 const EMPTY: FormInput = {
@@ -87,6 +89,7 @@ const EMPTY: FormInput = {
   cvBatchMax: 20,
   cvFileMaxMb: 5,
   cvRetentionDays: 30,
+  cvChatQuestions: 20,
   includesPreselection: false,
   includesFieldAgents: false,
   priorityVisibility: false,
@@ -139,6 +142,7 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
             cvBatchMax: plan.cvBatchMax,
             cvFileMaxMb: plan.cvFileMaxMb,
             cvRetentionDays: plan.cvRetentionDays,
+            cvChatQuestions: plan.cvChatQuestions,
             includesPreselection: plan.includesPreselection,
             includesFieldAgents: plan.includesFieldAgents,
             priorityVisibility: plan.priorityVisibility,
@@ -344,7 +348,7 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
                 </div>
                 <FormDescription className="text-xs">
                   CVs / period: 0 = not in this plan, empty = unlimited. Unreadable CVs are not counted. After the
-                  retention, files and contact details are deleted; scores stay.
+                  retention, files, contact details and chats are deleted; scores stay. Questions per CV: 0 = no chat.
                 </FormDescription>
               </div>
 

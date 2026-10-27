@@ -160,7 +160,8 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
                   <span className="font-medium text-foreground">{quotaLabel(plan.cvScreeningsPerPeriod, "CVs screened")}</span>{" "}
                   per period
                   <span className="block text-xs">
-                    {plan.cvBatchMax} per upload · {plan.cvFileMaxMb} MB max · kept {plan.cvRetentionDays} days
+                    {plan.cvBatchMax} per upload · {plan.cvFileMaxMb} MB max · kept {plan.cvRetentionDays} days ·{" "}
+                    {plan.cvChatQuestions ? `${plan.cvChatQuestions} questions per CV` : "no chat"}
                   </span>
                 </span>
               </li>
