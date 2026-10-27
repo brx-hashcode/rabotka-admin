@@ -20,6 +20,8 @@ export type BusinessPlan = {
   cvFileMaxMb: number;
   /** Days a screening keeps its files and contact details. */
   cvRetentionDays: number;
+  /** Questions a business may ask about one analysed CV (its chat). */
+  cvChatQuestions: number;
   includesPreselection: boolean;
   includesFieldAgents: boolean;
   priorityVisibility: boolean;
