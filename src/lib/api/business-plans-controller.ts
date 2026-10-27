@@ -27,9 +27,11 @@ export type BusinessPlan = {
   priorityVisibility: boolean;
   isActive: boolean;
   sortOrder: number;
+  /** Businesses with a period running or queued on the plan (the list only). */
+  businesses?: number;
 };
 
-export type BusinessPlanInput = Omit<BusinessPlan, "id">;
+export type BusinessPlanInput = Omit<BusinessPlan, "id" | "businesses">;
 
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
 export type BillingPeriod = "TRIAL" | "MONTHLY" | "ANNUAL";
@@ -80,6 +82,11 @@ class BusinessPlansController extends AdminBaseController {
     return this.patch(`/admin/business-plans/${encodeURIComponent(id)}`, data);
   }
 
+  /** Hides the plan and cancels every business on it. */
+  remove(id: string): Promise<{ businessesCancelled: number }> {
+    return this.delete(`/admin/business-plans/${encodeURIComponent(id)}`);
+  }
+
   subscription(profileId: string): Promise<BusinessSubscriptionOverview> {
     return this.get(`/admin/profiles/${encodeURIComponent(profileId)}/business/subscription`);
   }
@@ -103,6 +110,7 @@ const controller = new BusinessPlansController();
 export const listBusinessPlans = controller.list.bind(controller);
 export const createBusinessPlan = controller.create.bind(controller);
 export const updateBusinessPlan = controller.update.bind(controller);
+export const deleteBusinessPlan = controller.remove.bind(controller);
 export const getBusinessSubscription = controller.subscription.bind(controller);
 export const grantBusinessSubscription = controller.grant.bind(controller);
 export const cancelBusinessSubscription = controller.cancel.bind(controller);
