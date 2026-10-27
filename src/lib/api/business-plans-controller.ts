@@ -12,6 +12,14 @@ export type BusinessPlan = {
   unlocksPerPeriod: number | null;
   /** Null: unlimited. */
   activeOffersLimit: number | null;
+  /** CVs the AI screening reads per period. Null: unlimited; 0: not included. */
+  cvScreeningsPerPeriod: number | null;
+  /** CVs in one screening (one upload). */
+  cvBatchMax: number;
+  /** Largest CV file, in MB. */
+  cvFileMaxMb: number;
+  /** Days a screening keeps its files and contact details. */
+  cvRetentionDays: number;
   includesPreselection: boolean;
   includesFieldAgents: boolean;
   priorityVisibility: boolean;

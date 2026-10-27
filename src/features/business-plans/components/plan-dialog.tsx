@@ -48,6 +48,10 @@ const schema = z.object({
   annualPriceFcfa: z.coerce.number().int().min(0, "The price must be 0 or more"),
   unlocksPerPeriod: quota,
   activeOffersLimit: quota,
+  cvScreeningsPerPeriod: quota,
+  cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(100, "100 at most"),
+  cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
+  cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
   includesPreselection: z.boolean(),
   includesFieldAgents: z.boolean(),
   priorityVisibility: z.boolean(),
@@ -63,6 +67,13 @@ const FEATURE_OPTIONS = [
   { name: "priorityVisibility", label: "Priority visibility of offers" },
 ] as const;
 
+const CV_FIELDS = [
+  { name: "cvScreeningsPerPeriod", label: "CVs / period", min: 0, max: undefined, placeholder: "Unlimited" },
+  { name: "cvBatchMax", label: "CVs per upload", min: 1, max: 100, placeholder: undefined },
+  { name: "cvFileMaxMb", label: "Max file size (MB)", min: 1, max: 10, placeholder: undefined },
+  { name: "cvRetentionDays", label: "Kept for (days)", min: 1, max: 365, placeholder: undefined },
+] as const;
+
 const EMPTY: FormInput = {
   name: "",
   code: "",
@@ -71,6 +82,11 @@ const EMPTY: FormInput = {
   annualPriceFcfa: 0,
   unlocksPerPeriod: "",
   activeOffersLimit: "",
+  // Not included until set: an empty field would mean unlimited.
+  cvScreeningsPerPeriod: 0,
+  cvBatchMax: 20,
+  cvFileMaxMb: 5,
+  cvRetentionDays: 30,
   includesPreselection: false,
   includesFieldAgents: false,
   priorityVisibility: false,
@@ -119,6 +135,10 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
             annualPriceFcfa: plan.annualPriceFcfa,
             unlocksPerPeriod: plan.unlocksPerPeriod ?? "",
             activeOffersLimit: plan.activeOffersLimit ?? "",
+            cvScreeningsPerPeriod: plan.cvScreeningsPerPeriod ?? "",
+            cvBatchMax: plan.cvBatchMax,
+            cvFileMaxMb: plan.cvFileMaxMb,
+            cvRetentionDays: plan.cvRetentionDays,
             includesPreselection: plan.includesPreselection,
             includesFieldAgents: plan.includesFieldAgents,
             priorityVisibility: plan.priorityVisibility,
@@ -294,6 +314,39 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
               <FormDescription className="-mt-3 text-xs">
                 Leave a quota empty for unlimited. Unlocks cover the employer side of a contact unlock.
               </FormDescription>
+
+              <div className="flex flex-col gap-2">
+                <FormLabel>CV screening (AI)</FormLabel>
+                <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-3">
+                  {CV_FIELDS.map((option) => (
+                    <FormField
+                      key={option.name}
+                      control={form.control}
+                      name={option.name}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-normal text-muted-foreground text-xs">{option.label}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={asInputValue(field.value)}
+                              type="number"
+                              min={option.min}
+                              max={option.max}
+                              placeholder={option.placeholder}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <FormDescription className="text-xs">
+                  CVs / period: 0 = not in this plan, empty = unlimited. Unreadable CVs are not counted. After the
+                  retention, files and contact details are deleted; scores stay.
+                </FormDescription>
+              </div>
 
               <div className="flex flex-col gap-2">
                 <FormLabel>Included</FormLabel>
