@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   Building2,
   Check,
+  FileSearch,
   FileText,
   MoreHorizontal,
   Pencil,
@@ -147,6 +148,23 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
               <FileText className="size-3.5 shrink-0 text-foreground" />
               <span className="font-medium text-foreground">{quotaLabel(plan.activeOffersLimit, "active offers")}</span>
             </li>
+            {plan.cvScreeningsPerPeriod === 0 ? (
+              <li className="flex items-center gap-2">
+                <FileSearch className="size-3.5 shrink-0 text-foreground" />
+                <span>No CV screening</span>
+              </li>
+            ) : (
+              <li className="flex items-start gap-2">
+                <FileSearch className="mt-0.5 size-3.5 shrink-0 text-foreground" />
+                <span>
+                  <span className="font-medium text-foreground">{quotaLabel(plan.cvScreeningsPerPeriod, "CVs screened")}</span>{" "}
+                  per period
+                  <span className="block text-xs">
+                    {plan.cvBatchMax} per upload · {plan.cvFileMaxMb} MB max · kept {plan.cvRetentionDays} days
+                  </span>
+                </span>
+              </li>
+            )}
             {features.map((f) => (
               <li key={f} className="flex items-center gap-2">
                 <Check className="size-3.5 shrink-0 text-emerald-500" />
