@@ -10,6 +10,7 @@ import {
   Pencil,
   ToggleLeft,
   ToggleRight,
+  Trash2,
   Unlock,
 } from "lucide-react";
 import {
@@ -30,7 +31,9 @@ import {
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
 import {
+  deleteBusinessPlan,
   updateBusinessPlan,
   type BusinessPlan,
 } from "#/lib/api/business-plans-controller";
@@ -51,6 +54,9 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [toggleOpen, setToggleOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [typedCode, setTypedCode] = useState("");
+  const businesses = plan.businesses ?? 0;
 
   const { mutate: doToggle, isPending: isToggling } = useMutation({
     mutationFn: () => updateBusinessPlan(plan.id, { isActive: !plan.isActive }),
@@ -59,6 +65,20 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
       queryClient.invalidateQueries({ queryKey: BUSINESS_PLANS_KEY });
     },
     onError: (err: Error) => toast.error(friendlyError(err, "Couldn't update the plan. Try again.")),
+  });
+
+  const { mutate: doDelete, isPending: isDeleting } = useMutation({
+    mutationFn: () => deleteBusinessPlan(plan.id),
+    onSuccess: ({ businessesCancelled }) => {
+      toast.success(
+        businessesCancelled > 0
+          ? `Plan deleted; ${businessesCancelled} business${businessesCancelled > 1 ? "es" : ""} cancelled`
+          : "Plan deleted",
+      );
+      setDeleteOpen(false);
+      queryClient.invalidateQueries({ queryKey: BUSINESS_PLANS_KEY });
+    },
+    onError: (err: Error) => toast.error(friendlyError(err, "Couldn't delete the plan. Try again.")),
   });
 
   const features = [
@@ -79,7 +99,7 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
             {canManage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="shrink-0 -mr-1 -mt-1" disabled={isToggling}>
+                  <Button variant="ghost" size="icon" className="shrink-0 -mr-1 -mt-1" disabled={isToggling || isDeleting}>
                     <MoreHorizontal className="size-4" />
                     <span className="sr-only">Options</span>
                   </Button>
@@ -101,6 +121,16 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
                         Activate
                       </>
                     )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => {
+                      setTypedCode("");
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -177,7 +207,11 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
 
         {/* Footer */}
         <div className="px-5 py-2.5 border-t bg-muted/30">
-          <p className="text-muted-foreground text-xs">Display order {plan.sortOrder}</p>
+          <p className="text-muted-foreground text-xs">
+            Display order {plan.sortOrder}
+            {plan.businesses !== undefined &&
+              ` · ${businesses} business${businesses === 1 ? "" : "es"} on it`}
+          </p>
         </div>
       </div>
 
@@ -199,6 +233,52 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
               className={plan.isActive ? "" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs border-0 outline-none ring-0"}
             >
               {isToggling ? "Saving…" : plan.isActive ? "Deactivate" : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete plan?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  &ldquo;{plan.name}&rdquo; will no longer be offered or shown. Past periods and payments keep it in
+                  their history. This can&apos;t be undone.
+                </p>
+                {businesses > 0 ? (
+                  <p className="font-medium text-destructive">
+                    {businesses} business{businesses > 1 ? "es are" : " is"} on this plan: their period ends now,
+                    with any period queued after it, and they are told by notification and e-mail.
+                  </p>
+                ) : (
+                  <p>No business is on this plan.</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {businesses > 0 && (
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span>
+                Type <span className="font-mono font-semibold">{plan.code}</span> to confirm
+              </span>
+              <Input value={typedCode} onChange={(e) => setTypedCode(e.target.value)} autoComplete="off" />
+            </label>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                // Stay open while it runs; closed on success.
+                e.preventDefault();
+                doDelete();
+              }}
+              disabled={isDeleting || (businesses > 0 && typedCode.trim() !== plan.code)}
+              variant="destructive"
+            >
+              {isDeleting ? "Deleting…" : businesses > 0 ? "Delete and cancel" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
