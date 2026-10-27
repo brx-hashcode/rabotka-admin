@@ -1,12 +1,20 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, type ReactNode } from "react";
+import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  IconCoin,
+  IconFileSearch,
+  IconGauge,
+  IconId,
+  IconCircleCheck,
+} from "@tabler/icons-react";
+import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
@@ -19,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
-import { Checkbox } from "#/components/ui/checkbox";
+import { Switch } from "#/components/ui/switch";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
@@ -30,6 +38,7 @@ import {
 } from "#/lib/api/business-plans-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { BUSINESS_PLANS_KEY } from "#/hooks/use-business-plans-list";
+import { cn } from "#/lib/utils";
 
 /** An empty quota field means unlimited (null). */
 const quota = z.preprocess(
@@ -63,18 +72,68 @@ type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
 
 const FEATURE_OPTIONS = [
-  { name: "includesPreselection", label: "Preselection of profiles" },
-  { name: "includesFieldAgents", label: "Field agents (recrutement accompagné)" },
-  { name: "priorityVisibility", label: "Priority visibility of offers" },
+  {
+    name: "includesPreselection",
+    label: "Preselection of profiles",
+    hint: "Our team shortlists candidates for their offers.",
+  },
+  {
+    name: "includesFieldAgents",
+    label: "Field agents",
+    hint: "Recrutement accompagné: an agent handles the hiring on site.",
+  },
+  {
+    name: "priorityVisibility",
+    label: "Priority visibility",
+    hint: "Their offers are shown first to workers.",
+  },
 ] as const;
 
 const CV_FIELDS = [
-  { name: "cvScreeningsPerPeriod", label: "CVs / period", min: 0, max: undefined, placeholder: "Unlimited" },
-  { name: "cvBatchMax", label: "CVs per upload", min: 1, max: 100, placeholder: undefined },
-  { name: "cvFileMaxMb", label: "Max file size (MB)", min: 1, max: 10, placeholder: undefined },
-  { name: "cvRetentionDays", label: "Kept for (days)", min: 1, max: 365, placeholder: undefined },
-  { name: "cvChatQuestions", label: "Questions per CV (chat)", min: 0, max: 200, placeholder: undefined },
+  {
+    name: "cvScreeningsPerPeriod",
+    label: "CVs per period",
+    suffix: "CVs",
+    min: 0,
+    max: undefined,
+    placeholder: "Unlimited",
+    hint: "0 = not in this plan, empty = unlimited. Unreadable CVs are not counted.",
+  },
+  { name: "cvBatchMax", label: "CVs per upload", suffix: "CVs", min: 1, max: 100, placeholder: undefined, hint: "1 to 100 files at once." },
+  { name: "cvFileMaxMb", label: "Max file size", suffix: "MB", min: 1, max: 10, placeholder: undefined, hint: "Per file, 10 MB at most." },
+  {
+    name: "cvRetentionDays",
+    label: "Kept for",
+    suffix: "days",
+    min: 1,
+    max: 365,
+    placeholder: undefined,
+    hint: "Then files, contact details and chats are deleted; scores stay.",
+  },
+  {
+    name: "cvChatQuestions",
+    label: "Questions per CV",
+    suffix: "questions",
+    min: 0,
+    max: 200,
+    placeholder: undefined,
+    hint: "Questions to the AI about one CV. 0 = no chat.",
+  },
 ] as const;
+
+const fcfa = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
+
+/** What the annual price comes to per month, and the discount against twelve monthly payments. */
+function annualHint(monthly: unknown, annual: unknown): string | null {
+  const m = Number(monthly);
+  const a = Number(annual);
+  if (!(m > 0) || !(a > 0)) return null;
+  const off = Math.round((1 - a / (m * 12)) * 100);
+  const perMonth = `≈ ${fcfa(a / 12)} / month`;
+  if (off > 0) return `${perMonth} · ${off} % off monthly`;
+  if (off < 0) return `${perMonth} · more than 12 monthly payments`;
+  return `${perMonth} · same as monthly`;
+}
 
 const EMPTY: FormInput = {
   name: "",
@@ -104,6 +163,81 @@ function submitLabel(isPending: boolean, isEdit: boolean): string {
 function asInputValue(value: unknown): string | number {
   if (typeof value === "number" || typeof value === "string") return value;
   return "";
+}
+
+function Section({
+  icon,
+  title,
+  description,
+  children,
+}: Readonly<{ icon: ReactNode; title: string; description?: string; children: ReactNode }>) {
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border bg-muted/20 p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-sm leading-9">{title}</h3>
+          {description && <p className="-mt-1.5 text-muted-foreground text-xs">{description}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** A number input with its unit on the right. */
+function NumberField({
+  control,
+  name,
+  label,
+  suffix,
+  hint,
+  min,
+  max,
+  placeholder,
+}: Readonly<{
+  control: Control<FormInput, unknown, FormValues>;
+  name: FieldPath<FormInput>;
+  label: string;
+  suffix?: string;
+  hint?: ReactNode;
+  min?: number;
+  max?: number;
+  placeholder?: string;
+}>) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <div className="relative">
+            <FormControl>
+              <Input
+                {...field}
+                value={asInputValue(field.value)}
+                type="number"
+                min={min}
+                max={max}
+                placeholder={placeholder}
+                className={cn("tabular-nums", suffix && "pr-20")}
+              />
+            </FormControl>
+            {suffix && (
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground text-xs">
+                {suffix}
+              </span>
+            )}
+          </div>
+          {hint && <FormDescription className="text-xs">{hint}</FormDescription>}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 }
 
 type PlanDialogProps = {
@@ -175,207 +309,169 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
       ),
   });
 
+  const [monthly, annual] = useWatch({ control: form.control, name: ["monthlyPriceFcfa", "annualPriceFcfa"] });
+  const annualNote = annualHint(monthly, annual);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
-        <DialogHeader className="px-6 py-4 border-b shrink-0">
-          <DialogTitle>{isEdit ? "Edit Plan" : "New Plan"}</DialogTitle>
+      <DialogContent className="flex max-h-[92vh] w-full flex-col gap-0 p-0 sm:max-w-3xl">
+        <DialogHeader className="shrink-0 border-b px-6 py-5">
+          <DialogTitle className="text-lg">{isEdit ? `Edit ${plan.name}` : "New plan"}</DialogTitle>
+          <DialogDescription>
+            New prices and quotas apply to new purchases and renewals; periods already paid keep what they were
+            bought with.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((v) => mutate(v))}>
-            <div className="flex flex-col gap-5 px-6 py-5 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 py-6">
+              <Section icon={<IconId className="size-5" />} title="Identity" description="How the plan is named and listed.">
+                <div className="grid items-start gap-4 sm:grid-cols-[1fr_1fr_8rem]">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Pro" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                            placeholder="pro"
+                            disabled={isEdit}
+                            className="font-mono"
+                          />
+                        </FormControl>
+                        {isEdit && <FormDescription className="text-xs">Fixed once created.</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <NumberField control={form.control} name="sortOrder" label="Order" hint="Lower comes first." />
+                </div>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Pro" />
+                        <Textarea {...field} placeholder="Who this plan is for, shown to businesses" rows={3} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value.toLowerCase())}
-                          placeholder="pro"
-                          disabled={isEdit}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              </Section>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} placeholder="What this plan is for" rows={3} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Section icon={<IconCoin className="size-5" />} title="Pricing" description="0 makes the plan free.">
+                <div className="grid items-start gap-4 sm:grid-cols-2">
+                  <NumberField control={form.control} name="monthlyPriceFcfa" label="Monthly price" suffix="FCFA" min={0} />
+                  <NumberField
+                    control={form.control}
+                    name="annualPriceFcfa"
+                    label="Annual price"
+                    suffix="FCFA"
+                    min={0}
+                    hint={annualNote}
+                  />
+                </div>
+              </Section>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="monthlyPriceFcfa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly price (FCFA)</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={asInputValue(field.value)} type="number" min={0} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="annualPriceFcfa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Annual price (FCFA)</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={asInputValue(field.value)} type="number" min={0} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Section
+                icon={<IconGauge className="size-5" />}
+                title="Quotas"
+                description="Per period. Leave a field empty for unlimited."
+              >
+                <div className="grid items-start gap-4 sm:grid-cols-2">
+                  <NumberField
+                    control={form.control}
+                    name="unlocksPerPeriod"
+                    label="Contact unlocks"
+                    suffix="contacts"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="Covers the employer side of a contact unlock."
+                  />
+                  <NumberField
+                    control={form.control}
+                    name="activeOffersLimit"
+                    label="Active offers"
+                    suffix="offers"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="Offers online at the same time."
+                  />
+                </div>
+              </Section>
 
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="unlocksPerPeriod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unlocks / period</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={asInputValue(field.value)}
-                          type="number"
-                          min={0}
-                          placeholder="Unlimited"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="activeOffersLimit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Active offers</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={asInputValue(field.value)}
-                          type="number"
-                          min={0}
-                          placeholder="Unlimited"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="sortOrder"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={asInputValue(field.value)} type="number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormDescription className="-mt-3 text-xs">
-                Leave a quota empty for unlimited. Unlocks cover the employer side of a contact unlock.
-              </FormDescription>
-
-              <div className="flex flex-col gap-2">
-                <FormLabel>CV screening (AI)</FormLabel>
-                <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-3">
+              <Section
+                icon={<IconFileSearch className="size-5" />}
+                title="CV analysis (AI)"
+                description="Businesses upload CVs for a job; the AI scores and ranks them."
+              >
+                <div className="grid items-start gap-4 sm:grid-cols-2">
                   {CV_FIELDS.map((option) => (
-                    <FormField
+                    <NumberField
                       key={option.name}
                       control={form.control}
                       name={option.name}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-normal text-muted-foreground text-xs">{option.label}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={asInputValue(field.value)}
-                              type="number"
-                              min={option.min}
-                              max={option.max}
-                              placeholder={option.placeholder}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label={option.label}
+                      suffix={option.suffix}
+                      min={option.min}
+                      max={option.max}
+                      placeholder={option.placeholder}
+                      hint={option.hint}
                     />
                   ))}
                 </div>
-                <FormDescription className="text-xs">
-                  CVs / period: 0 = not in this plan, empty = unlimited. Unreadable CVs are not counted. After the
-                  retention, files, contact details and chats are deleted; scores stay. Questions per CV: 0 = no chat.
-                </FormDescription>
-              </div>
+              </Section>
 
-              <div className="flex flex-col gap-2">
-                <FormLabel>Included</FormLabel>
-                <div className="flex flex-col gap-2 rounded-lg bg-muted/40 p-3">
+              <Section icon={<IconCircleCheck className="size-5" />} title="Included services">
+                <div className="grid gap-3 sm:grid-cols-3">
                   {FEATURE_OPTIONS.map((option) => (
                     <FormField
                       key={option.name}
                       control={form.control}
                       name={option.name}
                       render={({ field }) => (
-                        <label className="flex cursor-pointer items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={field.value === true}
-                            onCheckedChange={(checked) => field.onChange(checked === true)}
-                          />
-                          {option.label}
+                        <label
+                          className={cn(
+                            "flex cursor-pointer flex-col gap-2 rounded-lg border bg-background p-3 transition-colors",
+                            field.value === true && "border-primary/60 bg-primary/5",
+                          )}
+                        >
+                          <span className="flex items-center justify-between gap-2 font-medium text-sm">
+                            {option.label}
+                            <Switch
+                              checked={field.value === true}
+                              onCheckedChange={(checked) => field.onChange(checked === true)}
+                            />
+                          </span>
+                          <span className="text-muted-foreground text-xs">{option.hint}</span>
                         </label>
                       )}
                     />
                   ))}
                 </div>
-              </div>
+              </Section>
             </div>
 
-            <div className="px-6 py-4 border-t shrink-0 flex justify-end gap-2">
+            <div className="flex shrink-0 justify-end gap-2 border-t px-6 py-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
