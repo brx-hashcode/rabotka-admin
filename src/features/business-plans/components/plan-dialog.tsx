@@ -58,7 +58,7 @@ const schema = z.object({
   unlocksPerPeriod: quota,
   activeOffersLimit: quota,
   cvScreeningsPerPeriod: quota,
-  cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(100, "100 at most"),
+  cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(5, "5 at most"),
   cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
   cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
@@ -100,7 +100,7 @@ const CV_FIELDS = [
     placeholder: "Unlimited",
     hint: "0 = not in this plan, empty = unlimited. Unreadable CVs are not counted.",
   },
-  { name: "cvBatchMax", label: "CVs per upload", suffix: "CVs", min: 1, max: 100, placeholder: undefined, hint: "1 to 100 files at once." },
+  { name: "cvBatchMax", label: "CVs per upload", suffix: "CVs", min: 1, max: 5, placeholder: undefined, hint: "1 to 5 files at once." },
   { name: "cvFileMaxMb", label: "Max file size", suffix: "MB", min: 1, max: 10, placeholder: undefined, hint: "Per file, 10 MB at most." },
   {
     name: "cvRetentionDays",
@@ -146,7 +146,7 @@ const EMPTY: FormInput = {
   activeOffersLimit: "",
   // Not included until set: an empty field would mean unlimited.
   cvScreeningsPerPeriod: 0,
-  cvBatchMax: 20,
+  cvBatchMax: 5,
   cvFileMaxMb: 5,
   cvRetentionDays: 30,
   cvChatQuestions: 20,
