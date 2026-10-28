@@ -417,11 +417,11 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
                   <NumberField
                     control={form.control}
                     name="activeOffersLimit"
-                    label="Active offers"
+                    label="Offers per period"
                     suffix="offers"
                     min={0}
                     placeholder="Unlimited"
-                    hint="Offers online at the same time."
+                    hint="Offers published per period, from 0 each period. Offers already online stay online."
                   />
                   <NumberField
                     control={form.control}
