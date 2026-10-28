@@ -177,7 +177,8 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
             </li>
             <li className="flex items-center gap-2">
               <FileText className="size-3.5 shrink-0 text-foreground" />
-              <span className="font-medium text-foreground">{quotaLabel(plan.activeOffersLimit, "active offers")}</span>
+              <span className="font-medium text-foreground">{quotaLabel(plan.activeOffersLimit, "offers")}</span>
+              <span>per period</span>
             </li>
             {plan.cvScreeningsPerPeriod === 0 ? (
               <li className="flex items-center gap-2">
