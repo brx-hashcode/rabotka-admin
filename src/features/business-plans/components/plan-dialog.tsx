@@ -62,6 +62,7 @@ const schema = z.object({
   cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
   cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
+  offerDraftsPerPeriod: quota,
   includesPreselection: z.boolean(),
   includesFieldAgents: z.boolean(),
   priorityVisibility: z.boolean(),
@@ -149,6 +150,7 @@ const EMPTY: FormInput = {
   cvFileMaxMb: 5,
   cvRetentionDays: 30,
   cvChatQuestions: 20,
+  offerDraftsPerPeriod: 20,
   includesPreselection: false,
   includesFieldAgents: false,
   priorityVisibility: false,
@@ -277,6 +279,7 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
             cvFileMaxMb: plan.cvFileMaxMb,
             cvRetentionDays: plan.cvRetentionDays,
             cvChatQuestions: plan.cvChatQuestions,
+            offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
             includesPreselection: plan.includesPreselection,
             includesFieldAgents: plan.includesFieldAgents,
             priorityVisibility: plan.priorityVisibility,
@@ -415,6 +418,15 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
                     min={0}
                     placeholder="Unlimited"
                     hint="Offers online at the same time."
+                  />
+                  <NumberField
+                    control={form.control}
+                    name="offerDraftsPerPeriod"
+                    label="AI-written offers"
+                    suffix="offers"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="« Rédiger avec l'IA » in the offer form. 0 = not in this plan."
                   />
                 </div>
               </Section>

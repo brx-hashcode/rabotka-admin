@@ -8,6 +8,7 @@ import {
   FileText,
   MoreHorizontal,
   Pencil,
+  PenLine,
   ToggleLeft,
   ToggleRight,
   Trash2,
@@ -196,6 +197,17 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
                 </span>
               </li>
             )}
+            <li className="flex items-center gap-2">
+              <PenLine className="size-3.5 shrink-0 text-foreground" />
+              {plan.offerDraftsPerPeriod === 0 ? (
+                <span>No AI offer writing</span>
+              ) : (
+                <span>
+                  <span className="font-medium text-foreground">{quotaLabel(plan.offerDraftsPerPeriod, "AI-written offers")}</span>{" "}
+                  per period
+                </span>
+              )}
+            </li>
             {features.map((f) => (
               <li key={f} className="flex items-center gap-2">
                 <Check className="size-3.5 shrink-0 text-emerald-500" />
