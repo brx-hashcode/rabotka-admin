@@ -6,6 +6,7 @@ import {
   IconBrandWhatsapp,
   IconChevronDown,
   IconFileText,
+  IconFileCv,
 } from "@tabler/icons-react";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { useMutation } from "@tanstack/react-query";
@@ -44,6 +45,7 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
+  downloadAdminProfileResume,
 } from "#/lib/api/profiles-controller";
 import type {
   AdminVerifyDocumentRef,
@@ -112,6 +114,7 @@ export default function ProfileDetailPage({
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoadingAgreement, setIsLoadingAgreement] = useState(false);
+  const [isLoadingResume, setIsLoadingResume] = useState(false);
 
   const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
     mutationFn: () => sendVerificationLink(profileId),
@@ -174,6 +177,30 @@ export default function ProfileDetailPage({
       toast.error("Failed to load agreement document");
     } finally {
       setIsLoadingAgreement(false);
+    }
+  }
+
+  async function handleViewResume() {
+    setIsLoadingResume(true);
+    try {
+      const blob = await downloadAdminProfileResume(profileId);
+      const objectUrl = URL.createObjectURL(blob);
+      handlePreviewDoc({
+        url: objectUrl,
+        title: "CV",
+        description: `CV — ${profile?.firstName} ${profile?.lastName}`,
+        fileType: "pdf",
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = `CV_${profile?.firstName ?? ""}_${profile?.lastName ?? ""}.pdf`;
+          a.click();
+        },
+      });
+    } catch {
+      toast.error("Failed to load the CV");
+    } finally {
+      setIsLoadingResume(false);
     }
   }
 
@@ -293,6 +320,12 @@ export default function ProfileDetailPage({
           </TabsList>
 
           <div className="flex items-center gap-2">
+            {isWorker && (
+              <Button variant="secondary" onClick={handleViewResume} disabled={isLoadingResume}>
+                <IconFileCv className="size-4" />
+                {isLoadingResume ? "Loading..." : "View CV"}
+              </Button>
+            )}
             <Button variant="secondary" onClick={handleViewAgreement} disabled={isLoadingAgreement}>
               <IconFileText className="size-4" />
               {isLoadingAgreement ? "Loading..." : "View Agreement"}

@@ -674,6 +674,16 @@ export class AdminProfilesController extends AdminBaseController {
     return response.blob();
   }
 
+  /** The CV the candidate downloads from their own app, generated from the profile. */
+  async downloadProfileResume(profileId: string): Promise<Blob> {
+    const response = await guardedFetch(
+      `${appConfig.apiUrl}/admin/profiles/${profileId}/resume`,
+      { credentials: "include" },
+    );
+    if (!response.ok) throw new Error("The CV couldn't be loaded. Try again.");
+    return response.blob();
+  }
+
   async bulkDelete(ids: string[]): Promise<{ count: number }> {
     const url = this.createURL(
       "/admin/profiles/bulk-delete",
@@ -753,5 +763,6 @@ export const getProfileWallet = controller.getWallet.bind(controller);
 export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
+export const downloadAdminProfileResume = controller.downloadProfileResume.bind(controller);
 export const getProfileInvoices = controller.getInvoices.bind(controller);
 export const updateProfileAvatar = controller.updateAvatar.bind(controller);
