@@ -291,10 +291,14 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
+      const { offerDraftsPerPeriod, ...rest } = values;
       const payload = {
-        ...values,
+        ...rest,
         description: values.description || null,
         isActive: plan?.isActive ?? true,
+        // A backend older than the field neither sends nor accepts it: an
+        // empty field there means « unknown », not « unlimited ».
+        ...(isEdit && plan.offerDraftsPerPeriod === undefined ? {} : { offerDraftsPerPeriod }),
       };
       return isEdit ? updateBusinessPlan(plan.id, payload) : createBusinessPlan(payload);
     },
