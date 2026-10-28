@@ -23,7 +23,8 @@ export type BusinessPlan = {
   /** Questions a business may ask about one analysed CV (its chat). */
   cvChatQuestions: number;
   /** Offers the AI writes per period (« Rédiger avec l'IA »). Null: unlimited; 0: not included. */
-  offerDraftsPerPeriod: number | null;
+  /** Absent from a backend older than the field. */
+  offerDraftsPerPeriod?: number | null;
   includesPreselection: boolean;
   includesFieldAgents: boolean;
   priorityVisibility: boolean;
