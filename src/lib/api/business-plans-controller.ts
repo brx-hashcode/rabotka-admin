@@ -26,7 +26,6 @@ export type BusinessPlan = {
   /** Absent from a backend older than the field. */
   offerDraftsPerPeriod?: number | null;
   includesPreselection: boolean;
-  includesFieldAgents: boolean;
   priorityVisibility: boolean;
   isActive: boolean;
   sortOrder: number;
@@ -64,7 +63,6 @@ export type BusinessSubscriptionOverview = {
     activeOffersLimit: number | null;
     activeOffers: number;
     includesPreselection: boolean;
-    includesFieldAgents: boolean;
     priorityVisibility: boolean;
   };
   upcoming: SubscriptionPeriod[];

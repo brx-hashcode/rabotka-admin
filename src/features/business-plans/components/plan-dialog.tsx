@@ -64,7 +64,6 @@ const schema = z.object({
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
   offerDraftsPerPeriod: quota,
   includesPreselection: z.boolean(),
-  includesFieldAgents: z.boolean(),
   priorityVisibility: z.boolean(),
   sortOrder: z.coerce.number().int(),
 });
@@ -77,11 +76,6 @@ const FEATURE_OPTIONS = [
     name: "includesPreselection",
     label: "Preselection of profiles",
     hint: "Our team shortlists candidates for their offers.",
-  },
-  {
-    name: "includesFieldAgents",
-    label: "Field agents",
-    hint: "Recrutement accompagné: an agent handles the hiring on site.",
   },
   {
     name: "priorityVisibility",
@@ -152,7 +146,6 @@ const EMPTY: FormInput = {
   cvChatQuestions: 20,
   offerDraftsPerPeriod: 20,
   includesPreselection: false,
-  includesFieldAgents: false,
   priorityVisibility: false,
   sortOrder: 0,
 };
@@ -281,7 +274,6 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
             cvChatQuestions: plan.cvChatQuestions,
             offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
             includesPreselection: plan.includesPreselection,
-            includesFieldAgents: plan.includesFieldAgents,
             priorityVisibility: plan.priorityVisibility,
             sortOrder: plan.sortOrder,
           }

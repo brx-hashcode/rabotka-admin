@@ -70,7 +70,6 @@ function planFacts(p: BusinessPlan): string {
     quota(p.unlocksPerPeriod, "contacts"),
     quota(p.activeOffersLimit, "offers"),
     p.includesPreselection && "Preselection",
-    p.includesFieldAgents && "Field agents",
     p.priorityVisibility && "Priority",
   ]
     .filter(Boolean)
@@ -215,9 +214,8 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
             <Row label="Includes">
               <div className="flex flex-wrap justify-end gap-1">
                 {e.includesPreselection && <Badge variant="outline">Preselection</Badge>}
-                {e.includesFieldAgents && <Badge variant="outline">Field agents</Badge>}
                 {e.priorityVisibility && <Badge variant="outline">Priority</Badge>}
-                {!e.includesPreselection && !e.includesFieldAgents && !e.priorityVisibility && "—"}
+                {!e.includesPreselection && !e.priorityVisibility && "—"}
               </div>
             </Row>
           )}
