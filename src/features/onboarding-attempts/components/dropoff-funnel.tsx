@@ -255,14 +255,30 @@ export function DropoffFunnel({
                         · {pct(step.ofStart)}
                       </span>
                     </div>
-                    <div className="bg-muted h-3 overflow-hidden rounded-full">
+                    {/* Who got here, then — hatched — who the step before lost,
+                        so a drop is seen as a gap and not only read. */}
+                    <div className="bg-muted flex h-3 gap-0.5 overflow-hidden rounded-full">
                       <div
                         className={cn(
-                          "h-full rounded-full transition-[width] duration-500",
-                          step.stage === "COMPLETED" ? "bg-emerald-500" : "bg-primary",
+                          "h-full shrink-0 rounded-full transition-[width] duration-500",
+                          step.stage === "COMPLETED" ? "bg-emerald-600" : "bg-primary",
                         )}
                         style={{ width: `${Math.max(step.ofStart * 100, step.reached ? 2 : 0)}%` }}
                       />
+                      {i > 0 && step.lostBefore > 0 && (
+                        <div
+                          title={`${step.lostBefore} perdu${step.lostBefore > 1 ? "s" : ""} à cette étape`}
+                          className={cn(
+                            "h-full shrink-0 rounded-full",
+                            isLeak ? "text-destructive/45" : "text-muted-foreground/35",
+                          )}
+                          style={{
+                            width: `${(steps[i - 1].ofStart - step.ofStart) * 100}%`,
+                            backgroundImage:
+                              "repeating-linear-gradient(45deg, currentColor 0 3px, transparent 3px 6px)",
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
