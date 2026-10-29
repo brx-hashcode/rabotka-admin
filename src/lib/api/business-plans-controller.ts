@@ -94,16 +94,19 @@ class BusinessPlansController extends AdminBaseController {
     return this.get(`/admin/profiles/${encodeURIComponent(profileId)}/business/subscription`);
   }
 
+  /** `startNow` ends the running period today instead of queueing after it. */
   grant(
     profileId: string,
-    data: { planId: string; billingPeriod: "MONTHLY" | "ANNUAL" },
+    data: { planId: string; billingPeriod: "MONTHLY" | "ANNUAL"; startNow?: boolean },
   ): Promise<BusinessSubscriptionOverview> {
     return this.post(`/admin/profiles/${encodeURIComponent(profileId)}/business/subscription`, data);
   }
 
-  cancel(profileId: string, subscriptionId: string): Promise<BusinessSubscriptionOverview> {
+  /** The business is told in-app and by email, with `reason` when given. */
+  cancel(profileId: string, subscriptionId: string, reason?: string): Promise<BusinessSubscriptionOverview> {
     return this.post(
       `/admin/profiles/${encodeURIComponent(profileId)}/business/subscription/${encodeURIComponent(subscriptionId)}/cancel`,
+      { reason: reason?.trim() || undefined },
     );
   }
 }

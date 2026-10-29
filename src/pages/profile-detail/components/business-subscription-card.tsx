@@ -24,7 +24,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "#/components/ui/dialog";
+import { Label } from "#/components/ui/label";
 import { Skeleton } from "#/components/ui/skeleton";
+import { Textarea } from "#/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { GeoCombobox } from "#/components/geo-combobox";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
@@ -61,8 +63,9 @@ const usage = (used: number, limit: number | null) => (limit === null ? `${used}
 
 /**
  * A business's plan on its Business tab: what it has now, what it used, what
- * is queued, and its history. An admin can grant (or extend) a plan and end a
- * running period, each behind a confirmation.
+ * is queued, and its history. An admin can assign a plan (after the running
+ * period or in its place) and end a running period, each behind a
+ * confirmation. The business is told of both in-app and by email.
  */
 export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: string }>) {
   const queryClient = useQueryClient();
@@ -73,8 +76,10 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
   const [granting, setGranting] = useState(false);
   const [planId, setPlanId] = useState<string | null>(null);
   const [period, setPeriod] = useState<"MONTHLY" | "ANNUAL">("MONTHLY");
+  const [startNow, setStartNow] = useState(false);
   const [confirmGrant, setConfirmGrant] = useState(false);
   const [cancelling, setCancelling] = useState<SubscriptionPeriod | null>(null);
+  const [reason, setReason] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
   const onSaved = (next: BusinessSubscriptionOverview) => {
@@ -83,25 +88,27 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
   };
 
   const grant = useMutation({
-    mutationFn: () => grantBusinessSubscription(profileId, { planId: planId!, billingPeriod: period }),
+    mutationFn: (now: boolean) =>
+      grantBusinessSubscription(profileId, { planId: planId!, billingPeriod: period, startNow: now }),
     onSuccess: (next) => {
       onSaved(next);
       setConfirmGrant(false);
       setGranting(false);
-      toast.success("Plan granted. The business is notified by email and in-app.");
+      toast.success("Plan assigned. The business is notified by email and in-app.");
     },
     onError: (err: Error) => {
       setConfirmGrant(false);
-      toast.error(friendlyError(err, "Couldn't grant the plan. Try again."));
+      toast.error(friendlyError(err, "Couldn't assign the plan. Try again."));
     },
   });
 
   const cancel = useMutation({
-    mutationFn: (sub: SubscriptionPeriod) => cancelBusinessSubscription(profileId, sub.id),
+    mutationFn: (sub: SubscriptionPeriod) => cancelBusinessSubscription(profileId, sub.id, reason),
     onSuccess: (next) => {
       onSaved(next);
       setCancelling(null);
-      toast.success("Period ended.");
+      setReason("");
+      toast.success("Period ended. The business is notified by email and in-app.");
     },
     onError: (err: Error) => toast.error(friendlyError(err, "Couldn't end the period. Try again.")),
   });
@@ -113,15 +120,36 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
     (p) => (p.status === "TRIAL" || p.status === "ACTIVE") && new Date(p.startsAt) <= new Date() && new Date(p.endsAt) > new Date(),
   );
   const chosen = plans.find((p) => p.id === planId);
+  // A running trial is always replaced, so only a paid or assigned period
+  // leaves the admin a choice between now and after it.
+  const replacing = running?.status === "ACTIVE" ? running : undefined;
+  const replacedPlan = replacing && plans.find((p) => p.code === replacing.planCode);
+  // As the server: a dearer plan always starts now, carrying the unused days.
+  const upgrade = !!chosen && !!replacedPlan && chosen.monthlyPriceFcfa > replacedPlan.monthlyPriceFcfa;
+  const now = upgrade || startNow;
+  const startNote = !replacing
+    ? null
+    : upgrade
+      ? `Dearer than « ${replacing.planName} »: it starts now and the unused days carry over.`
+      : now
+        ? `« ${replacing.planName} » ends today; its remaining time and quota are lost.`
+        : `Starts on ${formatDate(replacing.endsAt)}, when « ${replacing.planName} » ends.`;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm">Subscription</CardTitle>
         {canManageContent && (
-          <Button size="sm" variant="outline" onClick={() => setGranting(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setStartNow(false);
+              setGranting(true);
+            }}
+          >
             <IconPlus className="size-4" />
-            Grant plan
+            Assign plan
           </Button>
         )}
       </CardHeader>
@@ -199,10 +227,9 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
       <Dialog open={granting} onOpenChange={setGranting}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Grant a plan</DialogTitle>
+            <DialogTitle>Assign a plan</DialogTitle>
             <DialogDescription>
-              Added after the running period, if any (a running trial is replaced). No payment is asked; the business is
-              notified by email and in-app.
+              No payment is asked, and a running trial is replaced. The business is notified by email and in-app.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -227,13 +254,34 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
                 One year
               </ToggleGroupItem>
             </ToggleGroup>
+            {replacing && (
+              <div className="space-y-2">
+                <Label>Starts</Label>
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  value={now ? "now" : "after"}
+                  onValueChange={(v) => v && setStartNow(v === "now")}
+                  disabled={upgrade}
+                  className="w-full"
+                >
+                  <ToggleGroupItem value="after" className="flex-1">
+                    After the current period
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="now" className="flex-1">
+                    Start now
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                <p className="text-muted-foreground text-xs">{startNote}</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGranting(false)}>
               Cancel
             </Button>
             <Button onClick={() => setConfirmGrant(true)} disabled={!planId}>
-              Grant
+              Assign
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -242,22 +290,54 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
       <ConfirmDialog
         open={confirmGrant}
         onOpenChange={setConfirmGrant}
-        title={`Grant « ${chosen?.name ?? ""} » for ${period === "ANNUAL" ? "one year" : "one month"}?`}
-        description="The business gets the plan's quotas and features without paying. This is logged under your name."
-        actionLabel="Grant plan"
-        onConfirm={() => grant.mutate()}
+        title={`Assign « ${chosen?.name ?? ""} » for ${period === "ANNUAL" ? "one year" : "one month"}?`}
+        description={`${startNote ?? "It starts now."} The business gets the plan's quotas and features without paying. This is logged under your name.`}
+        actionLabel="Assign plan"
+        onConfirm={() => grant.mutate(!!replacing && startNow)}
         isPending={grant.isPending}
       />
 
-      <ConfirmDialog
+      <Dialog
         open={!!cancelling}
-        onOpenChange={(o) => !o && setCancelling(null)}
-        title={`End « ${cancelling?.planName ?? ""} » now?`}
-        description="The period stops now: its remaining quota and features are lost, and nothing is refunded from here."
-        actionLabel="End period"
-        onConfirm={() => cancelling && cancel.mutate(cancelling)}
-        isPending={cancel.isPending}
-      />
+        onOpenChange={(o) => {
+          if (o) return;
+          setCancelling(null);
+          setReason("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End « {cancelling?.planName ?? ""} » now?</DialogTitle>
+            <DialogDescription>
+              The period stops now: its remaining quota and features are lost, and nothing is refunded from here. The
+              business is notified by email and in-app.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="end-period-reason">Reason (shown to the business)</Label>
+            <Textarea
+              id="end-period-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={300}
+              placeholder="Optional"
+            />
+            <p className="text-muted-foreground text-right text-xs">{reason.length} / 300</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelling(null)} disabled={cancel.isPending}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelling && cancel.mutate(cancelling)}
+              disabled={cancel.isPending}
+            >
+              End period
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
