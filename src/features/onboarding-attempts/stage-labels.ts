@@ -60,7 +60,7 @@ const BUSINESS: { stage: Wording; reached: Wording; stopped: Wording } = {
 
 /** Both kinds at once: words true of a phone and of an email. */
 const MIXED: { stage: Wording; reached: Wording; stopped: Wording } = {
-  stage: { CODE_SENT: "Code", PHONE_VERIFIED: "Après vérification" },
+  stage: { CODE_SENT: "Code de vérification", PHONE_VERIFIED: "Après vérification" },
   reached: { CODE_SENT: "Code demandé", PHONE_VERIFIED: "Numéro ou e-mail vérifié" },
   stopped: {
     CODE_SENT: "Code demandé, jamais saisi",

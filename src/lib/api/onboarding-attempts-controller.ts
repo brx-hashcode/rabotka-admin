@@ -33,6 +33,16 @@ export type AdminOnboardingAttempt = {
   contactNote: string | null;
 };
 
+export type TimelineBucket = "day" | "week";
+
+/** One day (or week) of sign-ups, by the day they started. */
+export type OnboardingTimelinePoint = {
+  /** The bucket's first day, YYYY-MM-DD, Brazzaville time. */
+  date: string;
+  started: number;
+  completed: number;
+};
+
 export type AdminOnboardingAttemptListParams = {
   page?: number;
   limit?: number;
@@ -98,6 +108,21 @@ class AdminOnboardingAttemptsController extends AdminBaseController {
     );
   }
 
+  async getOnboardingTimeline(params: {
+    startedFrom?: string;
+    startedTo?: string;
+    entry?: OnboardingEntry;
+    bucket: TimelineBucket;
+  }): Promise<OnboardingTimelinePoint[]> {
+    const search = new URLSearchParams({ bucket: params.bucket });
+    if (params.startedFrom) search.set("started_from", params.startedFrom);
+    if (params.startedTo) search.set("started_to", params.startedTo);
+    if (params.entry) search.set("entry", params.entry);
+    return this.get<OnboardingTimelinePoint[]>(
+      `/admin/onboarding-attempts/timeline?${search.toString()}`,
+    );
+  }
+
   async markOnboardingContacted(
     id: string,
     note: string,
@@ -113,5 +138,7 @@ const controller = new AdminOnboardingAttemptsController();
 export const listOnboardingAttempts =
   controller.listOnboardingAttempts.bind(controller);
 export const getOnboardingStats = controller.getOnboardingStats.bind(controller);
+export const getOnboardingTimeline =
+  controller.getOnboardingTimeline.bind(controller);
 export const markOnboardingContacted =
   controller.markOnboardingContacted.bind(controller);

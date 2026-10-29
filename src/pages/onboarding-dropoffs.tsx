@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import {
   DropoffFunnel,
   DropoffKpis,
+  DropoffTimeline,
   LeakCallout,
   OnboardingAttemptsTable,
 } from "#/features/onboarding-attempts";
@@ -37,6 +38,8 @@ export default function OnboardingDropoffsPage() {
   // « now », and a moving key would refetch forever.
   const windows = useMemo(() => periodWindows(period), [period]);
   const kind = entry === "all" ? {} : { entry };
+  // A bar per day reads up to a month; past that, a bar per week.
+  const bucket = period === "7d" || period === "30d" ? "day" : "week";
 
   const { data: stats } = useQuery({
     queryKey: ["admin", "onboarding-attempts", "stats", windows.current, entry],
@@ -101,6 +104,7 @@ export default function OnboardingDropoffsPage() {
         previous={windows.previous ? previous : undefined}
         entry={entry}
       />
+      <DropoffTimeline window={windows.current} entry={entry === "all" ? undefined : entry} bucket={bucket} />
       <LeakCallout stats={stats} entry={entry} onShow={showStage} />
       <DropoffFunnel stats={stats} entry={entry} selected={stage} onSelect={setStage} />
       <div id="dropoff-list" className="scroll-mt-4">
