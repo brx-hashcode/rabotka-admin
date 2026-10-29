@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import {
   ChartContainer,
@@ -57,11 +58,22 @@ export function DropoffTimeline({
   entry?: OnboardingEntry;
   bucket: TimelineBucket;
 }>) {
-  const { data } = useQuery({
+  const { data, isError, refetch } = useQuery({
     queryKey: ["admin", "onboarding-attempts", "timeline", window, entry, bucket],
     queryFn: () => getOnboardingTimeline({ ...window, entry, bucket }),
   });
 
+  // A failed load says so: a skeleton that never resolves reads as « loading ».
+  if (isError) {
+    return (
+      <Card className="items-center gap-2 p-8 text-center">
+        <p className="text-sm font-medium">L'évolution n'a pas pu être chargée.</p>
+        <Button size="sm" variant="outline" onClick={() => void refetch()}>
+          Réessayer
+        </Button>
+      </Card>
+    );
+  }
   if (!data) return <Skeleton className="h-72 rounded-2xl" />;
 
   const points = data.map((p) => ({ ...p, open: p.started - p.completed }));
