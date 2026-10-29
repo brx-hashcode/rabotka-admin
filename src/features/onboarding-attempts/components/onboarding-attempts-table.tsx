@@ -187,12 +187,13 @@ export function OnboardingAttemptsTable({
           )}
 
           <Input
+            name="q"
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="Rechercher un nom, un téléphone…"
+            placeholder="Rechercher un nom, un téléphone, un e-mail…"
             className="ml-auto h-9 w-full max-w-xs"
           />
         </div>
@@ -632,6 +633,7 @@ function AttemptSheet({
                     </span>
                   )}
                   <Textarea
+                    name="note"
                     value={note}
                     onChange={(e) => setNote(e.target.value.slice(0, 1000))}
                     placeholder="Pourquoi la personne n'a pas terminé, et ce qui l'aiderait. Ex : le code WhatsApp n'arrivait pas."
