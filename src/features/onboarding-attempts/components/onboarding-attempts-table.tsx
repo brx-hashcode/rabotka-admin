@@ -46,19 +46,20 @@ import { cn } from "#/lib/utils";
 import {
   listOnboardingAttempts,
   markOnboardingContacted,
-  ONBOARDING_STAGES,
   type AdminOnboardingAttempt,
   type AdminOnboardingStats,
+  type OnboardingEntry,
   type OnboardingStage,
 } from "#/lib/api/onboarding-attempts-controller";
 import {
-  STAGE_LABELS,
   contactOf,
   emailFollowUpLink,
   initials,
   isWarmLead,
   pageRange,
-  stageIndex,
+  stageLabel,
+  stagesFor,
+  type EntryFilter,
   timeAgo,
   whatsAppFollowUpLink,
 } from "../stage-labels";
@@ -85,13 +86,24 @@ function queryFor(tab: FollowUp, stage: OnboardingStage | null) {
 const fullName = (a: AdminOnboardingAttempt) =>
   [a.firstName, a.lastName].filter(Boolean).join(" ");
 
+/** « Entreprise » for a business sign-up, else the profile type they chose. */
+const kindLabel = (a: Pick<AdminOnboardingAttempt, "entry" | "profileType">) =>
+  a.entry === "business"
+    ? "Entreprise"
+    : a.profileType === "WORKER"
+      ? "Travailleur"
+      : "Employeur";
+
 export function OnboardingAttemptsTable({
   stats,
+  entry = "all",
   stage,
   onClearStage,
   window = {},
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
+  /** The page's kind of sign-up: the list shows the same people as the numbers. */
+  entry?: EntryFilter;
   stage: OnboardingStage | null;
   onClearStage: () => void;
   /** The page's period: the list covers the same sign-ups as the numbers. */
@@ -111,13 +123,14 @@ export function OnboardingAttemptsTable({
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage, window],
+    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage, entry, window],
     queryFn: () =>
       listOnboardingAttempts({
         page,
         limit: PAGE_SIZE,
         q: q || undefined,
         ...queryFor(tab, stage),
+        ...(entry === "all" ? {} : { entry }),
         ...window,
       }),
     placeholderData: keepPreviousData,
@@ -174,7 +187,7 @@ export function OnboardingAttemptsTable({
 
           {stage && (
             <Badge variant="secondary" className="gap-1 py-1 pl-2.5">
-              Arrêtées à : {STAGE_LABELS[stage]}
+              Arrêtées à : {stageLabel(stage, entry)}
               <button
                 type="button"
                 onClick={onClearStage}
@@ -334,9 +347,9 @@ function AttemptRow({
                   Nom pas encore saisi
                 </span>
               )}
-              {row.profileType && (
+              {(row.entry === "business" || row.profileType) && (
                 <Badge variant="outline" className="font-normal">
-                  {row.profileType === "WORKER" ? "Travailleur" : "Employeur"}
+                  {kindLabel(row)}
                 </Badge>
               )}
             </span>
@@ -361,7 +374,7 @@ function AttemptRow({
       </TableCell>
 
       <TableCell>
-        <StageCell stage={row.stage} codeSends={row.codeSends} />
+        <StageCell stage={row.stage} entry={row.entry} codeSends={row.codeSends} />
       </TableCell>
 
       <TableCell className="hidden lg:table-cell">
@@ -455,9 +468,11 @@ function AttemptRow({
  */
 function StageCell({
   stage,
+  entry,
   codeSends,
-}: Readonly<{ stage: OnboardingStage; codeSends: number }>) {
-  const reached = stageIndex(stage);
+}: Readonly<{ stage: OnboardingStage; entry: OnboardingEntry; codeSends: number }>) {
+  const stages = stagesFor(entry);
+  const reached = stages.indexOf(stage);
   const done = stage === "COMPLETED";
   return (
     <div className="flex flex-col gap-1.5">
@@ -470,7 +485,7 @@ function StageCell({
               : "bg-muted text-foreground",
           )}
         >
-          {done ? "Compte créé" : STAGE_LABELS[stage]}
+          {done ? "Compte créé" : stageLabel(stage, entry)}
         </span>
         {isWarmLead(stage) && (
           <span
@@ -490,7 +505,7 @@ function StageCell({
         )}
       </div>
       <div className="flex max-w-[200px] gap-1" aria-hidden>
-        {ONBOARDING_STAGES.map((s, i) => (
+        {stages.map((s, i) => (
           <span
             key={s}
             className={cn(
@@ -562,7 +577,8 @@ function AttemptSheet({
     onError: () => toast.error("Impossible d'enregistrer le suivi"),
   });
 
-  const reached = attempt ? stageIndex(attempt.stage) : -1;
+  const stages = attempt ? stagesFor(attempt.entry) : [];
+  const reached = attempt ? stages.indexOf(attempt.stage) : -1;
   const when: Partial<Record<OnboardingStage, string | null>> = attempt
     ? {
         CODE_SENT: attempt.startedAt,
@@ -580,14 +596,14 @@ function AttemptSheet({
               <SheetTitle>{fullName(attempt) || contactOf(attempt)}</SheetTitle>
               <SheetDescription>
                 {contactOf(attempt)}
-                {attempt.profileType &&
-                  ` · ${attempt.profileType === "WORKER" ? "Travailleur" : "Employeur"}`}
+                {(attempt.entry === "business" || attempt.profileType) &&
+                  ` · ${kindLabel(attempt)}`}
               </SheetDescription>
             </SheetHeader>
 
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4">
               <ol className="flex flex-col">
-                {ONBOARDING_STAGES.map((s, i) => {
+                {stages.map((s, i) => {
                   const ok = i <= reached;
                   const at = when[s];
                   return (
@@ -602,7 +618,7 @@ function AttemptSheet({
                       </span>
                       <div className="flex flex-col">
                         <span className={cn("text-sm", !ok && "text-muted-foreground")}>
-                          {STAGE_LABELS[s]}
+                          {stageLabel(s, attempt.entry)}
                           {s === "CODE_SENT" && attempt.codeSends > 1 &&
                             ` (${attempt.codeSends} codes)`}
                         </span>

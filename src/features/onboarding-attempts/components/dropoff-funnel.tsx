@@ -8,14 +8,23 @@ import type {
   OnboardingStage,
 } from "#/lib/api/onboarding-attempts-controller";
 import {
-  REACHED_LABELS,
-  STAGE_LABELS,
-  STOPPED_HINTS,
   biggestLeak,
   deltaLabel,
   funnelSteps,
+  reachedLabel,
+  stageLabel,
+  stagesFor,
+  stoppedHint,
   stoppedStageFor,
+  type EntryFilter,
 } from "../stage-labels";
+
+/** How each kind of sign-up begins, under « Inscriptions commencées ». */
+const STARTED_HINTS: Record<EntryFilter, string> = {
+  all: "Code WhatsApp ou e-mail demandé",
+  whatsapp: "Code WhatsApp demandé",
+  business: "Code e-mail demandé",
+};
 
 const pct = (n: number) => `${Math.round(n * 100)} %`;
 
@@ -26,9 +35,11 @@ const pct = (n: number) => `${Math.round(n * 100)} %`;
 export function DropoffKpis({
   stats,
   previous,
+  entry,
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
   previous: AdminOnboardingStats | undefined;
+  entry: EntryFilter;
 }>) {
   if (!stats) {
     return (
@@ -58,7 +69,7 @@ export function DropoffKpis({
     {
       label: "Inscriptions commencées",
       value: String(stats.started),
-      hint: "Code WhatsApp demandé",
+      hint: STARTED_HINTS[entry],
       delta: deltaLabel(stats.started, previous?.started),
       upIsGood: true,
       raw: stats.started,
@@ -139,16 +150,19 @@ export function DropoffKpis({
  */
 export function DropoffFunnel({
   stats,
+  entry,
   selected,
   onSelect,
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
+  entry: EntryFilter;
   selected: OnboardingStage | null;
   onSelect: (stage: OnboardingStage | null) => void;
 }>) {
   if (!stats) return <Skeleton className="h-80 rounded-2xl" />;
 
-  const steps = funnelSteps(stats);
+  const stages = stagesFor(entry);
+  const steps = funnelSteps(stats, stages);
   const leak = biggestLeak(steps);
 
   return (
@@ -175,7 +189,7 @@ export function DropoffFunnel({
       ) : (
         <ol className="flex flex-col">
           {steps.map((step, i) => {
-            const stoppedStage = stoppedStageFor(step.stage);
+            const stoppedStage = stoppedStageFor(step.stage, stages);
             const isLeak = leak?.stage === step.stage;
             const isSelected = i > 0 && selected === stoppedStage;
             return (
@@ -204,7 +218,7 @@ export function DropoffFunnel({
                           −{step.lostBefore} · {pct(step.lostBeforeRate)} perdus
                         </span>
                         <span className="hidden sm:inline">
-                          — {STOPPED_HINTS[stoppedStage].toLowerCase()}
+                          — {stoppedHint(stoppedStage, entry).toLowerCase()}
                         </span>
                         {isLeak && (
                           <span className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-[11px] font-medium">
@@ -232,7 +246,7 @@ export function DropoffFunnel({
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
                       <span className="truncate font-medium">
-                        {REACHED_LABELS[step.stage]}
+                        {reachedLabel(step.stage, entry)}
                       </span>
                       <span className="text-muted-foreground shrink-0 tabular-nums">
                         <span className="text-foreground font-semibold">
@@ -267,24 +281,27 @@ export function DropoffFunnel({
  */
 export function LeakCallout({
   stats,
+  entry,
   onShow,
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
+  entry: EntryFilter;
   onShow: (stage: OnboardingStage) => void;
 }>) {
   if (!stats) return null;
-  const leak = biggestLeak(funnelSteps(stats));
+  const stages = stagesFor(entry);
+  const leak = biggestLeak(funnelSteps(stats, stages));
   if (!leak) return null;
-  const stage = stoppedStageFor(leak.stage);
+  const stage = stoppedStageFor(leak.stage, stages);
   return (
     <div className="border-destructive/30 bg-destructive/5 flex flex-wrap items-center gap-3 rounded-2xl border p-4">
       <IconAlertTriangle className="text-destructive size-5 shrink-0" />
       <p className="min-w-0 flex-1 text-sm">
-        <span className="font-semibold">Plus gros abandon : {STAGE_LABELS[stage]}.</span>{" "}
+        <span className="font-semibold">Plus gros abandon : {stageLabel(stage, entry)}.</span>{" "}
         <span className="text-muted-foreground">
           {leak.lostBefore} personne{leak.lostBefore > 1 ? "s" : ""} (
           {pct(leak.lostBeforeRate)}) {leak.lostBefore > 1 ? "s'arrêtent" : "s'arrête"} ici —{" "}
-          {STOPPED_HINTS[stage].toLowerCase()}.
+          {stoppedHint(stage, entry).toLowerCase()}.
         </span>
       </p>
       <Button size="sm" variant="outline" onClick={() => onShow(stage)}>

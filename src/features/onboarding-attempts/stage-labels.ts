@@ -1,6 +1,7 @@
 import {
   ONBOARDING_STAGES,
   type AdminOnboardingStats,
+  type OnboardingEntry,
   type OnboardingStage,
 } from "#/lib/api/onboarding-attempts-controller";
 
@@ -24,6 +25,66 @@ export const STOPPED_HINTS: Record<OnboardingStage, string> = {
   CONFIRMATION: "Au dernier écran, sans valider",
   COMPLETED: "Inscription terminée",
 };
+
+/** The page's filter: one kind of sign-up, or both. */
+export type EntryFilter = OnboardingEntry | "all";
+
+export const ENTRY_LABELS: Record<EntryFilter, string> = {
+  all: "Toutes",
+  whatsapp: "Application",
+  business: "Entreprises",
+};
+
+/**
+ * The steps a kind of sign-up goes through. A business confirms its email,
+ * then fills its organisation, documents and review in one go: the portal
+ * reports no step between the email and the account.
+ */
+export function stagesFor(entry: EntryFilter): readonly OnboardingStage[] {
+  return entry === "business"
+    ? ["CODE_SENT", "PHONE_VERIFIED", "COMPLETED"]
+    : ONBOARDING_STAGES;
+}
+
+type Wording = Partial<Record<OnboardingStage, string>>;
+
+/** A business's first two steps, which are an email, not a phone. */
+const BUSINESS: { stage: Wording; reached: Wording; stopped: Wording } = {
+  stage: { CODE_SENT: "Code e-mail", PHONE_VERIFIED: "Fiche entreprise" },
+  reached: { CODE_SENT: "Code e-mail demandé", PHONE_VERIFIED: "E-mail vérifié" },
+  stopped: {
+    CODE_SENT: "Code reçu par e-mail, jamais saisi",
+    PHONE_VERIFIED: "E-mail vérifié, entreprise jamais créée",
+  },
+};
+
+/** Both kinds at once: words true of a phone and of an email. */
+const MIXED: { stage: Wording; reached: Wording; stopped: Wording } = {
+  stage: { CODE_SENT: "Code", PHONE_VERIFIED: "Après vérification" },
+  reached: { CODE_SENT: "Code demandé", PHONE_VERIFIED: "Numéro ou e-mail vérifié" },
+  stopped: {
+    CODE_SENT: "Code demandé, jamais saisi",
+    PHONE_VERIFIED: "Vérifié, puis plus rien",
+  },
+};
+
+const wordingFor = (entry: EntryFilter) =>
+  entry === "business" ? BUSINESS : entry === "all" ? MIXED : null;
+
+/** Where someone stopped, in that kind of sign-up's words. */
+export function stageLabel(stage: OnboardingStage, entry: EntryFilter): string {
+  return wordingFor(entry)?.stage[stage] ?? STAGE_LABELS[stage];
+}
+
+/** A funnel step, « reached », in that kind of sign-up's words. */
+export function reachedLabel(stage: OnboardingStage, entry: EntryFilter): string {
+  return wordingFor(entry)?.reached[stage] ?? REACHED_LABELS[stage];
+}
+
+/** What stopping at a step means, in that kind of sign-up's words. */
+export function stoppedHint(stage: OnboardingStage, entry: EntryFilter): string {
+  return wordingFor(entry)?.stopped[stage] ?? STOPPED_HINTS[stage];
+}
 
 /** The stages someone can stop at — every one but the end. */
 export const DROP_STAGES = ONBOARDING_STAGES.filter((s) => s !== "COMPLETED");
@@ -130,13 +191,14 @@ export type FunnelStep = {
 
 export function funnelSteps(
   stats: Pick<AdminOnboardingStats, "started" | "funnel">,
+  stages: readonly OnboardingStage[] = ONBOARDING_STAGES,
 ): FunnelStep[] {
   const reached = new Map(stats.funnel.map((f) => [f.stage, f.count]));
   // The first step is everyone who started, whatever the funnel row says.
-  const counts = ONBOARDING_STAGES.map((s, i) =>
+  const counts = stages.map((s, i) =>
     i === 0 ? Math.max(stats.started, reached.get(s) ?? 0) : (reached.get(s) ?? 0),
   );
-  return ONBOARDING_STAGES.map((stage, i) => {
+  return stages.map((stage, i) => {
     const here = counts[i];
     const before = i === 0 ? here : counts[i - 1];
     const lost = Math.max(0, before - here);
@@ -163,8 +225,11 @@ export function biggestLeak(steps: FunnelStep[]): FunnelStep | null {
 }
 
 /** The stage people lost at `step` were stopped at: the one before it. */
-export function stoppedStageFor(step: OnboardingStage): OnboardingStage {
-  return ONBOARDING_STAGES[Math.max(0, ONBOARDING_STAGES.indexOf(step) - 1)];
+export function stoppedStageFor(
+  step: OnboardingStage,
+  stages: readonly OnboardingStage[] = ONBOARDING_STAGES,
+): OnboardingStage {
+  return stages[Math.max(0, stages.indexOf(step) - 1)];
 }
 
 /** « +3 », « −2 », « = » against the previous window; null without one. */
