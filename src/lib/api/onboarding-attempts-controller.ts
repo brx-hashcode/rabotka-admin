@@ -9,11 +9,15 @@ export const ONBOARDING_STAGES = [
 ] as const;
 export type OnboardingStage = (typeof ONBOARDING_STAGES)[number];
 
+/** How a sign-up began: the app's WhatsApp code, or a business's email code. */
+export type OnboardingEntry = "whatsapp" | "business";
+
 export type AdminOnboardingAttempt = {
   id: string;
   /** Null for a business sign-up, which proves an email instead. */
   phone: string | null;
   email: string | null;
+  entry: OnboardingEntry;
   firstName: string | null;
   lastName: string | null;
   profileType: "WORKER" | "EMPLOYER" | null;
@@ -34,6 +38,7 @@ export type AdminOnboardingAttemptListParams = {
   limit?: number;
   q?: string;
   stage?: OnboardingStage[];
+  entry?: OnboardingEntry;
   incomplete?: boolean;
   contacted?: boolean;
   startedFrom?: string;
@@ -66,6 +71,7 @@ class AdminOnboardingAttemptsController extends AdminBaseController {
     if (params.limit) search.set("limit", String(params.limit));
     if (params.q) search.set("q", params.q);
     for (const stage of params.stage ?? []) search.append("stage", stage);
+    if (params.entry) search.set("entry", params.entry);
     if (params.incomplete) search.set("incomplete", "true");
     if (params.contacted !== undefined)
       search.set("contacted", String(params.contacted));
@@ -80,10 +86,12 @@ class AdminOnboardingAttemptsController extends AdminBaseController {
   async getOnboardingStats(params: {
     startedFrom?: string;
     startedTo?: string;
+    entry?: OnboardingEntry;
   } = {}): Promise<AdminOnboardingStats> {
     const search = new URLSearchParams();
     if (params.startedFrom) search.set("started_from", params.startedFrom);
     if (params.startedTo) search.set("started_to", params.startedTo);
+    if (params.entry) search.set("entry", params.entry);
     const qs = search.toString();
     return this.get<AdminOnboardingStats>(
       `/admin/onboarding-attempts/stats${qs ? `?${qs}` : ""}`,
