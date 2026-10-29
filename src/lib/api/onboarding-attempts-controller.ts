@@ -11,7 +11,9 @@ export type OnboardingStage = (typeof ONBOARDING_STAGES)[number];
 
 export type AdminOnboardingAttempt = {
   id: string;
-  phone: string;
+  /** Null for a business sign-up, which proves an email instead. */
+  phone: string | null;
+  email: string | null;
   firstName: string | null;
   lastName: string | null;
   profileType: "WORKER" | "EMPLOYER" | null;

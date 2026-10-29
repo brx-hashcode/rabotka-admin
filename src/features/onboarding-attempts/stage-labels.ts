@@ -175,17 +175,29 @@ export function deltaLabel(current: number, previous: number | undefined): strin
   return d > 0 ? `+${d}` : `−${Math.abs(d)}`;
 }
 
-/** « SG » for Seba Gedeon, the last two digits for someone with no name yet. */
+/**
+ * « SG » for Seba Gedeon; for someone with no name yet, the phone's last two
+ * digits, or the email's first letter.
+ */
 export function initials(
   firstName: string | null,
   lastName: string | null,
-  phone: string,
+  contact: string,
 ): string {
   const letters = [firstName, lastName]
     .map((n) => n?.trim()?.[0] ?? "")
     .join("")
     .toUpperCase();
-  return letters || phone.replace(/\D/g, "").slice(-2);
+  if (letters) return letters;
+  const digits = contact.replace(/\D/g, "");
+  return contact.includes("@") || !digits
+    ? (contact[0] ?? "?").toUpperCase()
+    : digits.slice(-2);
+}
+
+/** How to reach a sign-up: the phone, or the email of a business sign-up. */
+export function contactOf(a: { phone: string | null; email: string | null }): string {
+  return a.phone ?? a.email ?? "";
 }
 
 /**
@@ -207,6 +219,14 @@ export function whatsAppFollowUpLink(
   const hello = firstName ? `Bonjour ${firstName.trim()}` : "Bonjour";
   const text = `${hello}, c'est l'équipe Rabotka. Vous avez commencé votre inscription sans la terminer : est-ce qu'on peut vous aider à la finir ?`;
   return `${whatsAppLink(phone)}?text=${encodeURIComponent(text)}`;
+}
+
+/** The same opening line as WhatsApp, by email: business sign-ups have no phone. */
+export function emailFollowUpLink(email: string, firstName: string | null): string {
+  const hello = firstName ? `Bonjour ${firstName.trim()}` : "Bonjour";
+  const subject = "Votre inscription sur Rabotka";
+  const body = `${hello},\n\nC'est l'équipe Rabotka. Vous avez commencé votre inscription sans la terminer : est-ce qu'on peut vous aider à la finir ?`;
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 /** « 1–20 sur 47 ». */
