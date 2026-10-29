@@ -84,7 +84,6 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
 
   const features = [
     plan.includesPreselection && "Preselection of profiles",
-    plan.includesFieldAgents && "Field agents",
     plan.priorityVisibility && "Priority visibility",
   ].filter(Boolean) as string[];
 
