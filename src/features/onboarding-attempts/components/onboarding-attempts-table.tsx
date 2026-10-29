@@ -12,6 +12,7 @@ import {
   IconChevronRight,
   IconConfetti,
   IconCopy,
+  IconMail,
   IconPhone,
   IconPhoneCheck,
   IconUserSearch,
@@ -52,6 +53,8 @@ import {
 } from "#/lib/api/onboarding-attempts-controller";
 import {
   STAGE_LABELS,
+  contactOf,
+  emailFollowUpLink,
   initials,
   isWarmLead,
   pageRange,
@@ -300,6 +303,7 @@ function AttemptRow({
   onOpen: () => void;
 }>) {
   const name = fullName(row);
+  const contact = contactOf(row);
   const done = row.stage === "COMPLETED";
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
@@ -320,7 +324,7 @@ function AttemptRow({
                 : "bg-primary/10 text-primary",
             )}
           >
-            {initials(row.firstName, row.lastName, row.phone)}
+            {initials(row.firstName, row.lastName, contact)}
           </span>
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="flex items-center gap-2 truncate font-medium">
@@ -336,16 +340,16 @@ function AttemptRow({
               )}
             </span>
             <span className="text-muted-foreground flex items-center gap-1 text-xs tabular-nums">
-              {row.phone}
+              {contact}
               <button
                 type="button"
                 onClick={(e) => {
                   stop(e);
                   void navigator.clipboard
-                    ?.writeText(row.phone)
-                    .then(() => toast.success("Numéro copié"));
+                    ?.writeText(contact)
+                    .then(() => toast.success(row.phone ? "Numéro copié" : "Adresse copiée"));
                 }}
-                aria-label="Copier le numéro"
+                aria-label={row.phone ? "Copier le numéro" : "Copier l'adresse"}
                 className="hover:text-foreground rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <IconCopy className="size-3" />
@@ -379,33 +383,52 @@ function AttemptRow({
 
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-1.5">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-8"
-            onClick={stop}
-            render={
-              <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
-            }
-          >
-            <IconPhone className="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-8 text-emerald-600"
-            onClick={stop}
-            render={
-              <a
-                href={whatsAppFollowUpLink(row.phone, row.firstName)}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Écrire à ${name || row.phone} sur WhatsApp`}
-              />
-            }
-          >
-            <IconBrandWhatsapp className="size-4" />
-          </Button>
+          {row.phone ? (
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8"
+                onClick={stop}
+                render={
+                  <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
+                }
+              >
+                <IconPhone className="size-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8 text-emerald-600"
+                onClick={stop}
+                render={
+                  <a
+                    href={whatsAppFollowUpLink(row.phone, row.firstName)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Écrire à ${name || contact} sur WhatsApp`}
+                  />
+                }
+              >
+                <IconBrandWhatsapp className="size-4" />
+              </Button>
+            </>
+          ) : row.email ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              onClick={stop}
+              render={
+                <a
+                  href={emailFollowUpLink(row.email, row.firstName)}
+                  aria-label={`Écrire à ${name || row.email} par e-mail`}
+                />
+              }
+            >
+              <IconMail className="size-4" />
+            </Button>
+          ) : null}
           {!done && (
             <Button
               size="sm"
@@ -553,9 +576,9 @@ function AttemptSheet({
         {attempt && (
           <>
             <SheetHeader>
-              <SheetTitle>{fullName(attempt) || attempt.phone}</SheetTitle>
+              <SheetTitle>{fullName(attempt) || contactOf(attempt)}</SheetTitle>
               <SheetDescription>
-                {attempt.phone}
+                {contactOf(attempt)}
                 {attempt.profileType &&
                   ` · ${attempt.profileType === "WORKER" ? "Travailleur" : "Employeur"}`}
               </SheetDescription>
@@ -619,20 +642,31 @@ function AttemptSheet({
             </div>
 
             <SheetFooter className="flex-row gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                render={
-                  <a
-                    href={whatsAppFollowUpLink(attempt.phone, attempt.firstName)}
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                }
-              >
-                <IconBrandWhatsapp className="size-4" />
-                WhatsApp
-              </Button>
+              {attempt.phone ? (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  render={
+                    <a
+                      href={whatsAppFollowUpLink(attempt.phone, attempt.firstName)}
+                      target="_blank"
+                      rel="noreferrer"
+                    />
+                  }
+                >
+                  <IconBrandWhatsapp className="size-4" />
+                  WhatsApp
+                </Button>
+              ) : attempt.email ? (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  render={<a href={emailFollowUpLink(attempt.email, attempt.firstName)} />}
+                >
+                  <IconMail className="size-4" />
+                  E-mail
+                </Button>
+              ) : null}
               {attempt.stage !== "COMPLETED" && (
                 <Button
                   className="flex-1"
