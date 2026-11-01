@@ -16,12 +16,14 @@ type FormState = {
   "business.trial_days": string;
   "business.trial_plan_code": string;
   "business.renewal_reminder_days": string;
+  "business.offer_expiry_reminder_days": string;
 };
 
 const EMPTY: FormState = {
   "business.trial_days": "",
   "business.trial_plan_code": "",
   "business.renewal_reminder_days": "",
+  "business.offer_expiry_reminder_days": "",
 };
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -115,6 +117,19 @@ export function BusinessPlansCard() {
             />
             <p className="text-muted-foreground text-xs">
               Comma-separated. Sent by email and in-app, never WhatsApp.
+            </p>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <FieldLabel>Offer ending reminder (days before the end)</FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              value={form["business.offer_expiry_reminder_days"]}
+              onChange={(e) => set("business.offer_expiry_reminder_days", e.target.value)}
+              placeholder="3"
+            />
+            <p className="text-muted-foreground text-xs">
+              Sent by email and in-app, never WhatsApp. 0 turns it off.
             </p>
           </div>
         </div>
