@@ -25,6 +25,13 @@ export type BusinessPlan = {
   /** Offers the AI writes per period (« Rédiger avec l'IA »). Null: unlimited; 0: not included. */
   /** Absent from a backend older than the field. */
   offerDraftsPerPeriod?: number | null;
+  /**
+   * Team members a business may invite: its account holder is its one
+   * administrator. Null: unlimited; 0: not included. Absent from a backend
+   * older than the field.
+   */
+  recruitersLimit?: number | null;
+  reviewersLimit?: number | null;
   includesPreselection: boolean;
   priorityVisibility: boolean;
   isActive: boolean;
