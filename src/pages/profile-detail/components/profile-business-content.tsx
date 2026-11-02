@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  IconActivity,
   IconAlertTriangle,
   IconBuilding,
+  IconChartBar,
   IconCheck,
   IconEye,
   IconFileText,
   IconHistory,
   IconPhoto,
+  IconUsersGroup,
+  IconWorldWww,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -138,6 +142,14 @@ function PreviousVersions({
  * no personal KYC); the business is told by email and in-app notification —
  * business accounts get no WhatsApp.
  */
+const SECTIONS = [
+  { value: "organisation", label: "Organisation", icon: IconBuilding },
+  { value: "team", label: "Team", icon: IconUsersGroup },
+  { value: "activity", label: "Activity", icon: IconActivity },
+  { value: "hiring", label: "Hiring", icon: IconChartBar },
+  { value: "careers", label: "Careers page & mailboxes", icon: IconWorldWww },
+] as const;
+
 /**
  * A business profile's BUSINESS tab: its organisation (details, plan,
  * verification, papers), and what it works with — team, activity, hiring,
@@ -147,13 +159,17 @@ export function ProfileBusinessContent(props: Readonly<Props>) {
   const [section, setSection] = useState("organisation");
   return (
     <Tabs value={section} onValueChange={setSection} className="gap-6">
-      <TabsList>
-        <TabsTrigger value="organisation">Organisation</TabsTrigger>
-        <TabsTrigger value="team">Team</TabsTrigger>
-        <TabsTrigger value="activity">Activity</TabsTrigger>
-        <TabsTrigger value="hiring">Hiring</TabsTrigger>
-        <TabsTrigger value="careers">Careers page & mailboxes</TabsTrigger>
-      </TabsList>
+      {/* A second level under the profile's tabs: underlined, with icons, not pills. */}
+      <div className="border-b">
+        <TabsList variant="line" className="h-auto gap-4 p-0">
+          {SECTIONS.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger key={value} value={value} className="flex-none gap-2 px-1 pb-2.5">
+              <Icon className="size-4" />
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
       <TabsContent value="organisation">
         <BusinessOrganisationSection {...props} />
       </TabsContent>
