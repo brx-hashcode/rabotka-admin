@@ -10,9 +10,11 @@ export const ACCOUNT_STATUS_LABELS: Record<string, string> = {
   BANNED: "Banned",
 } as const;
 
+/** The kinds admin tells apart: a business is an employer flagged `isBusiness`. */
 export const PROFILE_TYPE_LABELS: Record<string, string> = {
   WORKER: "Worker",
   EMPLOYER: "Employer",
+  BUSINESS: "Business",
 } as const;
 
 export const VERIFICATION_STATUS_LABELS: Record<string, string> = {
