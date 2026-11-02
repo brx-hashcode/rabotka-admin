@@ -55,10 +55,81 @@ export type BusinessOverview = {
   sources?: { source: string; received: number; hired: number }[];
 };
 
+export type BusinessAlert = {
+  kind: string;
+  count: number;
+  items?: { id: string; label: string; at?: string | null }[];
+};
+export type BusinessHealth = {
+  plan: { name: string | null; status: string | null; endsAt: string | null };
+  lastActivity: { at: string; action: string; by: string | null } | null;
+  alerts: BusinessAlert[];
+  last30Days: { candidates: number; hires: number };
+  openOffers: number;
+  teamSize: number;
+};
+
+export type BusinessInterview = {
+  id: string;
+  createdAt: string;
+  startsAt: string;
+  durationMinutes: number;
+  mode: string;
+  location: string | null;
+  status: "PENDING" | "CONFIRMED" | "DECLINED" | "RESCHEDULE_REQUESTED" | "CANCELLED";
+  respondedAt: string | null;
+  responseNote: string | null;
+  jobTitle: string;
+  candidateName: string;
+  candidateEmail: string | null;
+  offerId: string | null;
+  applicationId: string | null;
+  fromCv: boolean;
+};
+
+export type BusinessCvScreening = {
+  id: string;
+  createdAt: string;
+  jobTitle: string;
+  offerId: string | null;
+  status: "PROCESSING" | "DONE";
+  fromCareersPage: boolean;
+  cvs: number;
+  scored: number;
+  unreadable: number;
+  failed: number;
+  queued: number;
+  expiresAt: string;
+  purgedAt: string | null;
+};
+
+export type AdminNote = { id: string; body: string; createdAt: string; edited: boolean; author: { id: string; name: string } };
+
 const base = (profileId: string) => `/admin/profiles/${encodeURIComponent(profileId)}/business`;
 
 /** `admin/profiles/:id/business/*`: what a business works with, and support fixes. */
 class AdminBusinessController extends AdminBaseController {
+  health(profileId: string): Promise<BusinessHealth> {
+    return this.get(`${base(profileId)}/health`);
+  }
+  interviews(profileId: string): Promise<BusinessInterview[]> {
+    return this.get(`${base(profileId)}/interviews`);
+  }
+  cvScreenings(profileId: string): Promise<BusinessCvScreening[]> {
+    return this.get(`${base(profileId)}/cv-screenings`);
+  }
+  notes(profileId: string): Promise<AdminNote[]> {
+    return this.get(`${base(profileId)}/notes`);
+  }
+  addNote(profileId: string, body: string): Promise<AdminNote[]> {
+    return this.post(`${base(profileId)}/notes`, { body });
+  }
+  editNote(profileId: string, noteId: string, body: string): Promise<AdminNote[]> {
+    return this.patch(`${base(profileId)}/notes/${encodeURIComponent(noteId)}`, { body });
+  }
+  deleteNote(profileId: string, noteId: string): Promise<AdminNote[]> {
+    return this.delete(`${base(profileId)}/notes/${encodeURIComponent(noteId)}`);
+  }
   overview(profileId: string, days: 7 | 30 | 90): Promise<BusinessOverview> {
     return this.get(`${base(profileId)}/overview?days=${days}`);
   }
@@ -99,6 +170,13 @@ class AdminBusinessController extends AdminBaseController {
 
 const c = new AdminBusinessController();
 export const getBusinessOverview = c.overview.bind(c);
+export const getBusinessHealth = c.health.bind(c);
+export const getBusinessInterviews = c.interviews.bind(c);
+export const getBusinessCvScreenings = c.cvScreenings.bind(c);
+export const getAdminNotes = c.notes.bind(c);
+export const addAdminNote = c.addNote.bind(c);
+export const editAdminNote = c.editNote.bind(c);
+export const deleteAdminNote = c.deleteNote.bind(c);
 export const getBusinessTeam = c.team.bind(c);
 export const getBusinessActivity = c.activity.bind(c);
 export const getBusinessCareers = c.careers.bind(c);

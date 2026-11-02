@@ -3,6 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconActivity,
   IconAlertTriangle,
+  IconCalendarEvent,
+  IconFileSearch,
+  IconLayoutDashboard,
+  IconNotes,
   IconBuilding,
   IconChartBar,
   IconCheck,
@@ -49,6 +53,12 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
 import { BusinessSubscriptionCard } from "./business-subscription-card";
+import {
+  BusinessCvScreeningsSection,
+  BusinessInterviewsSection,
+  BusinessNotesSection,
+  BusinessOverviewSection,
+} from "./business-overview";
 import {
   BusinessActivitySection,
   BusinessCareersSection,
@@ -144,11 +154,15 @@ function PreviousVersions({
  * business accounts get no WhatsApp.
  */
 const SECTIONS = [
+  { value: "overview", label: "Overview", icon: IconLayoutDashboard },
   { value: "organisation", label: "Organisation", icon: IconBuilding },
   { value: "team", label: "Team", icon: IconUsersGroup },
   { value: "activity", label: "Activity", icon: IconActivity },
   { value: "hiring", label: "Hiring", icon: IconChartBar },
+  { value: "interviews", label: "Interviews", icon: IconCalendarEvent },
+  { value: "cv", label: "CV analyses", icon: IconFileSearch },
   { value: "careers", label: "Careers page & mailboxes", icon: IconWorldWww },
+  { value: "notes", label: "Notes", icon: IconNotes },
 ] as const;
 
 /**
@@ -157,12 +171,12 @@ const SECTIONS = [
  * careers page and mailboxes — with the fixes support may make.
  */
 export function ProfileBusinessContent(props: Readonly<Props>) {
-  const [section, setSection] = useState("organisation");
+  const [section, setSection] = useState("overview");
   return (
     <Tabs value={section} onValueChange={setSection} className="gap-6">
       {/* A second level under the profile's tabs: underlined, with icons, not pills. */}
       <div className="border-b">
-        <TabsList variant="line" className="h-auto gap-4 p-0">
+        <TabsList variant="line" className="h-auto w-full justify-start gap-4 overflow-x-auto p-0">
           {SECTIONS.map(({ value, label, icon: Icon }) => (
             <TabsTrigger key={value} value={value} className="flex-none gap-2 px-1 pb-2.5">
               <Icon className="size-4" />
@@ -171,6 +185,18 @@ export function ProfileBusinessContent(props: Readonly<Props>) {
           ))}
         </TabsList>
       </div>
+      <TabsContent value="overview">
+        <BusinessOverviewSection profileId={props.profileId} onOpenSection={setSection} />
+      </TabsContent>
+      <TabsContent value="interviews">
+        <BusinessInterviewsSection profileId={props.profileId} />
+      </TabsContent>
+      <TabsContent value="cv">
+        <BusinessCvScreeningsSection profileId={props.profileId} />
+      </TabsContent>
+      <TabsContent value="notes">
+        <BusinessNotesSection profileId={props.profileId} />
+      </TabsContent>
       <TabsContent value="organisation">
         <BusinessOrganisationSection {...props} />
       </TabsContent>
