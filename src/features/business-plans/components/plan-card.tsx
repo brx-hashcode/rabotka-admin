@@ -13,6 +13,7 @@ import {
   ToggleRight,
   Trash2,
   Unlock,
+  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -207,6 +208,20 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
                   <span>
                     <span className="font-medium text-foreground">{quotaLabel(plan.offerDraftsPerPeriod, "AI-written offers")}</span>{" "}
                     per period
+                  </span>
+                )}
+              </li>
+            )}
+            {plan.recruitersLimit !== undefined && (
+              <li className="flex items-center gap-2">
+                <Users className="size-3.5 shrink-0 text-foreground" />
+                {plan.recruitersLimit === 0 && plan.reviewersLimit === 0 ? (
+                  <span>No team members</span>
+                ) : (
+                  <span>
+                    <span className="font-medium text-foreground">{quotaLabel(plan.recruitersLimit ?? null, "recruiters")}</span>
+                    {" · "}
+                    <span className="font-medium text-foreground">{quotaLabel(plan.reviewersLimit ?? null, "reviewers")}</span>
                   </span>
                 )}
               </li>

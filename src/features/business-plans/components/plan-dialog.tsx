@@ -10,6 +10,7 @@ import {
   IconGauge,
   IconId,
   IconCircleCheck,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import {
   Dialog,
@@ -63,6 +64,8 @@ const schema = z.object({
   cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
   offerDraftsPerPeriod: quota,
+  recruitersLimit: quota,
+  reviewersLimit: quota,
   includesPreselection: z.boolean(),
   priorityVisibility: z.boolean(),
   sortOrder: z.coerce.number().int(),
@@ -145,6 +148,9 @@ const EMPTY: FormInput = {
   cvRetentionDays: 30,
   cvChatQuestions: 20,
   offerDraftsPerPeriod: 20,
+  // No team until set: an empty field would mean unlimited.
+  recruitersLimit: 0,
+  reviewersLimit: 0,
   includesPreselection: false,
   priorityVisibility: false,
   sortOrder: 0,
@@ -273,6 +279,8 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
             cvRetentionDays: plan.cvRetentionDays,
             cvChatQuestions: plan.cvChatQuestions,
             offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
+            recruitersLimit: plan.recruitersLimit ?? "",
+            reviewersLimit: plan.reviewersLimit ?? "",
             includesPreselection: plan.includesPreselection,
             priorityVisibility: plan.priorityVisibility,
             sortOrder: plan.sortOrder,
@@ -283,7 +291,7 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
-      const { offerDraftsPerPeriod, ...rest } = values;
+      const { offerDraftsPerPeriod, recruitersLimit, reviewersLimit, ...rest } = values;
       const payload = {
         ...rest,
         description: values.description || null,
@@ -291,6 +299,7 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
         // A backend older than the field neither sends nor accepts it: an
         // empty field there means « unknown », not « unlimited ».
         ...(isEdit && plan.offerDraftsPerPeriod === undefined ? {} : { offerDraftsPerPeriod }),
+        ...(isEdit && plan.recruitersLimit === undefined ? {} : { recruitersLimit, reviewersLimit }),
       };
       return isEdit ? updateBusinessPlan(plan.id, payload) : createBusinessPlan(payload);
     },
@@ -446,6 +455,33 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
                       hint={option.hint}
                     />
                   ))}
+                </div>
+              </Section>
+
+              <Section
+                icon={<IconUsersGroup className="size-5" />}
+                title="Team"
+                description="Colleagues a business invites into its space. Its account holder is its only administrator."
+              >
+                <div className="grid items-start gap-4 sm:grid-cols-2">
+                  <NumberField
+                    control={form.control}
+                    name="recruitersLimit"
+                    label="Recruiters"
+                    suffix="people"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="Publish offers, sort candidates, plan interviews. 0 = not in this plan."
+                  />
+                  <NumberField
+                    control={form.control}
+                    name="reviewersLimit"
+                    label="Reviewers"
+                    suffix="people"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="Read candidates and give their opinion. 0 = not in this plan."
+                  />
                 </div>
               </Section>
 
