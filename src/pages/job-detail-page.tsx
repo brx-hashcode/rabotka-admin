@@ -29,6 +29,7 @@ import { JobSummary } from "./job-detail/components/job-summary";
 import { JobApplicationsTable } from "./job-detail/components/job-applications-table";
 import { useNavigate } from "@tanstack/react-router";
 import { useRole } from "#/hooks/use-role";
+import { CareersApplicationsTable } from "#/features/careers-applications/careers-applications-table";
 
 export default function JobDetailPage({
   jobId,
@@ -221,6 +222,10 @@ export default function JobDetailPage({
 
       <section>
         <JobApplicationsTable applications={job.applications} />
+      </section>
+
+      <section>
+        <CareersApplicationsTable jobOfferId={jobId} title="Applications from the careers page" />
       </section>
 
       <ConfirmDialog
