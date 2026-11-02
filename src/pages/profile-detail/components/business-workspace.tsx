@@ -43,7 +43,7 @@ import {
 import { friendlyError } from "#/lib/api/friendly-error";
 import { activityLabel, activityOfferId } from "../business-activity-labels";
 import { formatDate, formatDateTime } from "../helpers";
-import { CareersApplicationsTable } from "#/features/careers-applications/careers-applications-table";
+import { CareersApplicationsSection } from "#/features/careers-applications/careers-applications-table";
 
 function Loading() {
   return (
@@ -331,7 +331,11 @@ export function BusinessHiringSection({ profileId }: Readonly<{ profileId: strin
               </CardContent>
             </Card>
           </div>
-          <CareersApplicationsTable employerId={profileId} title="Its careers page applications" />
+          <CareersApplicationsSection
+            employerId={profileId}
+            title="Direct applications"
+            description="Applied on its careers page, without a Rabotka profile."
+          />
         </>
       )}
     </div>
