@@ -22,7 +22,7 @@ import {
   bulkRestoreApplications,
 } from "#/lib/api/applications-controller";
 import { useRole } from "#/hooks/use-role";
-import { useState } from "react";
+import { parseAsInteger, parseAsStringLiteral, useQueryState } from "nuqs";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { CareersApplicationsTable } from "#/features/careers-applications/careers-applications-table";
 
@@ -88,7 +88,8 @@ function renderApplicationsHeader(table: TableInstance<Application>) {
 }
 
 export default function ApplicationsPage() {
-  const [source, setSource] = useState<"rabotka" | "careers">("rabotka");
+  const [source, setSource] = useQueryState("source", parseAsStringLiteral(["rabotka", "careers"] as const).withDefault("rabotka"));
+  const [, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
   return (
     <div>
@@ -98,7 +99,13 @@ export default function ApplicationsPage() {
       />
       {/* Two kinds: Rabotka workers, and people who applied on a careers page without a profile. */}
       <div className="mb-4 border-b">
-        <Tabs value={source} onValueChange={(v) => setSource(v as "rabotka" | "careers")}>
+        <Tabs
+          value={source}
+          onValueChange={(v) => {
+            void setSource(v as "rabotka" | "careers");
+            void setPage(null);
+          }}
+        >
           <TabsList variant="line" className="h-auto gap-4 p-0">
             <TabsTrigger value="rabotka" className="flex-none px-1 pb-2.5">
               Rabotka app

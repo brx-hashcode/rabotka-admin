@@ -107,9 +107,14 @@ export function JobApplicationsTable({ applications }: Readonly<Props>) {
       columns={columns}
       enableRowSelection
       header={
-        <h3 className="text-base font-semibold">
-          Applications ({applications?.length ?? 0})
-        </h3>
+        <div className="space-y-0.5">
+          <h3 className="text-base font-semibold">
+            Rabotka profiles ({applications?.length ?? 0})
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            Workers who applied with their Rabotka profile (app or WhatsApp).
+          </p>
+        </div>
       }
       emptyMessage="No applications yet."
       getRowId={(row) => row.id}
