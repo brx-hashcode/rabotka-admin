@@ -22,6 +22,9 @@ import {
   bulkRestoreApplications,
 } from "#/lib/api/applications-controller";
 import { useRole } from "#/hooks/use-role";
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
+import { CareersApplicationsTable } from "#/features/careers-applications/careers-applications-table";
 
 function ApplicationsTableHeader({
   table,
@@ -85,14 +88,36 @@ function renderApplicationsHeader(table: TableInstance<Application>) {
 }
 
 export default function ApplicationsPage() {
-  const { data, total, isLoading } = useApplicationsList();
+  const [source, setSource] = useState<"rabotka" | "careers">("rabotka");
 
   return (
     <div>
       <PageListHeader
         title="Applications"
-        description="Track job applications, penalties and application status."
+        description="Track job applications, penalties and application status — from the Rabotka app and from businesses' careers pages."
       />
+      {/* Two kinds: Rabotka workers, and people who applied on a careers page without a profile. */}
+      <div className="mb-4 border-b">
+        <Tabs value={source} onValueChange={(v) => setSource(v as "rabotka" | "careers")}>
+          <TabsList variant="line" className="h-auto gap-4 p-0">
+            <TabsTrigger value="rabotka" className="flex-none px-1 pb-2.5">
+              Rabotka app
+            </TabsTrigger>
+            <TabsTrigger value="careers" className="flex-none px-1 pb-2.5">
+              Careers page
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      {source === "rabotka" ? <RabotkaApplications /> : <CareersApplicationsTable />}
+    </div>
+  );
+}
+
+function RabotkaApplications() {
+  const { data, total, isLoading } = useApplicationsList();
+  return (
+    <div>
       <DataTable
         isPaginated
         enableRowSelection
