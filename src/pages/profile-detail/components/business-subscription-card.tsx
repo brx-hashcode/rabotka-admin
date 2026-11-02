@@ -209,7 +209,17 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
           </Row>
           {e.endsAt && <Row label="Ends">{formatDate(e.endsAt)}</Row>}
           <Row label="Contact unlocks">{e.plan ? usage(e.unlocksUsed, e.unlocksQuota) : "—"}</Row>
-          <Row label="Active offers">{usage(e.activeOffers, e.plan ? e.activeOffersLimit : 0)}</Row>
+          <Row label={e.offersPublished !== undefined ? "Offers published" : "Active offers"}>
+            {usage(e.offersPublished ?? e.activeOffers, e.plan ? e.activeOffersLimit : 0)}
+          </Row>
+          {e.plan && e.cvUsed !== undefined && <Row label="CV analysis">{usage(e.cvUsed, e.cvQuota ?? null)}</Row>}
+          {e.plan && e.offerDraftsQuota !== undefined && (
+            <Row label="AI drafts">
+              {usage(e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0), e.offerDraftsQuota)}
+            </Row>
+          )}
+          {e.recruiters !== undefined && <Row label="Recruiters">{usage(e.recruiters, e.plan ? (e.recruitersLimit ?? null) : 0)}</Row>}
+          {e.reviewers !== undefined && <Row label="Reviewers">{usage(e.reviewers, e.plan ? (e.reviewersLimit ?? null) : 0)}</Row>}
           {e.plan && (
             <Row label="Includes">
               <div className="flex flex-wrap justify-end gap-1">

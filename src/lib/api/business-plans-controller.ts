@@ -71,6 +71,16 @@ export type BusinessSubscriptionOverview = {
     activeOffers: number;
     includesPreselection: boolean;
     priorityVisibility: boolean;
+    /** The rest of the plan's usage (absent from an older backend). */
+    offersPublished?: number;
+    cvUsed?: number;
+    cvQuota?: number | null;
+    offerDraftsQuota?: number | null;
+    offerDraftsRemaining?: number | null;
+    recruiters?: number;
+    recruitersLimit?: number | null;
+    reviewers?: number;
+    reviewersLimit?: number | null;
   };
   upcoming: SubscriptionPeriod[];
   history: SubscriptionPeriod[];

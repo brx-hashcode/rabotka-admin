@@ -45,6 +45,13 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
 import { BusinessSubscriptionCard } from "./business-subscription-card";
+import {
+  BusinessActivitySection,
+  BusinessCareersSection,
+  BusinessHiringSection,
+  BusinessTeamSection,
+} from "./business-workspace";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import type { ViewerDocument } from "./document-viewer-drawer";
 
 type Props = {
@@ -131,7 +138,42 @@ function PreviousVersions({
  * no personal KYC); the business is told by email and in-app notification —
  * business accounts get no WhatsApp.
  */
-export function ProfileBusinessContent({
+/**
+ * A business profile's BUSINESS tab: its organisation (details, plan,
+ * verification, papers), and what it works with — team, activity, hiring,
+ * careers page and mailboxes — with the fixes support may make.
+ */
+export function ProfileBusinessContent(props: Readonly<Props>) {
+  const [section, setSection] = useState("organisation");
+  return (
+    <Tabs value={section} onValueChange={setSection} className="gap-6">
+      <TabsList>
+        <TabsTrigger value="organisation">Organisation</TabsTrigger>
+        <TabsTrigger value="team">Team</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+        <TabsTrigger value="hiring">Hiring</TabsTrigger>
+        <TabsTrigger value="careers">Careers page & mailboxes</TabsTrigger>
+      </TabsList>
+      <TabsContent value="organisation">
+        <BusinessOrganisationSection {...props} />
+      </TabsContent>
+      <TabsContent value="team">
+        <BusinessTeamSection profileId={props.profileId} />
+      </TabsContent>
+      <TabsContent value="activity">
+        <BusinessActivitySection profileId={props.profileId} />
+      </TabsContent>
+      <TabsContent value="hiring">
+        <BusinessHiringSection profileId={props.profileId} />
+      </TabsContent>
+      <TabsContent value="careers">
+        <BusinessCareersSection profileId={props.profileId} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function BusinessOrganisationSection({
   profileId,
   onPreviewDoc,
   logoUrl,
