@@ -75,6 +75,7 @@ type Approving = { kind: "business" } | { kind: "document"; doc: AdminBusinessDo
 function fileKind(mimeType: string | null): string | undefined {
   if (mimeType === "application/pdf") return "pdf";
   if (mimeType?.startsWith("image/")) return "image";
+  if (mimeType?.includes("wordprocessingml")) return "docx";
   return undefined;
 }
 

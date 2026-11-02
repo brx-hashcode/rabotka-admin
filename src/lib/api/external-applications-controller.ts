@@ -15,6 +15,8 @@ export type AdminExternalApplication = {
   knockedOut: boolean;
   answers: { label: string; value: string }[];
   hasCv: boolean;
+  /** The CV's type, for the viewer (absent from an older backend). */
+  cvMimeType?: string | null;
   score: number | null;
   createdAt: string;
   viewedAt: string | null;

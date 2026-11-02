@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { IconFileText } from "@tabler/icons-react";
@@ -16,6 +16,54 @@ import {
   type ExternalApplicationStatus,
 } from "#/lib/api/external-applications-controller";
 import { cn } from "#/lib/utils";
+import {
+  DocumentViewerDrawer,
+  type ViewerDocument,
+} from "#/pages/profile-detail/components/document-viewer-drawer";
+
+/** Opens a CV in admin's viewer (PDF, Word drawn in the browser, photo). */
+const CvOpener = createContext<(a: AdminExternalApplication) => void>(() => {});
+
+function viewerType(mime: string | null | undefined): string | undefined {
+  if (!mime) return undefined;
+  if (mime === "application/pdf") return "pdf";
+  if (mime.includes("wordprocessingml")) return "docx";
+  if (mime.startsWith("image/")) return "image";
+  return undefined;
+}
+
+/** The viewer for the CVs of a table; each opening is logged by the api. */
+function WithCvViewer({ children }: Readonly<{ children: ReactNode }>) {
+  const [doc, setDoc] = useState<ViewerDocument | null>(null);
+  const open = (a: AdminExternalApplication) =>
+    setDoc({
+      url: externalApplicationCvUrl(a.id),
+      title: `CV — ${a.firstName} ${a.lastName}`,
+      description: `${a.offer.title} · applied on the careers page`,
+      fileType: viewerType(a.cvMimeType),
+    });
+  return (
+    <CvOpener.Provider value={open}>
+      {children}
+      <DocumentViewerDrawer open={doc !== null} onOpenChange={(o) => !o && setDoc(null)} document={doc} />
+    </CvOpener.Provider>
+  );
+}
+
+function CvButton({ application }: Readonly<{ application: AdminExternalApplication }>) {
+  const open = useContext(CvOpener);
+  return (
+    <button
+      type="button"
+      onClick={() => open(application)}
+      title="Open the CV (recorded in the admin log)"
+      className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1")}
+    >
+      <IconFileText className="size-4" />
+      CV
+    </button>
+  );
+}
 
 const STATUS_CLASS: Record<ExternalApplicationStatus, string> = {
   PENDING: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
@@ -119,16 +167,7 @@ function careersColumns({ offer, business }: Readonly<{ offer: boolean; business
       header: () => <div className="hidden">CV</div>,
       cell: ({ row }) =>
         row.original.hasCv ? (
-          <a
-            href={externalApplicationCvUrl(row.original.id)}
-            target="_blank"
-            rel="noreferrer"
-            title="Open the CV (recorded in the admin log)"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1")}
-          >
-            <IconFileText className="size-4" />
-            CV
-          </a>
+          <CvButton application={row.original} />
         ) : (
           <span className="text-muted-foreground text-xs">No CV</span>
         ),
@@ -178,6 +217,7 @@ export function CareersApplicationsTable() {
   });
 
   return (
+    <WithCvViewer>
     <DataTable
       isPaginated
       data={query.data?.data ?? []}
@@ -196,6 +236,7 @@ export function CareersApplicationsTable() {
         </TableHeader>
       }
     />
+    </WithCvViewer>
   );
 }
 
@@ -215,6 +256,7 @@ export function CareersApplicationsSection({
   });
   const total = query.data?.total ?? 0;
   return (
+    <WithCvViewer>
     <DataTable
       data={query.data?.data ?? []}
       columns={jobOfferId ? FOR_OFFER : FOR_BUSINESS}
@@ -231,5 +273,6 @@ export function CareersApplicationsSection({
         </div>
       }
     />
+    </WithCvViewer>
   );
 }
