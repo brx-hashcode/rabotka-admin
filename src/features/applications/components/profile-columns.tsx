@@ -40,8 +40,15 @@ export function getVerificationStatusBadgeClass(status: string): string {
   }
 }
 
+/** WORKER, EMPLOYER (an individual) or BUSINESS (an organisation). */
+export function profileKind(p: { profileType: string; isBusiness?: boolean }): string {
+  return p.isBusiness ? "BUSINESS" : p.profileType;
+}
+
 export function getProfileTypeBadgeClass(type: string): string {
   switch (type) {
+    case "BUSINESS":
+      return "bg-emerald-600 text-white border-transparent";
     case "EMPLOYER":
       return "bg-violet-600 text-white border-transparent";
     case "WORKER":
@@ -96,7 +103,7 @@ const profileDataColumns: ColumnDef<Profile, unknown>[] = [
     accessorKey: "profileType",
     header: "Type",
     cell: ({ row }) => {
-      const type = row.original.profileType;
+      const type = profileKind(row.original);
       return (
         <Badge className={getProfileTypeBadgeClass(type)}>
           {type}
