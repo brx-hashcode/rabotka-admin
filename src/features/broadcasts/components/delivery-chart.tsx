@@ -1,5 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   ChartContainer,
@@ -7,11 +6,14 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "#/components/ui/chart";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  getBroadcastStats,
-  type RecipientStatus,
+import type {
+  BroadcastChannel,
+  BroadcastStats,
+  RecipientStatus,
 } from "#/lib/api/broadcasts-controller";
+import { CHANNEL_ICONS, CHANNEL_LABELS } from "./broadcast-columns";
 
 /**
  * A STATUS palette: these four colours carry a fixed meaning and are never
@@ -20,98 +22,199 @@ import {
  * Validated against both surfaces — worst adjacent pair ΔE 17.6 under
  * deuteranopia, 22.0 under tritanopia. Read is violet rather than the obvious
  * cyan: cyan sits ΔE 5.7 from the green beside it for tritanopia, close enough
- * that the two would blur into one.
- *
- * Pending is deliberately the one low-chroma step. Grey IS its meaning —
- * nothing has happened to it yet — and each bar is named on the axis and
- * labelled with its count, so nothing here is read by colour alone.
+ * that the two would blur into one. Pending is the one low-chroma step: grey
+ * IS its meaning. Every segment is also named with its count, so nothing here
+ * is read by colour alone.
  */
-const STATUS_STYLE: Record<
-  RecipientStatus,
-  { label: string; color: string }
-> = {
-  SENT: { label: "Sent", color: "#30d96e" },
+export const STATUS_STYLE: Record<RecipientStatus, { label: string; color: string }> = {
+  SENT: { label: "Delivered", color: "#30d96e" },
   READ: { label: "Read", color: "#9a56d6" },
   FAILED: { label: "Failed", color: "#ef4d4d" },
   PENDING: { label: "Pending", color: "#b9bec6" },
 };
 
-/** Left to right in the order a delivery actually moves through. */
+/** Left to right in the order a delivery moves through. */
 const STATUS_ORDER: RecipientStatus[] = ["SENT", "READ", "FAILED", "PENDING"];
 
-const chartConfig = {
-  count: { label: "Deliveries" },
-  ...Object.fromEntries(
-    STATUS_ORDER.map((status) => [
-      status,
-      { label: STATUS_STYLE[status].label, color: STATUS_STYLE[status].color },
-    ]),
-  ),
-} satisfies ChartConfig;
+/** Line colours for the channels on the curve. */
+const CHANNEL_COLOR: Record<BroadcastChannel, string> = {
+  IN_APP: "#9a56d6",
+  WHATSAPP: "#30d96e",
+  EMAIL: "#3b82f6",
+};
+
+const nf = (n: number) => n.toLocaleString("fr-FR");
+
+type ChannelRow = {
+  channel: BroadcastChannel;
+  total: number;
+  counts: Record<RecipientStatus, number>;
+};
+
+function byChannel(stats: BroadcastStats["byChannel"]): ChannelRow[] {
+  const rows = new Map<BroadcastChannel, ChannelRow>();
+  for (const s of stats) {
+    const row = rows.get(s.channel) ?? {
+      channel: s.channel,
+      total: 0,
+      counts: { SENT: 0, READ: 0, FAILED: 0, PENDING: 0 },
+    };
+    row.counts[s.status] += s.count;
+    row.total += s.count;
+    rows.set(s.channel, row);
+  }
+  return [...rows.values()].sort((a, b) => b.total - a.total);
+}
 
 /**
- * What became of every delivery, one bar per status.
+ * What became of every delivery, one bar per channel: delivered, read (in-app
+ * only), failed, still pending. Then, when the send spread over more than a
+ * minute, how it went out over time.
  *
- * The counters above carry the same four numbers as text; the bars carry their
- * relative size, which is the part a number cannot show at a glance — 40 sent
- * against 1 failed reads very differently from 20 against 21, and both are
- * "some failed" in a counter.
- *
- * Every delivery is counted, unlike the recipients list below, which is
- * paginated at 50.
+ * Every delivery is counted, unlike the recipients list, which is paginated.
  */
-export function DeliveryChart({
-  broadcastId,
-  live,
-}: Readonly<{
-  broadcastId: string;
-  /** The broadcast is still working: keep the breakdown refreshing. */
-  live: boolean;
-}>) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "broadcasts", broadcastId, "stats"],
-    queryFn: () => getBroadcastStats(broadcastId),
-    // Driven by the BROADCAST's state, not by what this query last saw. Polling
-    // on "some row is still PENDING" stopped the moment a page failed outright
-    // — which is exactly when the numbers are still moving.
-    refetchInterval: live ? 5_000 : false,
-  });
-
+export function DeliveryBreakdown({
+  stats,
+  isLoading,
+}: Readonly<{ stats: BroadcastStats | undefined; isLoading: boolean }>) {
   if (isLoading) {
     return (
-      <section className="bg-card shadow-soft space-y-3 rounded-lg p-4">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-55 w-full" />
-      </section>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-40" />
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     );
   }
 
-  const bars = toBars(data?.byChannel ?? []);
-  if (bars.length === 0) return null;
+  const rows = byChannel(stats?.byChannel ?? []);
+  const timeline = stats?.timeline ?? [];
+  const channels = rows.map((r) => r.channel);
 
   return (
-    <section className="bg-card shadow-soft space-y-3 rounded-lg p-4">
-      <div>
-        <h2 className="text-sm font-medium">Delivery status</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Delivery</CardTitle>
         <p className="text-muted-foreground text-xs">
-          Every delivery counted, not just the page below.
+          Every delivery, by channel. Read is reported by in-app only.
         </p>
-      </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {rows.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Nothing delivered yet. The audience is frozen when the broadcast is
+            sent.
+          </p>
+        ) : (
+          rows.map((row) => <ChannelBar key={row.channel} row={row} />)
+        )}
 
-      <ChartContainer config={chartConfig} className="h-55 w-full">
-        <BarChart
-          accessibilityLayer
-          data={bars}
-          margin={{ left: 4, right: 4, top: 20, bottom: 4 }}
-        >
-          {/* Recessive: horizontal only, so the grid measures the bars without
-              competing with them. */}
+        {rows.length > 0 ? (
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {STATUS_ORDER.map((status) => (
+              <span
+                key={status}
+                className="text-muted-foreground inline-flex items-center gap-1.5 text-xs"
+              >
+                <span
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: STATUS_STYLE[status].color }}
+                />
+                {STATUS_STYLE[status].label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        {timeline.length >= 2 ? (
+          <Timeline points={timeline} channels={channels} />
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChannelBar({ row }: Readonly<{ row: ChannelRow }>) {
+  const Icon = CHANNEL_ICONS[row.channel];
+  const reached = row.counts.SENT + row.counts.READ;
+  const pct = row.total ? Math.round((reached / row.total) * 100) : 0;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          {Icon ? <Icon className="text-muted-foreground size-4" /> : null}
+          {CHANNEL_LABELS[row.channel] ?? row.channel}
+        </span>
+        <span className="text-sm tabular-nums">
+          {nf(reached)}
+          <span className="text-muted-foreground"> / {nf(row.total)} · {pct} %</span>
+        </span>
+      </div>
+      <div className="bg-muted flex h-2.5 overflow-hidden rounded-full">
+        {STATUS_ORDER.map((status) =>
+          row.counts[status] > 0 ? (
+            <div
+              key={status}
+              title={`${STATUS_STYLE[status].label}: ${nf(row.counts[status])}`}
+              className="h-full"
+              style={{
+                width: `${(row.counts[status] / row.total) * 100}%`,
+                backgroundColor: STATUS_STYLE[status].color,
+              }}
+            />
+          ) : null,
+        )}
+      </div>
+      <div className="text-muted-foreground flex flex-wrap gap-x-3 text-xs tabular-nums">
+        {STATUS_ORDER.filter((s) => row.counts[s] > 0).map((s) => (
+          <span key={s}>
+            {nf(row.counts[s])} {STATUS_STYLE[s].label.toLowerCase()}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Timeline({
+  points,
+  channels,
+}: Readonly<{
+  points: BroadcastStats["timeline"];
+  channels: BroadcastChannel[];
+}>) {
+  const config = Object.fromEntries(
+    channels.map((c) => [c, { label: CHANNEL_LABELS[c] ?? c, color: CHANNEL_COLOR[c] }]),
+  ) satisfies ChartConfig;
+  const data = points.map((p) => ({
+    ...p,
+    time: new Date(p.at).toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">Over time</p>
+      <ChartContainer config={config} className="h-44 w-full">
+        <AreaChart data={data} margin={{ left: 4, right: 4, top: 8, bottom: 0 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis
-            dataKey="label"
+            dataKey="time"
             tickLine={false}
             axisLine={false}
             tickMargin={8}
+            minTickGap={24}
             className="text-xs"
           />
           <YAxis
@@ -121,55 +224,21 @@ export function DeliveryChart({
             allowDecimals={false}
             className="text-xs"
           />
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent nameKey="label" hideLabel />}
-          />
-          {/* One series, so no legend: the axis already names every bar. */}
-          <Bar dataKey="count" radius={[4, 4, 0, 0]} isAnimationActive={false}>
-            {bars.map((bar) => (
-              <Cell key={bar.status} fill={bar.fill} />
-            ))}
-            <LabelList
-              dataKey="count"
-              position="top"
-              offset={8}
-              className="fill-foreground text-xs font-medium"
+          <ChartTooltip content={<ChartTooltipContent />} />
+          {channels.map((c) => (
+            <Area
+              key={c}
+              dataKey={c}
+              type="monotone"
+              stroke={`var(--color-${c})`}
+              fill={`var(--color-${c})`}
+              fillOpacity={0.15}
+              strokeWidth={2}
+              isAnimationActive={false}
             />
-          </Bar>
-        </BarChart>
+          ))}
+        </AreaChart>
       </ChartContainer>
-    </section>
-  );
-}
-
-type BarDatum = {
-  status: RecipientStatus;
-  label: string;
-  count: number;
-  fill: string;
-};
-
-/**
- * Totals per status across every channel, in the fixed status order.
- *
- * A status with no deliveries is dropped rather than drawn at zero: an empty
- * bar reads as a state something reached and failed to leave, when in fact
- * nothing was ever in it.
- */
-function toBars(stats: { status: RecipientStatus; count: number }[]): BarDatum[] {
-  const totals = new Map<RecipientStatus, number>();
-
-  for (const stat of stats) {
-    totals.set(stat.status, (totals.get(stat.status) ?? 0) + stat.count);
-  }
-
-  return STATUS_ORDER.filter((status) => (totals.get(status) ?? 0) > 0).map(
-    (status) => ({
-      status,
-      label: STATUS_STYLE[status].label,
-      count: totals.get(status) ?? 0,
-      fill: STATUS_STYLE[status].color,
-    }),
+    </div>
   );
 }
