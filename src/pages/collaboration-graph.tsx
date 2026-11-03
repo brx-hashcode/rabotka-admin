@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import {
   IconBriefcase,
   IconCoin,
@@ -6,7 +6,13 @@ import {
   IconSend,
   IconUsers,
 } from "@tabler/icons-react";
-import { parseAsBoolean, parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import {
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryState,
+} from "nuqs";
 
 import {
   Card,
@@ -18,6 +24,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useCollaborationGraph } from "#/hooks/use-collaboration-graph";
 import {
@@ -35,6 +42,13 @@ import type {
 /** Tall enough to read the graph, short enough to keep the toolbar in view. */
 const STAGE = "h-[calc(100vh-26rem)] min-h-[28rem]";
 
+/** three.js is heavy: fetched only the first time someone switches to 3D. */
+const CollaborationGraph3D = lazy(
+  () => import("#/features/graph/components/collaboration-graph-3d"),
+);
+
+const VIEWS = ["2d", "3d"] as const;
+
 export default function CollaborationGraphPage() {
   const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
   const [minCollaborations, setMinCollaborations] = useQueryState(
@@ -44,6 +58,10 @@ export default function CollaborationGraphPage() {
   const [includeApplications, setIncludeApplications] = useQueryState(
     "applications",
     parseAsBoolean.withDefault(true),
+  );
+  const [view, setView] = useQueryState(
+    "view",
+    parseAsStringLiteral(VIEWS).withDefault("2d"),
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -142,11 +160,32 @@ export default function CollaborationGraphPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
         <Card className="overflow-hidden">
           <CardHeader className="gap-3 pb-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <CardTitle className="text-base">Network</CardTitle>
-              <CardDescription className="text-xs">
-                Size = number of connections · drag to move · ⌘/Ctrl + scroll to zoom
-              </CardDescription>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <div className="space-y-1">
+                <CardTitle className="text-base">Network</CardTitle>
+                <CardDescription className="text-xs">
+                  {view === "3d"
+                    ? "Size = number of connections · drag to orbit · scroll to zoom · right-drag to pan"
+                    : "Size = number of connections · drag to move · ⌘/Ctrl + scroll to zoom"}
+                </CardDescription>
+              </div>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                value={view}
+                onValueChange={(v) => {
+                  if (v) void setView(v === "2d" ? null : (v as "3d"));
+                }}
+                aria-label="Graph view"
+              >
+                <ToggleGroupItem value="2d" className="px-3 text-xs">
+                  2D
+                </ToggleGroupItem>
+                <ToggleGroupItem value="3d" className="px-3 text-xs">
+                  3D
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
             <GraphLegend />
             {data?.stats.truncated ? (
@@ -167,7 +206,7 @@ export default function CollaborationGraphPage() {
                 No connections with these filters.
               </div>
             ) : null}
-            {data && data.nodes.length > 0 ? (
+            {data && data.nodes.length > 0 && view === "2d" ? (
               <CollaborationGraphCanvas
                 nodes={data.nodes}
                 edges={data.edges}
@@ -176,6 +215,18 @@ export default function CollaborationGraphPage() {
                 onSelect={(n: GraphNode | null) => setSelectedId(n?.id ?? null)}
                 onRefresh={() => void refetch()}
               />
+            ) : null}
+            {data && data.nodes.length > 0 && view === "3d" ? (
+              <Suspense fallback={<Skeleton className="h-full w-full rounded-none" />}>
+                <CollaborationGraph3D
+                  nodes={data.nodes}
+                  edges={data.edges}
+                  search={search}
+                  selectedId={selectedId}
+                  onSelect={(n: GraphNode | null) => setSelectedId(n?.id ?? null)}
+                  onRefresh={() => void refetch()}
+                />
+              </Suspense>
             ) : null}
           </div>
         </Card>
