@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   Bell,
   BellRing,
   CalendarClock,
@@ -168,15 +167,7 @@ export default function BroadcastDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <Link
-          to="/broadcasts"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
-        >
-          <ArrowLeft className="size-4" />
-          Broadcasts
-        </Link>
-
+      <div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
@@ -736,7 +727,6 @@ function RecipientsCard({ broadcast }: Readonly<{ broadcast: Broadcast }>) {
 function DetailSkeleton() {
   return (
     <div className="space-y-6">
-      <Skeleton className="h-4 w-24" />
       <div className="space-y-2">
         <Skeleton className="h-8 w-80 max-w-full" />
         <Skeleton className="h-5 w-64" />
