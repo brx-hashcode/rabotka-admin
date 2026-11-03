@@ -12,6 +12,7 @@ import {
   IconChevronRight,
   IconConfetti,
   IconCopy,
+  IconMail,
   IconPhone,
   IconPhoneCheck,
   IconUserSearch,
@@ -45,17 +46,20 @@ import { cn } from "#/lib/utils";
 import {
   listOnboardingAttempts,
   markOnboardingContacted,
-  ONBOARDING_STAGES,
   type AdminOnboardingAttempt,
   type AdminOnboardingStats,
+  type OnboardingEntry,
   type OnboardingStage,
 } from "#/lib/api/onboarding-attempts-controller";
 import {
-  STAGE_LABELS,
+  contactOf,
+  emailFollowUpLink,
   initials,
   isWarmLead,
   pageRange,
-  stageIndex,
+  stageLabel,
+  stagesFor,
+  type EntryFilter,
   timeAgo,
   whatsAppFollowUpLink,
 } from "../stage-labels";
@@ -82,13 +86,24 @@ function queryFor(tab: FollowUp, stage: OnboardingStage | null) {
 const fullName = (a: AdminOnboardingAttempt) =>
   [a.firstName, a.lastName].filter(Boolean).join(" ");
 
+/** « Entreprise » for a business sign-up, else the profile type they chose. */
+const kindLabel = (a: Pick<AdminOnboardingAttempt, "entry" | "profileType">) =>
+  a.entry === "business"
+    ? "Entreprise"
+    : a.profileType === "WORKER"
+      ? "Travailleur"
+      : "Employeur";
+
 export function OnboardingAttemptsTable({
   stats,
+  entry = "all",
   stage,
   onClearStage,
   window = {},
 }: Readonly<{
   stats: AdminOnboardingStats | undefined;
+  /** The page's kind of sign-up: the list shows the same people as the numbers. */
+  entry?: EntryFilter;
   stage: OnboardingStage | null;
   onClearStage: () => void;
   /** The page's period: the list covers the same sign-ups as the numbers. */
@@ -108,13 +123,14 @@ export function OnboardingAttemptsTable({
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage, window],
+    queryKey: ["admin", "onboarding-attempts", "list", page, q, tab, stage, entry, window],
     queryFn: () =>
       listOnboardingAttempts({
         page,
         limit: PAGE_SIZE,
         q: q || undefined,
         ...queryFor(tab, stage),
+        ...(entry === "all" ? {} : { entry }),
         ...window,
       }),
     placeholderData: keepPreviousData,
@@ -171,7 +187,7 @@ export function OnboardingAttemptsTable({
 
           {stage && (
             <Badge variant="secondary" className="gap-1 py-1 pl-2.5">
-              Arrêtées à : {STAGE_LABELS[stage]}
+              Arrêtées à : {stageLabel(stage, entry)}
               <button
                 type="button"
                 onClick={onClearStage}
@@ -184,12 +200,13 @@ export function OnboardingAttemptsTable({
           )}
 
           <Input
+            name="q"
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="Rechercher un nom, un téléphone…"
+            placeholder="Rechercher un nom, un téléphone, un e-mail…"
             className="ml-auto h-9 w-full max-w-xs"
           />
         </div>
@@ -300,6 +317,7 @@ function AttemptRow({
   onOpen: () => void;
 }>) {
   const name = fullName(row);
+  const contact = contactOf(row);
   const done = row.stage === "COMPLETED";
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
@@ -320,7 +338,7 @@ function AttemptRow({
                 : "bg-primary/10 text-primary",
             )}
           >
-            {initials(row.firstName, row.lastName, row.phone)}
+            {initials(row.firstName, row.lastName, contact)}
           </span>
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="flex items-center gap-2 truncate font-medium">
@@ -329,23 +347,23 @@ function AttemptRow({
                   Nom pas encore saisi
                 </span>
               )}
-              {row.profileType && (
+              {(row.entry === "business" || row.profileType) && (
                 <Badge variant="outline" className="font-normal">
-                  {row.profileType === "WORKER" ? "Travailleur" : "Employeur"}
+                  {kindLabel(row)}
                 </Badge>
               )}
             </span>
             <span className="text-muted-foreground flex items-center gap-1 text-xs tabular-nums">
-              {row.phone}
+              {contact}
               <button
                 type="button"
                 onClick={(e) => {
                   stop(e);
                   void navigator.clipboard
-                    ?.writeText(row.phone)
-                    .then(() => toast.success("Numéro copié"));
+                    ?.writeText(contact)
+                    .then(() => toast.success(row.phone ? "Numéro copié" : "Adresse copiée"));
                 }}
-                aria-label="Copier le numéro"
+                aria-label={row.phone ? "Copier le numéro" : "Copier l'adresse"}
                 className="hover:text-foreground rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <IconCopy className="size-3" />
@@ -356,7 +374,7 @@ function AttemptRow({
       </TableCell>
 
       <TableCell>
-        <StageCell stage={row.stage} codeSends={row.codeSends} />
+        <StageCell stage={row.stage} entry={row.entry} codeSends={row.codeSends} />
       </TableCell>
 
       <TableCell className="hidden lg:table-cell">
@@ -379,33 +397,52 @@ function AttemptRow({
 
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-1.5">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-8"
-            onClick={stop}
-            render={
-              <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
-            }
-          >
-            <IconPhone className="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-8 text-emerald-600"
-            onClick={stop}
-            render={
-              <a
-                href={whatsAppFollowUpLink(row.phone, row.firstName)}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Écrire à ${name || row.phone} sur WhatsApp`}
-              />
-            }
-          >
-            <IconBrandWhatsapp className="size-4" />
-          </Button>
+          {row.phone ? (
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8"
+                onClick={stop}
+                render={
+                  <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
+                }
+              >
+                <IconPhone className="size-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8 text-emerald-600"
+                onClick={stop}
+                render={
+                  <a
+                    href={whatsAppFollowUpLink(row.phone, row.firstName)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Écrire à ${name || contact} sur WhatsApp`}
+                  />
+                }
+              >
+                <IconBrandWhatsapp className="size-4" />
+              </Button>
+            </>
+          ) : row.email ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              onClick={stop}
+              render={
+                <a
+                  href={emailFollowUpLink(row.email, row.firstName)}
+                  aria-label={`Écrire à ${name || row.email} par e-mail`}
+                />
+              }
+            >
+              <IconMail className="size-4" />
+            </Button>
+          ) : null}
           {!done && (
             <Button
               size="sm"
@@ -431,9 +468,11 @@ function AttemptRow({
  */
 function StageCell({
   stage,
+  entry,
   codeSends,
-}: Readonly<{ stage: OnboardingStage; codeSends: number }>) {
-  const reached = stageIndex(stage);
+}: Readonly<{ stage: OnboardingStage; entry: OnboardingEntry; codeSends: number }>) {
+  const stages = stagesFor(entry);
+  const reached = stages.indexOf(stage);
   const done = stage === "COMPLETED";
   return (
     <div className="flex flex-col gap-1.5">
@@ -446,7 +485,7 @@ function StageCell({
               : "bg-muted text-foreground",
           )}
         >
-          {done ? "Compte créé" : STAGE_LABELS[stage]}
+          {done ? "Compte créé" : stageLabel(stage, entry)}
         </span>
         {isWarmLead(stage) && (
           <span
@@ -466,7 +505,7 @@ function StageCell({
         )}
       </div>
       <div className="flex max-w-[200px] gap-1" aria-hidden>
-        {ONBOARDING_STAGES.map((s, i) => (
+        {stages.map((s, i) => (
           <span
             key={s}
             className={cn(
@@ -538,7 +577,8 @@ function AttemptSheet({
     onError: () => toast.error("Impossible d'enregistrer le suivi"),
   });
 
-  const reached = attempt ? stageIndex(attempt.stage) : -1;
+  const stages = attempt ? stagesFor(attempt.entry) : [];
+  const reached = attempt ? stages.indexOf(attempt.stage) : -1;
   const when: Partial<Record<OnboardingStage, string | null>> = attempt
     ? {
         CODE_SENT: attempt.startedAt,
@@ -553,17 +593,17 @@ function AttemptSheet({
         {attempt && (
           <>
             <SheetHeader>
-              <SheetTitle>{fullName(attempt) || attempt.phone}</SheetTitle>
+              <SheetTitle>{fullName(attempt) || contactOf(attempt)}</SheetTitle>
               <SheetDescription>
-                {attempt.phone}
-                {attempt.profileType &&
-                  ` · ${attempt.profileType === "WORKER" ? "Travailleur" : "Employeur"}`}
+                {contactOf(attempt)}
+                {(attempt.entry === "business" || attempt.profileType) &&
+                  ` · ${kindLabel(attempt)}`}
               </SheetDescription>
             </SheetHeader>
 
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4">
               <ol className="flex flex-col">
-                {ONBOARDING_STAGES.map((s, i) => {
+                {stages.map((s, i) => {
                   const ok = i <= reached;
                   const at = when[s];
                   return (
@@ -578,7 +618,7 @@ function AttemptSheet({
                       </span>
                       <div className="flex flex-col">
                         <span className={cn("text-sm", !ok && "text-muted-foreground")}>
-                          {STAGE_LABELS[s]}
+                          {stageLabel(s, attempt.entry)}
                           {s === "CODE_SENT" && attempt.codeSends > 1 &&
                             ` (${attempt.codeSends} codes)`}
                         </span>
@@ -609,6 +649,7 @@ function AttemptSheet({
                     </span>
                   )}
                   <Textarea
+                    name="note"
                     value={note}
                     onChange={(e) => setNote(e.target.value.slice(0, 1000))}
                     placeholder="Pourquoi la personne n'a pas terminé, et ce qui l'aiderait. Ex : le code WhatsApp n'arrivait pas."
@@ -619,20 +660,31 @@ function AttemptSheet({
             </div>
 
             <SheetFooter className="flex-row gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                render={
-                  <a
-                    href={whatsAppFollowUpLink(attempt.phone, attempt.firstName)}
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                }
-              >
-                <IconBrandWhatsapp className="size-4" />
-                WhatsApp
-              </Button>
+              {attempt.phone ? (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  render={
+                    <a
+                      href={whatsAppFollowUpLink(attempt.phone, attempt.firstName)}
+                      target="_blank"
+                      rel="noreferrer"
+                    />
+                  }
+                >
+                  <IconBrandWhatsapp className="size-4" />
+                  WhatsApp
+                </Button>
+              ) : attempt.email ? (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  render={<a href={emailFollowUpLink(attempt.email, attempt.firstName)} />}
+                >
+                  <IconMail className="size-4" />
+                  E-mail
+                </Button>
+              ) : null}
               {attempt.stage !== "COMPLETED" && (
                 <Button
                   className="flex-1"

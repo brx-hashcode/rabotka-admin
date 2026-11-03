@@ -29,6 +29,7 @@ import { JobSummary } from "./job-detail/components/job-summary";
 import { JobApplicationsTable } from "./job-detail/components/job-applications-table";
 import { useNavigate } from "@tanstack/react-router";
 import { useRole } from "#/hooks/use-role";
+import { CareersApplicationsSection } from "#/features/careers-applications/careers-applications-table";
 
 export default function JobDetailPage({
   jobId,
@@ -219,8 +220,14 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      <section>
+      <section className="space-y-4">
+        <h2 className="font-semibold text-lg">Applications</h2>
         <JobApplicationsTable applications={job.applications} />
+        <CareersApplicationsSection
+          jobOfferId={jobId}
+          title="Direct applications"
+          description="Applied on the business's careers page, without a Rabotka profile."
+        />
       </section>
 
       <ConfirmDialog

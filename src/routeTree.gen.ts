@@ -24,6 +24,7 @@ import { Route as AuthenticatedApplicationsApplicationIdRouteImport } from './ro
 import { Route as AuthenticatedBroadcastsIndexRouteImport } from './routes/_authenticated/broadcasts/index'
 import { Route as AuthenticatedBroadcastsBroadcastIdRouteImport } from './routes/_authenticated/broadcasts/$broadcastId'
 import { Route as AuthenticatedBroadcastsNewRouteImport } from './routes/_authenticated/broadcasts/new'
+import { Route as AuthenticatedBusinessPlansIndexRouteImport } from './routes/_authenticated/business-plans/index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat/index'
 import { Route as AuthenticatedClaimIndexRouteImport } from './routes/_authenticated/claim/index'
 import { Route as AuthenticatedContactRecordsIndexRouteImport } from './routes/_authenticated/contact-records/index'
@@ -136,6 +137,12 @@ const AuthenticatedBroadcastsNewRoute =
   AuthenticatedBroadcastsNewRouteImport.update({
     id: '/broadcasts/new',
     path: '/broadcasts/new',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBusinessPlansIndexRoute =
+  AuthenticatedBusinessPlansIndexRouteImport.update({
+    id: '/business-plans/',
+    path: '/business-plans/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
@@ -326,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/agents/': typeof AuthenticatedAgentsIndexRoute
   '/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
+  '/business-plans/': typeof AuthenticatedBusinessPlansIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
@@ -371,6 +379,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/applications': typeof AuthenticatedApplicationsIndexRoute
   '/broadcasts': typeof AuthenticatedBroadcastsIndexRoute
+  '/business-plans': typeof AuthenticatedBusinessPlansIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/contact-records': typeof AuthenticatedContactRecordsIndexRoute
@@ -418,6 +427,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
   '/_authenticated/broadcasts/': typeof AuthenticatedBroadcastsIndexRoute
+  '/_authenticated/business-plans/': typeof AuthenticatedBusinessPlansIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/agents/'
     | '/applications/'
     | '/broadcasts/'
+    | '/business-plans/'
     | '/chat/'
     | '/claim/'
     | '/contact-records/'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/applications'
     | '/broadcasts'
+    | '/business-plans'
     | '/chat'
     | '/claim'
     | '/contact-records'
@@ -556,6 +568,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/'
     | '/_authenticated/applications/'
     | '/_authenticated/broadcasts/'
+    | '/_authenticated/business-plans/'
     | '/_authenticated/chat/'
     | '/_authenticated/claim/'
     | '/_authenticated/contact-records/'
@@ -694,6 +707,13 @@ declare module '@tanstack/react-router' {
       path: '/broadcasts/new'
       fullPath: '/broadcasts/new'
       preLoaderRoute: typeof AuthenticatedBroadcastsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/business-plans/': {
+      id: '/_authenticated/business-plans/'
+      path: '/business-plans'
+      fullPath: '/business-plans/'
+      preLoaderRoute: typeof AuthenticatedBusinessPlansIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chat/': {
@@ -919,6 +939,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
   AuthenticatedBroadcastsIndexRoute: typeof AuthenticatedBroadcastsIndexRoute
+  AuthenticatedBusinessPlansIndexRoute: typeof AuthenticatedBusinessPlansIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedContactRecordsIndexRoute: typeof AuthenticatedContactRecordsIndexRoute
@@ -966,6 +987,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
   AuthenticatedBroadcastsIndexRoute: AuthenticatedBroadcastsIndexRoute,
+  AuthenticatedBusinessPlansIndexRoute: AuthenticatedBusinessPlansIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedContactRecordsIndexRoute: AuthenticatedContactRecordsIndexRoute,

@@ -18,6 +18,7 @@ import {
   getVerificationStatusBadgeClass,
   getStatusBadgeClass,
   getProfileTypeBadgeClass,
+  profileKind,
 } from "#/features/applications/components/profile-columns";
 import { appConfig } from "#/config";
 
@@ -63,7 +64,7 @@ const columns: ColumnDef<AdminProfileListItem>[] = [
     accessorKey: "profileType",
     header: "Type",
     cell: ({ row }) => {
-      const type = row.original.profileType;
+      const type = profileKind(row.original);
       return (
         <Badge className={getProfileTypeBadgeClass(type)}>{type}</Badge>
       );

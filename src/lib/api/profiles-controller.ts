@@ -76,6 +76,8 @@ export type AdminProfileListItem = {
   description: string;
   status: string;
   profileType: string;
+  /** A business account: shows the « Business » tab instead of KYC. */
+  isBusiness: boolean;
   whatsappConnected: boolean;
   /**
    * When VoVa stops being silent for this profile, or null if it was never
@@ -158,6 +160,88 @@ export type AdminVerificationImageItem = {
 export function kycDocumentRawUrl(profileId: string, documentId: string) {
   return `${appConfig.apiUrl}/admin/profiles/${profileId}/kyc-documents/${documentId}/raw`;
 }
+
+/** A business document's bytes, same-origin behind the admin session (as KYC). */
+export function businessDocumentRawUrl(profileId: string, documentId: string) {
+  return `${appConfig.apiUrl}/admin/profiles/${profileId}/business/documents/${documentId}/raw`;
+}
+
+export type VerificationDecision = "VERIFIED" | "REJECTED";
+
+export type AdminBusinessDocumentVersion = {
+  id: string;
+  documentType: string;
+  label: string;
+  fileName: string | null;
+  mimeType: string | null;
+  verificationStatus: string;
+  rejectionReason: string | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
+/** A current paper, with the versions it replaced (newest first). */
+export type AdminBusinessDocument = AdminBusinessDocumentVersion & {
+  /** Sent by the business to replace a refused or pending paper. */
+  resubmitted: boolean;
+  previousVersions: AdminBusinessDocumentVersion[];
+};
+
+/** `PATCH admin/profiles/:id/business`: only the fields that changed; null empties one. */
+export type AdminUpdateBusinessParams = Partial<{
+  name: string;
+  category: string;
+  legalForm: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+}>;
+
+/** `GET public/business/catalog`: the same tables the API checks against. */
+export type BusinessCatalog = {
+  categories: { value: string; label: string; legalForms: string[] }[];
+  legalForms: { value: string; label: string }[];
+  sizes: string[];
+};
+
+/** `GET admin/profiles/:id/business` (getBusinessForAdmin in rabotka-backend). */
+export type AdminBusinessDetail = {
+  id: string;
+  name: string;
+  /** The account's profile picture, used as the logo. */
+  logoUrl: string | null;
+  category: string;
+  categoryLabel: string;
+  legalForm: string | null;
+  legalFormLabel: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  verificationStatus: string;
+  verifiedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  documents: AdminBusinessDocument[];
+  requiredDocuments: { type: string; label: string }[][];
+  missingDocuments: { type: string; label: string }[][];
+};
 
 export function kycVerificationImageRawUrl(profileId: string, imageId: string) {
   return `${appConfig.apiUrl}/admin/profiles/${profileId}/verification-images/${imageId}/raw`;
@@ -364,6 +448,38 @@ export class AdminProfilesController extends AdminBaseController {
     return this.patch<AdminProfileDetailResponse>(url, data);
   }
 
+  getBusiness(id: string): Promise<AdminBusinessDetail> {
+    return this.get(`/admin/profiles/${encodeURIComponent(id)}/business`);
+  }
+
+  /** Corrects the organisation; an admin's edit reopens no review. */
+  updateBusiness(id: string, data: AdminUpdateBusinessParams): Promise<AdminBusinessDetail> {
+    return this.patch(`/admin/profiles/${encodeURIComponent(id)}/business`, data);
+  }
+
+  getBusinessCatalog(): Promise<BusinessCatalog> {
+    return this.get("/public/business/catalog");
+  }
+
+  /** Approve or refuse the business — which verifies and activates the account. */
+  verifyBusiness(
+    id: string,
+    data: { decision: VerificationDecision; reason?: string },
+  ): Promise<AdminBusinessDetail> {
+    return this.patch(`/admin/profiles/${encodeURIComponent(id)}/business/verify`, data);
+  }
+
+  verifyBusinessDocument(
+    id: string,
+    documentId: string,
+    data: { decision: VerificationDecision; reason?: string },
+  ): Promise<AdminBusinessDetail> {
+    return this.patch(
+      `/admin/profiles/${encodeURIComponent(id)}/business/documents/${encodeURIComponent(documentId)}/verify`,
+      data,
+    );
+  }
+
   async verifyProfile(
     id: string,
     data: AdminVerifyProfileParams,
@@ -558,6 +674,16 @@ export class AdminProfilesController extends AdminBaseController {
     return response.blob();
   }
 
+  /** The CV the candidate downloads from their own app, generated from the profile. */
+  async downloadProfileResume(profileId: string): Promise<Blob> {
+    const response = await guardedFetch(
+      `${appConfig.apiUrl}/admin/profiles/${profileId}/resume`,
+      { credentials: "include" },
+    );
+    if (!response.ok) throw new Error("The CV couldn't be loaded. Try again.");
+    return response.blob();
+  }
+
   async bulkDelete(ids: string[]): Promise<{ count: number }> {
     const url = this.createURL(
       "/admin/profiles/bulk-delete",
@@ -612,6 +738,12 @@ export async function fetchAllProfiles(
 export const getProfileById = controller.getById.bind(controller);
 export const updateProfile = controller.updateProfile.bind(controller);
 export const verifyProfile = controller.verifyProfile.bind(controller);
+export const getProfileBusiness = controller.getBusiness.bind(controller);
+export const updateProfileBusiness = controller.updateBusiness.bind(controller);
+export const getBusinessCatalog = controller.getBusinessCatalog.bind(controller);
+export const verifyProfileBusiness = controller.verifyBusiness.bind(controller);
+export const verifyProfileBusinessDocument =
+  controller.verifyBusinessDocument.bind(controller);
 export const uploadKycVerificationImage =
   controller.uploadVerificationImage.bind(controller);
 export const updateProfileStatus =
@@ -631,5 +763,6 @@ export const getProfileWallet = controller.getWallet.bind(controller);
 export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
+export const downloadAdminProfileResume = controller.downloadProfileResume.bind(controller);
 export const getProfileInvoices = controller.getInvoices.bind(controller);
 export const updateProfileAvatar = controller.updateAvatar.bind(controller);

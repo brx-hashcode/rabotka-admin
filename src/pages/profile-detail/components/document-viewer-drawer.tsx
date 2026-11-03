@@ -4,6 +4,7 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
@@ -90,6 +91,94 @@ async function downloadViaProxy(fileUrl: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(objectUrl);
+}
+
+/**
+ * The file's bytes, the way the viewers reach it: our own api with the
+ * session cookie, a local blob as is, anything else through `/file/proxy`.
+ */
+async function fetchDocumentBlob(fileUrl: string): Promise<Blob> {
+  if (/^(blob:|data:)/i.test(fileUrl.trim())) return (await fetch(fileUrl)).blob();
+  const isOwnApi = fileUrl.startsWith(`${appConfig.apiUrl}/`);
+  const target = isOwnApi ? fileUrl : `${appConfig.apiUrl}/file/proxy?url=${encodeURIComponent(fileUrl)}`;
+  const res = guardResponse(target, await fetch(target, { credentials: "include" }));
+  if (!res.ok) throw new Error(String(res.status));
+  return res.blob();
+}
+
+/**
+ * A Word file (.docx) drawn in the browser. Office Online needs a public
+ * link and fetches the file from Microsoft's side: it cannot reach our
+ * admin-only routes (business papers, careers-page CVs) nor a local api, and
+ * a CV should not be sent there anyway.
+ */
+function LocalDocxViewer({ url, title }: Readonly<{ url: string; title: string }>) {
+  const body = useRef<HTMLDivElement>(null);
+  const styles = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+  const [zoom, setZoom] = useState(1);
+
+  useEffect(() => {
+    let cancelled = false;
+    setState("loading");
+    void (async () => {
+      try {
+        const blob = await fetchDocumentBlob(url);
+        if (cancelled || !body.current) return;
+        body.current.innerHTML = "";
+        const { renderAsync } = await import("docx-preview");
+        await renderAsync(blob, body.current, styles.current ?? undefined, {
+          className: "docx",
+          inWrapper: true,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: true,
+        });
+        if (!cancelled) setState("ready");
+      } catch {
+        if (!cancelled) setState("failed");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  if (state === "failed") {
+    return <DocFallback url={url} reason="This Word document could not be displayed. It may be damaged; download it instead." />;
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-4 flex shrink-0 flex-wrap items-center justify-end gap-2 rounded-xl border bg-muted/30 p-3 shadow-sm">
+        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}>
+          −
+        </Button>
+        <span className="w-12 text-center text-xs tabular-nums">{Math.round(zoom * 100)} %</span>
+        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setZoom((z) => Math.min(2, +(z + 0.25).toFixed(2)))}>
+          +
+        </Button>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={() => downloadViaProxy(url, title || fileNameFromUrl(url))}
+        >
+          <Download className="size-3.5" />
+          Download
+        </Button>
+      </div>
+      {state === "loading" && <Skeleton className="mx-auto h-[70vh] w-full max-w-3xl" />}
+      <div className="docx-local-preview min-h-0 flex-1 overflow-auto rounded-xl bg-muted/40 p-4">
+        <style>{`
+          .docx-local-preview .docx-wrapper { background: transparent; padding: 0; }
+          .docx-local-preview .docx-wrapper > section.docx { margin: 0 auto 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+        `}</style>
+        <div ref={styles} />
+        <div ref={body} style={{ zoom }} />
+      </div>
+    </div>
+  );
 }
 
 function removePrintIframeLater(iframe: HTMLIFrameElement) {
@@ -334,6 +423,13 @@ function PdfViewer({ url, onDownload }: Readonly<{ url: string; onDownload?: () 
     // can't fetch them, so load them directly.
     if (/^(blob:|data:)/i.test(url.trim())) {
       return { url };
+    }
+    // Our own api (a KYC or business document's raw route): same-origin and
+    // authenticated by the session cookie, so loaded directly. Through the
+    // proxy it failed — the proxy fetches server-side, without the admin's
+    // session, and got a 401 instead of the PDF.
+    if (url.trim().startsWith(`${appConfig.apiUrl}/`)) {
+      return { url: pdfDocumentUrl(url) };
     }
     // Load through the same-origin file proxy: storage URLs are cross-origin and
     // usually lack CORS headers, so react-pdf's fetch is blocked when pointed at
@@ -933,6 +1029,9 @@ export function DocumentViewerDrawer({
       "ppt",
     ].includes(fileType) ||
       /\.(docx?|xlsx?|pptx?)(\?|#|$)/i.test(document.url));
+  // A .docx is drawn here; .doc, Excel and PowerPoint still go to Office Online.
+  const isWordX =
+    isOffice && (fileType === "docx" || /\.docx(\?|#|$)/i.test(document.url));
   const isMd =
     !isGoogleDocs && (fileType === "md" || document.url.endsWith(".md"));
   const isImage = !isGoogleDocs && isLikelyImageAsset(document.url, fileType);
@@ -968,9 +1067,11 @@ export function DocumentViewerDrawer({
               <GoogleDocsViewer url={document.url} title={document.title} />
             )}
             {open && isPdf && <PdfViewer url={document.url} onDownload={document.onDownload} />}
-            {open && isOffice && (
+            {open && isOffice && (isWordX ? (
+              <LocalDocxViewer url={document.url} title={document.title} />
+            ) : (
               <DocxViewer url={document.url} title={document.title} />
-            )}
+            ))}
             {open && isMd && (
               <MarkdownViewer url={document.url} title={document.title} />
             )}

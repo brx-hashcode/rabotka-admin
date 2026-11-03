@@ -17,6 +17,12 @@ import {
 } from "#/features/applications/components/profile-columns";
 import { Link } from "@tanstack/react-router";
 import { IconStar } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessSubscription } from "#/lib/api/business-plans-controller";
+import {
+  businessSubscriptionKey,
+  SubscriptionStatusBadge,
+} from "./business-subscription-card";
 
 type Props = {
   profile: AdminProfileDetailResponse;
@@ -61,7 +67,17 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
                 {getAccountStatusLabel(profile.status)}
               </Badge>
             </Row>
-            <Row label="KYC">
+            {profile.isBusiness && (
+              <Row label="Type">
+                <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-300">
+                  Business
+                </Badge>
+              </Row>
+            )}
+            {profile.isBusiness && <BusinessPlanRow profileId={profile.id} />}
+            {/* A business has no personal KYC: this is its organisation's
+                review (Business tab). */}
+            <Row label={profile.isBusiness ? "Verification" : "KYC"}>
               <Badge
                 className={getVerificationStatusBadgeClass(
                   profile.verificationStatus,
@@ -293,5 +309,28 @@ export function ProfileGeneralSummary({ profile }: Readonly<Props>) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/** A business's plan, as on its Business tab (same query, shared cache). */
+function BusinessPlanRow({ profileId }: Readonly<{ profileId: string }>) {
+  const { data } = useQuery({
+    queryKey: businessSubscriptionKey(profileId),
+    queryFn: () => getBusinessSubscription(profileId),
+  });
+  const e = data?.entitlements;
+  return (
+    <Row label="Plan">
+      {!e ? (
+        "—"
+      ) : e.plan && e.status ? (
+        <span className="inline-flex items-center gap-2">
+          {e.plan.name}
+          <SubscriptionStatusBadge status={e.status} />
+        </span>
+      ) : (
+        <span className="text-muted-foreground">No plan</span>
+      )}
+    </Row>
   );
 }

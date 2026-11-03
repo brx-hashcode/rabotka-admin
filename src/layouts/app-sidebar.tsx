@@ -29,6 +29,7 @@ import {
   IconUsersGroup,
   IconCashBanknote,
   IconUserX,
+  IconStack2,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavDocuments } from "#/layouts/nav-documents";
@@ -160,6 +161,12 @@ const documents: NavItem[] = [
     title: "Agent payouts",
     url: "/agent-payouts",
     icon: IconCashBanknote,
+    roles: [...MANAGER_UP, "FINANCE"],
+  },
+  {
+    title: "Business plans",
+    url: "/business-plans",
+    icon: IconStack2,
     roles: [...MANAGER_UP, "FINANCE"],
   },
   {

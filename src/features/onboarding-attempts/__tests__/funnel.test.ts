@@ -4,6 +4,9 @@ import {
   deltaLabel,
   funnelSteps,
   periodWindows,
+  reachedLabel,
+  stageLabel,
+  stagesFor,
   stoppedStageFor,
 } from "../stage-labels";
 
@@ -90,5 +93,35 @@ describe("deltaLabel", () => {
 
   it("says nothing without a previous window", () => {
     expect(deltaLabel(4, undefined)).toBeNull();
+  });
+});
+
+describe("business sign-ups", () => {
+  // A business confirms its email, then creates its account in one go.
+  const business = {
+    started: 13,
+    funnel: [
+      { stage: "CODE_SENT" as const, count: 13 },
+      { stage: "PHONE_VERIFIED" as const, count: 8 },
+      { stage: "DOCUMENTS" as const, count: 6 },
+      { stage: "CONFIRMATION" as const, count: 6 },
+      { stage: "COMPLETED" as const, count: 6 },
+    ],
+  };
+
+  it("has three steps, with no step between the email and the account", () => {
+    const stages = stagesFor("business");
+    const steps = funnelSteps(business, stages);
+    expect(steps.map((s) => s.stage)).toEqual(["CODE_SENT", "PHONE_VERIFIED", "COMPLETED"]);
+    expect(steps[2]).toMatchObject({ reached: 6, lostBefore: 2 });
+    expect(stoppedStageFor("COMPLETED", stages)).toBe("PHONE_VERIFIED");
+  });
+
+  it("speaks of an email, not WhatsApp or a phone", () => {
+    expect(stageLabel("CODE_SENT", "business")).toBe("Code e-mail");
+    expect(reachedLabel("PHONE_VERIFIED", "business")).toBe("E-mail vérifié");
+    expect(stageLabel("CODE_SENT", "whatsapp")).toBe("Code WhatsApp");
+    expect(reachedLabel("PHONE_VERIFIED", "all")).toBe("Numéro ou e-mail vérifié");
+    expect(stageLabel("DOCUMENTS", "all")).toBe("Pièces d'identité");
   });
 });

@@ -6,6 +6,7 @@ import {
   IconBrandWhatsapp,
   IconChevronDown,
   IconFileText,
+  IconFileCv,
 } from "@tabler/icons-react";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { useMutation } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ import {
 import { ProfileForm } from "./profile-detail/components/profile-form";
 import { ProfileGeneralSummary } from "./profile-detail/components/profile-general-summary";
 import { ProfileKycContent } from "./profile-detail/components/profile-kyc-content";
+import { ProfileBusinessContent } from "./profile-detail/components/profile-business-content";
 import { ProfilePaymentsContent } from "./profile-detail/components/profile-payments-content";
 import { ProfileReferralsContent } from "./profile-detail/components/profile-referrals-content";
 import { ProfileInvoicesContent } from "./profile-detail/components/profile-invoices-content";
@@ -43,6 +45,7 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
+  downloadAdminProfileResume,
 } from "#/lib/api/profiles-controller";
 import type {
   AdminVerifyDocumentRef,
@@ -52,6 +55,7 @@ import { useRole } from "#/hooks/use-role";
 
 type ProfileTab =
   | "general"
+  | "business"
   | "kyc"
   | "payments"
   | "invoices"
@@ -62,6 +66,7 @@ type ProfileTab =
 
 const PROFILE_TABS: { label: string; value: ProfileTab }[] = [
   { label: "General", value: "general" },
+  { label: "Business", value: "business" },
   { label: "Identity check (KYC)", value: "kyc" },
   { label: "Payments", value: "payments" },
   { label: "Invoices", value: "invoices" },
@@ -109,6 +114,7 @@ export default function ProfileDetailPage({
   const [drawerDoc, setDrawerDoc] = useState<ViewerDocument | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoadingAgreement, setIsLoadingAgreement] = useState(false);
+  const [isLoadingResume, setIsLoadingResume] = useState(false);
 
   const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
     mutationFn: () => sendVerificationLink(profileId),
@@ -171,6 +177,30 @@ export default function ProfileDetailPage({
       toast.error("Failed to load agreement document");
     } finally {
       setIsLoadingAgreement(false);
+    }
+  }
+
+  async function handleViewResume() {
+    setIsLoadingResume(true);
+    try {
+      const blob = await downloadAdminProfileResume(profileId);
+      const objectUrl = URL.createObjectURL(blob);
+      handlePreviewDoc({
+        url: objectUrl,
+        title: "CV",
+        description: `CV — ${profile?.firstName} ${profile?.lastName}`,
+        fileType: "pdf",
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = `CV_${profile?.firstName ?? ""}_${profile?.lastName ?? ""}.pdf`;
+          a.click();
+        },
+      });
+    } catch {
+      toast.error("Failed to load the CV");
+    } finally {
+      setIsLoadingResume(false);
     }
   }
 
@@ -260,8 +290,13 @@ export default function ProfileDetailPage({
   }
 
   const isWorker = profile.profileType === "WORKER";
+  // A business has no personal KYC: its organisation's papers, in the
+  // « Business » tab, are what get reviewed — so it shows one or the other.
   const visibleTabs = PROFILE_TABS.filter(
-    (t) => t.value !== "portfolio" || isWorker,
+    (t) =>
+      (t.value !== "portfolio" || isWorker) &&
+      (t.value !== "business" || profile.isBusiness) &&
+      (t.value !== "kyc" || !profile.isBusiness),
   );
 
   return (
@@ -285,6 +320,12 @@ export default function ProfileDetailPage({
           </TabsList>
 
           <div className="flex items-center gap-2">
+            {isWorker && (
+              <Button variant="secondary" onClick={handleViewResume} disabled={isLoadingResume}>
+                <IconFileCv className="size-4" />
+                {isLoadingResume ? "Loading..." : "View CV"}
+              </Button>
+            )}
             <Button variant="secondary" onClick={handleViewAgreement} disabled={isLoadingAgreement}>
               <IconFileText className="size-4" />
               {isLoadingAgreement ? "Loading..." : "View Agreement"}
@@ -368,6 +409,18 @@ export default function ProfileDetailPage({
             </div>
           </div>
         </TabsContent>
+
+        {profile.isBusiness && (
+          <TabsContent value="business">
+            <ProfileBusinessContent
+              profileId={profileId}
+              onPreviewDoc={handlePreviewDoc}
+              logoUrl={profile.avatarUrl}
+              onLogoChange={submitAvatarUpdate}
+              isUploadingLogo={isUploadingAvatar}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="kyc">
           <ProfileKycContent
