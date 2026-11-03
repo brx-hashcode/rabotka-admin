@@ -91,6 +91,18 @@ export type BroadcastStats = {
   timeline: BroadcastTimelinePoint[];
 };
 
+/** The list page's tiles (`GET admin/broadcasts/summary`). */
+export type BroadcastsSummary = {
+  byStatus: Record<BroadcastStatus, number>;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  /** In-app deliveries, the base of the read rate. */
+  inAppDelivered: number;
+  read: number;
+  lastSentAt: string | null;
+};
+
 export type BroadcastsListParams = {
   page?: number;
   limit?: number;
@@ -122,6 +134,12 @@ export class AdminBroadcastsController extends AdminBaseController {
     const query = this.buildSearchParams(searchParams);
     return this.get<Paginated<Broadcast>>(
       this.createURL("/admin/broadcasts", query),
+    );
+  }
+
+  async getSummary(): Promise<BroadcastsSummary> {
+    return this.get<BroadcastsSummary>(
+      this.createURL("/admin/broadcasts/summary", new URLSearchParams()),
     );
   }
 
@@ -222,6 +240,7 @@ const controller = new AdminBroadcastsController();
 
 export const getBroadcastsList = controller.getList.bind(controller);
 export const getBroadcastById = controller.getById.bind(controller);
+export const getBroadcastsSummary = controller.getSummary.bind(controller);
 export const getBroadcastRecipients = controller.getRecipients.bind(controller);
 export const getBroadcastStats = controller.getStats.bind(controller);
 export const getBroadcastAudienceFacets =
