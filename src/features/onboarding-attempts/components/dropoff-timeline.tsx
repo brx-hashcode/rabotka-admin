@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
@@ -74,7 +74,19 @@ export function DropoffTimeline({
       </Card>
     );
   }
-  if (!data) return <Skeleton className="h-72 rounded-2xl" />;
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-52" />
+          <Skeleton className="h-3 w-80 max-w-full" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-56 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   const points = data.map((p) => ({ ...p, open: p.started - p.completed }));
   const total = points.reduce((sum, p) => sum + p.started, 0);
@@ -84,88 +96,88 @@ export function DropoffTimeline({
   );
 
   return (
-    <Card className="gap-4 p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold">Évolution des inscriptions</h2>
-          <p className="text-muted-foreground text-sm">
+    <Card>
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
+        <div className="space-y-1">
+          <CardTitle className="text-base">Évolution des inscriptions</CardTitle>
+          <p className="text-muted-foreground text-xs">
             {bucket === "day" ? "Par jour" : "Par semaine"} de début : combien ont commencé, et combien ont terminé.
           </p>
         </div>
         {busiest && (
-          <span className="text-muted-foreground text-sm">
-            Pic{" "}
-            <span className="text-foreground font-semibold tabular-nums">
-              {busiest.started}
-            </span>{" "}
-            {bucket === "day" ? "le" : "la semaine du"} {tick(busiest.date)}
-          </span>
+          <div className="text-right">
+            <p className="text-2xl font-bold tabular-nums">{busiest.started}</p>
+            <p className="text-muted-foreground text-xs">
+              pic, {bucket === "day" ? "le" : "la semaine du"} {tick(busiest.date)}
+            </p>
+          </div>
         )}
-      </div>
-
-      {total === 0 ? (
-        <p className="text-muted-foreground py-10 text-center text-sm">
-          Aucune inscription commencée sur cette période.
-        </p>
-      ) : (
-        <ChartContainer config={chartConfig} className="h-56 w-full">
-          <BarChart
-            accessibilityLayer
-            data={points}
-            margin={{ left: 0, right: 4, top: 8, bottom: 0 }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={24}
-              tickFormatter={(d: string) => tick(d)}
-              className="text-xs"
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={28}
-              allowDecimals={false}
-              className="text-xs"
-            />
-            <ChartTooltip
-              cursor={{ fill: "var(--muted)", opacity: 0.5 }}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(_, payload) => {
-                    const p = payload?.[0]?.payload as (typeof points)[number] | undefined;
-                    if (!p) return null;
-                    return `${fullDay(p.date, bucket)} · ${p.started} commencée${p.started > 1 ? "s" : ""}`;
-                  }}
-                />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            {/* Finished at the base, the rest stacked on top, a 2px surface
-                gap between; only the top of the column is rounded. */}
-            <Bar
-              dataKey="completed"
-              stackId="s"
-              fill="var(--color-completed)"
-              stroke="var(--card)"
-              strokeWidth={2}
-              isAnimationActive={false}
-            />
-            <Bar
-              dataKey="open"
-              stackId="s"
-              fill="var(--color-open)"
-              stroke="var(--card)"
-              strokeWidth={2}
-              radius={[4, 4, 0, 0]}
-              isAnimationActive={false}
-            />
-          </BarChart>
-        </ChartContainer>
-      )}
+      </CardHeader>
+      <CardContent>
+        {total === 0 ? (
+          <p className="text-muted-foreground py-10 text-center text-sm">
+            Aucune inscription commencée sur cette période.
+          </p>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-56 w-full">
+            <BarChart
+              accessibilityLayer
+              data={points}
+              margin={{ left: 0, right: 4, top: 8, bottom: 0 }}
+            >
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={24}
+                tickFormatter={(d: string) => tick(d)}
+                className="text-xs"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={28}
+                allowDecimals={false}
+                className="text-xs"
+              />
+              <ChartTooltip
+                cursor={{ fill: "var(--muted)", opacity: 0.5 }}
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(_, payload) => {
+                      const p = payload?.[0]?.payload as (typeof points)[number] | undefined;
+                      if (!p) return null;
+                      return `${fullDay(p.date, bucket)} · ${p.started} commencée${p.started > 1 ? "s" : ""}`;
+                    }}
+                  />
+                }
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+              {/* Finished at the base, the rest stacked on top, a 2px surface
+                  gap between; only the top of the column is rounded. */}
+              <Bar
+                dataKey="completed"
+                stackId="s"
+                fill="var(--color-completed)"
+                stroke="var(--card)"
+                strokeWidth={2}
+                isAnimationActive={false}
+              />
+              <Bar
+                dataKey="open"
+                stackId="s"
+                fill="var(--color-open)"
+                stroke="var(--card)"
+                strokeWidth={2}
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+              />
+            </BarChart>
+          </ChartContainer>
+        )}
+      </CardContent>
     </Card>
   );
 }
