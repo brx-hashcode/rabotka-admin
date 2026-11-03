@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DirectMessagesButton } from "#/features/direct-messages-button";
 import { NetworkStatusIndicator } from "#/features/network-status-indicator";
 import { NotificationBell } from "#/features/notification-bell";
+import { RefreshButton } from "#/features/refresh-button";
 import { Separator } from "#/components/ui/separator";
 import { ThemeToggle } from "#/components/theme-toggle";
 import { SidebarTrigger } from "#/components/ui/sidebar";
@@ -51,6 +52,7 @@ export function SiteHeader() {
           <LiveClock />
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <RefreshButton />
           <NetworkStatusIndicator />
           <DirectMessagesButton />
           <NotificationBell />
