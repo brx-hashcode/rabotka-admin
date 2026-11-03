@@ -1,7 +1,20 @@
 import { useMemo, useState } from "react";
-import { IconSearch } from "@tabler/icons-react";
+import {
+  IconBriefcase,
+  IconCoin,
+  IconSearch,
+  IconSend,
+  IconUsers,
+} from "@tabler/icons-react";
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
@@ -11,8 +24,16 @@ import {
   CollaborationGraphCanvas,
   GraphLegend,
   GraphNodePanel,
+  GraphOverviewPanel,
 } from "#/features/graph";
-import type { GraphNode } from "#/lib/api/collaboration-graph-controller";
+import { plural, typeColor } from "#/features/graph/components/graph-colors";
+import type {
+  CollaborationGraph,
+  GraphNode,
+} from "#/lib/api/collaboration-graph-controller";
+
+/** Tall enough to read the graph, short enough to keep the toolbar in view. */
+const STAGE = "h-[calc(100vh-26rem)] min-h-[28rem]";
 
 export default function CollaborationGraphPage() {
   const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
@@ -50,118 +71,212 @@ export default function CollaborationGraphPage() {
 
   return (
     <div className="flex flex-col gap-4 pt-6">
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="min-w-56 flex-1">
-          <Label htmlFor="graph-search" className="text-xs">
-            Rechercher un profil
-          </Label>
-          <div className="relative mt-1">
-            <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
-            <Input
-              id="graph-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value || null)}
-              placeholder="Nom du recruteur ou du travailleur..."
-              className="pl-8"
-            />
+      <StatTiles data={data} isLoading={isLoading} />
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative min-w-56 flex-1">
+              <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+              <Input
+                aria-label="Search a profile"
+                value={search}
+                onChange={(e) => setSearch(e.target.value || null)}
+                placeholder="Search a recruiter or a worker…"
+                className="pl-8"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="graph-min" className="text-muted-foreground text-sm font-normal">
+                Min. missions
+              </Label>
+              <Input
+                id="graph-min"
+                type="number"
+                min={0}
+                value={minCollaborations}
+                onChange={(e) => setMinCollaborations(Number(e.target.value) || null)}
+                className="w-20"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="graph-applications"
+                checked={includeApplications}
+                onCheckedChange={(v) => setIncludeApplications(v ? null : false)}
+              />
+              <Label htmlFor="graph-applications" className="text-sm font-normal">
+                Unanswered applications
+              </Label>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <Label htmlFor="graph-min" className="text-xs">
-            Missions minimum
-          </Label>
-          <Input
-            id="graph-min"
-            type="number"
-            min={0}
-            value={minCollaborations}
-            onChange={(e) =>
-              setMinCollaborations(Number(e.target.value) || null)
-            }
-            className="mt-1 w-32"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 pb-2">
-          <Switch
-            id="graph-applications"
-            checked={includeApplications}
-            onCheckedChange={(v) => setIncludeApplications(v ? null : false)}
-          />
-          <Label htmlFor="graph-applications" className="text-xs">
-            Afficher les candidatures sans suite
-          </Label>
-        </div>
-      </div>
-
-      {searchHits.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {searchHits.map((n) => (
-            <button
-              key={n.id}
-              type="button"
-              onClick={() => setSelectedId(n.id)}
-              className="bg-card shadow-soft rounded-md px-2.5 py-1 text-xs hover:bg-muted"
-            >
-              {n.name}
-              <span className="text-muted-foreground ml-1.5">{n.degree}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <GraphLegend />
-
-      {data && (
-        <p className="text-muted-foreground text-xs">
-          {data.stats.profiles} profils · {data.stats.edges} liens ·{" "}
-          {data.stats.collaborations} missions ·{" "}
-          {data.stats.applications} candidatures sans suite
-          {data.stats.truncated && " · vue tronquée aux liens les plus forts"}
-        </p>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="bg-card shadow-soft h-[calc(100vh-22rem)] min-h-96 overflow-hidden rounded-lg">
-          {isLoading && <Skeleton className="h-full w-full" />}
-          {isError && (
-            <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-              Impossible de charger le réseau.
+          {searchHits.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {searchHits.map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => setSelectedId(n.id)}
+                  className={
+                    n.id === selectedId
+                      ? "bg-primary text-primary-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
+                      : "bg-muted hover:bg-muted/70 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
+                  }
+                >
+                  <span
+                    className="size-1.5 rounded-full"
+                    style={{ backgroundColor: typeColor(n.type) }}
+                  />
+                  {n.name}
+                  <span className="opacity-60 tabular-nums">{n.degree}</span>
+                </button>
+              ))}
             </div>
-          )}
-          {data && data.nodes.length === 0 && (
-            <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-              Aucune connexion à afficher avec ces filtres.
-            </div>
-          )}
-          {data && data.nodes.length > 0 && (
-            <CollaborationGraphCanvas
-              nodes={data.nodes}
-              edges={data.edges}
-              search={search}
-              selectedId={selectedId}
-              onSelect={(n: GraphNode | null) => setSelectedId(n?.id ?? null)}
-              onRefresh={() => void refetch()}
-            />
-          )}
-        </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
-        <div className="h-[calc(100vh-22rem)] min-h-96">
-          {selected && data ? (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
+        <Card className="overflow-hidden">
+          <CardHeader className="gap-3 pb-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <CardTitle className="text-base">Network</CardTitle>
+              <CardDescription className="text-xs">
+                Size = number of connections · drag to move · ⌘/Ctrl + scroll to zoom
+              </CardDescription>
+            </div>
+            <GraphLegend />
+            {data?.stats.truncated ? (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Large network: only the strongest links are drawn.
+              </p>
+            ) : null}
+          </CardHeader>
+          <div className={`bg-muted/20 border-t ${STAGE}`}>
+            {isLoading ? <Skeleton className="h-full w-full rounded-none" /> : null}
+            {isError ? (
+              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                The network couldn't be loaded.
+              </div>
+            ) : null}
+            {data && data.nodes.length === 0 ? (
+              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                No connections with these filters.
+              </div>
+            ) : null}
+            {data && data.nodes.length > 0 ? (
+              <CollaborationGraphCanvas
+                nodes={data.nodes}
+                edges={data.edges}
+                search={search}
+                selectedId={selectedId}
+                onSelect={(n: GraphNode | null) => setSelectedId(n?.id ?? null)}
+                onRefresh={() => void refetch()}
+              />
+            ) : null}
+          </div>
+        </Card>
+
+        {/* Pinned to the graph card's height; its list scrolls inside. */}
+        <div className="relative h-[32rem] lg:h-auto">
+          <div className="absolute inset-0">
+          {isLoading ? (
+            <Skeleton className="h-full w-full rounded-2xl" />
+          ) : selected && data ? (
             <GraphNodePanel
               node={selected}
               edges={data.edges}
               nodesById={nodesById}
+              onSelect={setSelectedId}
               onClose={() => setSelectedId(null)}
             />
           ) : (
-            <div className="bg-card shadow-soft text-muted-foreground flex h-full items-center justify-center rounded-lg p-6 text-center text-sm">
-              Sélectionnez un profil dans le réseau pour voir ses connexions.
-            </div>
+            <GraphOverviewPanel nodes={data?.nodes ?? []} onSelect={setSelectedId} />
           )}
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function StatTiles({
+  data,
+  isLoading,
+}: Readonly<{ data: CollaborationGraph | undefined; isLoading: boolean }>) {
+  const recruiters = data?.nodes.filter((n) => n.type === "EMPLOYER").length ?? 0;
+  const workers = (data?.nodes.length ?? 0) - recruiters;
+  const s = data?.stats;
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Tile
+        label="Profiles"
+        icon={IconUsers}
+        isLoading={isLoading}
+        value={s?.profiles}
+        note={`${plural(recruiters, "recruiter")} · ${plural(workers, "worker")}`}
+      />
+      <Tile
+        label="Missions"
+        icon={IconBriefcase}
+        isLoading={isLoading}
+        value={s?.collaborations}
+        note={`Worked together, across ${plural(s?.edges ?? 0, "link")}`}
+      />
+      <Tile
+        label="Paid contacts"
+        icon={IconCoin}
+        isLoading={isLoading}
+        value={s?.contacts}
+        note="A recruiter paid to reach a worker"
+      />
+      <Tile
+        label="Unanswered applications"
+        icon={IconSend}
+        isLoading={isLoading}
+        value={s?.applications}
+        note="Applied, never became a mission"
+      />
+    </div>
+  );
+}
+
+function Tile({
+  label,
+  icon: Icon,
+  value,
+  note,
+  isLoading,
+}: Readonly<{
+  label: string;
+  icon: React.ElementType;
+  value: number | undefined;
+  note: string;
+  isLoading: boolean;
+}>) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-muted-foreground text-sm font-medium">{label}</CardTitle>
+        <Icon className="text-muted-foreground size-4" />
+      </CardHeader>
+      <CardContent className="space-y-1">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-3 w-32" />
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-bold tabular-nums">{(value ?? 0).toLocaleString()}</p>
+            <p className="text-muted-foreground text-xs">{note}</p>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
