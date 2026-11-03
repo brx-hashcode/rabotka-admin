@@ -1,32 +1,47 @@
+import { GRAPH_COLORS } from "./graph-colors";
+
+/**
+ * What the marks mean, sized to sit in the graph card's header. Each line
+ * sample is drawn the way the canvas draws it: solid, dashed, dotted.
+ */
 export function GraphLegend() {
   return (
-    <div className="bg-card shadow-soft flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg px-3 py-2 text-xs">
-      <span className="flex items-center gap-1.5">
-        <span className="size-2.5 rounded-full bg-[#6366f1]" />
-        Recruteur
+    <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="size-2.5 rounded-full"
+          style={{ backgroundColor: GRAPH_COLORS.employer }}
+        />
+        Recruiter
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="size-2.5 rounded-full bg-[#10b981]" />
-        Travailleur
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="size-2.5 rounded-full"
+          style={{ backgroundColor: GRAPH_COLORS.worker }}
+        />
+        Worker
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-0.5 w-6 bg-[#94a3b8]" />
-        Mission réalisée
+      <span className="bg-border h-3 w-px" aria-hidden />
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="h-0.5 w-5 rounded-full"
+          style={{ backgroundColor: GRAPH_COLORS.mission }}
+        />
+        Mission
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-0 w-6 border-t border-dashed border-[#cbd5e1]" />
-        Candidature sans suite
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="h-0 w-5 border-t-2 border-dotted"
+          style={{ borderColor: GRAPH_COLORS.contact }}
+        />
+        Paid contact
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-0 w-6 border-t-2 border-dotted border-[#f59e0b]" />
-        Contact payé
-      </span>
-      <span className="text-muted-foreground">
-        Taille = nombre de connexions
-      </span>
-      {/* Zoom is opt-in so the canvas doesn't trap the page scroll — say so. */}
-      <span className="text-muted-foreground ml-auto">
-        Glisser pour déplacer · ⌘/Ctrl + molette pour zoomer
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="h-0 w-5 border-t border-dashed"
+          style={{ borderColor: GRAPH_COLORS.application }}
+        />
+        Unanswered application
       </span>
     </div>
   );

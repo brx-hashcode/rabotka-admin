@@ -20,7 +20,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 
-import { ChatDoodleBg } from "#/pages/profile-detail/components/chat-doodle-bg";
+import { GRAPH_COLORS, plural, typeLabel } from "./graph-colors";
 import type {
   GraphEdge,
   GraphNode,
@@ -40,12 +40,11 @@ type SimEdge = Omit<GraphEdge, "source" | "target"> & {
   target: SimNode;
 };
 
-const EMPLOYER_COLOR = "#6366f1";
-const WORKER_COLOR = "#10b981";
-const COLLAB_LINK = "#94a3b8";
-const APPLICATION_LINK = "#cbd5e1";
-// Paid contacts get their own hue: money changed hands, but no mission (yet).
-const CONTACT_LINK = "#f59e0b";
+const EMPLOYER_COLOR = GRAPH_COLORS.employer;
+const WORKER_COLOR = GRAPH_COLORS.worker;
+const COLLAB_LINK = GRAPH_COLORS.mission;
+const APPLICATION_LINK = GRAPH_COLORS.application;
+const CONTACT_LINK = GRAPH_COLORS.contact;
 
 const MIN_RADIUS = 10;
 const MAX_RADIUS = 30;
@@ -217,7 +216,11 @@ export function CollaborationGraphCanvas({
         ctx.beginPath();
         ctx.arc(n.x, n.y, r + 3 / t.k + r * 0.08, 0, Math.PI * 2);
         ctx.lineWidth = 3 / t.k;
-        ctx.strokeStyle = isSelected ? "#0f172a" : "#f59e0b";
+        // The selection ring takes the theme's text colour: a fixed dark navy
+        // vanished on the dark background.
+        ctx.strokeStyle = isSelected
+          ? getComputedStyle(canvas).color || "#0f172a"
+          : CONTACT_LINK;
         ctx.stroke();
       }
     }
@@ -565,18 +568,23 @@ export function CollaborationGraphCanvas({
   return (
     <div ref={wrapperRef} className="relative h-full w-full text-foreground">
       {/*
-        Same WhatsApp doodle backdrop as the chat views. It sits behind the
-        canvas, which only ever clears to transparent, so the pattern shows
-        through between the nodes. `text-foreground` drives its currentColor
-        strokes, so it follows the light/dark theme like it does in chat.
+        A quiet dot grid behind the canvas, which only ever clears to
+        transparent. The chat doodles used before competed with the nodes.
       */}
-      <ChatDoodleBg />
+      <div
+        aria-hidden
+        className="text-muted-foreground/25 pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(currentColor 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
       <canvas
         ref={canvasRef}
         className={
           hovered
-            ? "h-full w-full cursor-pointer"
-            : "h-full w-full cursor-grab active:cursor-grabbing"
+            ? "relative h-full w-full cursor-pointer"
+            : "relative h-full w-full cursor-grab active:cursor-grabbing"
         }
         onMouseMove={(e) => {
           const found = nodeAt(e.clientX, e.clientY);
@@ -593,32 +601,30 @@ export function CollaborationGraphCanvas({
       />
 
       <div className="absolute bottom-3 right-3 flex flex-col gap-1">
-        <GraphControl label="Zoom avant" onClick={() => zoomBy(1.4)}>
+        <GraphControl label="Zoom in" onClick={() => zoomBy(1.4)}>
           <IconPlus className="size-4" />
         </GraphControl>
-        <GraphControl label="Zoom arrière" onClick={() => zoomBy(1 / 1.4)}>
+        <GraphControl label="Zoom out" onClick={() => zoomBy(1 / 1.4)}>
           <IconMinus className="size-4" />
         </GraphControl>
-        <GraphControl label="Recentrer" onClick={resetView}>
+        <GraphControl label="Fit to view" onClick={resetView}>
           <IconFocusCentered className="size-4" />
         </GraphControl>
-        <GraphControl label="Réinitialiser et actualiser" onClick={refresh}>
+        <GraphControl label="Re-layout and refresh" onClick={refresh}>
           <IconRefresh className="size-4" />
         </GraphControl>
       </div>
 
       {hovered && (
-        <div className="bg-card shadow-soft pointer-events-none absolute left-3 top-3 rounded-lg px-3 py-2 text-xs">
+        <div className="bg-popover text-popover-foreground pointer-events-none absolute left-3 top-3 rounded-lg border px-3 py-2 text-xs shadow-md">
           <p className="font-medium">{hovered.name}</p>
           <p className="text-muted-foreground">
-            {hovered.type === "EMPLOYER" ? "Recruteur" : "Travailleur"} ·{" "}
-            {hovered.degree} connexion{hovered.degree === 1 ? "" : "s"}
+            {typeLabel(hovered.type)} · {plural(hovered.degree, "connection")}
           </p>
           <p className="text-muted-foreground">
-            {hovered.collaborations} mission
-            {hovered.collaborations === 1 ? "" : "s"} · {hovered.applications}{" "}
-            candidature{hovered.applications === 1 ? "" : "s"} ·{" "}
-            {hovered.contacts} contact{hovered.contacts === 1 ? "" : "s"}
+            {plural(hovered.collaborations, "mission")} ·{" "}
+            {plural(hovered.contacts, "paid contact")} ·{" "}
+            {plural(hovered.applications, "application")}
           </p>
         </div>
       )}
@@ -641,7 +647,7 @@ function GraphControl({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="bg-card shadow-soft text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors"
+      className="bg-background/90 text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md border shadow-xs backdrop-blur transition-colors"
     >
       {children}
     </button>
