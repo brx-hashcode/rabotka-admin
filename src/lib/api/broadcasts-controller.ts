@@ -72,6 +72,8 @@ export type BroadcastRecipient = {
     first_name: string;
     last_name: string;
     phone: string;
+    email: string | null;
+    avatar_url: string | null;
   };
 };
 
@@ -151,12 +153,18 @@ export class AdminBroadcastsController extends AdminBaseController {
 
   async getRecipients(
     id: string,
-    params: { page?: number; limit?: number; channel?: BroadcastChannel },
+    params: {
+      page?: number;
+      limit?: number;
+      channel?: BroadcastChannel;
+      status?: RecipientStatus;
+    },
   ): Promise<Paginated<BroadcastRecipient>> {
     const searchParams: Record<string, unknown> = {};
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.channel) searchParams.channel = params.channel;
+    if (params.status) searchParams.status = params.status;
 
     const query = this.buildSearchParams(searchParams);
     return this.get<Paginated<BroadcastRecipient>>(

@@ -5,6 +5,8 @@ type Props = Readonly<{
   body: string;
   link: string;
   channels: BroadcastChannel[];
+  /** Inside a card that already frames it: no box and no « Preview » label. */
+  bare?: boolean;
 }>;
 
 /**
@@ -19,7 +21,7 @@ type Props = Readonly<{
  * sign-off and a CTA button — none of which exist in the in-app feed, where the
  * row itself is the tap target and the title is the whole header.
  */
-export function MessagePreview({ title, body, link, channels }: Props) {
+export function MessagePreview({ title, body, link, channels, bare = false }: Props) {
   const empty = !title.trim() && !body.trim();
 
   if (empty) {
@@ -36,8 +38,10 @@ export function MessagePreview({ title, body, link, channels }: Props) {
   }
 
   return (
-    <div className="bg-card shadow-soft space-y-3 rounded-lg p-4">
-      <p className="text-muted-foreground text-xs font-medium">Preview</p>
+    <div className={bare ? "space-y-3" : "bg-card shadow-soft space-y-3 rounded-lg p-4"}>
+      {bare ? null : (
+        <p className="text-muted-foreground text-xs font-medium">Preview</p>
+      )}
 
       {channels.includes("IN_APP") ? (
         <ChannelBlock label="In-app">

@@ -30,13 +30,13 @@ const STATUS_VARIANT: Record<
   FAILED: "destructive",
 };
 
-const CHANNEL_LABELS: Record<string, string> = {
+export const CHANNEL_LABELS: Record<string, string> = {
   IN_APP: "In-app",
   WHATSAPP: "WhatsApp",
   EMAIL: "Email",
 };
 
-const CHANNEL_ICONS: Record<string, React.ElementType> = {
+export const CHANNEL_ICONS: Record<string, React.ElementType> = {
   IN_APP: Bell,
   WHATSAPP: MessageCircle,
   EMAIL: Mail,
@@ -44,7 +44,7 @@ const CHANNEL_ICONS: Record<string, React.ElementType> = {
 
 const nf = (n: number) => n.toLocaleString("fr-FR");
 
-function formatDate(value: string | null): string {
+export function formatDate(value: string | null): string {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -56,7 +56,7 @@ function formatDate(value: string | null): string {
 }
 
 /** Who the broadcast was for, from its filters: « Workers », « Employers »… */
-function audienceLabel(b: Broadcast): string {
+export function audienceLabel(b: Broadcast): string {
   const types = b.audience?.profile_types ?? [];
   const who =
     types.length === 0 || types.length > 1
