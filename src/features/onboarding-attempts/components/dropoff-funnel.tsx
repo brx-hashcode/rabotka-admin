@@ -1,6 +1,14 @@
-import { IconAlertTriangle, IconArrowDown, IconArrowRight } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconArrowDown,
+  IconArrowRight,
+  IconPhoneCall,
+  IconUserCheck,
+  IconUserPlus,
+  IconUserX,
+} from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Skeleton } from "#/components/ui/skeleton";
 import { cn } from "#/lib/utils";
 import type {
@@ -43,9 +51,19 @@ export function DropoffKpis({
 }>) {
   if (!stats) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-24 rounded-2xl" />
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="size-4" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-1.5 w-full" />
+              <Skeleton className="h-3 w-36" />
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
@@ -58,8 +76,11 @@ export function DropoffKpis({
 
   const tiles: {
     label: string;
+    icon: React.ElementType;
     value: string;
     hint: string;
+    /** A share to draw under the number, with its colour. */
+    bar?: { value: number; className: string };
     delta: string | null;
     /** Whether a rise is good news. */
     upIsGood: boolean;
@@ -68,6 +89,7 @@ export function DropoffKpis({
   }[] = [
     {
       label: "Inscriptions commencées",
+      icon: IconUserPlus,
       value: String(stats.started),
       hint: STARTED_HINTS[entry],
       delta: deltaLabel(stats.started, previous?.started),
@@ -77,8 +99,10 @@ export function DropoffKpis({
     },
     {
       label: "Comptes créés",
+      icon: IconUserCheck,
       value: String(stats.completed),
       hint: `${pct(stats.completionRate)} de conversion`,
+      bar: { value: stats.completionRate, className: "bg-emerald-500" },
       delta: deltaLabel(stats.completed, previous?.completed),
       upIsGood: true,
       raw: stats.completed,
@@ -86,7 +110,11 @@ export function DropoffKpis({
     },
     {
       label: "Abandons",
+      icon: IconUserX,
       value: String(stats.dropped),
+      bar: stats.started
+        ? { value: stats.dropped / stats.started, className: "bg-destructive" }
+        : undefined,
       hint: stats.started
         ? `${pct(stats.dropped / stats.started)} des inscriptions`
         : "Aucune inscription",
@@ -97,7 +125,12 @@ export function DropoffKpis({
     },
     {
       label: "À rappeler",
+      icon: IconPhoneCall,
       value: String(toCall),
+      // How much of the follow-up is done: contacted over everyone who left.
+      bar: stats.dropped
+        ? { value: stats.contacted / stats.dropped, className: "bg-amber-500" }
+        : undefined,
       hint: `${stats.contacted} déjà contactée${stats.contacted > 1 ? "s" : ""}`,
       delta: deltaLabel(toCall, prevToCall),
       upIsGood: false,
@@ -107,34 +140,48 @@ export function DropoffKpis({
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {tiles.map((t) => {
         const better =
           t.prevRaw === undefined || t.raw === t.prevRaw
             ? null
             : (t.raw > t.prevRaw) === t.upIsGood;
+        const Icon = t.icon;
         return (
-          <Card key={t.label} className="gap-1 p-4">
-            <span className="text-muted-foreground text-xs font-medium">
-              {t.label}
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-semibold tabular-nums">{t.value}</span>
-              {t.delta && (
-                <span
-                  title="Par rapport à la période précédente"
-                  className={cn(
-                    "rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums",
-                    better === null && "bg-muted text-muted-foreground",
-                    better === true && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                    better === false && "bg-destructive/10 text-destructive",
-                  )}
-                >
-                  {t.delta}
-                </span>
-              )}
-            </div>
-            <span className="text-muted-foreground text-xs">{t.hint}</span>
+          <Card key={t.label}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-muted-foreground text-sm font-medium">
+                {t.label}
+              </CardTitle>
+              <Icon className="text-muted-foreground size-4" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold tabular-nums">{t.value}</span>
+                {t.delta && (
+                  <span
+                    title="Par rapport à la période précédente"
+                    className={cn(
+                      "rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums",
+                      better === null && "bg-muted text-muted-foreground",
+                      better === true && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                      better === false && "bg-destructive/10 text-destructive",
+                    )}
+                  >
+                    {t.delta}
+                  </span>
+                )}
+              </div>
+              {t.bar ? (
+                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                  <div
+                    className={cn("h-full rounded-full", t.bar.className)}
+                    style={{ width: `${Math.min(Math.max(t.bar.value, 0), 1) * 100}%` }}
+                  />
+                </div>
+              ) : null}
+              <p className="text-muted-foreground text-xs">{t.hint}</p>
+            </CardContent>
           </Card>
         );
       })}
@@ -159,134 +206,150 @@ export function DropoffFunnel({
   selected: OnboardingStage | null;
   onSelect: (stage: OnboardingStage | null) => void;
 }>) {
-  if (!stats) return <Skeleton className="h-80 rounded-2xl" />;
+  if (!stats) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3 w-72" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
 
   const stages = stagesFor(entry);
   const steps = funnelSteps(stats, stages);
   const leak = biggestLeak(steps);
 
   return (
-    <Card className="gap-4 p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold">Parcours d'inscription</h2>
-          <p className="text-muted-foreground text-sm">
+    <Card>
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
+        <div className="space-y-1">
+          <CardTitle className="text-base">Parcours d'inscription</CardTitle>
+          <p className="text-muted-foreground text-xs">
             Combien arrivent à chaque étape. Touchez une perte pour voir qui rappeler.
           </p>
         </div>
-        <span className="text-muted-foreground text-sm">
-          Conversion globale{" "}
-          <span className="text-foreground font-semibold tabular-nums">
-            {pct(stats.completionRate)}
-          </span>
-        </span>
-      </div>
-
-      {stats.started === 0 ? (
-        <p className="text-muted-foreground py-10 text-center text-sm">
-          Aucune inscription commencée sur cette période.
-        </p>
-      ) : (
-        <ol className="flex flex-col">
-          {steps.map((step, i) => {
-            const stoppedStage = stoppedStageFor(step.stage, stages);
-            const isLeak = leak?.stage === step.stage;
-            const isSelected = i > 0 && selected === stoppedStage;
-            return (
-              <li key={step.stage} className="flex flex-col">
-                {i > 0 && (
-                  <button
-                    type="button"
-                    disabled={step.lostBefore === 0}
-                    onClick={() => onSelect(isSelected ? null : stoppedStage)}
-                    aria-pressed={isSelected}
-                    className={cn(
-                      "group ml-3 flex items-center gap-2 border-l-2 border-dashed py-1.5 pl-4 text-left text-xs transition-colors",
-                      step.lostBefore === 0
-                        ? "text-muted-foreground/60 cursor-default"
-                        : "hover:text-foreground cursor-pointer",
-                      isLeak ? "border-destructive/50 text-destructive" : "text-muted-foreground",
-                      isSelected && "text-foreground font-medium",
-                    )}
-                  >
-                    <IconArrowDown className="size-3.5 shrink-0" />
-                    {step.lostBefore === 0 ? (
-                      "Aucune perte"
-                    ) : (
-                      <>
-                        <span className="tabular-nums">
-                          −{step.lostBefore} · {pct(step.lostBeforeRate)} perdus
-                        </span>
-                        <span className="hidden sm:inline">
-                          — {stoppedHint(stoppedStage, entry).toLowerCase()}
-                        </span>
-                        {isLeak && (
-                          <span className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-[11px] font-medium">
-                            Plus grosse perte
-                          </span>
-                        )}
-                        <span
-                          className={cn(
-                            "ml-auto rounded-md px-2 py-0.5 text-[11px] font-medium",
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-foreground opacity-0 group-hover:opacity-100",
-                          )}
-                        >
-                          {isSelected ? "Filtré" : "Voir qui"}
-                        </span>
-                      </>
-                    )}
-                  </button>
-                )}
-                <div className="flex items-center gap-3">
-                  <span className="bg-muted text-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium">
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
-                      <span className="truncate font-medium">
-                        {reachedLabel(step.stage, entry)}
-                      </span>
-                      <span className="text-muted-foreground shrink-0 tabular-nums">
-                        <span className="text-foreground font-semibold">
-                          {step.reached}
-                        </span>{" "}
-                        · {pct(step.ofStart)}
-                      </span>
-                    </div>
-                    {/* Who got here, then — hatched — who the step before lost,
-                        so a drop is seen as a gap and not only read. */}
-                    <div className="bg-muted flex h-3 gap-0.5 overflow-hidden rounded-full">
-                      <div
-                        className={cn(
-                          "h-full shrink-0 rounded-full transition-[width] duration-500",
-                          step.stage === "COMPLETED" ? "bg-emerald-600" : "bg-primary",
-                        )}
-                        style={{ width: `${Math.max(step.ofStart * 100, step.reached ? 2 : 0)}%` }}
-                      />
-                      {i > 0 && step.lostBefore > 0 && (
-                        <div
-                          title={`${step.lostBefore} perdu${step.lostBefore > 1 ? "s" : ""} à cette étape`}
-                          className={cn(
-                            "h-full shrink-0 rounded-full",
-                            isLeak ? "text-destructive/45" : "text-muted-foreground/35",
-                          )}
-                          style={{
-                            width: `${(steps[i - 1].ofStart - step.ofStart) * 100}%`,
-                            backgroundImage:
-                              "repeating-linear-gradient(45deg, currentColor 0 3px, transparent 3px 6px)",
-                          }}
-                        />
+        <div className="text-right">
+          <p className="text-2xl font-bold tabular-nums">{pct(stats.completionRate)}</p>
+          <p className="text-muted-foreground text-xs">conversion globale</p>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {stats.started === 0 ? (
+          <p className="text-muted-foreground py-10 text-center text-sm">
+            Aucune inscription commencée sur cette période.
+          </p>
+        ) : (
+          <ol className="flex flex-col">
+            {steps.map((step, i) => {
+              const stoppedStage = stoppedStageFor(step.stage, stages);
+              const isLeak = leak?.stage === step.stage;
+              const isSelected = i > 0 && selected === stoppedStage;
+              return (
+                <li key={step.stage} className="flex flex-col">
+                  {i > 0 && (
+                    <button
+                      type="button"
+                      disabled={step.lostBefore === 0}
+                      onClick={() => onSelect(isSelected ? null : stoppedStage)}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        "group ml-3 flex items-center gap-2 border-l-2 border-dashed py-1.5 pl-4 text-left text-xs transition-colors",
+                        step.lostBefore === 0
+                          ? "text-muted-foreground/60 cursor-default"
+                          : "hover:text-foreground cursor-pointer",
+                        isLeak ? "border-destructive/50 text-destructive" : "text-muted-foreground",
+                        isSelected && "text-foreground font-medium",
                       )}
+                    >
+                      <IconArrowDown className="size-3.5 shrink-0" />
+                      {step.lostBefore === 0 ? (
+                        "Aucune perte"
+                      ) : (
+                        <>
+                          <span className="tabular-nums">
+                            −{step.lostBefore} · {pct(step.lostBeforeRate)} perdus
+                          </span>
+                          <span className="hidden sm:inline">
+                            — {stoppedHint(stoppedStage, entry).toLowerCase()}
+                          </span>
+                          {isLeak && (
+                            <span className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-[11px] font-medium">
+                              Plus grosse perte
+                            </span>
+                          )}
+                          <span
+                            className={cn(
+                              "ml-auto rounded-md px-2 py-0.5 text-[11px] font-medium",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-foreground opacity-0 group-hover:opacity-100",
+                            )}
+                          >
+                            {isSelected ? "Filtré" : "Voir qui"}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <span className="bg-muted text-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+                        <span className="truncate font-medium">
+                          {reachedLabel(step.stage, entry)}
+                        </span>
+                        <span className="text-muted-foreground shrink-0 tabular-nums">
+                          <span className="text-foreground font-semibold">
+                            {step.reached}
+                          </span>{" "}
+                          · {pct(step.ofStart)}
+                        </span>
+                      </div>
+                      {/* Who got here, then — hatched — who the step before lost,
+                          so a drop is seen as a gap and not only read. */}
+                      <div className="bg-muted flex h-3 gap-0.5 overflow-hidden rounded-full">
+                        <div
+                          className={cn(
+                            "h-full shrink-0 rounded-full transition-[width] duration-500",
+                            step.stage === "COMPLETED" ? "bg-emerald-600" : "bg-primary",
+                          )}
+                          style={{ width: `${Math.max(step.ofStart * 100, step.reached ? 2 : 0)}%` }}
+                        />
+                        {i > 0 && step.lostBefore > 0 && (
+                          <div
+                            title={`${step.lostBefore} perdu${step.lostBefore > 1 ? "s" : ""} à cette étape`}
+                            className={cn(
+                              "h-full shrink-0 rounded-full",
+                              isLeak ? "text-destructive/45" : "text-muted-foreground/35",
+                            )}
+                            style={{
+                              width: `${(steps[i - 1].ofStart - step.ofStart) * 100}%`,
+                              backgroundImage:
+                                "repeating-linear-gradient(45deg, currentColor 0 3px, transparent 3px 6px)",
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </CardContent>
     </Card>
   );
 }
@@ -310,10 +373,12 @@ export function LeakCallout({
   if (!leak) return null;
   const stage = stoppedStageFor(leak.stage, stages);
   return (
-    <div className="border-destructive/30 bg-destructive/5 flex flex-wrap items-center gap-3 rounded-2xl border p-4">
-      <IconAlertTriangle className="text-destructive size-5 shrink-0" />
+    <Card className="border-destructive/30 bg-destructive/5 flex-row flex-wrap items-center gap-4 p-4">
+      <span className="bg-destructive/10 text-destructive flex size-10 shrink-0 items-center justify-center rounded-full">
+        <IconAlertTriangle className="size-5" />
+      </span>
       <p className="min-w-0 flex-1 text-sm">
-        <span className="font-semibold">Plus gros abandon : {stageLabel(stage, entry)}.</span>{" "}
+        <span className="block font-semibold">Plus gros abandon : {stageLabel(stage, entry)}</span>
         <span className="text-muted-foreground">
           {leak.lostBefore} personne{leak.lostBefore > 1 ? "s" : ""} (
           {pct(leak.lostBeforeRate)}) {leak.lostBefore > 1 ? "s'arrêtent" : "s'arrête"} ici —{" "}
@@ -324,6 +389,6 @@ export function LeakCallout({
         Voir ces personnes
         <IconArrowRight />
       </Button>
-    </div>
+    </Card>
   );
 }
