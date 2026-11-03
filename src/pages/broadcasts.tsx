@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { PageListHeader } from "#/components/page-list-header";
 import { DataTable, TableHeader, TableHeaderToolbar } from "#/components/table";
 import { Button } from "#/components/ui/button";
+import { BroadcastSummaryCards } from "#/features/broadcasts/components/broadcast-summary-cards";
 import {
   broadcastColumns,
   broadcastStatusOptions,
@@ -56,6 +57,10 @@ export default function BroadcastsPage() {
             New broadcast
           </Button>
         ) : null}
+      </div>
+
+      <div className="mt-6">
+        <BroadcastSummaryCards />
       </div>
 
       <DataTable
