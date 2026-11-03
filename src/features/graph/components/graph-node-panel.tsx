@@ -16,15 +16,7 @@ import {
   typeColor,
   typeLabel,
 } from "./graph-colors";
-
-/** Up to two letters, the way the canvas draws a node without a photo. */
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  const first = parts[0][0] ?? "";
-  const second = parts.length > 1 ? (parts[parts.length - 1][0] ?? "") : "";
-  return `${first}${second}`.toUpperCase();
-}
+import { initialsOf } from "./graph-shared";
 
 /** A profile's photo inside its type ring, like the node on the canvas. */
 function NodeAvatar({
