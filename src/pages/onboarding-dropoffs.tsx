@@ -59,9 +59,9 @@ export default function OnboardingDropoffsPage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto pt-6">
+    <div className="flex flex-col gap-6">
       <PageListHeader
-        className="mb-2"
+        className="mb-0"
         title="Inscriptions inachevées"
         description="Qui a commencé son inscription sans la terminer, à quelle étape, et qui rappeler."
         actions={

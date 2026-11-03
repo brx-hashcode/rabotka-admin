@@ -19,7 +19,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
-import { Card, CardContent } from "#/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -160,7 +160,13 @@ export function OnboardingAttemptsTable({
   ];
 
   return (
-    <Card className="shadow-soft">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Les personnes</CardTitle>
+        <p className="text-muted-foreground text-xs">
+          Qui a commencé, où chacun s'est arrêté, et qui a déjà été rappelé.
+        </p>
+      </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <Tabs

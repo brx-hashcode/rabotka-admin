@@ -1,8 +1,6 @@
 export {
   AppSidebar,
   ChartAreaInteractive,
-  NavDocuments,
-  NavMain,
   NavSecondary,
   NavUser,
   SectionCards,

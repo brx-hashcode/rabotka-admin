@@ -72,6 +72,8 @@ export type BroadcastRecipient = {
     first_name: string;
     last_name: string;
     phone: string;
+    email: string | null;
+    avatar_url: string | null;
   };
 };
 
@@ -89,6 +91,18 @@ export type BroadcastTimelinePoint = {
 export type BroadcastStats = {
   byChannel: BroadcastDeliveryStat[];
   timeline: BroadcastTimelinePoint[];
+};
+
+/** The list page's tiles (`GET admin/broadcasts/summary`). */
+export type BroadcastsSummary = {
+  byStatus: Record<BroadcastStatus, number>;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  /** In-app deliveries, the base of the read rate. */
+  inAppDelivered: number;
+  read: number;
+  lastSentAt: string | null;
 };
 
 export type BroadcastsListParams = {
@@ -125,6 +139,12 @@ export class AdminBroadcastsController extends AdminBaseController {
     );
   }
 
+  async getSummary(): Promise<BroadcastsSummary> {
+    return this.get<BroadcastsSummary>(
+      this.createURL("/admin/broadcasts/summary", new URLSearchParams()),
+    );
+  }
+
   async getById(id: string): Promise<Broadcast> {
     return this.get<Broadcast>(
       this.createURL(`/admin/broadcasts/${id}`, new URLSearchParams()),
@@ -133,12 +153,18 @@ export class AdminBroadcastsController extends AdminBaseController {
 
   async getRecipients(
     id: string,
-    params: { page?: number; limit?: number; channel?: BroadcastChannel },
+    params: {
+      page?: number;
+      limit?: number;
+      channel?: BroadcastChannel;
+      status?: RecipientStatus;
+    },
   ): Promise<Paginated<BroadcastRecipient>> {
     const searchParams: Record<string, unknown> = {};
     if (params.page != null) searchParams.page = params.page;
     if (params.limit != null) searchParams.limit = params.limit;
     if (params.channel) searchParams.channel = params.channel;
+    if (params.status) searchParams.status = params.status;
 
     const query = this.buildSearchParams(searchParams);
     return this.get<Paginated<BroadcastRecipient>>(
@@ -222,6 +248,7 @@ const controller = new AdminBroadcastsController();
 
 export const getBroadcastsList = controller.getList.bind(controller);
 export const getBroadcastById = controller.getById.bind(controller);
+export const getBroadcastsSummary = controller.getSummary.bind(controller);
 export const getBroadcastRecipients = controller.getRecipients.bind(controller);
 export const getBroadcastStats = controller.getStats.bind(controller);
 export const getBroadcastAudienceFacets =
