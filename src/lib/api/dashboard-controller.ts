@@ -75,6 +75,11 @@ export class AdminDashboardController extends AdminBaseController {
     return this.get<JobActivityDataPoint[]>(url);
   }
 
+  /** Clears the server's cached admin figures, so the next reads are live. */
+  async refresh(): Promise<{ refreshedAt: string }> {
+    return this.post<{ refreshedAt: string }>("/admin/dashboard/refresh");
+  }
+
   async getJobStatusDistribution(
     params: JobActivityParams,
   ): Promise<JobStatusDataPoint[]> {
@@ -88,6 +93,7 @@ export class AdminDashboardController extends AdminBaseController {
 }
 
 const controller = new AdminDashboardController();
+export const refreshDashboard = controller.refresh.bind(controller);
 export const getMetrics = controller.getMetrics.bind(controller);
 export const getJobActivity = controller.getJobActivity.bind(controller);
 export const getJobStatusDistribution = controller.getJobStatusDistribution.bind(controller);
