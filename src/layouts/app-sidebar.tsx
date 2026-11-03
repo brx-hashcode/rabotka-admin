@@ -32,8 +32,7 @@ import {
   IconStack2,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
-import { NavDocuments } from "#/layouts/nav-documents";
-import { NavMain } from "#/layouts/nav-main";
+import { NavGroups, type NavGroup } from "#/layouts/nav-groups";
 import { NavSecondary } from "#/layouts/nav-secondary";
 import { NavUser } from "#/layouts/nav-user";
 import {
@@ -65,72 +64,80 @@ const LADDER: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MODERATOR"];
 
 const MANAGER_UP: AdminRole[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
 
-const navMain: NavItem[] = [
+const ALL_STAFF: AdminRole[] = [...LADDER, "FINANCE", "SUPPORT"];
+
+/**
+ * The sidebar, by what an admin comes to do: hire, talk to people, grow,
+ * keep things fair, follow the money, run ads, run the back office.
+ */
+const navGroups: NavGroup[] = [
   {
-    title: "Dashboard",
-    url: "/",
-    icon: IconGridDots,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    items: [
+      { title: "Dashboard", url: "/", icon: IconGridDots, roles: ALL_STAFF },
+      // The admins' own chat, with its unread badge.
+      { title: "Team chat", url: "/chat", icon: IconMessage, roles: ALL_STAFF },
+    ],
   },
   {
-    title: "Profiles",
-    url: "/profiles",
-    icon: IconUser,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    label: "Hiring",
+    items: [
+      { title: "Profiles", url: "/profiles", icon: IconUser, roles: ALL_STAFF },
+      { title: "Job offers", url: "/jobs", icon: IconBriefcase, roles: ALL_STAFF },
+      { title: "Applications", url: "/applications", icon: IconFileText, roles: ALL_STAFF },
+      { title: "Paid contacts", url: "/contact-records", icon: IconAddressBook, roles: ALL_STAFF },
+      { title: "Agents", url: "/agents", icon: IconUsersGroup, roles: ALL_STAFF },
+      { title: "Job categories", url: "/job-categories", icon: IconTag, roles: [...MANAGER_UP, "FINANCE"] },
+    ],
   },
   {
-    title: "Job Offers",
-    url: "/jobs",
-    icon: IconBriefcase,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    label: "Messaging",
+    items: [
+      { title: "Broadcasts", url: "/broadcasts", icon: IconBroadcast, roles: [...MANAGER_UP] },
+      { title: "WhatsApp", url: "/whatsapp", icon: IconBrandWhatsapp, roles: [...MANAGER_UP, "FINANCE", "SUPPORT"] },
+      // Worker ↔ employer threads, for moderation.
+      { title: "User conversations", url: "/conversations", icon: IconMessages, roles: [...LADDER] },
+    ],
   },
   {
-    title: "Domains",
-    url: "/job-categories",
-    icon: IconTag,
-    roles: [...MANAGER_UP, "FINANCE"],
+    label: "Growth",
+    items: [
+      // Sign-ups that stopped halfway, to call. Support's work as much as ours.
+      { title: "Sign-up drop-offs", url: "/onboarding-dropoffs", icon: IconUserX, roles: [...LADDER, "SUPPORT"] },
+      { title: "Referrals", url: "/referrals", icon: IconGift, roles: [...MANAGER_UP, "FINANCE", "SUPPORT"] },
+      { title: "HR events", url: "/events", icon: IconCalendar, roles: [...LADDER, "FINANCE"] },
+      { title: "Collaboration network", url: "/network", icon: IconTopologyStar3, roles: [...LADDER, "FINANCE"] },
+    ],
   },
   {
-    title: "Applications",
-    url: "/applications",
-    icon: IconFileText,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    label: "Trust & support",
+    items: [
+      { title: "Claims", url: "/claim", icon: IconReport, roles: ALL_STAFF },
+      { title: "Penalties", url: "/penalties", icon: IconAlertTriangle, roles: ALL_STAFF },
+      { title: "User reviews", url: "/feedback", icon: IconStar, roles: ALL_STAFF },
+    ],
   },
   {
-    title: "Paid contacts",
-    url: "/contact-records",
-    icon: IconAddressBook,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    label: "Finance",
+    items: [
+      { title: "Revenue & wallet", url: "/wallet", icon: IconWallet, roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"] },
+      { title: "Business plans", url: "/business-plans", icon: IconStack2, roles: [...MANAGER_UP, "FINANCE"] },
+      { title: "Agent payouts", url: "/agent-payouts", icon: IconCashBanknote, roles: [...MANAGER_UP, "FINANCE"] },
+    ],
   },
   {
-    title: "Agents",
-    url: "/agents",
-    icon: IconUsersGroup,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
+    label: "Advertising",
+    items: [
+      { title: "Advertisements", url: "/advertisements", icon: IconSpeakerphone, roles: [...LADDER, "FINANCE"] },
+      { title: "Ad bundles", url: "/ads-bundles", icon: IconPackage, roles: [...LADDER, "FINANCE"] },
+    ],
   },
   {
-    title: "Chat",
-    url: "/chat",
-    icon: IconMessage,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
-  },
-  {
-    title: "Penalties",
-    url: "/penalties",
-    icon: IconAlertTriangle,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
-  },
-  {
-    title: "Network",
-    url: "/network",
-    icon: IconTopologyStar3,
-    roles: [...LADDER, "FINANCE"],
-  },
-  {
-    title: "Team",
-    url: "/team",
-    icon: IconUsers,
-    roles: [...LADDER],
+    label: "Administration",
+    items: [
+      { title: "Admin team", url: "/team", icon: IconUsers, roles: [...LADDER] },
+      { title: "Activity logs", url: "/logs", icon: IconFileWord, roles: [...MANAGER_UP, "FINANCE"] },
+      { title: "Legal documents", url: "/documents", icon: IconFile, roles: [...MANAGER_UP, "FINANCE"] },
+    ],
   },
 ];
 
@@ -148,100 +155,6 @@ const navSecondary: NavItem[] = [
     roles: ["SUPER_ADMIN"],
   },
   { title: "Support", url: "/help", icon: IconHelp },
-];
-
-const documents: NavItem[] = [
-  {
-    title: "Finance",
-    url: "/wallet",
-    icon: IconWallet,
-    roles: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
-  },
-  {
-    title: "Agent payouts",
-    url: "/agent-payouts",
-    icon: IconCashBanknote,
-    roles: [...MANAGER_UP, "FINANCE"],
-  },
-  {
-    title: "Business plans",
-    url: "/business-plans",
-    icon: IconStack2,
-    roles: [...MANAGER_UP, "FINANCE"],
-  },
-  {
-    title: "Parrainage",
-    url: "/referrals",
-    icon: IconGift,
-    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
-  },
-  {
-    title: "Claims",
-    url: "/claim",
-    icon: IconReport,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
-  },
-  {
-    title: "Conversations",
-    url: "/conversations",
-    icon: IconMessages,
-    roles: [...LADDER],
-  },
-  {
-    title: "Feedback",
-    url: "/feedback",
-    icon: IconStar,
-    roles: [...LADDER, "FINANCE", "SUPPORT"],
-  },
-  {
-    // Sign-ups that stopped halfway, to call. Support's work as much as ours.
-    title: "Sign-up drop-offs",
-    url: "/onboarding-dropoffs",
-    icon: IconUserX,
-    roles: [...LADDER, "SUPPORT"],
-  },
-  {
-    title: "Events",
-    url: "/events",
-    icon: IconCalendar,
-    roles: [...LADDER, "FINANCE"],
-  },
-  {
-    title: "Broadcasts",
-    url: "/broadcasts",
-    icon: IconBroadcast,
-    roles: [...MANAGER_UP],
-  },
-  {
-    title: "WhatsApp",
-    url: "/whatsapp",
-    icon: IconBrandWhatsapp,
-    roles: [...MANAGER_UP, "FINANCE", "SUPPORT"],
-  },
-  {
-    title: "Logs",
-    url: "/logs",
-    icon: IconFileWord,
-    roles: [...MANAGER_UP, "FINANCE"],
-  },
-  {
-    title: "Documents",
-    url: "/documents",
-    icon: IconFile,
-    roles: [...MANAGER_UP, "FINANCE"],
-  },
-  {
-    title: "Ad Bundles",
-    url: "/ads-bundles",
-    icon: IconPackage,
-    roles: [...LADDER, "FINANCE"],
-  },
-  {
-    title: "Advertisements",
-    url: "/advertisements",
-    icon: IconSpeakerphone,
-    roles: [...LADDER, "FINANCE"],
-  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -262,15 +175,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     0,
   );
 
-  const filteredNavMain = navMain
-    .filter((item) => !item.roles || (role && item.roles.includes(role)))
-    .map((item) =>
-      item.url === "/chat" ? { ...item, badge: chatUnread } : item,
-    );
-
-  const filteredDocuments = documents.filter(
-    (item) => !item.roles || (role && item.roles.includes(role)),
-  );
+  const allowed = (item: NavItem) =>
+    !item.roles || (role !== undefined && item.roles.includes(role));
+  const visibleGroups = navGroups.map((group) => ({
+    ...group,
+    items: group.items
+      .filter(allowed)
+      .map((item) =>
+        item.url === "/chat" ? { ...item, badge: chatUnread } : item,
+      ),
+  }));
 
   const filteredNavSecondary = navSecondary.filter(
     (item) => !item.roles || (role && item.roles.includes(role)),
@@ -300,8 +214,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={filteredNavMain} />
-        <NavDocuments items={filteredDocuments} />
+        <NavGroups groups={visibleGroups} />
         <NavSecondary items={filteredNavSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
