@@ -33,8 +33,6 @@ export function WhatsappStatCards({
           id: "sent",
           title: "Sent",
           value: stats.sent.toLocaleString(),
-          trend: null,
-          trendPercentage: null,
           // Received messages ride along here rather than on a fifth card:
           // the grid is four wide, and they are volume, not a delivery rate.
           description: [
@@ -48,8 +46,6 @@ export function WhatsappStatCards({
           id: "delivered",
           title: "Delivered",
           value: `${stats.deliveryRate}%`,
-          trend: null,
-          trendPercentage: null,
           description: `${(
             stats.totals.DELIVERED + stats.totals.READ
           ).toLocaleString()} reached the handset · ${formatDuration(
@@ -60,16 +56,12 @@ export function WhatsappStatCards({
           id: "read",
           title: "Read",
           value: `${stats.readRate}%`,
-          trend: null,
-          trendPercentage: null,
           description: `${stats.totals.READ.toLocaleString()} opened by the recipient`,
         },
         {
           id: "failed",
           title: "Failed",
           value: `${stats.failureRate}%`,
-          trend: null,
-          trendPercentage: null,
           description: `${stats.totals.FAILED.toLocaleString()} never left, of ${stats.total.toLocaleString()} total`,
         },
       ]

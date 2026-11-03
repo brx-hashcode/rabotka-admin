@@ -34,7 +34,17 @@ export type DashboardMetrics = {
   jobsTrend: number | null;
   applicationsCount: number;
   applicationsTrend: number | null;
+  /**
+   * How many arrived in the last 30 days and in the 30 days before. What the
+   * cards show next to the all-time totals. Absent from an older server.
+   */
+  last30Days?: Record<
+    "connections" | "assignments" | "profiles" | "jobs" | "applications",
+    PeriodCounts
+  >;
 };
+
+export type PeriodCounts = { current: number; previous: number };
 
 export type JobActivityParams = {
   range?: "90d" | "30d" | "7d";
