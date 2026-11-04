@@ -165,6 +165,22 @@ describe("job export rows", () => {
     expect(cell(jobItemsToTypedRows([fresh])[0]!, "Rating average")).toBeNull();
   });
 
+  /** What the analytics app joins missions to applications and profiles on. */
+  it("exports the join keys", () => {
+    const row = jobItemsToStringRows([{ ...full, employerIsBusiness: true }])[0]!;
+    expect(cell(row, "Offer ID")).toBe("j-1");
+    expect(cell(row, "Employer reference")).toBe("e-1");
+    expect(cell(row, "Business offer")).toBe("Yes");
+    expect(
+      cell(jobItemsToTypedRows([{ ...full, employerIsBusiness: false }])[0]!, "Business offer"),
+    ).toBe("No");
+  });
+
+  it("leaves the business flag empty when the API does not send it", () => {
+    // An older API: unknown, which is not the same as "not a business".
+    expect(cell(jobItemsToStringRows([full])[0]!, "Business offer")).toBe("");
+  });
+
   it("keeps numbers numeric in the typed rows so Excel can sum them", () => {
     const row = jobItemsToTypedRows([full])[0]!;
     expect(cell(row, "Amount")).toBe(15000);
