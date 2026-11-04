@@ -63,6 +63,8 @@ export const PROFILE_EXPORT_HEADERS = [
   // Timestamps
   "Created at",
   "Updated at",
+  // Last so earlier columns keep their place.
+  "Business",
 ] as const;
 
 /** Domains joined for a single cell; the CSV writer quotes the separator. */
@@ -121,6 +123,7 @@ export function profileItemsToStringRows(
     p.vectorIndexedAt ?? "",
     p.createdAt ?? "",
     p.updatedAt ?? "",
+    yesNo(p.isBusiness),
   ]);
 }
 
@@ -175,5 +178,6 @@ export function profileItemsToTypedRows(
     p.vectorIndexedAt ?? "",
     p.createdAt ?? "",
     p.updatedAt ?? "",
+    yesNo(p.isBusiness),
   ]);
 }

@@ -26,7 +26,9 @@ const full: AdminProfileListItem = {
   description: "Enseignant, hôtellerie",
   status: "ACTIVE",
   profileType: "WORKER",
+  isBusiness: false,
   whatsappConnected: true,
+  botPausedUntil: null,
   verificationStatus: "VERIFIED",
   verifiedBy: "Admin One",
   verifiedAt: "2026-08-01T10:00:00.000Z",
@@ -163,6 +165,13 @@ describe("profile export rows", () => {
   });
 
   /** Live payment URLs must not travel in a file that gets forwarded around. */
+  it("says which profiles are business accounts", () => {
+    expect(cell(profileItemsToStringRows([full])[0]!, "Business")).toBe("No");
+    expect(
+      cell(profileItemsToTypedRows([{ ...full, isBusiness: true }])[0]!, "Business"),
+    ).toBe("Yes");
+  });
+
   it("does not export payment links", () => {
     const headers = PROFILE_EXPORT_HEADERS.join(" ").toLowerCase();
     expect(headers).not.toContain("payment link");
