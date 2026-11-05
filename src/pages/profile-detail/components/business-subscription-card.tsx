@@ -73,16 +73,40 @@ const usage = (used: number, limit: number | null) => (limit === null ? `${used}
 
 const quota = (n: number | null, what: string) => (n === null ? `Unlimited ${what}` : `${n} ${what}`);
 
-/** What a plan gives, on one line: « 10 contacts · 10 offers · Preselection ». */
+/** An AI allowance: « 50 CV analyses », « No CV analysis », « Unlimited CV analyses ». */
+const allowance = (n: number | null | undefined, one: string, many: string) =>
+  n === undefined ? null : n === null ? `Unlimited ${many}` : n === 0 ? `No ${one}` : `${n} ${n > 1 ? many : one}`;
+
+/** What a plan gives, on one line: « 10 contacts · 10 offers · 50 CV analyses · Preselection ». */
 function planFacts(p: BusinessPlan): string {
   return [
     quota(p.unlocksPerPeriod, "contacts"),
     quota(p.activeOffersLimit, "offers"),
+    allowance(p.cvScreeningsPerPeriod, "CV analysis", "CV analyses"),
+    allowance(p.offerDraftsPerPeriod, "AI draft", "AI drafts"),
     p.includesPreselection && "Preselection",
     p.priorityVisibility && "Priority",
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+/** « 5 Nov 2026 », for the dialog's sentences. */
+const day = (d: Date | string) => formatDate(typeof d === "string" ? d : d.toISOString());
+
+/** A numbered step of the assign dialog. */
+function Step({ n, title, children }: Readonly<{ n: number; title: string; children: React.ReactNode }>) {
+  return (
+    <section className="space-y-2.5">
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-full text-[11px] tabular-nums">
+          {n}
+        </span>
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
 }
 
 /** As the server's `periodEnd`: whole months, the day clamped to the month's length. */
@@ -117,6 +141,50 @@ function ChoiceTile({
     >
       {children}
     </button>
+  );
+}
+
+/** One plan to pick: its name, price for the chosen duration and what it gives. */
+function PlanChoice({
+  plan,
+  period,
+  selected,
+  current,
+  onSelect,
+}: Readonly<{
+  plan: BusinessPlan;
+  period: "MONTHLY" | "ANNUAL";
+  selected: boolean;
+  current: boolean;
+  onSelect: () => void;
+}>) {
+  return (
+    <ChoiceTile selected={selected} onSelect={onSelect}>
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className={cn(
+            "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border",
+            selected ? "border-primary" : "border-muted-foreground/40",
+          )}
+        >
+          {selected && <span className="bg-primary size-2 rounded-full" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+              {plan.name}
+              {current && <Badge variant="outline">Current</Badge>}
+            </p>
+            <p className="text-muted-foreground shrink-0 text-xs tabular-nums">
+              {formatFcfa(period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa)}
+              {period === "ANNUAL" ? " / year" : " / month"}
+            </p>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-xs">{planFacts(plan)}</p>
+        </div>
+      </div>
+    </ChoiceTile>
   );
 }
 
@@ -204,8 +272,13 @@ export function BusinessSubscriptionCard({
   const startsAt = now || !queueEnd ? new Date() : new Date(queueEnd);
   const endsAt = periodEnd(startsAt, period);
   const activePlans = plansForBusiness(plans, business.id);
-  // A custom plan starts from the chosen plan, or the first catalog one.
-  const templatePlan = chosen ?? activePlans.find((p) => !p.businessId);
+  const catalogPlans = activePlans.filter((p) => !p.businessId);
+  const customPlans = activePlans.filter((p) => p.businessId);
+  // A new custom plan starts from the plan chosen, else the current one, else the first of the catalog.
+  const templatePlan =
+    (chosen && !chosen.businessId ? chosen : undefined) ??
+    catalogPlans.find((p) => p.id === replacedPlan?.id) ??
+    catalogPlans[0];
   const unlocksLeft = e.unlocksQuota === null ? null : Math.max(0, e.unlocksQuota - e.unlocksUsed);
 
   const openAssign = () => {
@@ -334,52 +407,67 @@ export function BusinessSubscriptionCard({
       </CardContent>
 
       <Dialog open={granting} onOpenChange={setGranting}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Assign a plan</DialogTitle>
+        <DialogContent className="flex max-h-[92vh] flex-col gap-0 p-0 sm:max-w-xl">
+          <DialogHeader className="shrink-0 border-b px-6 py-5">
+            <DialogTitle>Assign a plan to {business.name}</DialogTitle>
             <DialogDescription>
-              Free for the business, logged under your name. It is notified by email and in-app.
+              {business.name} pays nothing for it: the period is offered, logged under your name. It is told by email
+              and in-app.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label>Plan</Label>
-              <div role="radiogroup" aria-label="Plan" className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                {activePlans.map((p) => (
-                  <ChoiceTile key={p.id} selected={planId === p.id} onSelect={() => setPlanId(p.id)}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-2 text-sm font-medium">
-                          {p.name}
-                          {p.businessId && <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-300">Custom</Badge>}
-                          {replacedPlan?.id === p.id && <Badge variant="outline">Current</Badge>}
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 text-xs">{planFacts(p)}</p>
-                      </div>
-                      <p className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                        {formatFcfa(period === "ANNUAL" ? p.annualPriceFcfa : p.monthlyPriceFcfa)}
-                        {period === "ANNUAL" ? " / year" : " / month"}
-                      </p>
-                    </div>
-                  </ChoiceTile>
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5">
+            <Step n={1} title="Which plan?">
+              <div role="radiogroup" aria-label="Plan" className="space-y-2">
+                {catalogPlans.map((p) => (
+                  <PlanChoice
+                    key={p.id}
+                    plan={p}
+                    period={period}
+                    selected={planId === p.id}
+                    current={replacedPlan?.id === p.id}
+                    onSelect={() => setPlanId(p.id)}
+                  />
                 ))}
-                {activePlans.length === 0 && <p className="text-muted-foreground text-sm">No active plan to assign.</p>}
+                {catalogPlans.length === 0 && <p className="text-muted-foreground text-sm">No active plan in the catalog.</p>}
               </div>
-              {templatePlan && (
-                <button
-                  type="button"
-                  onClick={() => setCustomFrom(templatePlan)}
-                  className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center gap-1 text-xs"
-                >
-                  <IconSparkles className="size-3.5" />
-                  Create a custom plan for {business.name}, starting from {templatePlan.name}
-                </button>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label>Duration</Label>
+              <div className="space-y-2 pt-2">
+                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                  Custom plans for {business.name}
+                </p>
+                {customPlans.map((p) => (
+                  <PlanChoice
+                    key={p.id}
+                    plan={p}
+                    period={period}
+                    selected={planId === p.id}
+                    current={replacedPlan?.id === p.id}
+                    onSelect={() => setPlanId(p.id)}
+                  />
+                ))}
+                {templatePlan && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomFrom(templatePlan)}
+                    className="hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3 text-left transition-colors"
+                  >
+                    <span className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-md">
+                      <IconSparkles className="size-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">New custom plan</span>
+                      <span className="text-muted-foreground block text-xs">
+                        Its own price and quotas, seen by {business.name} only. Starts from {templatePlan.name}&apos;s
+                        values; change any of them.
+                      </span>
+                    </span>
+                  </button>
+                )}
+              </div>
+            </Step>
+
+            <Step n={2} title="For how long?">
               <ToggleGroup
                 type="single"
                 variant="outline"
@@ -394,55 +482,65 @@ export function BusinessSubscriptionCard({
                   One year
                 </ToggleGroupItem>
               </ToggleGroup>
-            </div>
+            </Step>
 
-            {replacing && (
-              <div className="space-y-2">
-                <Label>Starts</Label>
-                <div role="radiogroup" aria-label="Starts" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <ChoiceTile selected={!now} disabled={upgrade} onSelect={() => setStartNow(false)}>
-                    <p className="text-sm font-medium">After the current period</p>
-                    <p className="text-muted-foreground mt-0.5 text-xs">
-                      {upgrade ? "Not for a dearer plan" : `From ${formatDate(queueEnd)}`}
-                    </p>
-                  </ChoiceTile>
-                  <ChoiceTile selected={now} onSelect={() => setStartNow(true)}>
-                    <p className="text-sm font-medium">Start now</p>
-                    <p className="text-muted-foreground mt-0.5 text-xs">
-                      {upgrade ? "Unused days carry over" : `« ${replacing.planName} » ends today`}
-                    </p>
-                  </ChoiceTile>
-                </div>
-              </div>
-            )}
-
-            {chosen && (
-              <div className="bg-muted/50 space-y-1 rounded-lg p-3 text-sm">
-                <p className="font-medium">
-                  {chosen.name} · {period === "ANNUAL" ? "one year" : "one month"}
-                </p>
-                <p className="text-muted-foreground">
-                  {formatDate(startsAt.toISOString())} → {formatDate(endsAt.toISOString())}
-                  {upgrade && ", plus the unused days"}
-                </p>
-                {replacing && now && !upgrade && (
-                  <p className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                    <IconAlertTriangle className="mt-px size-3.5 shrink-0" />« {replacing.planName} » ends today: its
-                    remaining time and {unlocksLeft === null ? "quota" : `${unlocksLeft} contacts`} are lost.
+            {replacing && chosen && (
+              <Step n={3} title="Starting when?">
+                {upgrade ? (
+                  <p className="bg-muted/50 rounded-lg p-3 text-sm">
+                    <span className="font-medium">Today.</span>{" "}
+                    <span className="text-muted-foreground">
+                      {chosen.name} costs more than « {replacing.planName} », so it replaces it now; the days left on «{" "}
+                      {replacing.planName} » are added to it.
+                    </span>
                   </p>
+                ) : (
+                  <div role="radiogroup" aria-label="Starts" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <ChoiceTile selected={!startNow} onSelect={() => setStartNow(false)}>
+                      <p className="text-sm font-medium">When « {replacing.planName} » ends</p>
+                      <p className="text-muted-foreground mt-0.5 text-xs">On {day(queueEnd ?? replacing.endsAt)}</p>
+                    </ChoiceTile>
+                    <ChoiceTile selected={startNow} onSelect={() => setStartNow(true)}>
+                      <p className="text-sm font-medium">Today</p>
+                      <p className="text-muted-foreground mt-0.5 text-xs">« {replacing.planName} » stops now</p>
+                    </ChoiceTile>
+                  </div>
                 )}
-              </div>
+              </Step>
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGranting(false)} disabled={grant.isPending}>
-              Cancel
-            </Button>
-            <Button onClick={() => grant.mutate(!!replacing && startNow)} disabled={!chosen || grant.isPending}>
-              {grant.isPending ? "Assigning…" : chosen ? `Assign ${chosen.name}` : "Assign"}
-            </Button>
-          </DialogFooter>
+          <div className="shrink-0 space-y-3 border-t px-6 py-4">
+            {chosen ? (
+              <div className="space-y-1 text-sm">
+                <p>
+                  {business.name} gets <span className="font-medium">{chosen.name}</span> for{" "}
+                  {period === "ANNUAL" ? "one year" : "one month"}: <span className="font-medium">{day(startsAt)}</span> →{" "}
+                  <span className="font-medium">{day(endsAt)}</span>
+                  {upgrade && ", plus the days left"}.
+                </p>
+                {replacing && now && !upgrade && (
+                  <p className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    <IconAlertTriangle className="mt-px size-3.5 shrink-0" />« {replacing.planName} » stops today: its
+                    remaining days and {unlocksLeft === null ? "quotas" : `${unlocksLeft} contacts left`} are lost.
+                  </p>
+                )}
+                {running?.status === "TRIAL" && (
+                  <p className="text-muted-foreground text-xs">The running trial ends today and this plan takes over.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">Choose a plan.</p>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGranting(false)} disabled={grant.isPending}>
+                Cancel
+              </Button>
+              <Button onClick={() => grant.mutate(!!replacing && startNow)} disabled={!chosen || grant.isPending}>
+                {grant.isPending ? "Assigning…" : chosen ? `Assign ${chosen.name}` : "Assign"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
