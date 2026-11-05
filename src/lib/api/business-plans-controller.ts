@@ -38,9 +38,18 @@ export type BusinessPlan = {
   sortOrder: number;
   /** Businesses with a period running or queued on the plan (the list only). */
   businesses?: number;
+  /** A custom plan: made for one business alone, the only one to see it. */
+  custom?: boolean;
+  /** The business a custom plan is made for; null: the public catalog. */
+  businessId?: string | null;
+  /** Who a custom plan is made for (the list only). */
+  business?: { id: string; name: string; profileId: string };
 };
 
-export type BusinessPlanInput = Omit<BusinessPlan, "id" | "businesses">;
+export type BusinessPlanInput = Omit<BusinessPlan, "id" | "businesses" | "custom" | "business">;
+
+/** The AI features a trial may leave out (Settings → Business plans). */
+export type TrialAiFeature = "cvAnalysis" | "cvChat" | "offerWriter";
 
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
 export type BillingPeriod = "TRIAL" | "MONTHLY" | "ANNUAL";
@@ -81,6 +90,8 @@ export type BusinessSubscriptionOverview = {
     recruitersLimit?: number | null;
     reviewers?: number;
     reviewersLimit?: number | null;
+    /** AI features the plan has but the running trial leaves out. */
+    trialLocked?: TrialAiFeature[];
   };
   upcoming: SubscriptionPeriod[];
   history: SubscriptionPeriod[];
@@ -117,6 +128,11 @@ class BusinessPlansController extends AdminBaseController {
     return this.post(`/admin/profiles/${encodeURIComponent(profileId)}/business/subscription`, data);
   }
 
+  /** Starts the free trial now: for a business approved without it. Once per business. */
+  startTrial(profileId: string): Promise<BusinessSubscriptionOverview> {
+    return this.post(`/admin/profiles/${encodeURIComponent(profileId)}/business/subscription/trial`, {});
+  }
+
   /** The business is told in-app and by email, with `reason` when given. */
   cancel(profileId: string, subscriptionId: string, reason?: string): Promise<BusinessSubscriptionOverview> {
     return this.post(
@@ -135,6 +151,7 @@ export const deleteBusinessPlan = controller.remove.bind(controller);
 export const getBusinessSubscription = controller.subscription.bind(controller);
 export const grantBusinessSubscription = controller.grant.bind(controller);
 export const cancelBusinessSubscription = controller.cancel.bind(controller);
+export const startBusinessTrial = controller.startTrial.bind(controller);
 
 /** « 15 000 FCFA ». */
 export function formatFcfa(amount: number): string {

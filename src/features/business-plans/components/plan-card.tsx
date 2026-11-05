@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -147,8 +148,24 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
               ) : (
                 <Badge className="w-fit text-[10px] py-0 bg-rose-500 text-white border-transparent">Inactive</Badge>
               )}
+              {plan.businessId && (
+                <Badge className="w-fit text-[10px] py-0 bg-violet-500 text-white border-transparent">Custom</Badge>
+              )}
               <span className="text-muted-foreground text-[11px]">{plan.code}</span>
             </div>
+            {plan.business && (
+              <p className="text-muted-foreground text-xs">
+                For{" "}
+                <Link
+                  to="/profiles/$profileId"
+                  params={{ profileId: plan.business.profileId }}
+                  className="text-foreground font-medium hover:underline"
+                >
+                  {plan.business.name}
+                </Link>{" "}
+                only
+              </p>
+            )}
           </div>
 
           {/* Prices */}
