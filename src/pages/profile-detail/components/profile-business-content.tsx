@@ -52,7 +52,12 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
-import { BusinessSubscriptionCard } from "./business-subscription-card";
+import { BusinessSubscriptionCard, businessSubscriptionKey } from "./business-subscription-card";
+import { Checkbox } from "#/components/ui/checkbox";
+import { trialOffer } from "#/features/business-plans/trial-offer";
+import { useBusinessPlansList } from "#/hooks/use-business-plans-list";
+import { useSystemConfigCategory } from "#/hooks/use-system-config";
+import { getBusinessSubscription } from "#/lib/api/business-plans-controller";
 import {
   BusinessCvScreeningsSection,
   BusinessInterviewsSection,
@@ -233,6 +238,16 @@ function BusinessOrganisationSection({
   const [refusing, setRefusing] = useState<Refusing | null>(null);
   const [approving, setApproving] = useState<Approving | null>(null);
   const [reason, setReason] = useState("");
+  // Approving starts the trial unless the admin unticks it.
+  const [withTrial, setWithTrial] = useState(true);
+  const { configs } = useSystemConfigCategory("FEES");
+  const { data: plans } = useBusinessPlansList();
+  const { data: subscription } = useQuery({
+    queryKey: businessSubscriptionKey(profileId),
+    queryFn: () => getBusinessSubscription(profileId),
+  });
+  const trial = trialOffer(configs, plans);
+  const trialUsed = subscription?.trialUsed ?? false;
 
   const onSaved = (next: AdminBusinessDetail) => {
     queryClient.setQueryData(queryKey, next);
@@ -243,7 +258,7 @@ function BusinessOrganisationSection({
   };
 
   const decideBusiness = useMutation({
-    mutationFn: (input: { decision: VerificationDecision; reason?: string }) =>
+    mutationFn: (input: { decision: VerificationDecision; reason?: string; startTrial?: boolean }) =>
       verifyProfileBusiness(profileId, input),
     onSuccess: (next, input) => {
       onSaved(next);
@@ -289,7 +304,7 @@ function BusinessOrganisationSection({
   function confirmApproval() {
     if (!approving) return;
     if (approving.kind === "business") {
-      decideBusiness.mutate({ decision: "VERIFIED" });
+      decideBusiness.mutate({ decision: "VERIFIED", startTrial: !!trial && !trialUsed && withTrial });
     } else {
       decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" });
     }
@@ -346,7 +361,7 @@ function BusinessOrganisationSection({
       </div>
 
       <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
-        <BusinessSubscriptionCard profileId={profileId} />
+        <BusinessSubscriptionCard profileId={profileId} business={{ id: business.id, name: business.name }} />
 
         <Card>
           <CardHeader>
@@ -399,7 +414,10 @@ function BusinessOrganisationSection({
                   </Button>
                 )}
                 <Button
-                  onClick={() => setApproving({ kind: "business" })}
+                  onClick={() => {
+                    setWithTrial(true);
+                    setApproving({ kind: "business" });
+                  }}
                   disabled={decideBusiness.isPending}
                 >
                   <IconCheck className="size-4" />
@@ -510,9 +528,38 @@ function BusinessOrganisationSection({
         }}
         title={approving?.kind === "document" ? `Accept « ${approving.doc.label} » ?` : `Approve ${business.name} ?`}
         description={
-          approving?.kind === "document"
-            ? "This document will be marked as verified."
-            : "The business is verified and its account becomes active. Its pending documents are accepted, and the business is notified by email and in-app notification. This cannot be undone from here."
+          approving?.kind === "document" ? (
+            "This document will be marked as verified."
+          ) : (
+            <div className="space-y-3">
+              <p>
+                The business is verified and its account becomes active. Its pending documents are accepted, and the
+                business is notified by email and in-app notification. This cannot be undone from here.
+              </p>
+              {trial && !trialUsed ? (
+                <label className="text-foreground flex cursor-pointer items-start gap-2.5 rounded-lg border p-3">
+                  <Checkbox
+                    checked={withTrial}
+                    onCheckedChange={(v) => setWithTrial(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="block font-medium">
+                      Start the {trial.days}-day trial of {trial.planName}
+                    </span>
+                    <span className="text-muted-foreground block text-xs">
+                      AI features stay off during the trial unless Settings → Business plans turns them on. Untick to
+                      approve without a plan; you can start the trial later from Subscription.
+                    </span>
+                  </span>
+                </label>
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  {trialUsed ? "This business already had its trial." : "No trial is configured: approved without a plan."}
+                </p>
+              )}
+            </div>
+          )
         }
         actionLabel={approving?.kind === "document" ? "Accept" : "Approve business"}
         onConfirm={confirmApproval}

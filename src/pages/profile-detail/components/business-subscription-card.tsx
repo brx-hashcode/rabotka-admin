@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconHistory, IconPlayerStop, IconPlus } from "@tabler/icons-react";
+import { IconAlertTriangle, IconGift, IconHistory, IconPlayerStop, IconPlus, IconSparkles } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import {
@@ -8,12 +8,14 @@ import {
   formatFcfa,
   getBusinessSubscription,
   grantBusinessSubscription,
+  startBusinessTrial,
   type BusinessPlan,
   type BusinessSubscriptionOverview,
   type SubscriptionPeriod,
   type SubscriptionStatus,
 } from "#/lib/api/business-plans-controller";
 import { useBusinessPlansList } from "#/hooks/use-business-plans-list";
+import { PlanDialog } from "#/features/business-plans/components/plan-dialog";
 import { useRole } from "#/hooks/use-role";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -45,6 +47,13 @@ const STATUS: Record<SubscriptionStatus, { label: string; className: string }> =
 };
 
 const PERIOD_LABEL = { TRIAL: "Trial", MONTHLY: "Monthly", ANNUAL: "Annual" } as const;
+
+const TRIAL_LOCKED_LABEL = { cvAnalysis: "CV analysis", cvChat: "CV questions", offerWriter: "AI drafts" } as const;
+
+/** What a business may be assigned: the catalog's active plans, and its own custom plans. */
+export function plansForBusiness(plans: BusinessPlan[], businessId: string): BusinessPlan[] {
+  return plans.filter((p) => p.isActive && (!p.businessId || p.businessId === businessId));
+}
 
 export function SubscriptionStatusBadge({ status }: Readonly<{ status: SubscriptionStatus }>) {
   return <Badge className={STATUS[status].className}>{STATUS[status].label}</Badge>;
@@ -120,7 +129,10 @@ const END_REASONS = ["Fin du partenariat convenu", "À la demande de l'entrepris
  * period or in its place) and end a running period. The business is told of
  * both in-app and by email.
  */
-export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: string }>) {
+export function BusinessSubscriptionCard({
+  profileId,
+  business,
+}: Readonly<{ profileId: string; business: { id: string; name: string } }>) {
   const queryClient = useQueryClient();
   const { canManageContent } = useRole();
   const key = businessSubscriptionKey(profileId);
@@ -133,6 +145,7 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
   const [cancelling, setCancelling] = useState<SubscriptionPeriod | null>(null);
   const [reason, setReason] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [customFrom, setCustomFrom] = useState<BusinessPlan | null>(null);
 
   const onSaved = (next: BusinessSubscriptionOverview) => {
     queryClient.setQueryData(key, next);
@@ -148,6 +161,15 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
       toast.success("Plan assigned. The business is notified by email and in-app.");
     },
     onError: (err: Error) => toast.error(friendlyError(err, "Couldn't assign the plan. Try again.")),
+  });
+
+  const trial = useMutation({
+    mutationFn: () => startBusinessTrial(profileId),
+    onSuccess: (next) => {
+      onSaved(next);
+      toast.success("Trial started. The business is notified by email and in-app.");
+    },
+    onError: (err: Error) => toast.error(friendlyError(err, "Couldn't start the trial. Try again.")),
   });
 
   const cancel = useMutation({
@@ -181,7 +203,9 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
     .reduce<string | null>((latest, p) => (!latest || p.endsAt > latest ? p.endsAt : latest), null);
   const startsAt = now || !queueEnd ? new Date() : new Date(queueEnd);
   const endsAt = periodEnd(startsAt, period);
-  const activePlans = plans.filter((p) => p.isActive);
+  const activePlans = plansForBusiness(plans, business.id);
+  // A custom plan starts from the chosen plan, or the first catalog one.
+  const templatePlan = chosen ?? activePlans.find((p) => !p.businessId);
   const unlocksLeft = e.unlocksQuota === null ? null : Math.max(0, e.unlocksQuota - e.unlocksUsed);
 
   const openAssign = () => {
@@ -195,10 +219,18 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm">Subscription</CardTitle>
         {canManageContent && (
-          <Button size="sm" variant="outline" onClick={openAssign}>
-            <IconPlus className="size-4" />
-            Assign plan
-          </Button>
+          <div className="flex gap-2">
+            {!data.trialUsed && !running && (
+              <Button size="sm" variant="outline" onClick={() => trial.mutate()} disabled={trial.isPending}>
+                <IconGift className="size-4" />
+                {trial.isPending ? "Starting…" : "Start trial"}
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={openAssign}>
+              <IconPlus className="size-4" />
+              Assign plan
+            </Button>
+          </div>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
@@ -220,6 +252,17 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
           )}
           {e.recruiters !== undefined && <Row label="Recruiters">{usage(e.recruiters, e.plan ? (e.recruitersLimit ?? null) : 0)}</Row>}
           {e.reviewers !== undefined && <Row label="Reviewers">{usage(e.reviewers, e.plan ? (e.reviewersLimit ?? null) : 0)}</Row>}
+          {e.trialLocked && e.trialLocked.length > 0 && (
+            <Row label="Not in the trial">
+              <div className="flex flex-wrap justify-end gap-1">
+                {e.trialLocked.map((f) => (
+                  <Badge key={f} variant="outline">
+                    {TRIAL_LOCKED_LABEL[f]}
+                  </Badge>
+                ))}
+              </div>
+            </Row>
+          )}
           {e.plan && (
             <Row label="Includes">
               <div className="flex flex-wrap justify-end gap-1">
@@ -309,6 +352,7 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
                       <div className="min-w-0">
                         <p className="flex items-center gap-2 text-sm font-medium">
                           {p.name}
+                          {p.businessId && <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-300">Custom</Badge>}
                           {replacedPlan?.id === p.id && <Badge variant="outline">Current</Badge>}
                         </p>
                         <p className="text-muted-foreground mt-0.5 text-xs">{planFacts(p)}</p>
@@ -322,6 +366,16 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
                 ))}
                 {activePlans.length === 0 && <p className="text-muted-foreground text-sm">No active plan to assign.</p>}
               </div>
+              {templatePlan && (
+                <button
+                  type="button"
+                  onClick={() => setCustomFrom(templatePlan)}
+                  className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center gap-1 text-xs"
+                >
+                  <IconSparkles className="size-3.5" />
+                  Create a custom plan for {business.name}, starting from {templatePlan.name}
+                </button>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -391,6 +445,14 @@ export function BusinessSubscriptionCard({ profileId }: Readonly<{ profileId: st
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PlanDialog
+        open={!!customFrom}
+        onOpenChange={(o) => !o && setCustomFrom(null)}
+        template={customFrom ?? undefined}
+        forBusiness={business}
+        onSaved={(saved) => setPlanId(saved.id)}
+      />
 
       <Dialog
         open={!!cancelling}
