@@ -19,7 +19,7 @@ export type AdminVovaMemory = {
 export type AdminInvoiceItem = {
   id: string;
   profileId: string;
-  paymentRequestId: string;
+  paymentRequestId: string | null;
   amount: string;
   reason: string;
   relatedEntityType: string | null;
@@ -58,7 +58,7 @@ export type AdminProfileListItem = {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email: string | null;
   phone: string;
   /**
    * Optional second number to be reached on, when the WhatsApp number is not
@@ -196,8 +196,8 @@ export type AdminUpdateBusinessParams = Partial<{
   registrationNumber: string | null;
   taxId: string | null;
   statisticalId: string | null;
-  address: string;
-  countryCode: string;
+  address: string | null;
+  countryCode: string | null;
   city: string | null;
   email: string | null;
   phone: string | null;
@@ -226,7 +226,7 @@ export type AdminBusinessDetail = {
   registrationNumber: string | null;
   taxId: string | null;
   statisticalId: string | null;
-  address: string;
+  address: string | null;
   countryCode: string | null;
   countryName: string | null;
   city: string | null;

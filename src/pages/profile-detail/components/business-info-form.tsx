@@ -34,8 +34,12 @@ type FormData = {
   description: string;
 };
 
-/** Fields the API refuses empty: never sent as null. */
-const REQUIRED: (keyof FormData)[] = ["name", "category", "address", "countryCode"];
+/**
+ * Fields the API refuses empty: never sent as null. Not the address: an
+ * organisation working online only has none (null since 2026-11-03), and
+ * requiring it here crashed the tab on `null.trim()`.
+ */
+const REQUIRED: (keyof FormData)[] = ["name", "category", "countryCode"];
 
 function toForm(b: AdminBusinessDetail): FormData {
   return {
@@ -50,7 +54,7 @@ function toForm(b: AdminBusinessDetail): FormData {
     phone: b.phone ?? "",
     countryCode: b.countryCode ?? "",
     city: b.city ?? "",
-    address: b.address,
+    address: b.address ?? "",
     website: b.website ?? "",
     description: b.description ?? "",
   };
