@@ -471,10 +471,10 @@ export function BusinessSubscriptionCard({
                   <button
                     type="button"
                     onClick={() => setCustomFrom(templatePlan)}
-                    className="text-muted-foreground hover:border-foreground/30 hover:text-foreground hover:bg-muted/40 flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-center transition-colors"
+                    className="text-muted-foreground hover:border-foreground/30 hover:text-foreground hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-5 text-center transition-colors sm:col-span-2"
                   >
                     <span className="text-foreground text-sm font-medium">New custom plan</span>
-                    <span className="max-w-56 text-xs leading-relaxed">
+                    <span className="text-xs leading-relaxed">
                       Its own price and quotas, for {business.name} only. Starts from {templatePlan.name}.
                     </span>
                   </button>
