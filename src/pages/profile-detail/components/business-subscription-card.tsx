@@ -1,11 +1,25 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconGift, IconHistory, IconPlayerStop, IconPlus, IconSparkles } from "@tabler/icons-react";
+import {
+  IconAddressBook,
+  IconAlertTriangle,
+  IconBolt,
+  IconBriefcase,
+  IconCalendarEvent,
+  IconCircleCheckFilled,
+  IconFileSearch,
+  IconGift,
+  IconHistory,
+  IconHourglass,
+  IconPlayerStop,
+  IconPlus,
+  IconStack2,
+  IconWand,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import {
   cancelBusinessSubscription,
-  formatFcfa,
   getBusinessSubscription,
   grantBusinessSubscription,
   startBusinessTrial,
@@ -31,7 +45,6 @@ import {
 import { Label } from "#/components/ui/label";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
 import { formatDate } from "../helpers";
@@ -77,29 +90,15 @@ const quota = (n: number | null, what: string) => (n === null ? `Unlimited ${wha
 const allowance = (n: number | null | undefined, one: string, many: string) =>
   n === undefined ? null : n === null ? `Unlimited ${many}` : n === 0 ? `No ${one}` : `${n} ${n > 1 ? many : one}`;
 
-/** What a plan gives, on one line: « 10 contacts · 10 offers · 50 CV analyses · Preselection ». */
-function planFacts(p: BusinessPlan): string {
-  return [
-    quota(p.unlocksPerPeriod, "contacts"),
-    quota(p.activeOffersLimit, "offers"),
-    allowance(p.cvScreeningsPerPeriod, "CV analysis", "CV analyses"),
-    allowance(p.offerDraftsPerPeriod, "AI draft", "AI drafts"),
-    p.includesPreselection && "Preselection",
-    p.priorityVisibility && "Priority",
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 /** « 5 Nov 2026 », for the dialog's sentences. */
 const day = (d: Date | string) => formatDate(typeof d === "string" ? d : d.toISOString());
 
 /** A numbered step of the assign dialog. */
 function Step({ n, title, children }: Readonly<{ n: number; title: string; children: React.ReactNode }>) {
   return (
-    <section className="space-y-2.5">
-      <h3 className="flex items-center gap-2 text-sm font-medium">
-        <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-full text-[11px] tabular-nums">
+    <section className="space-y-3">
+      <h3 className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+        <span className="bg-foreground text-background flex size-5 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums">
           {n}
         </span>
         {title}
@@ -107,6 +106,23 @@ function Step({ n, title, children }: Readonly<{ n: number; title: string; child
       {children}
     </section>
   );
+}
+
+/** One line of what a plan gives, with its icon. */
+function Fact({ icon: Icon, children, off = false }: Readonly<{ icon: typeof IconBriefcase; children: React.ReactNode; off?: boolean }>) {
+  return (
+    <li className={cn("flex items-center gap-2", off && "opacity-50")}>
+      <Icon className="size-3.5 shrink-0" />
+      <span className="truncate">{children}</span>
+    </li>
+  );
+}
+
+/** « 12 % off » when a year costs less than twelve months; null otherwise. */
+function annualSaving(p: BusinessPlan | undefined): string | null {
+  if (!p || p.monthlyPriceFcfa <= 0) return null;
+  const off = Math.round((1 - p.annualPriceFcfa / (p.monthlyPriceFcfa * 12)) * 100);
+  return off > 0 ? `${off} % off` : null;
 }
 
 /** As the server's `periodEnd`: whole months, the day clamped to the month's length. */
@@ -120,31 +136,7 @@ function periodEnd(start: Date, period: "MONTHLY" | "ANNUAL"): Date {
   return end;
 }
 
-/** A bordered tile that reads as a radio: the plan and start choices. */
-function ChoiceTile({
-  selected,
-  disabled,
-  onSelect,
-  children,
-}: Readonly<{ selected: boolean; disabled?: boolean; onSelect: () => void; children: React.ReactNode }>) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      disabled={disabled}
-      onClick={onSelect}
-      className={cn(
-        "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-        selected ? "border-primary bg-primary/5 ring-primary ring-1" : "hover:bg-muted/50",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** One plan to pick: its name, price for the chosen duration and what it gives. */
+/** One plan to pick: a card with its price for the chosen duration and what it gives. */
 function PlanChoice({
   plan,
   period,
@@ -158,33 +150,54 @@ function PlanChoice({
   current: boolean;
   onSelect: () => void;
 }>) {
+  const price = period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa;
+  const cv = plan.cvScreeningsPerPeriod;
+  const drafts = plan.offerDraftsPerPeriod;
   return (
-    <ChoiceTile selected={selected} onSelect={onSelect}>
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden
-          className={cn(
-            "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border",
-            selected ? "border-primary" : "border-muted-foreground/40",
-          )}
-        >
-          {selected && <span className="bg-primary size-2 rounded-full" />}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-              {plan.name}
-              {current && <Badge variant="outline">Current</Badge>}
-            </p>
-            <p className="text-muted-foreground shrink-0 text-xs tabular-nums">
-              {formatFcfa(period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa)}
-              {period === "ANNUAL" ? " / year" : " / month"}
-            </p>
-          </div>
-          <p className="text-muted-foreground mt-0.5 text-xs">{planFacts(plan)}</p>
-        </div>
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={cn(
+        "relative flex h-full w-full cursor-pointer flex-col gap-3 rounded-xl border p-4 text-left transition-all",
+        selected
+          ? "border-primary bg-primary/5 ring-primary ring-1"
+          : "hover:border-foreground/25 hover:bg-muted/40",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 pr-6">
+        <p className="text-sm leading-tight font-semibold">{plan.name}</p>
+        {current && (
+          <Badge variant="outline" className="shrink-0 text-[10px]">
+            Current
+          </Badge>
+        )}
       </div>
-    </ChoiceTile>
+      {selected ? (
+        <IconCircleCheckFilled className="text-primary absolute top-3.5 right-3.5 size-5" />
+      ) : (
+        <span className="border-muted-foreground/30 absolute top-4 right-4 size-4 rounded-full border" />
+      )}
+      <p className="flex items-baseline gap-1">
+        <span className="text-xl font-semibold tracking-tight tabular-nums">{price.toLocaleString("fr-FR")}</span>
+        <span className="text-muted-foreground text-xs">FCFA / {period === "ANNUAL" ? "year" : "month"}</span>
+      </p>
+      <ul className="text-muted-foreground space-y-1.5 text-xs">
+        <Fact icon={IconAddressBook}>{quota(plan.unlocksPerPeriod, "contacts")}</Fact>
+        <Fact icon={IconBriefcase}>{quota(plan.activeOffersLimit, "offers")}</Fact>
+        {cv !== undefined && (
+          <Fact icon={IconFileSearch} off={cv === 0}>
+            {allowance(cv, "CV analysis", "CV analyses")}
+          </Fact>
+        )}
+        {drafts !== undefined && (
+          <Fact icon={IconWand} off={drafts === 0}>
+            {allowance(drafts, "AI draft", "AI drafts")}
+          </Fact>
+        )}
+      </ul>
+    </button>
   );
 }
 
@@ -407,18 +420,25 @@ export function BusinessSubscriptionCard({
       </CardContent>
 
       <Dialog open={granting} onOpenChange={setGranting}>
-        <DialogContent className="flex max-h-[92vh] flex-col gap-0 p-0 sm:max-w-xl">
-          <DialogHeader className="shrink-0 border-b px-6 py-5">
-            <DialogTitle>Assign a plan to {business.name}</DialogTitle>
-            <DialogDescription>
-              {business.name} pays nothing for it: the period is offered, logged under your name. It is told by email
-              and in-app.
-            </DialogDescription>
+        <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
+            <div className="flex items-center gap-3">
+              <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+                <IconStack2 className="size-5" />
+              </span>
+              <div className="min-w-0 text-left">
+                <DialogTitle>Assign a plan</DialogTitle>
+                <DialogDescription className="mt-0.5">
+                  To {business.name}, offered: nothing to pay. Logged under your name; {business.name} is told by email
+                  and in-app.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5">
-            <Step n={1} title="Which plan?">
-              <div role="radiogroup" aria-label="Plan" className="space-y-2">
+          <div className="min-h-0 flex-1 space-y-7 overflow-y-auto border-t px-6 py-5">
+            <Step n={1} title="Plan">
+              <div role="radiogroup" aria-label="Plan" className="grid gap-3 sm:grid-cols-2">
                 {catalogPlans.map((p) => (
                   <PlanChoice
                     key={p.id}
@@ -429,13 +449,14 @@ export function BusinessSubscriptionCard({
                     onSelect={() => setPlanId(p.id)}
                   />
                 ))}
-                {catalogPlans.length === 0 && <p className="text-muted-foreground text-sm">No active plan in the catalog.</p>}
               </div>
+              {catalogPlans.length === 0 && <p className="text-muted-foreground text-sm">No active plan in the catalog.</p>}
 
-              <div className="space-y-2 pt-2">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Custom plans for {business.name}
-                </p>
+              <div className="flex items-center gap-3 pt-2">
+                <span className="text-muted-foreground shrink-0 text-xs font-medium">Custom for {business.name}</span>
+                <span className="bg-border h-px flex-1" />
+              </div>
+              <div role="radiogroup" aria-label="Custom plans" className="grid gap-3 sm:grid-cols-2">
                 {customPlans.map((p) => (
                   <PlanChoice
                     key={p.id}
@@ -450,87 +471,120 @@ export function BusinessSubscriptionCard({
                   <button
                     type="button"
                     onClick={() => setCustomFrom(templatePlan)}
-                    className="hover:bg-muted/50 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3 text-left transition-colors"
+                    className="text-muted-foreground hover:border-foreground/30 hover:text-foreground hover:bg-muted/40 flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-center transition-colors"
                   >
-                    <span className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-md">
-                      <IconSparkles className="size-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium">New custom plan</span>
-                      <span className="text-muted-foreground block text-xs">
-                        Its own price and quotas, seen by {business.name} only. Starts from {templatePlan.name}&apos;s
-                        values; change any of them.
-                      </span>
+                    <span className="text-foreground text-sm font-medium">New custom plan</span>
+                    <span className="max-w-56 text-xs leading-relaxed">
+                      Its own price and quotas, for {business.name} only. Starts from {templatePlan.name}.
                     </span>
                   </button>
                 )}
               </div>
             </Step>
 
-            <Step n={2} title="For how long?">
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                value={period}
-                onValueChange={(v) => v && setPeriod(v as "MONTHLY" | "ANNUAL")}
-                className="w-full"
-              >
-                <ToggleGroupItem value="MONTHLY" className="flex-1">
-                  One month
-                </ToggleGroupItem>
-                <ToggleGroupItem value="ANNUAL" className="flex-1">
-                  One year
-                </ToggleGroupItem>
-              </ToggleGroup>
+            <Step n={2} title="Duration">
+              <div role="radiogroup" aria-label="Duration" className="bg-muted grid grid-cols-2 gap-1 rounded-lg p-1">
+                {(
+                  [
+                    ["MONTHLY", "One month", null],
+                    ["ANNUAL", "One year", annualSaving(chosen)],
+                  ] as const
+                ).map(([value, label, hint]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={period === value}
+                    onClick={() => setPeriod(value)}
+                    className={cn(
+                      "flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors",
+                      period === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                    {hint && (
+                      <span className="rounded-full bg-emerald-500/15 px-1.5 py-px text-[10px] text-emerald-600 dark:text-emerald-300">
+                        {hint}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </Step>
 
             {replacing && chosen && (
-              <Step n={3} title="Starting when?">
+              <Step n={3} title="Start">
                 {upgrade ? (
-                  <p className="bg-muted/50 rounded-lg p-3 text-sm">
-                    <span className="font-medium">Today.</span>{" "}
-                    <span className="text-muted-foreground">
-                      {chosen.name} costs more than « {replacing.planName} », so it replaces it now; the days left on «{" "}
-                      {replacing.planName} » are added to it.
-                    </span>
-                  </p>
+                  <div className="bg-muted/50 flex items-start gap-3 rounded-xl p-4 text-sm">
+                    <IconBolt className="text-primary mt-0.5 size-4 shrink-0" />
+                    <p>
+                      <span className="font-medium">Starts today.</span>{" "}
+                      <span className="text-muted-foreground">
+                        {chosen.name} costs more than « {replacing.planName} »: it replaces it now, and the days left
+                        are added to it.
+                      </span>
+                    </p>
+                  </div>
                 ) : (
-                  <div role="radiogroup" aria-label="Starts" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <ChoiceTile selected={!startNow} onSelect={() => setStartNow(false)}>
-                      <p className="text-sm font-medium">When « {replacing.planName} » ends</p>
-                      <p className="text-muted-foreground mt-0.5 text-xs">On {day(queueEnd ?? replacing.endsAt)}</p>
-                    </ChoiceTile>
-                    <ChoiceTile selected={startNow} onSelect={() => setStartNow(true)}>
-                      <p className="text-sm font-medium">Today</p>
-                      <p className="text-muted-foreground mt-0.5 text-xs">« {replacing.planName} » stops now</p>
-                    </ChoiceTile>
+                  <div role="radiogroup" aria-label="Start" className="grid gap-3 sm:grid-cols-2">
+                    {(
+                      [
+                        [false, IconHourglass, `When « ${replacing.planName} » ends`, `On ${day(queueEnd ?? replacing.endsAt)}`],
+                        [true, IconBolt, "Today", `« ${replacing.planName} » stops now`],
+                      ] as const
+                    ).map(([value, Icon, title, hint]) => (
+                      <button
+                        key={String(value)}
+                        type="button"
+                        role="radio"
+                        aria-checked={startNow === value}
+                        onClick={() => setStartNow(value)}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-left transition-all",
+                          startNow === value
+                            ? "border-primary bg-primary/5 ring-primary ring-1"
+                            : "hover:border-foreground/25 hover:bg-muted/40",
+                        )}
+                      >
+                        <Icon className={cn("mt-0.5 size-4 shrink-0", startNow === value ? "text-primary" : "text-muted-foreground")} />
+                        <span>
+                          <span className="block text-sm font-medium">{title}</span>
+                          <span className="text-muted-foreground block text-xs">{hint}</span>
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </Step>
             )}
           </div>
 
-          <div className="shrink-0 space-y-3 border-t px-6 py-4">
+          <div className="bg-muted/30 shrink-0 space-y-3 border-t px-6 py-4">
             {chosen ? (
-              <div className="space-y-1 text-sm">
-                <p>
-                  {business.name} gets <span className="font-medium">{chosen.name}</span> for{" "}
-                  {period === "ANNUAL" ? "one year" : "one month"}: <span className="font-medium">{day(startsAt)}</span> →{" "}
-                  <span className="font-medium">{day(endsAt)}</span>
-                  {upgrade && ", plus the days left"}.
-                </p>
-                {replacing && now && !upgrade && (
-                  <p className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                    <IconAlertTriangle className="mt-px size-3.5 shrink-0" />« {replacing.planName} » stops today: its
-                    remaining days and {unlocksLeft === null ? "quotas" : `${unlocksLeft} contacts left`} are lost.
+              <div className="flex items-start gap-3">
+                <IconCalendarEvent className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                <div className="min-w-0 space-y-1 text-sm">
+                  <p>
+                    <span className="font-medium">{chosen.name}</span>
+                    <span className="text-muted-foreground"> · {period === "ANNUAL" ? "one year" : "one month"} · </span>
+                    <span className="font-medium tabular-nums">
+                      {day(startsAt)} → {day(endsAt)}
+                    </span>
+                    {upgrade && <span className="text-muted-foreground">, plus the days left</span>}
                   </p>
-                )}
-                {running?.status === "TRIAL" && (
-                  <p className="text-muted-foreground text-xs">The running trial ends today and this plan takes over.</p>
-                )}
+                  {replacing && now && !upgrade && (
+                    <p className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                      <IconAlertTriangle className="mt-px size-3.5 shrink-0" />« {replacing.planName} » stops today:
+                      its remaining days and {unlocksLeft === null ? "quotas" : `${unlocksLeft} contacts left`} are lost.
+                    </p>
+                  )}
+                  {running?.status === "TRIAL" && (
+                    <p className="text-muted-foreground text-xs">The running trial ends today and this plan takes over.</p>
+                  )}
+                </div>
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Choose a plan.</p>
+              <p className="text-muted-foreground text-sm">Choose a plan to see its dates.</p>
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setGranting(false)} disabled={grant.isPending}>
