@@ -27,6 +27,8 @@ export type AdminJobOfferListItem = {
   employerPhone: string;
   employerAvatarUrl: string | null;
   employerId: string;
+  /** Posted by a business account. Optional: an older API leaves it out. */
+  employerIsBusiness?: boolean;
   applicationsCount: number;
   createdAt: string;
   updatedAt: string;

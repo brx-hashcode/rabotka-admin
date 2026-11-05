@@ -64,6 +64,12 @@ export const JOB_EXPORT_HEADERS = [
   "Updated at",
   "Description",
   "Note",
+  // Join keys, last so earlier columns keep their place. The analytics app
+  // joins missions to the applications export on `Offer ID` and to the
+  // profiles export on `Employer reference` (the profile's `Reference`).
+  "Offer ID",
+  "Employer reference",
+  "Business offer",
 ] as const;
 
 /**
@@ -76,6 +82,10 @@ export const JOB_EXPORT_HEADERS = [
 const workers = (j: AdminJobOfferListItem) => (j.workerNames ?? []).join(", ");
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
+
+/** Empty when an older API leaves the flag out: unknown is not "No". */
+const business = (j: AdminJobOfferListItem) =>
+  j.employerIsBusiness == null ? "" : yesNo(j.employerIsBusiness);
 
 export function jobItemsToStringRows(
   items: AdminJobOfferListItem[],
@@ -122,6 +132,9 @@ export function jobItemsToStringRows(
     j.updatedAt ?? "",
     j.description ?? "",
     j.note ?? "",
+    j.id,
+    j.employerId ?? "",
+    business(j),
   ]);
 }
 
@@ -176,5 +189,8 @@ export function jobItemsToTypedRows(
     j.updatedAt ?? "",
     j.description ?? "",
     j.note ?? "",
+    j.id,
+    j.employerId ?? "",
+    business(j),
   ]);
 }
