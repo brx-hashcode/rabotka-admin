@@ -13,6 +13,16 @@ import { Switch } from "#/components/ui/switch";
 import { Separator } from "#/components/ui/separator";
 import { GeoCombobox } from "#/components/geo-combobox";
 
+type PackKey = "cv" | "offers" | "contacts" | "offer_drafts";
+
+/** The packs a business may buy on top of its plan (SystemConfig `business.pack_*`). */
+const PACKS: { key: PackKey; label: string; unit: string }[] = [
+  { key: "cv", label: "CV analyses", unit: "CVs" },
+  { key: "offers", label: "Offers to publish", unit: "offers" },
+  { key: "contacts", label: "Contacts", unit: "contacts" },
+  { key: "offer_drafts", label: "AI-written offers", unit: "offers" },
+];
+
 type FormState = {
   "business.trial_days": string;
   "business.trial_plan_code": string;
@@ -21,7 +31,7 @@ type FormState = {
   "business.trial_offer_writer": string;
   "business.renewal_reminder_days": string;
   "business.offer_expiry_reminder_days": string;
-};
+} & Record<`business.pack_${PackKey}_${"quantity" | "price_fcfa"}`, string>;
 
 const EMPTY: FormState = {
   "business.trial_days": "",
@@ -31,6 +41,14 @@ const EMPTY: FormState = {
   "business.trial_offer_writer": "false",
   "business.renewal_reminder_days": "",
   "business.offer_expiry_reminder_days": "",
+  "business.pack_cv_quantity": "",
+  "business.pack_cv_price_fcfa": "",
+  "business.pack_offers_quantity": "",
+  "business.pack_offers_price_fcfa": "",
+  "business.pack_contacts_quantity": "",
+  "business.pack_contacts_price_fcfa": "",
+  "business.pack_offer_drafts_quantity": "",
+  "business.pack_offer_drafts_price_fcfa": "",
 };
 
 /** The AI features a trial may include; each is off unless switched on. */
@@ -47,7 +65,7 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 /**
- * The business trial and renewal reminders (SystemConfig `business.*`). The
+ * The business trial, renewal reminders and packs (SystemConfig `business.*`). The
  * plans themselves — prices, quotas — are edited on the Business plans page.
  */
 export function BusinessPlansCard() {
@@ -84,7 +102,7 @@ export function BusinessPlansCard() {
           <div>
             <CardTitle className="text-base font-semibold">Business plans</CardTitle>
             <p className="text-muted-foreground text-xs">
-              Trial and renewal reminders. Prices and quotas:{" "}
+              Trial, reminders and packs. Plan prices and quotas:{" "}
               <Link to="/business-plans" className="underline underline-offset-2">
                 Business plans
               </Link>
@@ -172,6 +190,41 @@ export function BusinessPlansCard() {
             />
             <p className="text-muted-foreground text-xs">
               Sent by email and in-app, never WhatsApp. 0 turns it off.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <FieldLabel>Packs</FieldLabel>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {PACKS.map((p) => (
+                <div key={p.key} className="space-y-2 rounded-lg border p-3">
+                  <span className="block text-sm font-medium">{p.label}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <span className="text-muted-foreground text-xs">{`${p.unit[0].toUpperCase()}${p.unit.slice(1)} per pack`}</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={form[`business.pack_${p.key}_quantity`]}
+                        onChange={(e) => set(`business.pack_${p.key}_quantity`, e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-muted-foreground text-xs">Price (FCFA)</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={form[`business.pack_${p.key}_price_fcfa`]}
+                        onChange={(e) => set(`business.pack_${p.key}_price_fcfa`, e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Bought on top of a plan, kept 12 months and used once the plan&apos;s own quota for the period runs out.
+              A price of 0 means the pack is not sold.
             </p>
           </div>
         </div>
