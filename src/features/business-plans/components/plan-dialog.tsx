@@ -68,6 +68,7 @@ const schema = z.object({
   reviewersLimit: quota,
   includesPreselection: z.boolean(),
   priorityVisibility: z.boolean(),
+  linkedinPosting: z.boolean(),
   sortOrder: z.coerce.number().int(),
 });
 
@@ -84,6 +85,11 @@ const FEATURE_OPTIONS = [
     name: "priorityVisibility",
     label: "Priority visibility",
     hint: "Their offers are shown first to workers.",
+  },
+  {
+    name: "linkedinPosting",
+    label: "LinkedIn publishing",
+    hint: "Their team posts offers on LinkedIn from Rabotka, candidates apply on the careers page.",
   },
 ] as const;
 
@@ -153,6 +159,7 @@ const EMPTY: FormInput = {
   reviewersLimit: 0,
   includesPreselection: false,
   priorityVisibility: false,
+  linkedinPosting: false,
   sortOrder: 0,
 };
 
@@ -273,6 +280,7 @@ function toForm(plan: BusinessPlan): FormInput {
     reviewersLimit: plan.reviewersLimit ?? "",
     includesPreselection: plan.includesPreselection,
     priorityVisibility: plan.priorityVisibility,
+    linkedinPosting: plan.linkedinPosting,
     sortOrder: plan.sortOrder,
   };
 }

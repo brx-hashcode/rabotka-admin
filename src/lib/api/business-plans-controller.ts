@@ -34,6 +34,7 @@ export type BusinessPlan = {
   reviewersLimit?: number | null;
   includesPreselection: boolean;
   priorityVisibility: boolean;
+  linkedinPosting: boolean;
   isActive: boolean;
   sortOrder: number;
   /** Businesses with a period running or queued on the plan (the list only). */
@@ -80,6 +81,7 @@ export type BusinessSubscriptionOverview = {
     activeOffers: number;
     includesPreselection: boolean;
     priorityVisibility: boolean;
+    linkedinPosting?: boolean;
     /** The rest of the plan's usage (absent from an older backend). */
     offersPublished?: number;
     cvUsed?: number;
