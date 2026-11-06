@@ -16,6 +16,7 @@ import {
   IconEye,
   IconFileText,
   IconHistory,
+  IconLoader2,
   IconPhoto,
   IconUsersGroup,
   IconWorldWww,
@@ -259,6 +260,8 @@ function BusinessOrganisationSection({
     // profile's own status and verification, shown in the other tabs.
     void queryClient.invalidateQueries({ queryKey });
     void queryClient.invalidateQueries({ queryKey: ["admin", "profiles", profileId] });
+    // Approving may start the trial: the Subscription card follows.
+    void queryClient.invalidateQueries({ queryKey: businessSubscriptionKey(profileId) });
   };
 
   const decideBusiness = useMutation({
@@ -294,25 +297,33 @@ function BusinessOrganisationSection({
     onError: (err: Error) => toast.error(err.message || "The details could not be saved."),
   });
 
+  // The dialogs stay open, their button spinning, until the decision is
+  // saved; an error leaves them open to try again.
+  const refusePending = decideBusiness.isPending || decideDocument.isPending;
+
   function confirmRefusal() {
     if (!refusing || !reason.trim()) return;
+    const done = {
+      onSuccess: () => {
+        setRefusing(null);
+        setReason("");
+      },
+    };
     if (refusing.kind === "business") {
-      decideBusiness.mutate({ decision: "REJECTED", reason: reason.trim() });
+      decideBusiness.mutate({ decision: "REJECTED", reason: reason.trim() }, done);
     } else {
-      decideDocument.mutate({ documentId: refusing.doc.id, decision: "REJECTED", reason: reason.trim() });
+      decideDocument.mutate({ documentId: refusing.doc.id, decision: "REJECTED", reason: reason.trim() }, done);
     }
-    setRefusing(null);
-    setReason("");
   }
 
   function confirmApproval() {
     if (!approving) return;
+    const done = { onSuccess: () => setApproving(null) };
     if (approving.kind === "business") {
-      decideBusiness.mutate({ decision: "VERIFIED", startTrial: !!trial && !trialUsed && withTrial });
+      decideBusiness.mutate({ decision: "VERIFIED", startTrial: !!trial && !trialUsed && withTrial }, done);
     } else {
-      decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" });
+      decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" }, done);
     }
-    setApproving(null);
   }
 
   function preview(doc: AdminBusinessDocumentVersion) {
@@ -528,7 +539,7 @@ function BusinessOrganisationSection({
       <ConfirmDialog
         open={!!approving}
         onOpenChange={(open) => {
-          if (!open) setApproving(null);
+          if (!open && !decideBusiness.isPending && !decideDocument.isPending) setApproving(null);
         }}
         title={approving?.kind === "document" ? `Accept « ${approving.doc.label} » ?` : `Approve ${business.name} ?`}
         description={
@@ -603,7 +614,7 @@ function BusinessOrganisationSection({
       <Dialog
         open={!!refusing}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !refusePending) {
             setRefusing(null);
             setReason("");
           }
@@ -628,10 +639,11 @@ function BusinessOrganisationSection({
             autoFocus
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRefusing(null)}>
+            <Button variant="outline" onClick={() => setRefusing(null)} disabled={refusePending}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmRefusal} disabled={!reason.trim()}>
+            <Button variant="destructive" onClick={confirmRefusal} disabled={!reason.trim() || refusePending}>
+              {refusePending && <IconLoader2 className="mr-2 size-4 animate-spin" />}
               Refuse
             </Button>
           </DialogFooter>
