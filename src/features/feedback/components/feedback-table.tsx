@@ -21,7 +21,7 @@ const SCORES = [5, 4, 3, 2, 1] as const;
 /** Filled stars up to the score, hollow after — readable without colour. */
 function Stars({ score }: { score: number }) {
   return (
-    <span className="tabular-nums" title={`${score} sur 5`}>
+    <span className="tabular-nums" title={`${score} out of 5`}>
       <span aria-hidden>
         {"★".repeat(score)}
         <span className="text-muted-foreground/40">{"★".repeat(5 - score)}</span>
@@ -69,7 +69,7 @@ export function FeedbackTable() {
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="Rechercher un commentaire, un nom, un téléphone…"
+            placeholder="Search a comment, name or phone…"
             className="h-9 max-w-xs"
           />
           <div className="flex gap-1">
@@ -78,7 +78,7 @@ export function FeedbackTable() {
               variant={score === null ? "secondary" : "ghost"}
               onClick={() => setFilter(null)}
             >
-              Toutes
+              All
             </Button>
             {SCORES.map((s) => (
               <Button
@@ -92,16 +92,16 @@ export function FeedbackTable() {
             ))}
           </div>
           <span className="text-muted-foreground ml-auto text-sm tabular-nums">
-            {total} avis
+            {total} review{total === 1 ? "" : "s"}
           </span>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[110px]">Note</TableHead>
-              <TableHead>Commentaire</TableHead>
-              <TableHead className="w-[200px]">Auteur</TableHead>
+              <TableHead className="w-[110px]">Rating</TableHead>
+              <TableHead>Comment</TableHead>
+              <TableHead className="w-[200px]">Author</TableHead>
               <TableHead className="w-[110px]">Type</TableHead>
               <TableHead className="w-[150px]">Date</TableHead>
             </TableRow>
@@ -121,7 +121,7 @@ export function FeedbackTable() {
                   colSpan={5}
                   className="text-muted-foreground py-10 text-center"
                 >
-                  Aucun avis pour ces critères.
+                  No reviews match these filters.
                 </TableCell>
               </TableRow>
             ) : (
@@ -135,7 +135,7 @@ export function FeedbackTable() {
                       <span className="whitespace-pre-wrap">{row.comment}</span>
                     ) : (
                       <span className="text-muted-foreground italic">
-                        Sans commentaire
+                        No comment
                       </span>
                     )}
                   </TableCell>
@@ -157,13 +157,13 @@ export function FeedbackTable() {
                     {row.profile ? (
                       <Badge variant="secondary">
                         {row.profile.profileType === "WORKER"
-                          ? "Travailleur"
-                          : "Employeur"}
+                          ? "Worker"
+                          : "Employer"}
                       </Badge>
                     ) : null}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    {new Date(row.createdAt).toLocaleString("fr", {
+                    {new Date(row.createdAt).toLocaleString("en-GB", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
@@ -177,7 +177,7 @@ export function FeedbackTable() {
         {lastPage > 1 && (
           <div className="flex items-center justify-end gap-2">
             <span className="text-muted-foreground text-sm">
-              Page {page} sur {lastPage}
+              Page {page} of {lastPage}
             </span>
             <Button
               size="sm"
@@ -185,7 +185,7 @@ export function FeedbackTable() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              Précédent
+              Previous
             </Button>
             <Button
               size="sm"
@@ -193,7 +193,7 @@ export function FeedbackTable() {
               disabled={page >= lastPage}
               onClick={() => setPage((p) => p + 1)}
             >
-              Suivant
+              Next
             </Button>
           </div>
         )}

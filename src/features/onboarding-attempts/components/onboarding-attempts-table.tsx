@@ -86,13 +86,13 @@ function queryFor(tab: FollowUp, stage: OnboardingStage | null) {
 const fullName = (a: AdminOnboardingAttempt) =>
   [a.firstName, a.lastName].filter(Boolean).join(" ");
 
-/** « Entreprise » for a business sign-up, else the profile type they chose. */
+/** « Business » for a business sign-up, else the profile type they chose. */
 const kindLabel = (a: Pick<AdminOnboardingAttempt, "entry" | "profileType">) =>
   a.entry === "business"
-    ? "Entreprise"
+    ? "Business"
     : a.profileType === "WORKER"
-      ? "Travailleur"
-      : "Employeur";
+      ? "Worker"
+      : "Employer";
 
 export function OnboardingAttemptsTable({
   stats,
@@ -153,18 +153,18 @@ export function OnboardingAttemptsTable({
       : {};
 
   const tabs: { value: FollowUp; label: string }[] = [
-    { value: "to-call", label: "À rappeler" },
-    { value: "contacted", label: "Contactées" },
-    { value: "completed", label: "Terminées" },
-    { value: "all", label: "Toutes" },
+    { value: "to-call", label: "To call back" },
+    { value: "contacted", label: "Contacted" },
+    { value: "completed", label: "Finished" },
+    { value: "all", label: "All" },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Les personnes</CardTitle>
+        <CardTitle className="text-base">People</CardTitle>
         <p className="text-muted-foreground text-xs">
-          Qui a commencé, où chacun s'est arrêté, et qui a déjà été rappelé.
+          Who started, where each one stopped, and who has already been called back.
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -193,11 +193,11 @@ export function OnboardingAttemptsTable({
 
           {stage && (
             <Badge variant="secondary" className="gap-1 py-1 pl-2.5">
-              Arrêtées à : {stageLabel(stage, entry)}
+              Stopped at: {stageLabel(stage, entry)}
               <button
                 type="button"
                 onClick={onClearStage}
-                aria-label="Retirer le filtre d'étape"
+                aria-label="Remove the step filter"
                 className="hover:bg-muted-foreground/20 rounded-full p-0.5"
               >
                 <IconX className="size-3" />
@@ -212,7 +212,7 @@ export function OnboardingAttemptsTable({
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="Rechercher un nom, un téléphone, un e-mail…"
+            placeholder="Search a name, phone or email…"
             className="ml-auto h-9 w-full max-w-xs"
           />
         </div>
@@ -220,10 +220,10 @@ export function OnboardingAttemptsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Personne</TableHead>
-              <TableHead className="w-[260px]">Étape atteinte</TableHead>
-              <TableHead className="hidden w-[150px] lg:table-cell">Activité</TableHead>
-              <TableHead className="hidden w-[220px] md:table-cell">Suivi</TableHead>
+              <TableHead>Person</TableHead>
+              <TableHead className="w-[260px]">Step reached</TableHead>
+              <TableHead className="hidden w-[150px] lg:table-cell">Activity</TableHead>
+              <TableHead className="hidden w-[220px] md:table-cell">Follow-up</TableHead>
               <TableHead className="w-[150px] text-right">
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -250,8 +250,8 @@ export function OnboardingAttemptsTable({
                       )}
                     </span>
                     {tab === "to-call"
-                      ? "Personne à rappeler sur cette période."
-                      : "Aucune inscription pour ces critères."}
+                      ? "Nobody to call back in this period."
+                      : "No sign-ups match these filters."}
                   </div>
                 </TableCell>
               </TableRow>
@@ -279,7 +279,7 @@ export function OnboardingAttemptsTable({
                   size="icon"
                   variant="outline"
                   className="size-8"
-                  aria-label="Page précédente"
+                  aria-label="Previous page"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
@@ -292,7 +292,7 @@ export function OnboardingAttemptsTable({
                   size="icon"
                   variant="outline"
                   className="size-8"
-                  aria-label="Page suivante"
+                  aria-label="Next page"
                   disabled={page >= lastPage}
                   onClick={() => setPage((p) => p + 1)}
                 >
@@ -350,7 +350,7 @@ function AttemptRow({
             <span className="flex items-center gap-2 truncate font-medium">
               {name || (
                 <span className="text-muted-foreground font-normal italic">
-                  Nom pas encore saisi
+                  No name yet
                 </span>
               )}
               {(row.entry === "business" || row.profileType) && (
@@ -367,9 +367,9 @@ function AttemptRow({
                   stop(e);
                   void navigator.clipboard
                     ?.writeText(contact)
-                    .then(() => toast.success(row.phone ? "Numéro copié" : "Adresse copiée"));
+                    .then(() => toast.success(row.phone ? "Number copied" : "Address copied"));
                 }}
-                aria-label={row.phone ? "Copier le numéro" : "Copier l'adresse"}
+                aria-label={row.phone ? "Copy the number" : "Copy the address"}
                 className="hover:text-foreground rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <IconCopy className="size-3" />
@@ -385,14 +385,14 @@ function AttemptRow({
 
       <TableCell className="hidden lg:table-cell">
         <div className="flex flex-col text-xs">
-          <span title={new Date(row.lastActivityAt).toLocaleString("fr")}>
+          <span title={new Date(row.lastActivityAt).toLocaleString("en-GB")}>
             Active {timeAgo(row.lastActivityAt)}
           </span>
           <span
             className="text-muted-foreground"
-            title={new Date(row.startedAt).toLocaleString("fr")}
+            title={new Date(row.startedAt).toLocaleString("en-GB")}
           >
-            Commencée {timeAgo(row.startedAt)}
+            Started {timeAgo(row.startedAt)}
           </span>
         </div>
       </TableCell>
@@ -411,7 +411,7 @@ function AttemptRow({
                 className="size-8"
                 onClick={stop}
                 render={
-                  <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Appeler" />
+                  <a href={`tel:${row.phone.replace(/\s/g, "")}`} aria-label="Call" />
                 }
               >
                 <IconPhone className="size-4" />
@@ -426,7 +426,7 @@ function AttemptRow({
                     href={whatsAppFollowUpLink(row.phone, row.firstName)}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={`Écrire à ${name || contact} sur WhatsApp`}
+                    aria-label={`Message ${name || contact} on WhatsApp`}
                   />
                 }
               >
@@ -442,7 +442,7 @@ function AttemptRow({
               render={
                 <a
                   href={emailFollowUpLink(row.email, row.firstName)}
-                  aria-label={`Écrire à ${name || row.email} par e-mail`}
+                  aria-label={`Email ${name || row.email}`}
                 />
               }
             >
@@ -458,7 +458,7 @@ function AttemptRow({
                 onOpen();
               }}
             >
-              {row.contactedAt ? "Voir" : "Noter"}
+              {row.contactedAt ? "View" : "Log call"}
             </Button>
           )}
         </div>
@@ -491,22 +491,22 @@ function StageCell({
               : "bg-muted text-foreground",
           )}
         >
-          {done ? "Compte créé" : stageLabel(stage, entry)}
+          {done ? "Account created" : stageLabel(stage, entry)}
         </span>
         {isWarmLead(stage) && (
           <span
             className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
-            title="Arrivée loin : un appel a de bonnes chances de finir l'inscription."
+            title="Got far: a call has a good chance of finishing the sign-up."
           >
-            Presque fini
+            Almost done
           </span>
         )}
         {stage === "CODE_SENT" && codeSends > 1 && (
           <span
             className="bg-destructive/10 text-destructive rounded-md px-2 py-0.5 text-xs font-medium"
-            title={`${codeSends} codes demandés sans succès : le code n'arrive peut-être pas.`}
+            title={`${codeSends} codes requested without success: the code may not be arriving.`}
           >
-            Code non reçu ?
+            Code not received?
           </span>
         )}
       </div>
@@ -528,13 +528,13 @@ function StageCell({
 /** Where the follow-up stands, with the note's first line. */
 function FollowUpCell({ row }: Readonly<{ row: AdminOnboardingAttempt }>) {
   if (row.stage === "COMPLETED") {
-    return <span className="text-muted-foreground text-xs">Terminée</span>;
+    return <span className="text-muted-foreground text-xs">Finished</span>;
   }
   if (!row.contactedAt) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
         <span className="size-1.5 rounded-full bg-amber-500" />
-        À rappeler
+        To call back
       </span>
     );
   }
@@ -542,7 +542,7 @@ function FollowUpCell({ row }: Readonly<{ row: AdminOnboardingAttempt }>) {
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
         <IconPhoneCheck className="size-3.5" />
-        Contactée {timeAgo(row.contactedAt)}
+        Contacted {timeAgo(row.contactedAt)}
       </span>
       {(row.contactNote || row.contactedBy) && (
         <span
@@ -577,10 +577,10 @@ function AttemptSheet({
     mutationFn: () => markOnboardingContacted(attempt!.id, note),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "onboarding-attempts"] });
-      toast.success("Appel noté");
+      toast.success("Call logged");
       onClose();
     },
-    onError: () => toast.error("Impossible d'enregistrer le suivi"),
+    onError: () => toast.error("Could not save the follow-up"),
   });
 
   const stages = attempt ? stagesFor(attempt.entry) : [];
@@ -630,14 +630,14 @@ function AttemptSheet({
                         </span>
                         {ok && at && (
                           <span className="text-muted-foreground text-xs">
-                            {new Date(at).toLocaleString("fr", {
+                            {new Date(at).toLocaleString("en-GB", {
                               dateStyle: "medium",
                               timeStyle: "short",
                             })}
                           </span>
                         )}
                         {i === reached && s !== "COMPLETED" && (
-                          <span className="text-destructive text-xs">S'est arrêtée ici</span>
+                          <span className="text-destructive text-xs">Stopped here</span>
                         )}
                       </div>
                     </li>
@@ -647,18 +647,18 @@ function AttemptSheet({
 
               {attempt.stage !== "COMPLETED" && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium">Suivi de l'appel</span>
+                  <span className="text-sm font-medium">Call follow-up</span>
                   {attempt.contactedAt && (
                     <span className="text-muted-foreground text-xs">
-                      Contactée {timeAgo(attempt.contactedAt)}
-                      {attempt.contactedBy && ` par ${attempt.contactedBy}`}
+                      Contacted {timeAgo(attempt.contactedAt)}
+                      {attempt.contactedBy && ` by ${attempt.contactedBy}`}
                     </span>
                   )}
                   <Textarea
                     name="note"
                     value={note}
                     onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-                    placeholder="Pourquoi la personne n'a pas terminé, et ce qui l'aiderait. Ex : le code WhatsApp n'arrivait pas."
+                    placeholder="Why they did not finish, and what would help. E.g. the WhatsApp code was not arriving."
                     rows={5}
                   />
                 </div>
@@ -688,7 +688,7 @@ function AttemptSheet({
                   render={<a href={emailFollowUpLink(attempt.email, attempt.firstName)} />}
                 >
                   <IconMail className="size-4" />
-                  E-mail
+                  Email
                 </Button>
               ) : null}
               {attempt.stage !== "COMPLETED" && (
@@ -697,7 +697,7 @@ function AttemptSheet({
                   onClick={() => save.mutate()}
                   disabled={save.isPending}
                 >
-                  {attempt.contactedAt ? "Mettre à jour" : "Marquer contactée"}
+                  {attempt.contactedAt ? "Update" : "Mark contacted"}
                 </Button>
               )}
             </SheetFooter>

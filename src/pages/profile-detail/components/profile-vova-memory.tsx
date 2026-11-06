@@ -61,9 +61,9 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
       await queryClient.invalidateQueries({
         queryKey: ["profile-vova-memory", profileId],
       });
-      toast.success("Mémoire effacée");
+      toast.success("Memory erased");
     },
-    onError: () => toast.error("Impossible d'effacer la mémoire"),
+    onError: () => toast.error("Could not erase the memory"),
   });
 
   const facts = data?.facts ?? [];
@@ -75,10 +75,10 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
         <div className="flex items-center gap-2">
           <IconBrain className="text-muted-foreground size-4" />
           <div>
-            <h3 className="text-sm font-medium">Mémoire de VoVa</h3>
+            <h3 className="text-sm font-medium">VoVa memory</h3>
             <p className="text-muted-foreground text-xs">
-              Ce que l'assistant retient d'une conversation à l'autre, et
-              rappelle dans chacune de ses réponses.
+              What the assistant keeps from one conversation to the next, and
+              recalls in each of its answers.
             </p>
           </div>
         </div>
@@ -91,17 +91,17 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
             onClick={() => setConfirming(true)}
           >
             <IconTrash className="size-4" />
-            Effacer
+            Erase
           </Button>
         )}
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground text-sm">Chargement…</p>
+        <p className="text-muted-foreground text-sm">Loading…</p>
       ) : facts.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          Rien de retenu pour l'instant. C'est le cas le plus courant : la liste
-          se construit après quelques échanges avec l'assistant.
+          Nothing kept yet. That is the most common case: the list builds up
+          after a few exchanges with the assistant.
         </p>
       ) : (
         <>
@@ -115,7 +115,7 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
           </ul>
           {updatedAt && (
             <p className="text-muted-foreground text-xs">
-              Mis à jour le {updatedAt}
+              Updated {updatedAt}
             </p>
           )}
         </>
@@ -125,18 +125,16 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Effacer la mémoire de {profileName} ?
+              Erase {profileName}&apos;s memory?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              L'assistant oubliera ces {facts.length} fait
-              {facts.length > 1 ? "s" : ""}. Ce n'est pas un blocage
-              définitif&nbsp;: la liste se reconstruira à partir des
-              conversations suivantes. L'action est enregistrée dans le journal
-              du profil.
+              The assistant will forget {facts.length === 1 ? "this fact" : `these ${facts.length} facts`}. This
+              is not a permanent block: the list builds up again from later
+              conversations. The action is recorded in the profile&apos;s log.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 // The dialog closes on its own action click, which would unmount
@@ -147,7 +145,7 @@ export function ProfileVovaMemory({ profileId, profileName }: Props) {
               }}
               disabled={erase.isPending}
             >
-              {erase.isPending ? "Effacement…" : "Effacer"}
+              {erase.isPending ? "Erasing…" : "Erase"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

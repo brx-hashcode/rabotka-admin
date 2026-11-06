@@ -39,8 +39,8 @@ import { getApplicationStatusLabel } from "#/lib/status-labels";
 
 const schema = z.object({
   applicationId: z.string().optional(),
-  amount: z.coerce.number().int().min(1, "Montant requis (min 1 FCFA)"),
-  reason: z.string().min(3, "Raison requise"),
+  amount: z.coerce.number().int().min(1, "Amount required (1 FCFA or more)"),
+  reason: z.string().min(3, "Reason required"),
 });
 
 type FormInput = z.input<typeof schema>;
@@ -84,7 +84,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
         reason: values.reason,
       }),
     onSuccess: () => {
-      toast.success("Pénalité créée avec succès");
+      toast.success("Penalty created");
       queryClient.invalidateQueries({ queryKey: ["admin", "penalties"] });
       handleClose();
     },
@@ -110,7 +110,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Créer une pénalité</DialogTitle>
+          <DialogTitle>Create a penalty</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -121,7 +121,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
             <ProfileCombobox
               value={selectedProfile}
               onChange={handleProfileChange}
-              label="Profil"
+              label="Profile"
             />
 
             <FormField
@@ -129,7 +129,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
               name="applicationId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mission <span className="text-muted-foreground text-xs">(optionnel)</span></FormLabel>
+                  <FormLabel>Mission <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -141,10 +141,10 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
                           <SelectValue
                             placeholder={
                               !selectedProfile
-                                ? "Sélectionnez un profil d'abord"
+                                ? "Pick a profile first"
                                 : applicationsQuery.isLoading
-                                  ? "Chargement…"
-                                  : "Aucune mission liée (optionnel)"
+                                  ? "Loading…"
+                                  : "No linked job (optional)"
                             }
                           />
                         </span>
@@ -171,7 +171,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Montant (FCFA)</FormLabel>
+                  <FormLabel>Amount (FCFA)</FormLabel>
                   <FormControl>
                     <Input type="number" min={1} {...field} value={field.value as number} />
                   </FormControl>
@@ -186,7 +186,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between gap-2">
-                    <FormLabel>Raison</FormLabel>
+                    <FormLabel>Reason</FormLabel>
                     {/* Appends rather than replaces, so an admin can stack two
                         snippets or add a detail after picking one. */}
                     <ReasonTemplatePicker
@@ -198,7 +198,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
                   </div>
                   <FormControl>
                     <Textarea
-                      placeholder="Ex: Absence non justifiée au poste."
+                      placeholder="E.g. « Absence non justifiée au poste. »"
                       rows={3}
                       {...field}
                     />
@@ -210,7 +210,7 @@ export function CreatePenaltyDialog({ open, onOpenChange }: Readonly<Props>) {
 
             <div className="flex justify-end pt-1">
               <Button type="submit" disabled={!selectedProfile || mutation.isPending}>
-                {mutation.isPending ? "Création…" : "Créer la pénalité"}
+                {mutation.isPending ? "Creating…" : "Create penalty"}
               </Button>
             </div>
           </form>

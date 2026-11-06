@@ -21,27 +21,27 @@ import {
  * Two parts of one whole: of the sign-ups that began that day, those that
  * finished and those that did not (yet). Validated on both surfaces: green
  * #16a34a and grey #71717a, ΔE 12.0 under deuteranopia, both ≥ 3:1. The grey
- * is grey on purpose — « pas terminée » is not an alarm, many still finish —
+ * is grey on purpose — « not finished » is not an alarm, many still finish —
  * and the legend, the gap between segments and the tooltip name each part.
  */
 const chartConfig = {
-  completed: { label: "Terminées", color: "#16a34a" },
-  open: { label: "Pas terminées", color: "#71717a" },
+  completed: { label: "Finished", color: "#16a34a" },
+  open: { label: "Not finished", color: "#71717a" },
 } satisfies ChartConfig;
 
 const tick = (date: string) =>
-  new Date(`${date}T12:00:00Z`).toLocaleDateString("fr", {
+  new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
   });
 
 const fullDay = (date: string, bucket: TimelineBucket) => {
-  const d = new Date(`${date}T12:00:00Z`).toLocaleDateString("fr", {
+  const d = new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", {
     weekday: bucket === "day" ? "long" : undefined,
     day: "numeric",
     month: "long",
   });
-  return bucket === "week" ? `Semaine du ${d}` : d.charAt(0).toUpperCase() + d.slice(1);
+  return bucket === "week" ? `Week of ${d}` : d;
 };
 
 /**
@@ -67,9 +67,9 @@ export function DropoffTimeline({
   if (isError) {
     return (
       <Card className="items-center gap-2 p-8 text-center">
-        <p className="text-sm font-medium">L'évolution n'a pas pu être chargée.</p>
+        <p className="text-sm font-medium">The trend could not be loaded.</p>
         <Button size="sm" variant="outline" onClick={() => void refetch()}>
-          Réessayer
+          Retry
         </Button>
       </Card>
     );
@@ -99,16 +99,16 @@ export function DropoffTimeline({
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
         <div className="space-y-1">
-          <CardTitle className="text-base">Évolution des inscriptions</CardTitle>
+          <CardTitle className="text-base">Sign-ups over time</CardTitle>
           <p className="text-muted-foreground text-xs">
-            {bucket === "day" ? "Par jour" : "Par semaine"} de début : combien ont commencé, et combien ont terminé.
+            By {bucket === "day" ? "day" : "week"} started: how many began, and how many finished.
           </p>
         </div>
         {busiest && (
           <div className="text-right">
             <p className="text-2xl font-bold tabular-nums">{busiest.started}</p>
             <p className="text-muted-foreground text-xs">
-              pic, {bucket === "day" ? "le" : "la semaine du"} {tick(busiest.date)}
+              peak, {bucket === "day" ? "on" : "week of"} {tick(busiest.date)}
             </p>
           </div>
         )}
@@ -116,7 +116,7 @@ export function DropoffTimeline({
       <CardContent>
         {total === 0 ? (
           <p className="text-muted-foreground py-10 text-center text-sm">
-            Aucune inscription commencée sur cette période.
+            No sign-ups started in this period.
           </p>
         ) : (
           <ChartContainer config={chartConfig} className="h-56 w-full">
@@ -149,7 +149,7 @@ export function DropoffTimeline({
                     labelFormatter={(_, payload) => {
                       const p = payload?.[0]?.payload as (typeof points)[number] | undefined;
                       if (!p) return null;
-                      return `${fullDay(p.date, bucket)} · ${p.started} commencée${p.started > 1 ? "s" : ""}`;
+                      return `${fullDay(p.date, bucket)} · ${p.started} started`;
                     }}
                   />
                 }

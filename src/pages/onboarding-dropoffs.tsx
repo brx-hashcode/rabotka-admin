@@ -62,8 +62,8 @@ export default function OnboardingDropoffsPage() {
     <div className="flex flex-col gap-6">
       <PageListHeader
         className="mb-0"
-        title="Inscriptions inachevées"
-        description="Qui a commencé son inscription sans la terminer, à quelle étape, et qui rappeler."
+        title="Sign-up drop-offs"
+        description="Who started signing up without finishing, at which step, and who to call back."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Tabs
@@ -73,7 +73,7 @@ export default function OnboardingDropoffsPage() {
                 setStage(null);
               }}
             >
-              <TabsList className="h-9" aria-label="Type d'inscription">
+              <TabsList className="h-9" aria-label="Sign-up type">
                 {(Object.keys(ENTRY_LABELS) as EntryFilter[]).map((e) => (
                   <TabsTrigger key={e} value={e}>
                     {ENTRY_LABELS[e]}
@@ -88,7 +88,7 @@ export default function OnboardingDropoffsPage() {
                 setStage(null);
               }}
             >
-              <TabsList className="h-9" aria-label="Période">
+              <TabsList className="h-9" aria-label="Period">
                 {(Object.keys(PERIOD_LABELS) as DropoffPeriod[]).map((p) => (
                   <TabsTrigger key={p} value={p}>
                     {PERIOD_LABELS[p]}

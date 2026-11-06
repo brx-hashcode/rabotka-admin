@@ -91,8 +91,8 @@ export function JobFlyerButton({ job }: Readonly<{ job: JobFlyerData }>) {
     if (!logoDataUrl) {
       // Capturing now would produce a flyer with an empty circle where the
       // logo belongs, and the file would look finished. Better to say so.
-      toast.error("Visuel pas encore prêt", {
-        description: "Réessayez dans un instant.",
+      toast.error("Flyer not ready yet", {
+        description: "Try again in a moment.",
       });
       return;
     }
