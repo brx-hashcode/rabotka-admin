@@ -27,14 +27,14 @@ import {
   type EntryFilter,
 } from "../stage-labels";
 
-/** How each kind of sign-up begins, under « Inscriptions commencées ». */
+/** How each kind of sign-up begins, under « Sign-ups started ». */
 const STARTED_HINTS: Record<EntryFilter, string> = {
-  all: "Code WhatsApp ou e-mail demandé",
-  whatsapp: "Code WhatsApp demandé",
-  business: "Code e-mail demandé",
+  all: "WhatsApp or email code requested",
+  whatsapp: "WhatsApp code requested",
+  business: "Email code requested",
 };
 
-const pct = (n: number) => `${Math.round(n * 100)} %`;
+const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 /**
  * The four numbers to read first, each against the period before — so a bad
@@ -88,7 +88,7 @@ export function DropoffKpis({
     prevRaw: number | undefined;
   }[] = [
     {
-      label: "Inscriptions commencées",
+      label: "Sign-ups started",
       icon: IconUserPlus,
       value: String(stats.started),
       hint: STARTED_HINTS[entry],
@@ -98,10 +98,10 @@ export function DropoffKpis({
       prevRaw: previous?.started,
     },
     {
-      label: "Comptes créés",
+      label: "Accounts created",
       icon: IconUserCheck,
       value: String(stats.completed),
-      hint: `${pct(stats.completionRate)} de conversion`,
+      hint: `${pct(stats.completionRate)} conversion`,
       bar: { value: stats.completionRate, className: "bg-emerald-500" },
       delta: deltaLabel(stats.completed, previous?.completed),
       upIsGood: true,
@@ -109,29 +109,29 @@ export function DropoffKpis({
       prevRaw: previous?.completed,
     },
     {
-      label: "Abandons",
+      label: "Drop-offs",
       icon: IconUserX,
       value: String(stats.dropped),
       bar: stats.started
         ? { value: stats.dropped / stats.started, className: "bg-destructive" }
         : undefined,
       hint: stats.started
-        ? `${pct(stats.dropped / stats.started)} des inscriptions`
-        : "Aucune inscription",
+        ? `${pct(stats.dropped / stats.started)} of sign-ups`
+        : "No sign-ups",
       delta: deltaLabel(stats.dropped, previous?.dropped),
       upIsGood: false,
       raw: stats.dropped,
       prevRaw: previous?.dropped,
     },
     {
-      label: "À rappeler",
+      label: "To call back",
       icon: IconPhoneCall,
       value: String(toCall),
       // How much of the follow-up is done: contacted over everyone who left.
       bar: stats.dropped
         ? { value: stats.contacted / stats.dropped, className: "bg-amber-500" }
         : undefined,
-      hint: `${stats.contacted} déjà contactée${stats.contacted > 1 ? "s" : ""}`,
+      hint: `${stats.contacted} already contacted`,
       delta: deltaLabel(toCall, prevToCall),
       upIsGood: false,
       raw: toCall,
@@ -160,7 +160,7 @@ export function DropoffKpis({
                 <span className="text-2xl font-bold tabular-nums">{t.value}</span>
                 {t.delta && (
                   <span
-                    title="Par rapport à la période précédente"
+                    title="Compared with the previous period"
                     className={cn(
                       "rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums",
                       better === null && "bg-muted text-muted-foreground",
@@ -233,20 +233,20 @@ export function DropoffFunnel({
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
         <div className="space-y-1">
-          <CardTitle className="text-base">Parcours d'inscription</CardTitle>
+          <CardTitle className="text-base">Sign-up funnel</CardTitle>
           <p className="text-muted-foreground text-xs">
-            Combien arrivent à chaque étape. Touchez une perte pour voir qui rappeler.
+            How many reach each step. Click a loss to see who to call back.
           </p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold tabular-nums">{pct(stats.completionRate)}</p>
-          <p className="text-muted-foreground text-xs">conversion globale</p>
+          <p className="text-muted-foreground text-xs">overall conversion</p>
         </div>
       </CardHeader>
       <CardContent>
         {stats.started === 0 ? (
           <p className="text-muted-foreground py-10 text-center text-sm">
-            Aucune inscription commencée sur cette période.
+            No sign-ups started in this period.
           </p>
         ) : (
           <ol className="flex flex-col">
@@ -273,18 +273,18 @@ export function DropoffFunnel({
                     >
                       <IconArrowDown className="size-3.5 shrink-0" />
                       {step.lostBefore === 0 ? (
-                        "Aucune perte"
+                        "No loss"
                       ) : (
                         <>
                           <span className="tabular-nums">
-                            −{step.lostBefore} · {pct(step.lostBeforeRate)} perdus
+                            −{step.lostBefore} · {pct(step.lostBeforeRate)} lost
                           </span>
                           <span className="hidden sm:inline">
                             — {stoppedHint(stoppedStage, entry).toLowerCase()}
                           </span>
                           {isLeak && (
                             <span className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-[11px] font-medium">
-                              Plus grosse perte
+                              Biggest loss
                             </span>
                           )}
                           <span
@@ -295,7 +295,7 @@ export function DropoffFunnel({
                                 : "bg-muted text-foreground opacity-0 group-hover:opacity-100",
                             )}
                           >
-                            {isSelected ? "Filtré" : "Voir qui"}
+                            {isSelected ? "Filtered" : "See who"}
                           </span>
                         </>
                       )}
@@ -329,7 +329,7 @@ export function DropoffFunnel({
                         />
                         {i > 0 && step.lostBefore > 0 && (
                           <div
-                            title={`${step.lostBefore} perdu${step.lostBefore > 1 ? "s" : ""} à cette étape`}
+                            title={`${step.lostBefore} lost at this step`}
                             className={cn(
                               "h-full shrink-0 rounded-full",
                               isLeak ? "text-destructive/45" : "text-muted-foreground/35",
@@ -378,15 +378,15 @@ export function LeakCallout({
         <IconAlertTriangle className="size-5" />
       </span>
       <p className="min-w-0 flex-1 text-sm">
-        <span className="block font-semibold">Plus gros abandon : {stageLabel(stage, entry)}</span>
+        <span className="block font-semibold">Biggest drop-off: {stageLabel(stage, entry)}</span>
         <span className="text-muted-foreground">
-          {leak.lostBefore} personne{leak.lostBefore > 1 ? "s" : ""} (
-          {pct(leak.lostBeforeRate)}) {leak.lostBefore > 1 ? "s'arrêtent" : "s'arrête"} ici —{" "}
+          {leak.lostBefore} {leak.lostBefore > 1 ? "people stop" : "person stops"} here (
+          {pct(leak.lostBeforeRate)}) —{" "}
           {stoppedHint(stage, entry).toLowerCase()}.
         </span>
       </p>
       <Button size="sm" variant="outline" onClick={() => onShow(stage)}>
-        Voir ces personnes
+        See these people
         <IconArrowRight />
       </Button>
     </Card>

@@ -5,10 +5,10 @@ import OnboardingDropoffsPage from "#/pages/onboarding-dropoffs";
 export const Route = createFileRoute("/_authenticated/onboarding-dropoffs/")({
   component: () => (
     <Layout
-      title="Inscriptions inachevées"
+      title="Sign-up drop-offs"
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Inscriptions inachevées" },
+        { label: "Sign-up drop-offs" },
       ]}
     >
       <OnboardingDropoffsPage />

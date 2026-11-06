@@ -7,32 +7,32 @@ import {
 
 /**
  * Where the person stopped, said as the screen they were on — an admin calling
- * them needs « bloqué au code », not an enum.
+ * them needs « stuck at the code », not an enum.
  */
 export const STAGE_LABELS: Record<OnboardingStage, string> = {
-  CODE_SENT: "Code WhatsApp",
-  PHONE_VERIFIED: "Type de profil",
-  DOCUMENTS: "Pièces d'identité",
-  CONFIRMATION: "Dernière étape",
-  COMPLETED: "Compte créé",
+  CODE_SENT: "WhatsApp code",
+  PHONE_VERIFIED: "Profile type",
+  DOCUMENTS: "ID documents",
+  CONFIRMATION: "Last step",
+  COMPLETED: "Account created",
 };
 
 /** What the step's card says about the people who stopped there. */
 export const STOPPED_HINTS: Record<OnboardingStage, string> = {
-  CODE_SENT: "Code demandé, jamais saisi",
-  PHONE_VERIFIED: "Numéro vérifié, puis plus rien",
-  DOCUMENTS: "Arrivés aux pièces, pas plus loin",
-  CONFIRMATION: "Au dernier écran, sans valider",
-  COMPLETED: "Inscription terminée",
+  CODE_SENT: "Code requested, never entered",
+  PHONE_VERIFIED: "Number verified, then nothing",
+  DOCUMENTS: "Reached the documents, went no further",
+  CONFIRMATION: "On the last screen, never confirmed",
+  COMPLETED: "Sign-up finished",
 };
 
 /** The page's filter: one kind of sign-up, or both. */
 export type EntryFilter = OnboardingEntry | "all";
 
 export const ENTRY_LABELS: Record<EntryFilter, string> = {
-  all: "Toutes",
-  whatsapp: "Application",
-  business: "Entreprises",
+  all: "All",
+  whatsapp: "App",
+  business: "Businesses",
 };
 
 /**
@@ -50,21 +50,21 @@ type Wording = Partial<Record<OnboardingStage, string>>;
 
 /** A business's first two steps, which are an email, not a phone. */
 const BUSINESS: { stage: Wording; reached: Wording; stopped: Wording } = {
-  stage: { CODE_SENT: "Code e-mail", PHONE_VERIFIED: "Fiche entreprise" },
-  reached: { CODE_SENT: "Code e-mail demandé", PHONE_VERIFIED: "E-mail vérifié" },
+  stage: { CODE_SENT: "Email code", PHONE_VERIFIED: "Business details" },
+  reached: { CODE_SENT: "Email code requested", PHONE_VERIFIED: "Email verified" },
   stopped: {
-    CODE_SENT: "Code reçu par e-mail, jamais saisi",
-    PHONE_VERIFIED: "E-mail vérifié, entreprise jamais créée",
+    CODE_SENT: "Code received by email, never entered",
+    PHONE_VERIFIED: "Email verified, business never created",
   },
 };
 
 /** Both kinds at once: words true of a phone and of an email. */
 const MIXED: { stage: Wording; reached: Wording; stopped: Wording } = {
-  stage: { CODE_SENT: "Code de vérification", PHONE_VERIFIED: "Après vérification" },
-  reached: { CODE_SENT: "Code demandé", PHONE_VERIFIED: "Numéro ou e-mail vérifié" },
+  stage: { CODE_SENT: "Verification code", PHONE_VERIFIED: "After verification" },
+  reached: { CODE_SENT: "Code requested", PHONE_VERIFIED: "Number or email verified" },
   stopped: {
-    CODE_SENT: "Code demandé, jamais saisi",
-    PHONE_VERIFIED: "Vérifié, puis plus rien",
+    CODE_SENT: "Code requested, never entered",
+    PHONE_VERIFIED: "Verified, then nothing",
   },
 };
 
@@ -111,16 +111,16 @@ export function stageIndex(stage: OnboardingStage): number {
   return ONBOARDING_STAGES.indexOf(stage);
 }
 
-/** « à l'instant », « il y a 5 min », « il y a 3 h », « il y a 2 j », then a date. */
+/** « just now », « 5 min ago », « 3 h ago », « 2 d ago », then a date. */
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const minutes = Math.floor((now - new Date(iso).getTime()) / 60_000);
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return `${hours} h ago`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `il y a ${days} j`;
-  return new Date(iso).toLocaleDateString("fr", { day: "numeric", month: "short" });
+  if (days < 7) return `${days} d ago`;
+  return `on ${new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
 }
 
 /** A wa.me link: digits only, no plus. */
@@ -130,20 +130,20 @@ export function whatsAppLink(phone: string): string {
 
 /** The funnel's steps as « reached », each a step further than the last. */
 export const REACHED_LABELS: Record<OnboardingStage, string> = {
-  CODE_SENT: "Code WhatsApp demandé",
-  PHONE_VERIFIED: "Numéro vérifié",
-  DOCUMENTS: "Pièces d'identité",
-  CONFIRMATION: "Dernière étape",
-  COMPLETED: "Compte créé",
+  CODE_SENT: "WhatsApp code requested",
+  PHONE_VERIFIED: "Number verified",
+  DOCUMENTS: "ID documents",
+  CONFIRMATION: "Last step",
+  COMPLETED: "Account created",
 };
 
 export type DropoffPeriod = "7d" | "30d" | "90d" | "all";
 
 export const PERIOD_LABELS: Record<DropoffPeriod, string> = {
-  "7d": "7 j",
-  "30d": "30 j",
-  "90d": "90 j",
-  all: "Tout",
+  "7d": "7 d",
+  "30d": "30 d",
+  "90d": "90 d",
+  all: "All",
 };
 
 const PERIOD_DAYS: Record<Exclude<DropoffPeriod, "all">, number> = {
@@ -154,8 +154,8 @@ const PERIOD_DAYS: Record<Exclude<DropoffPeriod, "all">, number> = {
 
 /**
  * The window a period covers, and the one just before it — the comparison
- * that tells « 12 abandons » from « 12 abandons, deux fois plus que le mois
- * dernier ». « Tout » has no previous window.
+ * that tells « 12 drop-offs » from « 12 drop-offs, twice last month's ».
+ * « All » has no previous window.
  */
 export function periodWindows(
   period: DropoffPeriod,
@@ -275,7 +275,8 @@ export function isWarmLead(stage: OnboardingStage): boolean {
 
 /**
  * A wa.me link with the opening line already written, so reaching out is one
- * tap and the person knows at once who is writing and why.
+ * tap and the person knows at once who is writing and why. In French: it
+ * goes to the person who signed up, not to the admin.
  */
 export function whatsAppFollowUpLink(
   phone: string,
@@ -294,10 +295,10 @@ export function emailFollowUpLink(email: string, firstName: string | null): stri
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-/** « 1–20 sur 47 ». */
+/** « 1–20 of 47 ». */
 export function pageRange(page: number, pageSize: number, total: number): string {
-  if (total === 0) return "0 sur 0";
+  if (total === 0) return "0 of 0";
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
-  return `${from}–${to} sur ${total}`;
+  return `${from}–${to} of ${total}`;
 }

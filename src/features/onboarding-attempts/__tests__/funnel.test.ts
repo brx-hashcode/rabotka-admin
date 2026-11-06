@@ -77,7 +77,7 @@ describe("periodWindows", () => {
     });
   });
 
-  it("has nothing to compare « Tout » with", () => {
+  it("has nothing to compare « All » with", () => {
     expect(periodWindows("all", now)).toEqual({ current: {}, previous: null });
   });
 });
@@ -118,10 +118,10 @@ describe("business sign-ups", () => {
   });
 
   it("speaks of an email, not WhatsApp or a phone", () => {
-    expect(stageLabel("CODE_SENT", "business")).toBe("Code e-mail");
-    expect(reachedLabel("PHONE_VERIFIED", "business")).toBe("E-mail vérifié");
-    expect(stageLabel("CODE_SENT", "whatsapp")).toBe("Code WhatsApp");
-    expect(reachedLabel("PHONE_VERIFIED", "all")).toBe("Numéro ou e-mail vérifié");
-    expect(stageLabel("DOCUMENTS", "all")).toBe("Pièces d'identité");
+    expect(stageLabel("CODE_SENT", "business")).toBe("Email code");
+    expect(reachedLabel("PHONE_VERIFIED", "business")).toBe("Email verified");
+    expect(stageLabel("CODE_SENT", "whatsapp")).toBe("WhatsApp code");
+    expect(reachedLabel("PHONE_VERIFIED", "all")).toBe("Number or email verified");
+    expect(stageLabel("DOCUMENTS", "all")).toBe("ID documents");
   });
 });

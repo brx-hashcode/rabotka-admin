@@ -5,8 +5,8 @@ import FeedbackPage from "#/pages/feedback";
 export const Route = createFileRoute("/_authenticated/feedback/")({
   component: () => (
     <Layout
-      title="Avis utilisateurs"
-      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Avis" }]}
+      title="User feedback"
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Feedback" }]}
     >
       <FeedbackPage />
     </Layout>
