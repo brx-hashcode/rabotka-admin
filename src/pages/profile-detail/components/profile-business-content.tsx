@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconActivity,
   IconAlertTriangle,
+  IconBell,
+  IconGift,
+  IconRosetteDiscountCheck,
   IconCalendarEvent,
   IconFileSearch,
   IconLayoutDashboard,
@@ -53,7 +56,8 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
 import { BusinessSubscriptionCard, businessSubscriptionKey } from "./business-subscription-card";
-import { Checkbox } from "#/components/ui/checkbox";
+import { Switch } from "#/components/ui/switch";
+import { cn } from "#/lib/utils";
 import { trialOffer } from "#/features/business-plans/trial-offer";
 import { useBusinessPlansList } from "#/hooks/use-business-plans-list";
 import { useSystemConfigCategory } from "#/hooks/use-system-config";
@@ -531,33 +535,63 @@ function BusinessOrganisationSection({
           approving?.kind === "document" ? (
             "This document will be marked as verified."
           ) : (
-            <div className="space-y-3">
-              <p>
-                The business is verified and its account becomes active. Its pending documents are accepted, and the
-                business is notified by email and in-app notification. This cannot be undone from here.
-              </p>
-              {trial && !trialUsed ? (
-                <label className="text-foreground flex cursor-pointer items-start gap-2.5 rounded-lg border p-3">
-                  <Checkbox
-                    checked={withTrial}
-                    onCheckedChange={(v) => setWithTrial(v === true)}
-                    className="mt-0.5"
-                  />
-                  <span>
-                    <span className="block font-medium">
-                      Start the {trial.days}-day trial of {trial.planName}
+            <div className="text-foreground space-y-4 text-sm">
+              <ul className="space-y-2">
+                {[
+                  { icon: IconRosetteDiscountCheck, text: "The business is verified and its account becomes active." },
+                  { icon: IconFileText, text: "Its pending documents are accepted." },
+                  { icon: IconBell, text: "It is told by email and in-app notification." },
+                ].map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-start gap-2.5">
+                    <span className="bg-muted flex size-6 shrink-0 items-center justify-center rounded-md">
+                      <Icon className="size-3.5" />
                     </span>
+                    <span className="text-muted-foreground pt-0.5">{text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {business.missingDocuments.length > 0 && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                  <IconAlertTriangle className="mt-px size-4 shrink-0 text-amber-600" />
+                  <p>
+                    Still missing:{" "}
+                    <span className="font-medium">
+                      {business.missingDocuments.map((g) => g.map((d) => d.label).join(" or ")).join(", ")}
+                    </span>
+                    . Approving anyway skips them.
+                  </p>
+                </div>
+              )}
+
+              {trial && !trialUsed ? (
+                <label
+                  htmlFor="approve-with-trial"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                    withTrial && "border-primary/40 bg-primary/5",
+                  )}
+                >
+                  <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                    <IconGift className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">Free trial · {trial.days} days</span>
                     <span className="text-muted-foreground block text-xs">
-                      AI features stay off during the trial unless Settings → Business plans turns them on. Untick to
-                      approve without a plan; you can start the trial later from Subscription.
+                      {withTrial
+                        ? `${trial.planName} starts today. AI features follow Settings → Business plans.`
+                        : "Approved without a plan. You can start the trial later from Subscription."}
                     </span>
                   </span>
+                  <Switch id="approve-with-trial" checked={withTrial} onCheckedChange={setWithTrial} />
                 </label>
               ) : (
-                <p className="text-muted-foreground text-xs">
-                  {trialUsed ? "This business already had its trial." : "No trial is configured: approved without a plan."}
+                <p className="text-muted-foreground bg-muted/50 rounded-lg p-3 text-xs">
+                  {trialUsed ? "This business already had its trial: approved without a new one." : "No trial is configured: approved without a plan."}
                 </p>
               )}
+
+              <p className="text-muted-foreground text-xs">This cannot be undone from here.</p>
             </div>
           )
         }
