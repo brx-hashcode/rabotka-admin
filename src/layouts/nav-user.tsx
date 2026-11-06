@@ -148,7 +148,7 @@ export const NavUser = ({ user }: Readonly<NavUserProps>) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout}>
+            <AlertDialogAction variant="destructive" onClick={handleLogout}>
               Sign out
             </AlertDialogAction>
           </AlertDialogFooter>
