@@ -69,6 +69,7 @@ const schema = z.object({
   includesPreselection: z.boolean(),
   priorityVisibility: z.boolean(),
   linkedinPosting: z.boolean(),
+  hrExports: z.boolean(),
   sortOrder: z.coerce.number().int(),
 });
 
@@ -90,6 +91,11 @@ const FEATURE_OPTIONS = [
     name: "linkedinPosting",
     label: "LinkedIn publishing",
     hint: "Their team posts offers on LinkedIn from Rabotka, candidates apply on the careers page.",
+  },
+  {
+    name: "hrExports",
+    label: "HR exports",
+    hint: "Excel/CSV of an offer's candidates, the staff register of hires, and the offers to declare to the ACPE.",
   },
 ] as const;
 
@@ -160,6 +166,7 @@ const EMPTY: FormInput = {
   includesPreselection: false,
   priorityVisibility: false,
   linkedinPosting: false,
+  hrExports: false,
   sortOrder: 0,
 };
 
@@ -281,6 +288,7 @@ function toForm(plan: BusinessPlan): FormInput {
     includesPreselection: plan.includesPreselection,
     priorityVisibility: plan.priorityVisibility,
     linkedinPosting: plan.linkedinPosting,
+    hrExports: plan.hrExports,
     sortOrder: plan.sortOrder,
   };
 }
