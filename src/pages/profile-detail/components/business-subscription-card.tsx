@@ -354,7 +354,8 @@ export function BusinessSubscriptionCard({
               <div className="flex flex-wrap justify-end gap-1">
                 {e.includesPreselection && <Badge variant="outline">Preselection</Badge>}
                 {e.priorityVisibility && <Badge variant="outline">Priority</Badge>}
-                {!e.includesPreselection && !e.priorityVisibility && "—"}
+                {e.linkedinPosting && <Badge variant="outline">LinkedIn</Badge>}
+                {!e.includesPreselection && !e.priorityVisibility && !e.linkedinPosting && "—"}
               </div>
             </Row>
           )}
