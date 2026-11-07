@@ -17,6 +17,11 @@ export type AdminPaymentRequestListItem = {
   status: PaymentRequestStatus;
   gateway: string | null;
   gatewayPaymentRef: string | null;
+  /** The price, in XAF. */
+  amount?: number | null;
+  /** What the network was charged, in its own currency (USD in the DRC); null before any attempt. */
+  chargedCurrency?: string | null;
+  chargedAmount?: number | null;
   paymentReference: string | null;
   proofImages: string[];
   rejectionNote: string | null;
