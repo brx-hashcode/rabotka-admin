@@ -36,9 +36,9 @@ describe("whatsAppFollowUpLink", () => {
 
 describe("pageRange", () => {
   it.each([
-    [1, 20, 47, "1–20 sur 47"],
-    [3, 20, 47, "41–47 sur 47"],
-    [1, 20, 0, "0 sur 0"],
+    [1, 20, 47, "1–20 of 47"],
+    [3, 20, 47, "41–47 of 47"],
+    [1, 20, 0, "0 of 0"],
   ])("page %i of %i over %i → %s", (page, size, total, label) => {
     expect(pageRange(page, size, total)).toBe(label);
   });

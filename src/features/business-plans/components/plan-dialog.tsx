@@ -59,7 +59,7 @@ const schema = z.object({
   unlocksPerPeriod: quota,
   activeOffersLimit: quota,
   cvScreeningsPerPeriod: quota,
-  cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(5, "5 at most"),
+  cvBatchMax: z.coerce.number().int().min(1, "1 or more").max(100, "100 at most"),
   cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
   cvRetentionDays: z.coerce.number().int().min(1, "1 or more").max(365, "365 at most"),
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
@@ -68,6 +68,8 @@ const schema = z.object({
   reviewersLimit: quota,
   includesPreselection: z.boolean(),
   priorityVisibility: z.boolean(),
+  linkedinPosting: z.boolean(),
+  hrExports: z.boolean(),
   sortOrder: z.coerce.number().int(),
 });
 
@@ -85,6 +87,16 @@ const FEATURE_OPTIONS = [
     label: "Priority visibility",
     hint: "Their offers are shown first to workers.",
   },
+  {
+    name: "linkedinPosting",
+    label: "LinkedIn publishing",
+    hint: "Their team posts offers on LinkedIn from Rabotka, candidates apply on the careers page.",
+  },
+  {
+    name: "hrExports",
+    label: "HR exports",
+    hint: "Excel/CSV of an offer's candidates, the staff register of hires, and the offers to declare to the ACPE.",
+  },
 ] as const;
 
 const CV_FIELDS = [
@@ -97,7 +109,7 @@ const CV_FIELDS = [
     placeholder: "Unlimited",
     hint: "0 = not in this plan, empty = unlimited. Unreadable CVs are not counted.",
   },
-  { name: "cvBatchMax", label: "CVs per upload", suffix: "CVs", min: 1, max: 5, placeholder: undefined, hint: "1 to 5 files at once." },
+  { name: "cvBatchMax", label: "CVs per analysis", suffix: "CVs", min: 1, max: 100, placeholder: undefined, hint: "1 to 100 CVs in one analysis (large batches are sent in several requests)." },
   { name: "cvFileMaxMb", label: "Max file size", suffix: "MB", min: 1, max: 10, placeholder: undefined, hint: "Per file, 10 MB at most." },
   {
     name: "cvRetentionDays",
@@ -153,6 +165,8 @@ const EMPTY: FormInput = {
   reviewersLimit: 0,
   includesPreselection: false,
   priorityVisibility: false,
+  linkedinPosting: false,
+  hrExports: false,
   sortOrder: 0,
 };
 
@@ -245,14 +259,57 @@ type PlanDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   plan?: BusinessPlan;
+  /** A new custom plan: made for this business alone. */
+  forBusiness?: { id: string; name: string };
+  /** A new plan starts from this one's prices and quotas (a custom plan from a catalog plan). */
+  template?: BusinessPlan;
+  /** After a create or an edit, with the saved plan. */
+  onSaved?: (plan: BusinessPlan) => void;
 };
+
+/** A plan's values in the form. */
+function toForm(plan: BusinessPlan): FormInput {
+  return {
+    name: plan.name,
+    code: plan.code,
+    description: plan.description ?? "",
+    monthlyPriceFcfa: plan.monthlyPriceFcfa,
+    annualPriceFcfa: plan.annualPriceFcfa,
+    unlocksPerPeriod: plan.unlocksPerPeriod ?? "",
+    activeOffersLimit: plan.activeOffersLimit ?? "",
+    cvScreeningsPerPeriod: plan.cvScreeningsPerPeriod ?? "",
+    cvBatchMax: plan.cvBatchMax,
+    cvFileMaxMb: plan.cvFileMaxMb,
+    cvRetentionDays: plan.cvRetentionDays,
+    cvChatQuestions: plan.cvChatQuestions,
+    offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
+    recruitersLimit: plan.recruitersLimit ?? "",
+    reviewersLimit: plan.reviewersLimit ?? "",
+    includesPreselection: plan.includesPreselection,
+    priorityVisibility: plan.priorityVisibility,
+    linkedinPosting: plan.linkedinPosting,
+    hrExports: plan.hrExports,
+    sortOrder: plan.sortOrder,
+  };
+}
+
+/** « pro » for « Akieni » becomes `pro-akieni`: a code free of the catalog's. */
+export function customPlanCode(base: string, businessName: string): string {
+  const name = businessName
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${base}-${name}`.slice(0, 40).replace(/-+$/, "");
+}
 
 /**
  * Create or edit a business plan. New prices and quotas apply to new
  * purchases and renewals; periods already paid keep what they were bought
  * with. The code is fixed once created (the trial setting refers to it).
  */
-export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProps>) {
+export function PlanDialog({ open, onOpenChange, plan, forBusiness, template, onSaved }: Readonly<PlanDialogProps>) {
   const queryClient = useQueryClient();
   const isEdit = plan != null;
 
@@ -263,31 +320,19 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
 
   useEffect(() => {
     if (!open) return;
-    form.reset(
-      isEdit
+    let values = EMPTY;
+    if (isEdit) values = toForm(plan);
+    else if (template) {
+      values = forBusiness
         ? {
-            name: plan.name,
-            code: plan.code,
-            description: plan.description ?? "",
-            monthlyPriceFcfa: plan.monthlyPriceFcfa,
-            annualPriceFcfa: plan.annualPriceFcfa,
-            unlocksPerPeriod: plan.unlocksPerPeriod ?? "",
-            activeOffersLimit: plan.activeOffersLimit ?? "",
-            cvScreeningsPerPeriod: plan.cvScreeningsPerPeriod ?? "",
-            cvBatchMax: plan.cvBatchMax,
-            cvFileMaxMb: plan.cvFileMaxMb,
-            cvRetentionDays: plan.cvRetentionDays,
-            cvChatQuestions: plan.cvChatQuestions,
-            offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
-            recruitersLimit: plan.recruitersLimit ?? "",
-            reviewersLimit: plan.reviewersLimit ?? "",
-            includesPreselection: plan.includesPreselection,
-            priorityVisibility: plan.priorityVisibility,
-            sortOrder: plan.sortOrder,
+            ...toForm(template),
+            name: `${template.name} · ${forBusiness.name}`.slice(0, 80),
+            code: customPlanCode(template.code, forBusiness.name),
           }
-        : EMPTY,
-    );
-  }, [open, plan, isEdit, form]);
+        : { ...toForm(template), name: "", code: "" };
+    }
+    form.reset(values);
+  }, [open, plan, isEdit, form, template, forBusiness]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -300,12 +345,14 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
         // empty field there means « unknown », not « unlimited ».
         ...(isEdit && plan.offerDraftsPerPeriod === undefined ? {} : { offerDraftsPerPeriod }),
         ...(isEdit && plan.recruitersLimit === undefined ? {} : { recruitersLimit, reviewersLimit }),
+        ...(!isEdit && forBusiness ? { businessId: forBusiness.id } : {}),
       };
       return isEdit ? updateBusinessPlan(plan.id, payload) : createBusinessPlan(payload);
     },
-    onSuccess: () => {
-      toast.success(isEdit ? "Plan updated" : "Plan created");
+    onSuccess: (saved) => {
+      toast.success(isEdit ? "Plan updated" : forBusiness ? `Custom plan created for ${forBusiness.name}` : "Plan created");
       queryClient.invalidateQueries({ queryKey: BUSINESS_PLANS_KEY });
+      onSaved?.(saved);
       onOpenChange(false);
     },
     onError: (err: Error) =>
@@ -324,8 +371,16 @@ export function PlanDialog({ open, onOpenChange, plan }: Readonly<PlanDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[92vh] w-full flex-col gap-0 p-0 sm:max-w-3xl">
         <DialogHeader className="shrink-0 border-b px-6 py-5">
-          <DialogTitle className="text-lg">{isEdit ? `Edit ${plan.name}` : "New plan"}</DialogTitle>
+          <DialogTitle className="text-lg">
+            {isEdit ? `Edit ${plan.name}` : forBusiness ? `Custom plan for ${forBusiness.name}` : "New plan"}
+          </DialogTitle>
           <DialogDescription>
+            {(isEdit ? plan.business : forBusiness) ? (
+              <>
+                Only {(isEdit ? plan.business?.name : forBusiness?.name) ?? "this business"} sees this plan: on its
+                Subscription page, to buy or renew, and here to assign.{" "}
+              </>
+            ) : null}
             New prices and quotas apply to new purchases and renewals; periods already paid keep what they were
             bought with.
           </DialogDescription>

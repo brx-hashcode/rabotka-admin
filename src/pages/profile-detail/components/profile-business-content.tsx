@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconActivity,
   IconAlertTriangle,
+  IconBell,
+  IconGift,
+  IconRosetteDiscountCheck,
   IconCalendarEvent,
   IconFileSearch,
   IconLayoutDashboard,
@@ -13,6 +16,7 @@ import {
   IconEye,
   IconFileText,
   IconHistory,
+  IconLoader2,
   IconPhoto,
   IconUsersGroup,
   IconWorldWww,
@@ -52,7 +56,13 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
-import { BusinessSubscriptionCard } from "./business-subscription-card";
+import { BusinessSubscriptionCard, businessSubscriptionKey } from "./business-subscription-card";
+import { Switch } from "#/components/ui/switch";
+import { cn } from "#/lib/utils";
+import { trialOffer } from "#/features/business-plans/trial-offer";
+import { useBusinessPlansList } from "#/hooks/use-business-plans-list";
+import { useSystemConfigCategory } from "#/hooks/use-system-config";
+import { getBusinessSubscription } from "#/lib/api/business-plans-controller";
 import {
   BusinessCvScreeningsSection,
   BusinessInterviewsSection,
@@ -233,6 +243,16 @@ function BusinessOrganisationSection({
   const [refusing, setRefusing] = useState<Refusing | null>(null);
   const [approving, setApproving] = useState<Approving | null>(null);
   const [reason, setReason] = useState("");
+  // Approving starts the trial unless the admin unticks it.
+  const [withTrial, setWithTrial] = useState(true);
+  const { configs } = useSystemConfigCategory("FEES");
+  const { data: plans } = useBusinessPlansList();
+  const { data: subscription } = useQuery({
+    queryKey: businessSubscriptionKey(profileId),
+    queryFn: () => getBusinessSubscription(profileId),
+  });
+  const trial = trialOffer(configs, plans);
+  const trialUsed = subscription?.trialUsed ?? false;
 
   const onSaved = (next: AdminBusinessDetail) => {
     queryClient.setQueryData(queryKey, next);
@@ -240,10 +260,12 @@ function BusinessOrganisationSection({
     // profile's own status and verification, shown in the other tabs.
     void queryClient.invalidateQueries({ queryKey });
     void queryClient.invalidateQueries({ queryKey: ["admin", "profiles", profileId] });
+    // Approving may start the trial: the Subscription card follows.
+    void queryClient.invalidateQueries({ queryKey: businessSubscriptionKey(profileId) });
   };
 
   const decideBusiness = useMutation({
-    mutationFn: (input: { decision: VerificationDecision; reason?: string }) =>
+    mutationFn: (input: { decision: VerificationDecision; reason?: string; startTrial?: boolean }) =>
       verifyProfileBusiness(profileId, input),
     onSuccess: (next, input) => {
       onSaved(next);
@@ -275,25 +297,33 @@ function BusinessOrganisationSection({
     onError: (err: Error) => toast.error(err.message || "The details could not be saved."),
   });
 
+  // The dialogs stay open, their button spinning, until the decision is
+  // saved; an error leaves them open to try again.
+  const refusePending = decideBusiness.isPending || decideDocument.isPending;
+
   function confirmRefusal() {
     if (!refusing || !reason.trim()) return;
+    const done = {
+      onSuccess: () => {
+        setRefusing(null);
+        setReason("");
+      },
+    };
     if (refusing.kind === "business") {
-      decideBusiness.mutate({ decision: "REJECTED", reason: reason.trim() });
+      decideBusiness.mutate({ decision: "REJECTED", reason: reason.trim() }, done);
     } else {
-      decideDocument.mutate({ documentId: refusing.doc.id, decision: "REJECTED", reason: reason.trim() });
+      decideDocument.mutate({ documentId: refusing.doc.id, decision: "REJECTED", reason: reason.trim() }, done);
     }
-    setRefusing(null);
-    setReason("");
   }
 
   function confirmApproval() {
     if (!approving) return;
+    const done = { onSuccess: () => setApproving(null) };
     if (approving.kind === "business") {
-      decideBusiness.mutate({ decision: "VERIFIED" });
+      decideBusiness.mutate({ decision: "VERIFIED", startTrial: !!trial && !trialUsed && withTrial }, done);
     } else {
-      decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" });
+      decideDocument.mutate({ documentId: approving.doc.id, decision: "VERIFIED" }, done);
     }
-    setApproving(null);
   }
 
   function preview(doc: AdminBusinessDocumentVersion) {
@@ -346,7 +376,7 @@ function BusinessOrganisationSection({
       </div>
 
       <div className="col-span-5 min-w-0 space-y-6 lg:col-span-2">
-        <BusinessSubscriptionCard profileId={profileId} />
+        <BusinessSubscriptionCard profileId={profileId} business={{ id: business.id, name: business.name }} />
 
         <Card>
           <CardHeader>
@@ -399,7 +429,10 @@ function BusinessOrganisationSection({
                   </Button>
                 )}
                 <Button
-                  onClick={() => setApproving({ kind: "business" })}
+                  onClick={() => {
+                    setWithTrial(true);
+                    setApproving({ kind: "business" });
+                  }}
                   disabled={decideBusiness.isPending}
                 >
                   <IconCheck className="size-4" />
@@ -506,13 +539,72 @@ function BusinessOrganisationSection({
       <ConfirmDialog
         open={!!approving}
         onOpenChange={(open) => {
-          if (!open) setApproving(null);
+          if (!open && !decideBusiness.isPending && !decideDocument.isPending) setApproving(null);
         }}
         title={approving?.kind === "document" ? `Accept « ${approving.doc.label} » ?` : `Approve ${business.name} ?`}
         description={
-          approving?.kind === "document"
-            ? "This document will be marked as verified."
-            : "The business is verified and its account becomes active. Its pending documents are accepted, and the business is notified by email and in-app notification. This cannot be undone from here."
+          approving?.kind === "document" ? (
+            "This document will be marked as verified."
+          ) : (
+            <div className="text-foreground space-y-4 text-sm">
+              <ul className="space-y-2">
+                {[
+                  { icon: IconRosetteDiscountCheck, text: "The business is verified and its account becomes active." },
+                  { icon: IconFileText, text: "Its pending documents are accepted." },
+                  { icon: IconBell, text: "It is told by email and in-app notification." },
+                ].map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-start gap-2.5">
+                    <span className="bg-muted flex size-6 shrink-0 items-center justify-center rounded-md">
+                      <Icon className="size-3.5" />
+                    </span>
+                    <span className="text-muted-foreground pt-0.5">{text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {business.missingDocuments.length > 0 && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                  <IconAlertTriangle className="mt-px size-4 shrink-0 text-amber-600" />
+                  <p>
+                    Still missing:{" "}
+                    <span className="font-medium">
+                      {business.missingDocuments.map((g) => g.map((d) => d.label).join(" or ")).join(", ")}
+                    </span>
+                    . Approving anyway skips them.
+                  </p>
+                </div>
+              )}
+
+              {trial && !trialUsed ? (
+                <label
+                  htmlFor="approve-with-trial"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                    withTrial && "border-primary/40 bg-primary/5",
+                  )}
+                >
+                  <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                    <IconGift className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">Free trial · {trial.days} days</span>
+                    <span className="text-muted-foreground block text-xs">
+                      {withTrial
+                        ? `${trial.planName} starts today. AI features follow Settings → Business plans.`
+                        : "Approved without a plan. You can start the trial later from Subscription."}
+                    </span>
+                  </span>
+                  <Switch id="approve-with-trial" checked={withTrial} onCheckedChange={setWithTrial} />
+                </label>
+              ) : (
+                <p className="text-muted-foreground bg-muted/50 rounded-lg p-3 text-xs">
+                  {trialUsed ? "This business already had its trial: approved without a new one." : "No trial is configured: approved without a plan."}
+                </p>
+              )}
+
+              <p className="text-muted-foreground text-xs">This cannot be undone from here.</p>
+            </div>
+          )
         }
         actionLabel={approving?.kind === "document" ? "Accept" : "Approve business"}
         onConfirm={confirmApproval}
@@ -522,7 +614,7 @@ function BusinessOrganisationSection({
       <Dialog
         open={!!refusing}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !refusePending) {
             setRefusing(null);
             setReason("");
           }
@@ -547,10 +639,11 @@ function BusinessOrganisationSection({
             autoFocus
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRefusing(null)}>
+            <Button variant="outline" onClick={() => setRefusing(null)} disabled={refusePending}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmRefusal} disabled={!reason.trim()}>
+            <Button variant="destructive" onClick={confirmRefusal} disabled={!reason.trim() || refusePending}>
+              {refusePending && <IconLoader2 className="mr-2 size-4 animate-spin" />}
               Refuse
             </Button>
           </DialogFooter>

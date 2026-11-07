@@ -17,11 +17,11 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { getFeedbackStats } from "#/lib/api/feedback-controller";
 
 const distributionConfig = {
-  count: { label: "Avis", color: "var(--chart-2)" },
+  count: { label: "Reviews", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
 const trendConfig = {
-  count: { label: "Avis", color: "var(--chart-2)" },
+  count: { label: "Reviews", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
 const STAR = "★";
@@ -80,32 +80,32 @@ export function FeedbackStats() {
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-4">
         <StatTile
-          label="Note moyenne"
+          label="Average rating"
           value={data.total ? `${data.average.toFixed(2)} / 5` : "—"}
-          hint={`Sur ${data.total} avis au total`}
+          hint={`Out of ${data.total} reviews in total`}
         />
         <StatTile
-          label="Avis reçus"
+          label="Reviews received"
           value={String(data.total)}
-          hint="Depuis le lancement"
+          hint="Since launch"
         />
         <StatTile
-          label="Avec commentaire"
+          label="With a comment"
           value={data.total ? `${commentRate}%` : "—"}
-          hint={`${data.withComment} avis commentés`}
+          hint={`${data.withComment} reviews with a comment`}
         />
         <StatTile
-          label="Travailleurs / Employeurs"
+          label="Workers / Employers"
           value={`${worker?.average?.toFixed(1) ?? "—"} / ${employer?.average?.toFixed(1) ?? "—"}`}
-          hint={`${worker?.count ?? 0} et ${employer?.count ?? 0} avis`}
+          hint={`${worker?.count ?? 0} and ${employer?.count ?? 0} reviews`}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="flex h-[320px] flex-col overflow-hidden shadow-soft">
           <CardHeader>
-            <CardTitle>Répartition des notes</CardTitle>
-            <CardDescription>Nombre d’avis par note</CardDescription>
+            <CardTitle>Rating breakdown</CardTitle>
+            <CardDescription>Number of reviews per rating</CardDescription>
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 pb-4">
             <ChartContainer
@@ -136,13 +136,13 @@ export function FeedbackStats() {
 
         <Card className="flex h-[320px] flex-col overflow-hidden shadow-soft">
           <CardHeader>
-            <CardTitle>Avis dans le temps</CardTitle>
-            <CardDescription>30 derniers jours</CardDescription>
+            <CardTitle>Reviews over time</CardTitle>
+            <CardDescription>Last 30 days</CardDescription>
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 pb-4">
             {data.trend.length === 0 ? (
               <div className="text-muted-foreground flex flex-1 items-center justify-center text-sm">
-                Aucun avis sur la période
+                No reviews in this period
               </div>
             ) : (
               <ChartContainer
@@ -157,7 +157,7 @@ export function FeedbackStats() {
                     axisLine={false}
                     tickMargin={8}
                     tickFormatter={(v: string) =>
-                      new Date(v).toLocaleDateString("fr", {
+                      new Date(v).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
                       })

@@ -9,22 +9,54 @@ import { BUSINESS_PLANS_KEY } from "#/hooks/use-business-plans-list";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
+import { Switch } from "#/components/ui/switch";
 import { Separator } from "#/components/ui/separator";
 import { GeoCombobox } from "#/components/geo-combobox";
+
+type PackKey = "cv" | "offers" | "contacts" | "offer_drafts";
+
+/** The packs a business may buy on top of its plan (SystemConfig `business.pack_*`). */
+const PACKS: { key: PackKey; label: string; unit: string }[] = [
+  { key: "cv", label: "CV analyses", unit: "CVs" },
+  { key: "offers", label: "Offers to publish", unit: "offers" },
+  { key: "contacts", label: "Contacts", unit: "contacts" },
+  { key: "offer_drafts", label: "AI-written offers", unit: "offers" },
+];
 
 type FormState = {
   "business.trial_days": string;
   "business.trial_plan_code": string;
+  "business.trial_cv_analysis": string;
+  "business.trial_cv_chat": string;
+  "business.trial_offer_writer": string;
   "business.renewal_reminder_days": string;
   "business.offer_expiry_reminder_days": string;
-};
+} & Record<`business.pack_${PackKey}_${"quantity" | "price_fcfa"}`, string>;
 
 const EMPTY: FormState = {
   "business.trial_days": "",
   "business.trial_plan_code": "",
+  "business.trial_cv_analysis": "false",
+  "business.trial_cv_chat": "false",
+  "business.trial_offer_writer": "false",
   "business.renewal_reminder_days": "",
   "business.offer_expiry_reminder_days": "",
+  "business.pack_cv_quantity": "",
+  "business.pack_cv_price_fcfa": "",
+  "business.pack_offers_quantity": "",
+  "business.pack_offers_price_fcfa": "",
+  "business.pack_contacts_quantity": "",
+  "business.pack_contacts_price_fcfa": "",
+  "business.pack_offer_drafts_quantity": "",
+  "business.pack_offer_drafts_price_fcfa": "",
 };
+
+/** The AI features a trial may include; each is off unless switched on. */
+const TRIAL_AI: { key: keyof FormState; label: string; hint: string }[] = [
+  { key: "business.trial_cv_analysis", label: "CV analysis", hint: "Scoring CVs (« CV inclus »)" },
+  { key: "business.trial_cv_chat", label: "CV questions & compare", hint: "« Interroger le CV » and « Comparer »" },
+  { key: "business.trial_offer_writer", label: "AI offer writer", hint: "« Rédiger avec l'IA »" },
+];
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -33,7 +65,7 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 /**
- * The business trial and renewal reminders (SystemConfig `business.*`). The
+ * The business trial, renewal reminders and packs (SystemConfig `business.*`). The
  * plans themselves — prices, quotas — are edited on the Business plans page.
  */
 export function BusinessPlansCard() {
@@ -70,7 +102,7 @@ export function BusinessPlansCard() {
           <div>
             <CardTitle className="text-base font-semibold">Business plans</CardTitle>
             <p className="text-muted-foreground text-xs">
-              Trial and renewal reminders. Prices and quotas:{" "}
+              Trial, reminders and packs. Plan prices and quotas:{" "}
               <Link to="/business-plans" className="underline underline-offset-2">
                 Business plans
               </Link>
@@ -95,18 +127,46 @@ export function BusinessPlansCard() {
               value={form["business.trial_days"]}
               onChange={(e) => set("business.trial_days", e.target.value)}
             />
-            <p className="text-muted-foreground text-xs">Starts when a business is approved. 0: no trial.</p>
+            <p className="text-muted-foreground text-xs">
+              Offered when a business is approved (the admin may untick it). 0: no trial.
+            </p>
           </div>
           <div className="space-y-1.5">
             <FieldLabel>Plan given during the trial</FieldLabel>
             <GeoCombobox
-              options={(plans ?? []).map((p) => ({ value: p.code, label: `${p.name} (${p.code})` }))}
+              // A custom plan is one business's: never the trial of every other.
+              options={(plans ?? [])
+                .filter((p) => !p.businessId)
+                .map((p) => ({ value: p.code, label: `${p.name} (${p.code})` }))}
               value={form["business.trial_plan_code"] || null}
               onChange={(v) => set("business.trial_plan_code", v ?? "")}
               placeholder="No trial plan"
               searchPlaceholder="Search plans…"
             />
-            <p className="text-muted-foreground text-xs">Its quotas and features apply during the trial.</p>
+            <p className="text-muted-foreground text-xs">
+              Its quotas and features apply during the trial, except the AI features below left off.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <FieldLabel>AI during the trial</FieldLabel>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {TRIAL_AI.map((f) => (
+                <label key={f.key} className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border p-3">
+                  <span>
+                    <span className="block text-sm font-medium">{f.label}</span>
+                    <span className="text-muted-foreground block text-xs">{f.hint}</span>
+                  </span>
+                  <Switch
+                    checked={form[f.key] === "true"}
+                    onCheckedChange={(on) => set(f.key, on ? "true" : "false")}
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Off: the business sees the feature locked until it takes a paid plan. A paid period always gets its
+              plan&apos;s AI.
+            </p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <FieldLabel>Renewal reminders (days before the end)</FieldLabel>
@@ -130,6 +190,41 @@ export function BusinessPlansCard() {
             />
             <p className="text-muted-foreground text-xs">
               Sent by email and in-app, never WhatsApp. 0 turns it off.
+            </p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <FieldLabel>Packs</FieldLabel>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {PACKS.map((p) => (
+                <div key={p.key} className="space-y-2 rounded-lg border p-3">
+                  <span className="block text-sm font-medium">{p.label}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <span className="text-muted-foreground text-xs">{`${p.unit[0].toUpperCase()}${p.unit.slice(1)} per pack`}</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={form[`business.pack_${p.key}_quantity`]}
+                        onChange={(e) => set(`business.pack_${p.key}_quantity`, e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-muted-foreground text-xs">Price (FCFA)</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={form[`business.pack_${p.key}_price_fcfa`]}
+                        onChange={(e) => set(`business.pack_${p.key}_price_fcfa`, e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Bought on top of a plan, kept 12 months and used once the plan&apos;s own quota for the period runs out.
+              A price of 0 means the pack is not sold.
             </p>
           </div>
         </div>

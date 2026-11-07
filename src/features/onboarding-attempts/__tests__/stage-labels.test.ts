@@ -25,10 +25,10 @@ describe("timeAgo", () => {
   const ago = (ms: number) => new Date(now - ms).toISOString();
 
   it("speaks in minutes, hours, then days", () => {
-    expect(timeAgo(ago(20_000), now)).toBe("à l'instant");
-    expect(timeAgo(ago(5 * 60_000), now)).toBe("il y a 5 min");
-    expect(timeAgo(ago(3 * 3_600_000), now)).toBe("il y a 3 h");
-    expect(timeAgo(ago(2 * 86_400_000), now)).toBe("il y a 2 j");
+    expect(timeAgo(ago(20_000), now)).toBe("just now");
+    expect(timeAgo(ago(5 * 60_000), now)).toBe("5 min ago");
+    expect(timeAgo(ago(3 * 3_600_000), now)).toBe("3 h ago");
+    expect(timeAgo(ago(2 * 86_400_000), now)).toBe("2 d ago");
   });
 });
 

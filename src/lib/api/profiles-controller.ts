@@ -462,9 +462,10 @@ export class AdminProfilesController extends AdminBaseController {
   }
 
   /** Approve or refuse the business — which verifies and activates the account. */
+  /** `startTrial` (on approval): start the free trial; false approves without it. */
   verifyBusiness(
     id: string,
-    data: { decision: VerificationDecision; reason?: string },
+    data: { decision: VerificationDecision; reason?: string; startTrial?: boolean },
   ): Promise<AdminBusinessDetail> {
     return this.patch(`/admin/profiles/${encodeURIComponent(id)}/business/verify`, data);
   }

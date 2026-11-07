@@ -48,7 +48,7 @@ export function QuickMessagePicker({
           disabled={disabled}
         >
           <MessageSquareText />
-          Modèles
+          Templates
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">

@@ -30,13 +30,13 @@ function timeAgo(timestamp: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(timestamp).getTime()) / 1000,
   );
-  if (seconds < 60) return "à l'instant";
+  if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `il y a ${hours}h`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `il y a ${days}j`;
+  return `${days}d ago`;
 }
 
 export function NotificationBell() {
@@ -101,7 +101,7 @@ export function NotificationBell() {
                 className="h-7 text-xs text-muted-foreground"
                 onClick={() => clearNotifications()}
               >
-                Tout effacer
+                Clear all
               </Button>
             )}
           </div>
@@ -110,7 +110,7 @@ export function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
                 <Bell className="size-8 opacity-40" />
-                <p className="text-sm">Aucune notification</p>
+                <p className="text-sm">No notifications</p>
               </div>
             ) : (
               <div className="divide-y">
