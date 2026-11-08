@@ -46,6 +46,10 @@ type FormState = {
   "fees.rating_score_delta_3": string;
   "fees.rating_score_delta_4": string;
   "fees.rating_score_delta_5": string;
+  "payment.fx_max_age_hours": string;
+  "payment.fx_significant_digits": string;
+  "payment.fx_margin_percent": string;
+  "payment.preferred_currencies": string;
 };
 
 const EMPTY: FormState = {
@@ -81,6 +85,10 @@ const EMPTY: FormState = {
   "fees.rating_score_delta_3": "",
   "fees.rating_score_delta_4": "",
   "fees.rating_score_delta_5": "",
+  "payment.fx_max_age_hours": "",
+  "payment.fx_significant_digits": "",
+  "payment.fx_margin_percent": "",
+  "payment.preferred_currencies": "",
 };
 
 /**
@@ -684,6 +692,68 @@ export function FeesCard() {
               suffix="pts"
               min={-100}
             />
+          </div>
+        </div>
+
+        <Separator className="mb-6" />
+
+        <p className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
+          Payments outside the CFA zone
+        </p>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Prices are set in FCFA. A network outside the CFA zone (DRC, Kenya,
+          Rwanda…) is charged in its own currency: the price is converted at
+          the day&apos;s rate, refreshed every 6 hours, then rounded to the
+          nearest clean figure. With 2 significant digits 1 000 FCFA is $1.70;
+          with 1 it is $2. XAF and XOF are never converted.
+        </p>
+        <div className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <FieldLabel>Significant digits kept</FieldLabel>
+            <NumericInput
+              value={form["payment.fx_significant_digits"]}
+              onChange={(v) => set("payment.fx_significant_digits", v)}
+              min={1}
+              max={6}
+              hint="1 rounds coarsely ($2), 2 stays within about 5 % ($1.70)."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Conversion margin</FieldLabel>
+            <NumericInput
+              value={form["payment.fx_margin_percent"]}
+              onChange={(v) => set("payment.fx_margin_percent", v)}
+              suffix="%"
+              min={0}
+              hint="Added before rounding, to cover the cost of the exchange. 0 = none."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Rate maximum age</FieldLabel>
+            <NumericInput
+              value={form["payment.fx_max_age_hours"]}
+              onChange={(v) => set("payment.fx_max_age_hours", v)}
+              suffix="h"
+              min={1}
+              hint="Older than this, the currency is not offered rather than priced at a stale rate."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Preferred currencies</FieldLabel>
+            <Input
+              value={form["payment.preferred_currencies"]}
+              onChange={(e) =>
+                set(
+                  "payment.preferred_currencies",
+                  e.target.value.toUpperCase(),
+                )
+              }
+              placeholder="USD"
+            />
+            <p className="text-muted-foreground mt-1 text-[11px]">
+              When a network takes several currencies (CDF and USD in the
+              DRC), the first listed here. Comma-separated codes.
+            </p>
           </div>
         </div>
       </CardContent>

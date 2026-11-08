@@ -4,6 +4,7 @@ import { Badge } from "#/components/ui/badge";
 import type { AdminPaymentRequestListItem } from "#/lib/api/payment-requests-controller";
 import { PaymentRequestRowActions } from "./payment-request-row-actions";
 import { recordTypeLabel } from "#/lib/log-labels";
+import { formatXAF } from "#/lib/utils";
 
 export type PaymentRequest = AdminPaymentRequestListItem;
 
@@ -63,6 +64,32 @@ const paymentRequestDataColumns: ColumnDef<PaymentRequest, unknown>[] = [
         variant: "secondary" as const,
       };
       return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
+    },
+  },
+  {
+    id: "amount",
+    accessorKey: "amount",
+    header: "Amount",
+    cell: ({ row }) => {
+      const { amount, chargedCurrency, chargedAmount } = row.original;
+      if (amount == null) return <span className="text-muted-foreground">—</span>;
+      // Charged in another currency than the franc CFA price (DRC: USD).
+      const converted =
+        chargedCurrency &&
+        chargedAmount != null &&
+        chargedCurrency !== "XAF" &&
+        chargedCurrency !== "XOF";
+      return (
+        <div className="text-sm tabular-nums">
+          <p className="font-medium">{formatXAF(amount)}</p>
+          {converted && (
+            <p className="text-muted-foreground text-xs">
+              {chargedAmount.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}{" "}
+              {chargedCurrency} charged
+            </p>
+          )}
+        </div>
+      );
     },
   },
   {
