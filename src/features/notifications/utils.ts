@@ -10,6 +10,7 @@ export const NOTIFICATION_ENTITY_LABELS: Record<string, string> = {
   agent: "Agent",
   "agent-placement": "Agent placement",
   "agent-withdrawal": "Agent payout",
+  "demo-request": "Demo request",
 };
 
 export function getNotificationHref(
@@ -36,6 +37,9 @@ export function getNotificationHref(
     // A withdrawal request waits in the payout queue.
     case "agent-withdrawal":
       return "/agent-payouts";
+    // A company that asked for a demo on the business site.
+    case "demo-request":
+      return `/demo-requests/${entityId}`;
     case "claim":
       return "/claim";
     case "event":
