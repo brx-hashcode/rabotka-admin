@@ -19,6 +19,7 @@ import { Badge } from "#/components/ui/badge";
 import { Button, buttonVariants } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
+import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Switch } from "#/components/ui/switch";
 import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
@@ -37,6 +38,8 @@ import {
   resendBusinessInvite,
   ROLE_LABEL,
   setBusinessDistribution,
+  setBusinessPartner,
+  type BusinessCareers,
   type BusinessMailbox,
   type BusinessTeamMember,
 } from "#/lib/api/admin-business-controller";
@@ -448,6 +451,8 @@ export function BusinessCareersSection({ profileId }: Readonly<{ profileId: stri
             />
           </div>
 
+          <PartnerRow profileId={profileId} careers={c} canManage={canManageContent} />
+
           <div className="space-y-2">
             <p className="font-medium">Cover</p>
             {c.coverUrl ? (
@@ -540,6 +545,76 @@ function Media({ src, wide, onRemove }: Readonly<{ src: string; wide?: boolean; 
           <IconPhotoOff className="size-4" />
           Take down
         </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * « Partenaire »: staff's pick for « Ils recrutent avec Rabotka » on the
+ * business site, first on the careers site. Needs a logo to show there.
+ */
+function PartnerRow({
+  profileId,
+  careers,
+  canManage,
+}: Readonly<{ profileId: string; careers: BusinessCareers; canManage: boolean }>) {
+  const queryClient = useQueryClient();
+  const [rank, setRank] = useState(careers.partnerRank ? String(careers.partnerRank) : "");
+  const save = useMutation({
+    mutationFn: (input: { partner: boolean; rank: number | null }) =>
+      setBusinessPartner(profileId, input.partner, input.rank),
+    onSuccess: (page) => {
+      setRank(page.partnerRank ? String(page.partnerRank) : "");
+      toast.success(page.partner ? "Partner — shown on the business site" : "No longer a partner");
+      void queryClient.invalidateQueries({ queryKey: adminBusinessKey(profileId) });
+    },
+    onError: (err) => toast.error(friendlyError(err, "That did not work.")),
+  });
+  const parsed = rank.trim() ? Number.parseInt(rank, 10) : null;
+  const rankValid = parsed === null || (Number.isInteger(parsed) && parsed >= 1 && parsed <= 999);
+  const rankChanged = (parsed ?? null) !== (careers.partnerRank ?? null);
+
+  return (
+    <div className="space-y-3 rounded border p-3">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="font-medium">Partner</p>
+          <p className="text-muted-foreground text-xs">
+            Logo in « Ils recrutent avec Rabotka » on the business site, and first on the job board. Needs a logo and
+            a verified account.
+          </p>
+        </div>
+        <Switch
+          checked={careers.partner}
+          disabled={!canManage || save.isPending}
+          onCheckedChange={(on) => save.mutate({ partner: on, rank: on ? parsed : null })}
+          aria-label="Partner"
+        />
+      </div>
+      {careers.partner && (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="space-y-1">
+            <span className="block text-muted-foreground text-xs">Order (1 first; empty = after the numbered ones)</span>
+            <Input
+              type="number"
+              min={1}
+              max={999}
+              value={rank}
+              onChange={(e) => setRank(e.target.value)}
+              disabled={!canManage}
+              className="h-8 w-28"
+            />
+          </label>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!canManage || !rankValid || !rankChanged || save.isPending}
+            onClick={() => save.mutate({ partner: true, rank: parsed })}
+          >
+            Save order
+          </Button>
+        </div>
       )}
     </div>
   );

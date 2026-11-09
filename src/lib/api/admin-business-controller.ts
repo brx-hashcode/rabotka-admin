@@ -39,6 +39,10 @@ export type BusinessCareers = {
   photos: string[];
   benefits: string[];
   openOffers: number;
+  /** Shown in « Ils recrutent avec Rabotka » and first on the careers site. */
+  partner: boolean;
+  /** Order among partners, 1 first; null after the numbered ones. */
+  partnerRank: number | null;
 };
 
 export type BusinessMailbox = { id: string; provider: string; email: string; connectedAt: string; expired: boolean };
@@ -166,6 +170,9 @@ class AdminBusinessController extends AdminBaseController {
   setDistribution(profileId: string, distributeOffers: boolean): Promise<BusinessCareers> {
     return this.patch(`${base(profileId)}/careers`, { distributeOffers });
   }
+  setPartner(profileId: string, partner: boolean, rank: number | null): Promise<BusinessCareers> {
+    return this.patch(`${base(profileId)}/careers/partner`, { partner, ...(rank ? { rank } : {}) });
+  }
 }
 
 const c = new AdminBusinessController();
@@ -187,6 +194,7 @@ export const disconnectBusinessMailbox = c.disconnectMailbox.bind(c);
 export const removeCareersPhoto = c.removePhoto.bind(c);
 export const removeCareersCover = c.removeCover.bind(c);
 export const setBusinessDistribution = c.setDistribution.bind(c);
+export const setBusinessPartner = c.setPartner.bind(c);
 
 export const adminBusinessKey = (profileId: string, ...rest: (string | number)[]) =>
   ["admin", "business", profileId, ...rest] as const;
