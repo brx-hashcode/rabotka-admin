@@ -9,7 +9,7 @@ import {
   IconFileCv,
 } from "@tabler/icons-react";
 import { useQueryState, parseAsStringEnum } from "nuqs";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useProfileDetail } from "#/hooks/use-profile-detail";
@@ -46,6 +46,8 @@ import {
   sendVerificationLink,
   downloadAdminProfileAgreement,
   downloadAdminProfileResume,
+  downloadAdminUploadedCv,
+  getAdminUploadedCv,
 } from "#/lib/api/profiles-controller";
 import type {
   AdminVerifyDocumentRef,
@@ -115,6 +117,13 @@ export default function ProfileDetailPage({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoadingAgreement, setIsLoadingAgreement] = useState(false);
   const [isLoadingResume, setIsLoadingResume] = useState(false);
+  const [isLoadingUploadedCv, setIsLoadingUploadedCv] = useState(false);
+  // The CV the worker uploaded, beside the one Rabotka generates.
+  const uploadedCv = useQuery({
+    queryKey: ["admin-profile-uploaded-cv", profileId],
+    queryFn: () => getAdminUploadedCv(profileId),
+    enabled: profile?.profileType === "WORKER",
+  });
 
   const { mutate: sendVerifLink, isPending: isSendingVerifLink } = useMutation({
     mutationFn: () => sendVerificationLink(profileId),
@@ -201,6 +210,34 @@ export default function ProfileDetailPage({
       toast.error("Failed to load the CV");
     } finally {
       setIsLoadingResume(false);
+    }
+  }
+
+  async function handleViewUploadedCv() {
+    const cv = uploadedCv.data?.cv;
+    if (!cv) return;
+    setIsLoadingUploadedCv(true);
+    try {
+      const blob = await downloadAdminUploadedCv(profileId);
+      const objectUrl = URL.createObjectURL(blob);
+      const fileType =
+        cv.mimeType === "application/pdf" ? "pdf" : cv.mimeType.includes("wordprocessingml") ? "docx" : undefined;
+      handlePreviewDoc({
+        url: objectUrl,
+        title: "Uploaded CV",
+        description: `${cv.fileName} — uploaded ${new Date(cv.uploadedAt).toLocaleDateString()}`,
+        fileType,
+        onDownload: () => {
+          const a = globalThis.document.createElement("a");
+          a.href = objectUrl;
+          a.download = cv.fileName;
+          a.click();
+        },
+      });
+    } catch {
+      toast.error("Failed to load the uploaded CV");
+    } finally {
+      setIsLoadingUploadedCv(false);
     }
   }
 
@@ -324,6 +361,12 @@ export default function ProfileDetailPage({
               <Button variant="secondary" onClick={handleViewResume} disabled={isLoadingResume}>
                 <IconFileCv className="size-4" />
                 {isLoadingResume ? "Loading..." : "View CV"}
+              </Button>
+            )}
+            {isWorker && uploadedCv.data?.cv && (
+              <Button variant="secondary" onClick={handleViewUploadedCv} disabled={isLoadingUploadedCv}>
+                <IconFileText className="size-4" />
+                {isLoadingUploadedCv ? "Loading..." : "View uploaded CV"}
               </Button>
             )}
             <Button variant="secondary" onClick={handleViewAgreement} disabled={isLoadingAgreement}>

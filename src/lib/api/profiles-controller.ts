@@ -410,6 +410,14 @@ export type AdminProfilesListParams = {
   deleted?: boolean;
 };
 
+/** A worker's uploaded CV (« Mon CV »), as GET /admin/profiles/:id/cv describes it. */
+export type AdminUploadedCv = {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+};
+
 export class AdminProfilesController extends AdminBaseController {
   async getList(params: AdminProfilesListParams): Promise<AdminProfilesResponse> {
     const searchParams: Record<string, unknown> = {};
@@ -675,6 +683,21 @@ export class AdminProfilesController extends AdminBaseController {
     return response.blob();
   }
 
+  /** The CV the worker uploaded themselves (« Mon CV »), if any. */
+  async getUploadedCv(profileId: string): Promise<{ cv: AdminUploadedCv | null }> {
+    const url = this.createURL(`/admin/profiles/${profileId}/cv`, new URLSearchParams());
+    return this.get<{ cv: AdminUploadedCv | null }>(url);
+  }
+
+  async downloadUploadedCv(profileId: string): Promise<Blob> {
+    const response = await guardedFetch(
+      `${appConfig.apiUrl}/admin/profiles/${profileId}/cv/file`,
+      { credentials: "include" },
+    );
+    if (!response.ok) throw new Error("The uploaded CV couldn't be loaded. Try again.");
+    return response.blob();
+  }
+
   /** The CV the candidate downloads from their own app, generated from the profile. */
   async downloadProfileResume(profileId: string): Promise<Blob> {
     const response = await guardedFetch(
@@ -765,5 +788,7 @@ export const creditProfileWallet = controller.creditWallet.bind(controller);
 export const sendVerificationLink = controller.sendVerificationLink.bind(controller);
 export const downloadAdminProfileAgreement = controller.downloadProfileAgreement.bind(controller);
 export const downloadAdminProfileResume = controller.downloadProfileResume.bind(controller);
+export const getAdminUploadedCv = controller.getUploadedCv.bind(controller);
+export const downloadAdminUploadedCv = controller.downloadUploadedCv.bind(controller);
 export const getProfileInvoices = controller.getInvoices.bind(controller);
 export const updateProfileAvatar = controller.updateAvatar.bind(controller);
