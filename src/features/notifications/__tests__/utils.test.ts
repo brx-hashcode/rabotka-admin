@@ -29,6 +29,10 @@ describe("getNotificationHref", () => {
       "/agent-payouts",
     );
     expect(NOTIFICATION_ENTITY_LABELS["agent-withdrawal"]).toBe("Agent payout");
+    expect(getNotificationHref("demo-request", "d-1")).toBe(
+      "/demo-requests/d-1",
+    );
+    expect(NOTIFICATION_ENTITY_LABELS["demo-request"]).toBe("Demo request");
   });
 
   it("gives no link for an entity it does not know", () => {

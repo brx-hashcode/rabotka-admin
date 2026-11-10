@@ -31,6 +31,8 @@ import { Route as AuthenticatedContactRecordsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedContactRecordsContactRecordIdRouteImport } from './routes/_authenticated/contact-records/$contactRecordId'
 import { Route as AuthenticatedConversationsIndexRouteImport } from './routes/_authenticated/conversations/index'
 import { Route as AuthenticatedConversationsConversationIdRouteImport } from './routes/_authenticated/conversations/$conversationId'
+import { Route as AuthenticatedDemoRequestsIndexRouteImport } from './routes/_authenticated/demo-requests/index'
+import { Route as AuthenticatedDemoRequestsDemoRequestIdRouteImport } from './routes/_authenticated/demo-requests/$demoRequestId'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback/index'
@@ -179,6 +181,18 @@ const AuthenticatedConversationsConversationIdRoute =
     path: '/conversations/$conversationId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDemoRequestsIndexRoute =
+  AuthenticatedDemoRequestsIndexRouteImport.update({
+    id: '/demo-requests/',
+    path: '/demo-requests/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDemoRequestsDemoRequestIdRoute =
+  AuthenticatedDemoRequestsDemoRequestIdRouteImport.update({
+    id: '/demo-requests/$demoRequestId',
+    path: '/demo-requests/$demoRequestId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDocumentsIndexRoute =
   AuthenticatedDocumentsIndexRouteImport.update({
     id: '/documents/',
@@ -324,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
+  '/demo-requests/$demoRequestId': typeof AuthenticatedDemoRequestsDemoRequestIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -338,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/claim/': typeof AuthenticatedClaimIndexRoute
   '/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
   '/conversations/': typeof AuthenticatedConversationsIndexRoute
+  '/demo-requests/': typeof AuthenticatedDemoRequestsIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
@@ -370,6 +386,7 @@ export interface FileRoutesByTo {
   '/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
+  '/demo-requests/$demoRequestId': typeof AuthenticatedDemoRequestsDemoRequestIdRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -384,6 +401,7 @@ export interface FileRoutesByTo {
   '/claim': typeof AuthenticatedClaimIndexRoute
   '/contact-records': typeof AuthenticatedContactRecordsIndexRoute
   '/conversations': typeof AuthenticatedConversationsIndexRoute
+  '/demo-requests': typeof AuthenticatedDemoRequestsIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
@@ -418,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/broadcasts/new': typeof AuthenticatedBroadcastsNewRoute
   '/_authenticated/contact-records/$contactRecordId': typeof AuthenticatedContactRecordsContactRecordIdRoute
   '/_authenticated/conversations/$conversationId': typeof AuthenticatedConversationsConversationIdRoute
+  '/_authenticated/demo-requests/$demoRequestId': typeof AuthenticatedDemoRequestsDemoRequestIdRoute
   '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRoute
   '/_authenticated/penalties/$penaltyId': typeof AuthenticatedPenaltiesPenaltyIdRoute
   '/_authenticated/profiles/$profileId': typeof AuthenticatedProfilesProfileIdRoute
@@ -432,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/claim/': typeof AuthenticatedClaimIndexRoute
   '/_authenticated/contact-records/': typeof AuthenticatedContactRecordsIndexRoute
   '/_authenticated/conversations/': typeof AuthenticatedConversationsIndexRoute
+  '/_authenticated/demo-requests/': typeof AuthenticatedDemoRequestsIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
@@ -466,6 +486,7 @@ export interface FileRouteTypes {
     | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
     | '/conversations/$conversationId'
+    | '/demo-requests/$demoRequestId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
@@ -480,6 +501,7 @@ export interface FileRouteTypes {
     | '/claim/'
     | '/contact-records/'
     | '/conversations/'
+    | '/demo-requests/'
     | '/documents/'
     | '/events/'
     | '/feedback/'
@@ -512,6 +534,7 @@ export interface FileRouteTypes {
     | '/broadcasts/new'
     | '/contact-records/$contactRecordId'
     | '/conversations/$conversationId'
+    | '/demo-requests/$demoRequestId'
     | '/jobs/$jobId'
     | '/penalties/$penaltyId'
     | '/profiles/$profileId'
@@ -526,6 +549,7 @@ export interface FileRouteTypes {
     | '/claim'
     | '/contact-records'
     | '/conversations'
+    | '/demo-requests'
     | '/documents'
     | '/events'
     | '/feedback'
@@ -559,6 +583,7 @@ export interface FileRouteTypes {
     | '/_authenticated/broadcasts/new'
     | '/_authenticated/contact-records/$contactRecordId'
     | '/_authenticated/conversations/$conversationId'
+    | '/_authenticated/demo-requests/$demoRequestId'
     | '/_authenticated/jobs/$jobId'
     | '/_authenticated/penalties/$penaltyId'
     | '/_authenticated/profiles/$profileId'
@@ -573,6 +598,7 @@ export interface FileRouteTypes {
     | '/_authenticated/claim/'
     | '/_authenticated/contact-records/'
     | '/_authenticated/conversations/'
+    | '/_authenticated/demo-requests/'
     | '/_authenticated/documents/'
     | '/_authenticated/events/'
     | '/_authenticated/feedback/'
@@ -758,6 +784,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConversationsConversationIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/demo-requests/': {
+      id: '/_authenticated/demo-requests/'
+      path: '/demo-requests'
+      fullPath: '/demo-requests/'
+      preLoaderRoute: typeof AuthenticatedDemoRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/demo-requests/$demoRequestId': {
+      id: '/_authenticated/demo-requests/$demoRequestId'
+      path: '/demo-requests/$demoRequestId'
+      fullPath: '/demo-requests/$demoRequestId'
+      preLoaderRoute: typeof AuthenticatedDemoRequestsDemoRequestIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/documents/': {
       id: '/_authenticated/documents/'
       path: '/documents'
@@ -930,6 +970,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBroadcastsNewRoute: typeof AuthenticatedBroadcastsNewRoute
   AuthenticatedContactRecordsContactRecordIdRoute: typeof AuthenticatedContactRecordsContactRecordIdRoute
   AuthenticatedConversationsConversationIdRoute: typeof AuthenticatedConversationsConversationIdRoute
+  AuthenticatedDemoRequestsDemoRequestIdRoute: typeof AuthenticatedDemoRequestsDemoRequestIdRoute
   AuthenticatedJobsJobIdRoute: typeof AuthenticatedJobsJobIdRoute
   AuthenticatedPenaltiesPenaltyIdRoute: typeof AuthenticatedPenaltiesPenaltyIdRoute
   AuthenticatedProfilesProfileIdRoute: typeof AuthenticatedProfilesProfileIdRoute
@@ -944,6 +985,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClaimIndexRoute: typeof AuthenticatedClaimIndexRoute
   AuthenticatedContactRecordsIndexRoute: typeof AuthenticatedContactRecordsIndexRoute
   AuthenticatedConversationsIndexRoute: typeof AuthenticatedConversationsIndexRoute
+  AuthenticatedDemoRequestsIndexRoute: typeof AuthenticatedDemoRequestsIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedFeedbackIndexRoute: typeof AuthenticatedFeedbackIndexRoute
@@ -978,6 +1020,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedContactRecordsContactRecordIdRoute,
   AuthenticatedConversationsConversationIdRoute:
     AuthenticatedConversationsConversationIdRoute,
+  AuthenticatedDemoRequestsDemoRequestIdRoute:
+    AuthenticatedDemoRequestsDemoRequestIdRoute,
   AuthenticatedJobsJobIdRoute: AuthenticatedJobsJobIdRoute,
   AuthenticatedPenaltiesPenaltyIdRoute: AuthenticatedPenaltiesPenaltyIdRoute,
   AuthenticatedProfilesProfileIdRoute: AuthenticatedProfilesProfileIdRoute,
@@ -992,6 +1036,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClaimIndexRoute: AuthenticatedClaimIndexRoute,
   AuthenticatedContactRecordsIndexRoute: AuthenticatedContactRecordsIndexRoute,
   AuthenticatedConversationsIndexRoute: AuthenticatedConversationsIndexRoute,
+  AuthenticatedDemoRequestsIndexRoute: AuthenticatedDemoRequestsIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedFeedbackIndexRoute: AuthenticatedFeedbackIndexRoute,

@@ -30,6 +30,7 @@ import {
   IconCashBanknote,
   IconUserX,
   IconStack2,
+  IconPresentation,
 } from "@tabler/icons-react";
 import rabotkaLogo from "#/assets/rabotka-logo.png";
 import { NavGroups, type NavGroup } from "#/layouts/nav-groups";
@@ -86,6 +87,7 @@ const navGroups: NavGroup[] = [
       { title: "Applications", url: "/applications", icon: IconFileText, roles: ALL_STAFF },
       { title: "Paid contacts", url: "/contact-records", icon: IconAddressBook, roles: ALL_STAFF },
       { title: "Agents", url: "/agents", icon: IconUsersGroup, roles: ALL_STAFF },
+      { title: "Demo requests", url: "/demo-requests", icon: IconPresentation, roles: [...LADDER, "FINANCE", "SUPPORT"] },
       { title: "Job categories", url: "/job-categories", icon: IconTag, roles: [...MANAGER_UP, "FINANCE"] },
     ],
   },
