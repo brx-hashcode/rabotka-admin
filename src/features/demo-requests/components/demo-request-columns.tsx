@@ -1,10 +1,23 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { Link } from "@tanstack/react-router";
-import { EyeIcon } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  EyeIcon,
+  MailIcon,
+  MessageCircleIcon,
+  MoreHorizontal,
+  PhoneIcon,
+} from "lucide-react";
 
-import { getCommonColumns } from "#/components/table";
+import { getCommonColumns, ProfileCell } from "#/components/table";
 import { Badge } from "#/components/ui/badge";
-import { buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import type {
   AdminDemoRequest,
   DemoRequestStatus,
@@ -61,20 +74,28 @@ export function formatDateTime(value: string | null): string {
   }
 }
 
+/** The number as it is dialled, with its international prefix. */
+export function displayPhone(phone: string): string {
+  const p = phone.trim();
+  return p.startsWith("+") ? p : `+${p}`;
+}
+
 const dataColumns: ColumnDef<DemoRequest, unknown>[] = [
   {
     id: "company",
     accessorKey: "company",
     header: "Company",
     cell: ({ row }) => (
-      <div className="max-w-[220px]">
-        <p className="font-medium text-sm wrap-break-word whitespace-normal">
-          {row.original.company}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {row.original.countryName} · {row.original.companySize} people
-        </p>
-      </div>
+      <Link
+        to="/demo-requests/$demoRequestId"
+        params={{ demoRequestId: row.original.id }}
+        className="block max-w-[260px] hover:opacity-80"
+      >
+        <ProfileCell
+          name={row.original.company}
+          email={`${row.original.countryName} · ${row.original.companySize} employees`}
+        />
+      </Link>
     ),
   },
   {
@@ -82,11 +103,11 @@ const dataColumns: ColumnDef<DemoRequest, unknown>[] = [
     accessorKey: "lastName",
     header: "Contact",
     cell: ({ row }) => (
-      <div className="max-w-[220px]">
-        <p className="font-medium text-sm">
-          {row.original.firstName} {row.original.lastName}
+      <div className="max-w-[240px] text-sm leading-tight">
+        <p className="truncate font-medium">
+          {row.original.lastName} {row.original.firstName}
         </p>
-        <p className="text-muted-foreground text-xs wrap-break-word whitespace-normal">
+        <p className="text-muted-foreground truncate text-xs">
           {row.original.jobTitle} · {row.original.email}
         </p>
       </div>
@@ -97,7 +118,9 @@ const dataColumns: ColumnDef<DemoRequest, unknown>[] = [
     accessorKey: "phone",
     header: "Phone",
     cell: ({ row }) => (
-      <span className="text-sm whitespace-nowrap">{row.original.phone}</span>
+      <span className="text-muted-foreground text-sm whitespace-nowrap">
+        {displayPhone(row.original.phone)}
+      </span>
     ),
   },
   {
@@ -114,19 +137,56 @@ const dataColumns: ColumnDef<DemoRequest, unknown>[] = [
     id: "createdAt",
     accessorKey: "createdAt",
     header: "Requested",
-    cell: ({ row }) => formatDateTime(row.original.createdAt),
+    cell: ({ row }) => (
+      <span className="text-sm whitespace-nowrap">
+        {formatDateTime(row.original.createdAt)}
+      </span>
+    ),
   },
 ];
 
+/** View, then the three ways to answer — as the agents' row menu. */
 function DemoRequestRowActions({ row }: Readonly<{ row: DemoRequest }>) {
+  const navigate = useNavigate();
+  const phone = row.phone.replace(/\D/g, "");
   return (
-    <Link
-      to="/demo-requests/$demoRequestId"
-      params={{ demoRequestId: row.id }}
-      className={buttonVariants({ variant: "ghost", size: "icon" })}
-    >
-      <EyeIcon className="size-4" aria-hidden />
-    </Link>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Demo request actions">
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onClick={() =>
+            void navigate({
+              to: "/demo-requests/$demoRequestId",
+              params: { demoRequestId: row.id },
+            })
+          }
+        >
+          <EyeIcon className="size-4" />
+          View
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => window.open(`tel:+${phone}`, "_self")}>
+          <PhoneIcon className="size-4" />
+          Call
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => window.open(`https://wa.me/${phone}`, "_blank", "noreferrer")}
+        >
+          <MessageCircleIcon className="size-4" />
+          WhatsApp
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => window.open(`mailto:${row.email}`, "_self")}
+        >
+          <MailIcon className="size-4" />
+          E-mail
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
