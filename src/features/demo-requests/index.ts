@@ -3,6 +3,7 @@ export {
   DEMO_STATUS_LABELS,
   demoRequestColumns,
   demoStatusOptions,
+  displayPhone,
   formatDateTime,
   getDemoStatusBadgeClass,
   type DemoRequest,
