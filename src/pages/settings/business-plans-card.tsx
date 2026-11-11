@@ -31,6 +31,7 @@ type FormState = {
   "business.trial_offer_writer": string;
   "business.renewal_reminder_days": string;
   "business.offer_expiry_reminder_days": string;
+  "business.talent_pool_months": string;
 } & Record<`business.pack_${PackKey}_${"quantity" | "price_fcfa"}`, string>;
 
 const EMPTY: FormState = {
@@ -41,6 +42,7 @@ const EMPTY: FormState = {
   "business.trial_offer_writer": "false",
   "business.renewal_reminder_days": "",
   "business.offer_expiry_reminder_days": "",
+  "business.talent_pool_months": "",
   "business.pack_cv_quantity": "",
   "business.pack_cv_price_fcfa": "",
   "business.pack_offers_quantity": "",
@@ -190,6 +192,21 @@ export function BusinessPlansCard() {
             />
             <p className="text-muted-foreground text-xs">
               Sent by email and in-app, never WhatsApp. 0 turns it off.
+            </p>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <FieldLabel>Kept candidatures (months)</FieldLabel>
+            <Input
+              type="number"
+              min={1}
+              max={36}
+              value={form["business.talent_pool_months"]}
+              onChange={(e) => set("business.talent_pool_months", e.target.value)}
+              placeholder="12"
+            />
+            <p className="text-muted-foreground text-xs">
+              How long a careers-page candidate who ticked « garder ma candidature » stays searchable in the
+              business&apos;s « Mes profils », with their CV. 1 to 36; the candidate can withdraw at any time.
             </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
