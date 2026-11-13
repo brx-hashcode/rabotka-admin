@@ -356,7 +356,8 @@ export function BusinessSubscriptionCard({
                 {e.priorityVisibility && <Badge variant="outline">Priority</Badge>}
                 {e.linkedinPosting && <Badge variant="outline">LinkedIn</Badge>}
                 {e.hrExports && <Badge variant="outline">HR exports</Badge>}
-                {!e.includesPreselection && !e.priorityVisibility && !e.linkedinPosting && !e.hrExports && "—"}
+                {e.videoInterviews && <Badge variant="outline">Visio</Badge>}
+                {!e.includesPreselection && !e.priorityVisibility && !e.linkedinPosting && !e.hrExports && !e.videoInterviews && "—"}
               </div>
             </Row>
           )}

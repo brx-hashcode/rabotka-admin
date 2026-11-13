@@ -89,6 +89,7 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
     plan.priorityVisibility && "Priority visibility",
     plan.linkedinPosting && "LinkedIn publishing",
     plan.hrExports && "HR exports",
+    plan.videoInterviews && "Video interviews",
   ].filter(Boolean) as string[];
 
   return (

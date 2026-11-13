@@ -70,6 +70,7 @@ const schema = z.object({
   priorityVisibility: z.boolean(),
   linkedinPosting: z.boolean(),
   hrExports: z.boolean(),
+  videoInterviews: z.boolean(),
   sortOrder: z.coerce.number().int(),
 });
 
@@ -96,6 +97,11 @@ const FEATURE_OPTIONS = [
     name: "hrExports",
     label: "HR exports",
     hint: "Excel/CSV of an offer's candidates, the staff register of hires, and the offers to declare to the ACPE.",
+  },
+  {
+    name: "videoInterviews",
+    label: "Video interviews in Rabotka",
+    hint: "In-app visio: a link made in Rabotka, guests invited into the call, transcription. A Meet or Zoom link pasted by hand stays free for every plan.",
   },
 ] as const;
 
@@ -167,6 +173,7 @@ const EMPTY: FormInput = {
   priorityVisibility: false,
   linkedinPosting: false,
   hrExports: false,
+  videoInterviews: false,
   sortOrder: 0,
 };
 
@@ -289,6 +296,7 @@ function toForm(plan: BusinessPlan): FormInput {
     priorityVisibility: plan.priorityVisibility,
     linkedinPosting: plan.linkedinPosting,
     hrExports: plan.hrExports,
+    videoInterviews: plan.videoInterviews ?? false,
     sortOrder: plan.sortOrder,
   };
 }
