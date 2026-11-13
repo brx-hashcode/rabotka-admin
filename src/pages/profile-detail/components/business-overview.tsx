@@ -3,7 +3,11 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
+  IconBriefcase,
   IconCircleCheck,
+  IconCreditCard,
+  IconUsers,
+  IconUsersGroup,
   IconClock,
   IconPencil,
   IconTrash,
@@ -32,6 +36,9 @@ import {
   type BusinessInterview,
 } from "#/lib/api/admin-business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { getBusinessSubscription } from "#/lib/api/business-plans-controller";
+import { cn } from "#/lib/utils";
+import { businessSubscriptionKey } from "./business-subscription-card";
 import { activityLabel } from "../business-activity-labels";
 import { formatDate, formatDateTime } from "../helpers";
 
@@ -72,43 +79,179 @@ export function BusinessOverviewSection({
 
   return (
     <div className="space-y-6">
+      {/* Each figure opens the section that explains it. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Tile label="Plan" value={h.plan.name ?? "No plan"} hint={h.plan.endsAt ? `${h.plan.status?.toLowerCase() ?? ""} · until ${formatDate(h.plan.endsAt)}` : undefined} />
-        <Tile label="Open offers" value={String(h.openOffers)} />
-        <Tile label="Last 30 days" value={`${h.last30Days.candidates} candidates`} hint={`${h.last30Days.hires} hired`} />
         <Tile
-          label="Last activity"
-          value={h.lastActivity ? formatDateTime(h.lastActivity.at) : "Never"}
-          hint={h.lastActivity ? `${h.lastActivity.by ?? "Someone"} ${activityLabel(h.lastActivity.action)}` : `${h.teamSize} in the team`}
+          icon={IconCreditCard}
+          label="Plan"
+          value={h.plan.name ?? "No plan"}
+          hint={h.plan.endsAt ? `${h.plan.status?.toLowerCase() ?? ""} · until ${formatDate(h.plan.endsAt)}` : "No active subscription"}
+          onClick={() => onOpenSection("organisation")}
+        />
+        <Tile icon={IconBriefcase} label="Open offers" value={String(h.openOffers)} hint="Offers taking candidates" onClick={() => onOpenSection("hiring")} />
+        <Tile
+          icon={IconUsers}
+          label="Last 30 days"
+          value={`${h.last30Days.candidates} candidates`}
+          hint={`${h.last30Days.hires} hired`}
+          onClick={() => onOpenSection("hiring")}
+        />
+        <Tile
+          icon={IconUsersGroup}
+          label="Team"
+          value={`${h.teamSize} member${h.teamSize > 1 ? "s" : ""}`}
+          hint={h.lastActivity ? `Last: ${h.lastActivity.by ?? "someone"} ${activityLabel(h.lastActivity.action)} · ${formatDateTime(h.lastActivity.at)}` : "No activity yet"}
+          onClick={() => onOpenSection("team")}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Needs attention</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {h.alerts.length === 0 ? (
-            <p className="flex items-center gap-2 text-green-700 text-sm dark:text-green-400">
-              <IconCircleCheck className="size-4" />
-              Nothing stuck: candidates answered, offers on track, team and mailboxes fine.
-            </p>
-          ) : (
-            h.alerts.map((a) => <AlertRow key={a.kind} alert={a} onOpen={onOpenSection} />)
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">Needs attention</CardTitle>
+            {h.alerts.length > 0 && <Badge variant="outline">{h.alerts.length}</Badge>}
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {h.alerts.length === 0 ? (
+              <p className="flex items-center gap-2 text-green-700 text-sm dark:text-green-400">
+                <IconCircleCheck className="size-4" />
+                Nothing stuck: candidates answered, offers on track, team and mailboxes fine.
+              </p>
+            ) : (
+              h.alerts.map((a) => <AlertRow key={a.kind} alert={a} onOpen={onOpenSection} />)
+            )}
+          </CardContent>
+        </Card>
+        <PlanUsageCard profileId={profileId} onOpen={() => onOpenSection("organisation")} />
+      </div>
+
+      <UpcomingInterviewsCard profileId={profileId} onOpen={() => onOpenSection("interviews")} />
     </div>
   );
 }
 
-function Tile({ label, value, hint }: Readonly<{ label: string; value: string; hint?: string }>) {
+function Tile({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  onClick,
+}: Readonly<{ icon: typeof IconUsers; label: string; value: string; hint?: string; onClick?: () => void }>) {
+  return (
+    <button type="button" onClick={onClick} className="group text-left">
+      <Card className="h-full transition-colors group-hover:border-primary/40">
+        <CardContent className="space-y-1 p-4">
+          <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+            <Icon className="size-3.5" />
+            {label}
+          </p>
+          <p className="truncate font-semibold text-lg">{value}</p>
+          {hint && <p className="truncate text-muted-foreground text-xs">{hint}</p>}
+        </CardContent>
+      </Card>
+    </button>
+  );
+}
+
+/** One quota of the plan: used of included, a bar when it is limited. */
+function Meter({ label, used, quota }: Readonly<{ label: string; used: number; quota: number | null | undefined }>) {
+  const unlimited = quota === null;
+  const none = quota === 0 || quota === undefined;
+  const pct = !unlimited && !none ? Math.min(100, Math.round((used / quota) * 100)) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">{unlimited ? `${used} · unlimited` : none ? "Not included" : `${used} / ${quota}`}</span>
+      </div>
+      {!unlimited && !none && (
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className={cn("h-full rounded-full", pct >= 90 ? "bg-amber-500" : "bg-primary")} style={{ width: `${pct}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** What the plan includes, and how much of it this period has used. */
+function PlanUsageCard({ profileId, onOpen }: Readonly<{ profileId: string; onOpen: () => void }>) {
+  const sub = useQuery({ queryKey: businessSubscriptionKey(profileId), queryFn: () => getBusinessSubscription(profileId) });
+  const e = sub.data?.entitlements;
+  const features = e
+    ? [
+        e.includesPreselection && "Preselection",
+        e.priorityVisibility && "Priority",
+        e.linkedinPosting && "LinkedIn",
+        e.hrExports && "HR exports",
+      ].filter((f): f is string => Boolean(f))
+    : [];
   return (
     <Card>
-      <CardContent className="space-y-1 p-4">
-        <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="truncate font-semibold text-lg">{value}</p>
-        {hint && <p className="truncate text-muted-foreground text-xs">{hint}</p>}
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">Plan usage</CardTitle>
+        <Button size="sm" variant="ghost" className="h-7" onClick={onOpen}>
+          Manage
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {sub.isLoading ? (
+          <Skeleton className="h-32" />
+        ) : !e?.plan ? (
+          <p className="text-muted-foreground text-sm">No active plan.</p>
+        ) : (
+          <>
+            <Meter label="Offers published" used={e.offersPublished ?? e.activeOffers} quota={e.activeOffersLimit} />
+            <Meter label="Contacts" used={e.unlocksUsed} quota={e.unlocksQuota} />
+            <Meter label="CVs analysed" used={e.cvUsed ?? 0} quota={e.cvQuota} />
+            <Meter label="Recruiters" used={e.recruiters ?? 0} quota={e.recruitersLimit} />
+            <Meter label="Reviewers" used={e.reviewers ?? 0} quota={e.reviewersLimit} />
+            <div className="flex flex-wrap gap-1 pt-1">
+              {features.length ? features.map((f) => <Badge key={f} variant="outline">{f}</Badge>) : <span className="text-muted-foreground text-xs">No extra services</span>}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** The next interviews, so support knows what is about to happen. */
+function UpcomingInterviewsCard({ profileId, onOpen }: Readonly<{ profileId: string; onOpen: () => void }>) {
+  const query = useQuery({ queryKey: adminBusinessKey(profileId, "interviews"), queryFn: () => getBusinessInterviews(profileId) });
+  const now = Date.now();
+  const next = (query.data ?? [])
+    .filter((i) => i.status !== "CANCELLED" && i.status !== "DECLINED" && Date.parse(i.startsAt) > now)
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
+    .slice(0, 4);
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">Next interviews</CardTitle>
+        <Button size="sm" variant="ghost" className="h-7" onClick={onOpen}>
+          See all
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {query.isLoading ? (
+          <Skeleton className="h-20" />
+        ) : next.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No interview planned.</p>
+        ) : (
+          <ul className="divide-y">
+            {next.map((i) => (
+              <li key={i.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{i.candidateName}</p>
+                  <p className="truncate text-muted-foreground text-xs">{i.jobTitle}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="tabular-nums">{formatDateTime(i.startsAt)}</p>
+                  <span className={cn("rounded px-1.5 py-0.5 text-[11px]", INTERVIEW_STATUS[i.status].className)}>{INTERVIEW_STATUS[i.status].label}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

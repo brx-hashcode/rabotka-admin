@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCrown,
   IconDots,
@@ -27,7 +27,6 @@ import { useRole } from "#/hooks/use-role";
 import {
   adminBusinessKey,
   disconnectBusinessMailbox,
-  getBusinessActivity,
   getBusinessCareers,
   getBusinessMailboxes,
   getBusinessOverview,
@@ -44,7 +43,6 @@ import {
   type BusinessTeamMember,
 } from "#/lib/api/admin-business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { activityLabel, activityOfferId } from "../business-activity-labels";
 import { formatDate, formatDateTime } from "../helpers";
 import { CareersApplicationsSection } from "#/features/careers-applications/careers-applications-table";
 
@@ -171,85 +169,6 @@ export function BusinessTeamSection({ profileId }: Readonly<{ profileId: string 
 }
 
 const places = (p: { used: number; limit: number | null }) => (p.limit === null ? `${p.used} / unlimited` : `${p.used} / ${p.limit}`);
-
-// ── Activity ────────────────────────────────────────────────────────────
-
-/** Who did what in the business's space, newest first. */
-export function BusinessActivitySection({ profileId }: Readonly<{ profileId: string }>) {
-  const team = useQuery({ queryKey: adminBusinessKey(profileId, "team"), queryFn: () => getBusinessTeam(profileId) });
-  const [memberId, setMemberId] = useState<string | undefined>(undefined);
-  const activity = useInfiniteQuery({
-    queryKey: adminBusinessKey(profileId, "activity", memberId ?? "all"),
-    queryFn: ({ pageParam }) => getBusinessActivity(profileId, { page: pageParam, memberId }),
-    initialPageParam: 1,
-    getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
-  });
-  const items = activity.data?.pages.flatMap((p) => p.items) ?? [];
-  const people = (team.data?.members ?? []).filter((m) => m.status !== "INVITED");
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-sm">
-          Activity {activity.data && <span className="font-normal text-muted-foreground">({activity.data.pages[0]?.total ?? 0})</span>}
-        </CardTitle>
-        {people.length > 1 && (
-          <div className="flex flex-wrap gap-1">
-            {[{ id: undefined as string | undefined, name: "Everyone" }, ...people].map((p) => (
-              <Button key={p.id ?? "all"} size="sm" variant={memberId === p.id ? "default" : "outline"} onClick={() => setMemberId(p.id)}>
-                {p.name}
-              </Button>
-            ))}
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        {activity.isLoading ? (
-          <div className="p-6">
-            <Loading />
-          </div>
-        ) : activity.isError ? (
-          <div className="p-6">
-            <Failed error={activity.error} />
-          </div>
-        ) : items.length === 0 ? (
-          <p className="p-6 text-muted-foreground text-sm">Nothing yet.</p>
-        ) : (
-          <ul className="divide-y">
-            {items.map((it) => {
-              const offerId = activityOfferId(it.action, it.targetId);
-              return (
-                <li key={it.id} className="flex items-center gap-3 px-6 py-2.5 text-sm">
-                  <p className="min-w-0 flex-1 truncate" title={it.action}>
-                    <span className="font-medium">{it.member?.name ?? "A former member"}</span>{" "}
-                    {it.member && <span className="text-muted-foreground text-xs">({ROLE_LABEL[it.member.role]})</span>}{" "}
-                    {activityLabel(it.action)}
-                    {offerId && (
-                      <>
-                        {" · "}
-                        <Link to="/jobs/$jobId" params={{ jobId: offerId }} className="font-medium hover:underline">
-                          open offer
-                        </Link>
-                      </>
-                    )}
-                  </p>
-                  <span className="shrink-0 text-muted-foreground text-xs">{formatDateTime(it.at)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {activity.hasNextPage && (
-          <div className="border-t p-3 text-center">
-            <Button size="sm" variant="outline" onClick={() => void activity.fetchNextPage()} disabled={activity.isFetchingNextPage}>
-              Load more
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 // ── Hiring ──────────────────────────────────────────────────────────────
 
