@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  IconActivity,
   IconAlertTriangle,
   IconBell,
   IconGift,
@@ -70,7 +69,6 @@ import {
   BusinessOverviewSection,
 } from "./business-overview";
 import {
-  BusinessActivitySection,
   BusinessCareersSection,
   BusinessHiringSection,
   BusinessTeamSection,
@@ -167,7 +165,6 @@ const SECTIONS = [
   { value: "overview", label: "Overview", icon: IconLayoutDashboard },
   { value: "organisation", label: "Organisation", icon: IconBuilding },
   { value: "team", label: "Team", icon: IconUsersGroup },
-  { value: "activity", label: "Activity", icon: IconActivity },
   { value: "hiring", label: "Hiring", icon: IconChartBar },
   { value: "interviews", label: "Interviews", icon: IconCalendarEvent },
   { value: "cv", label: "CV analyses", icon: IconFileSearch },
@@ -212,9 +209,6 @@ export function ProfileBusinessContent(props: Readonly<Props>) {
       </TabsContent>
       <TabsContent value="team">
         <BusinessTeamSection profileId={props.profileId} />
-      </TabsContent>
-      <TabsContent value="activity">
-        <BusinessActivitySection profileId={props.profileId} />
       </TabsContent>
       <TabsContent value="hiring">
         <BusinessHiringSection profileId={props.profileId} />
