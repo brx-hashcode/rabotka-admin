@@ -6,6 +6,7 @@ import {
   IconBell,
   IconGift,
   IconRosetteDiscountCheck,
+  IconStack2,
   IconCalendarEvent,
   IconFileSearch,
   IconLayoutDashboard,
@@ -57,6 +58,7 @@ import { ConfirmDialog } from "#/features/team/components/confirm-dialog";
 import { formatDate } from "../helpers";
 import { BusinessInfoForm } from "./business-info-form";
 import { BusinessSubscriptionCard, businessSubscriptionKey } from "./business-subscription-card";
+import { BusinessPlansSection } from "./business-plans-section";
 import { Switch } from "#/components/ui/switch";
 import { cn } from "#/lib/utils";
 import { trialOffer } from "#/features/business-plans/trial-offer";
@@ -165,6 +167,7 @@ function PreviousVersions({
 const SECTIONS = [
   { value: "overview", label: "Overview", icon: IconLayoutDashboard },
   { value: "organisation", label: "Organisation", icon: IconBuilding },
+  { value: "plans", label: "Plans", icon: IconStack2 },
   { value: "team", label: "Team", icon: IconUsersGroup },
   { value: "hiring", label: "Hiring", icon: IconChartBar },
   { value: "interviews", label: "Interviews", icon: IconCalendarEvent },
@@ -216,6 +219,9 @@ export function ProfileBusinessContent(props: Readonly<Props>) {
       </TabsContent>
       <TabsContent value="organisation">
         <BusinessOrganisationSection {...props} />
+      </TabsContent>
+      <TabsContent value="plans">
+        <BusinessPlansSection profileId={props.profileId} />
       </TabsContent>
       <TabsContent value="team">
         <BusinessTeamSection profileId={props.profileId} />

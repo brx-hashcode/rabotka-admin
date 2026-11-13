@@ -28,7 +28,7 @@ export default function BusinessPlansPage() {
         ))}
       </div>
     );
-  } else if (plans.length === 0) {
+  } else if (!plans.some((p) => !p.businessId)) {
     listSection = (
       <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
         <div className="bg-muted rounded-full p-5">
@@ -48,31 +48,14 @@ export default function BusinessPlansPage() {
       </div>
     );
   } else {
-    // Custom plans apart: each is one business's, made from its Subscription card.
-    const catalog = plans.filter((p) => !p.businessId);
-    const custom = plans.filter((p) => p.businessId);
-    const grid = (list: typeof plans) => (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {list.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} canManage={canManageContent} />
-        ))}
-      </div>
-    );
+    // Custom plans live on their business's profile (Business › Plans): only the catalog here.
     listSection = (
-      <div className="space-y-10">
-        {grid(catalog)}
-        {custom.length > 0 && (
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-base font-semibold">Custom plans</h2>
-              <p className="text-muted-foreground text-sm">
-                Each made for one business, the only one to see it. Create one from the business&apos;s Subscription
-                card (Assign plan).
-              </p>
-            </div>
-            {grid(custom)}
-          </section>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {plans
+          .filter((p) => !p.businessId)
+          .map((plan) => (
+            <PlanCard key={plan.id} plan={plan} canManage={canManageContent} />
+          ))}
       </div>
     );
   }
