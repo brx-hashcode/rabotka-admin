@@ -36,6 +36,8 @@ export type BusinessPlan = {
   priorityVisibility: boolean;
   linkedinPosting: boolean;
   hrExports: boolean;
+  /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. Absent from an older backend. */
+  videoInterviews?: boolean;
   isActive: boolean;
   sortOrder: number;
   /** Businesses with a period running or queued on the plan (the list only). */
@@ -84,6 +86,7 @@ export type BusinessSubscriptionOverview = {
     priorityVisibility: boolean;
     linkedinPosting?: boolean;
     hrExports?: boolean;
+    videoInterviews?: boolean;
     /** The rest of the plan's usage (absent from an older backend). */
     offersPublished?: number;
     cvUsed?: number;
