@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
@@ -172,15 +173,24 @@ const SECTIONS = [
   { value: "notes", label: "Notes", icon: IconNotes },
 ] as const;
 
+const SECTION_VALUES = SECTIONS.map((s) => s.value);
+type SectionValue = (typeof SECTION_VALUES)[number];
+const sectionParser = parseAsStringEnum<SectionValue>([...SECTION_VALUES])
+  .withDefault("overview")
+  .withOptions({ clearOnDefault: true });
+
 /**
  * A business profile's BUSINESS tab: its organisation (details, plan,
  * verification, papers), and what it works with — team, activity, hiring,
  * careers page and mailboxes — with the fixes support may make.
  */
 export function ProfileBusinessContent(props: Readonly<Props>) {
-  const [section, setSection] = useState("overview");
+  // In the URL (?section=), beside the profile's own ?tab=: a reload or a
+  // shared link opens the same section.
+  const [section, setSection] = useQueryState("section", sectionParser);
+  const open = (value: string) => void setSection(SECTION_VALUES.includes(value as SectionValue) ? (value as SectionValue) : null);
   return (
-    <Tabs value={section} onValueChange={setSection} className="gap-6">
+    <Tabs value={section} onValueChange={open} className="gap-6">
       {/* A second level under the profile's tabs: underlined, with icons, not pills. */}
       <div className="border-b">
         <TabsList variant="line" className="h-auto w-full justify-start gap-4 overflow-x-auto p-0">
@@ -193,7 +203,7 @@ export function ProfileBusinessContent(props: Readonly<Props>) {
         </TabsList>
       </div>
       <TabsContent value="overview">
-        <BusinessOverviewSection profileId={props.profileId} onOpenSection={setSection} />
+        <BusinessOverviewSection profileId={props.profileId} onOpenSection={open} />
       </TabsContent>
       <TabsContent value="interviews">
         <BusinessInterviewsSection profileId={props.profileId} />
