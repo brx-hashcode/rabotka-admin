@@ -1,7 +1,7 @@
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { endOfDay, isSameDay, parseISO, startOfDay } from "date-fns";
-import { Repeat } from "lucide-react";
+import { Repeat, Video } from "lucide-react";
 import { cn } from "#/lib/utils";
 import { useCalendar } from "#/features/calendar/contexts/calendar-context";
 import { AddEditEventDialog } from "#/features/calendar/dialogs/add-edit-event-dialog";
@@ -104,6 +104,9 @@ export function MonthEventBadge({
             hint that dragging this will ask a question is the question. */}
         {event.seriesId && (
           <Repeat className="size-3 shrink-0 opacity-70" aria-label="Repeats" />
+        )}
+        {event.visioRoom && (
+          <Video className="size-3 shrink-0 opacity-70" aria-label="Video meeting" />
         )}
         {renderBadgeText && (
           <p className="flex-1 truncate font-semibold">

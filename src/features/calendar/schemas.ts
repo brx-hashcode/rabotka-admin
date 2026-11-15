@@ -28,6 +28,8 @@ export const eventSchema = z
 		color: z.enum(["blue", "green", "red", "yellow", "purple", "orange"]),
 		channel: z.enum(["EMAIL", "WHATSAPP", "ALL"]),
 		location: z.string().optional(),
+		// A visio on our own Jitsi: each participant gets their own link.
+		visio: z.boolean().default(false),
 		profileIds: z.array(z.string()).default([]),
 		userIds: z.array(z.string()).default([]),
 		// Flat rather than a nested `recurrence` object: every field in this form

@@ -3,6 +3,8 @@ import { getMe, type Admin } from "#/lib/api/auth-controller";
 import { getQueryClient } from "#/app/providers";
 import { canViewRoute, landingRouteFor } from "#/lib/role-access";
 import { isExpiring } from "#/lib/auth/session";
+import { CallPanel } from "#/features/visio/call-panel";
+import { IncomingCall } from "#/features/visio/incoming-call";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
@@ -29,5 +31,19 @@ export const Route = createFileRoute("/_authenticated")({
     }
   },
 
-  component: Outlet,
+  component: AuthenticatedShell,
 });
+
+/**
+ * Every signed-in page, plus what outlives a page change: the call panel (a
+ * call keeps going while you move around the admin) and the incoming-call ring.
+ */
+function AuthenticatedShell() {
+  return (
+    <>
+      <Outlet />
+      <CallPanel />
+      <IncomingCall />
+    </>
+  );
+}
