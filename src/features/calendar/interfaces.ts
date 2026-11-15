@@ -33,6 +33,8 @@ export interface IEvent {
 	channel: TDeliveryChannel;
 	user: IUser;
 	location: string | null;
+	/** The event's visio room, when it has one. */
+	visioRoom: string | null;
 	profiles: ICalendarProfile[];
 	assignedUsers: IUser[];
 	/** Null on a one-off event. Non-null means this is one occurrence of a series. */

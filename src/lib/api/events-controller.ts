@@ -40,6 +40,8 @@ export type AdminEvent = {
   color: TEventColor;
   channel: TDeliveryChannel;
   location: string | null;
+  /** The event's visio room on our own Jitsi, when it has one. */
+  visioRoom: string | null;
   user: AdminEventUser;
   profiles: AdminEventProfile[];
   assignedUsers: AdminEventUser[];
@@ -58,6 +60,8 @@ export type CreateEventParams = {
   color: string;
   channel: TDeliveryChannel;
   location?: string;
+  /** true adds a visio (each participant gets their link); false removes it. */
+  visio?: boolean;
   profileIds?: string[];
   userIds?: string[];
   /** Omit for a one-off event. */

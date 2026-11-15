@@ -1,4 +1,5 @@
 import { AdminBaseController } from "./base-controller";
+import type { VisioJoin } from "./visio-controller";
 
 export type ChatConversationType = "DIRECT" | "GROUP";
 
@@ -10,11 +11,21 @@ export type ChatAttachment = {
   size: number;
 };
 
+/** A CALL message: the call's room, and how it went once over. */
+export type ChatCallInfo = {
+  room: string;
+  endedAt?: string;
+  durationSec?: number;
+};
+
 export type ChatMessageItem = {
   id: string;
   conversationId: string;
   senderId: string;
   senderName: string;
+  /** TEXT, or CALL: a video call started here (shown as a card). */
+  kind: "TEXT" | "CALL";
+  call: ChatCallInfo | null;
   body: string | null;
   attachments: ChatAttachment[];
   createdAt: string;
@@ -39,6 +50,8 @@ export type ChatConversationItem = {
   participants: ChatParticipantItem[];
   lastMessage: ChatMessageItem | null;
   unreadCount: number;
+  /** The call going on in it, if any. */
+  activeCall: { room: string; startedAt: string } | null;
 };
 
 export type ChatTeamUser = { id: string; name: string; role: string };
@@ -164,6 +177,49 @@ export class AdminChatController extends AdminBaseController {
     return this.delete<{ success: boolean }>(url);
   }
 
+  // ── Calls ─────────────────────────────────────────────────────────────
+
+  /** Starts the conversation's call (ringing the others), or finds the one going on. */
+  async startCall(
+    conversationId: string,
+  ): Promise<{ room: string; started: boolean }> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/call`,
+      new URLSearchParams(),
+    );
+    return this.post<{ room: string; started: boolean }>(url, {});
+  }
+
+  async joinCall(
+    conversationId: string,
+  ): Promise<VisioJoin & { title: string }> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/call/join`,
+      new URLSearchParams(),
+    );
+    return this.post<VisioJoin & { title: string }>(url, {});
+  }
+
+  /** Left the call; `remaining` is who was still in it. The last one out ends it. */
+  async leaveCall(
+    conversationId: string,
+    remaining: number,
+  ): Promise<{ ended: boolean }> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/call/leave`,
+      new URLSearchParams(),
+    );
+    return this.post<{ ended: boolean }>(url, { remaining });
+  }
+
+  async declineCall(conversationId: string): Promise<{ success: boolean }> {
+    const url = this.createURL(
+      `/admin/chat/conversations/${conversationId}/call/decline`,
+      new URLSearchParams(),
+    );
+    return this.post<{ success: boolean }>(url, {});
+  }
+
   async uploadAttachment(file: File): Promise<ChatAttachment> {
     const url = this.createURL(
       "/admin/chat/attachments",
@@ -193,3 +249,7 @@ export const editChatMessage = controller.editMessage.bind(controller);
 export const deleteChatMessage = controller.deleteMessage.bind(controller);
 export const uploadChatAttachment =
   controller.uploadAttachment.bind(controller);
+export const startChatCall = controller.startCall.bind(controller);
+export const joinChatCall = controller.joinCall.bind(controller);
+export const leaveChatCall = controller.leaveCall.bind(controller);
+export const declineChatCall = controller.declineCall.bind(controller);

@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { useChatStore } from "#/stores/use-chat-store";
+import { useCallStore, type IncomingRing } from "#/stores/use-call-store";
 import { chatKeys } from "#/hooks/use-chat";
 import type {
   ChatConversationItem,
@@ -44,7 +45,7 @@ function unlockAudio() {
     });
 }
 
-function playNotificationSound() {
+export function playNotificationSound() {
   try {
     notificationSound.currentTime = 0;
   } catch {
@@ -244,6 +245,30 @@ export function useChatSocket() {
         );
       },
     );
+
+    // ── Calls ──────────────────────────────────────────────────────────
+    // Someone started a call here: ring, unless I'm already in it.
+    socket.on("call:ring", (r: IncomingRing & { callerId: string }) => {
+      void queryClient.invalidateQueries({ queryKey: chatKeys.conversations });
+      if (r.callerId === meIdRef.current) return;
+      if (useCallStore.getState().call?.conversationId === r.conversationId) return;
+      useCallStore.getState().ring({
+        conversationId: r.conversationId,
+        conversationName: r.conversationName,
+        callerName: r.callerName,
+        direct: r.direct,
+      });
+    });
+
+    // Over: the ring stops and « Join » goes.
+    socket.on("call:ended", ({ conversationId }: { conversationId: string }) => {
+      useCallStore.getState().stopRinging(conversationId);
+      void queryClient.invalidateQueries({ queryKey: chatKeys.conversations });
+    });
+
+    socket.on("call:declined", (d: { conversationId: string; name: string }) => {
+      toast(`${d.name} declined the call`);
+    });
 
     socket.on("chat:notification", (n: ChatNotification) => {
       // message:new already updated the unread badge; here we only alert.
