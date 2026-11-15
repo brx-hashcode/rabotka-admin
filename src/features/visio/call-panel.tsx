@@ -27,13 +27,17 @@ const TOOLBAR = [
   "shareaudio",
   "chat",
   "raisehand",
+  "reactions",
   "closedcaptions",
+  "polls",
+  "recording",
   "participants-pane",
   "mute-everyone",
   "mute-video-everyone",
   "security",
   "whiteboard",
   "etherpad",
+  "sharedvideo",
   "noisesuppression",
   "tileview",
   "filmstrip",
@@ -392,7 +396,13 @@ export function CallPanel() {
             disableInviteFunctions: true,
             enableWelcomePage: false,
             enableClosePage: false,
-            disableThirdPartyRequests: true,
+            // On for « Partager une vidéo » (YouTube). Gravatar stays off: no email
+            // hash leaves for an avatar.
+            disableThirdPartyRequests: false,
+            gravatar: { disabled: true },
+            // « Commencer l'enregistrement » records in the browser, to a file; everyone
+            // in the call is told when it starts.
+            localRecording: { notifyAllParticipants: true },
             notifications: [],
             logging: { defaultLogLevel: "error", loggers: {} },
             // Told the moment the call's own hang-up button is pressed, so the
