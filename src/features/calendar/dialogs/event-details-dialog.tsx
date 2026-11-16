@@ -1,7 +1,7 @@
 
 
 import { format, parseISO } from "date-fns";
-import { Calendar, Clock, Repeat, Text, User } from "lucide-react";
+import { Calendar, Clock, MapPin, Repeat, Text, User, Video } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import type { IEvent } from "#/features/calendar/interfaces";
 import type { TEventEditScope } from "#/features/calendar/types";
 import { describeRecurrence } from "#/features/calendar/utils";
 import { RecurringScopeDialog } from "./recurring-scope-dialog";
+import { useJoinCall } from "#/features/visio/use-join-call";
 
 type IProps = {
   event: IEvent;
@@ -37,6 +38,7 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
   const { canManageContent } = useRole();
   const [open, setOpen] = useState(false);
   const { mutate: remove, isPending } = useDeleteEvent();
+  const { joinEvent } = useJoinCall();
 
   const [scopeOpen, setScopeOpen] = useState(false);
 
@@ -108,6 +110,40 @@ export function EventDetailsDialog({ event, children }: Readonly<IProps>) {
                     {repeatSummary}
                   </p>
                 </div>
+              </div>
+            )}
+
+            {event.location && (
+              <div className="flex items-start gap-2">
+                <MapPin className="mt-1 size-4 shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Location</p>
+                  <p className="text-sm text-muted-foreground">
+                    {event.location}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {event.visioRoom && (
+              <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+                <Video className="size-4 shrink-0 text-green-600" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">Video meeting</p>
+                  <p className="text-xs text-muted-foreground">
+                    Invited users join by the link they received.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-green-600 text-white hover:bg-green-700"
+                  onClick={() => {
+                    setOpen(false);
+                    void joinEvent(event.visioRoom!);
+                  }}
+                >
+                  Join
+                </Button>
               </div>
             )}
 

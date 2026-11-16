@@ -1,3 +1,5 @@
+import { IconVideo } from "@tabler/icons-react";
+import { Switch } from "#/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, set } from "date-fns";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
@@ -177,6 +179,7 @@ export function AddEditEventDialog({
       color: event?.color ?? "blue",
       channel: event?.channel ?? "EMAIL",
       location: event?.location ?? "",
+        visio: Boolean(event?.visioRoom),
       profileIds: getProfileIds(),
       userIds: getUserIds(),
       ...fromRecurrence(event?.recurrence),
@@ -194,6 +197,7 @@ export function AddEditEventDialog({
         color: event?.color ?? "blue",
         channel: event?.channel ?? "EMAIL",
         location: event?.location ?? "",
+        visio: Boolean(event?.visioRoom),
         profileIds: getProfileIds(),
         userIds: getUserIds(),
         ...fromRecurrence(event?.recurrence),
@@ -236,6 +240,7 @@ export function AddEditEventDialog({
       color: values.color,
       channel: values.channel,
       location: values.location || undefined,
+      visio: values.visio,
       profileIds: getProfileIds(),
       userIds: getUserIds(),
       recurrence: toRecurrenceParams(values),
@@ -447,6 +452,31 @@ export function AddEditEventDialog({
                       )}
                     />
                   </div>
+                  <FormField
+                    // @ts-expect-error - form.control is not typed correctly
+                    control={form.control}
+                    name="visio"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-1.5">
+                            <IconVideo className="size-4" />
+                            Video meeting
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            A visio room is created. Invited users get their own
+                            link; the team joins from this calendar.
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={Boolean(field.value)}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </FormSection>
 
                 <FormSection title="When">

@@ -20,6 +20,8 @@ import {
   IconMusic,
   IconVideo,
   IconUsersGroup,
+  IconPhoneCall,
+  IconPhoneOff,
 } from "@tabler/icons-react";
 import type { Icon } from "@tabler/icons-react";
 
@@ -29,6 +31,8 @@ import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
 import { useAdminMe } from "#/hooks/use-admin-me";
 import { useChatStore } from "#/stores/use-chat-store";
+import { useCallStore } from "#/stores/use-call-store";
+import { useJoinCall } from "#/features/visio/use-join-call";
 import {
   useConversations,
   useMessages,
@@ -42,6 +46,7 @@ import {
 import type {
   ChatAttachment,
   ChatConversationItem,
+  ChatMessageItem,
 } from "#/lib/api/chat-controller";
 import {
   Sheet,
@@ -157,6 +162,86 @@ function conversationTitle(c: ChatConversationItem, meId?: string): string {
   return other?.name ?? "Direct";
 }
 
+/** « Start call » in the thread header; « Join call » while one is going on. */
+function CallButton({
+  conversation,
+}: Readonly<{ conversation: ChatConversationItem }>) {
+  const { joinConversation } = useJoinCall();
+  const inThisCall = useCallStore(
+    (s) => s.call?.conversationId === conversation.id,
+  );
+  const live = Boolean(conversation.activeCall);
+  return (
+    <Button
+      type="button"
+      variant={live ? "default" : "outline"}
+      size="sm"
+      className={cn(
+        "gap-1.5",
+        live && "bg-green-600 text-white hover:bg-green-700",
+      )}
+      disabled={inThisCall}
+      onClick={() =>
+        void joinConversation(conversation.id, { start: !live })
+      }
+    >
+      <IconVideo className="size-4" />
+      {inThisCall ? "In call" : live ? "Join call" : "Start call"}
+    </Button>
+  );
+}
+
+/** A call started in the conversation: joinable while live, its length once over. */
+function CallCard({
+  message,
+  live,
+}: Readonly<{ message: ChatMessageItem; live: boolean }>) {
+  const { joinConversation } = useJoinCall();
+  const minutes = Math.max(
+    1,
+    Math.round((message.call?.durationSec ?? 0) / 60),
+  );
+  return (
+    <div className="my-2 flex justify-center">
+      <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border bg-background/90 px-4 py-3 shadow-sm backdrop-blur-sm">
+        <span
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-full",
+            live
+              ? "bg-green-500/15 text-green-600"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
+          {live ? (
+            <IconPhoneCall className="size-4" />
+          ) : (
+            <IconPhoneOff className="size-4" />
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">
+            {live ? "Call in progress" : "Call ended"}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {message.senderName} · {formatTime(message.createdAt)}
+            {!live && message.call?.endedAt ? ` · ${minutes} min` : ""}
+          </p>
+        </div>
+        {live && (
+          <Button
+            type="button"
+            size="sm"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => void joinConversation(message.conversationId)}
+          >
+            Join
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
@@ -254,10 +339,14 @@ export default function ChatPage() {
                     )}
                   </div>
                   <p className="truncate text-xs text-muted-foreground">
-                    {c.lastMessage?.body ??
-                      (c.lastMessage?.attachments.length
-                        ? "📎 Attachment"
-                        : "No messages yet")}
+                    {c.activeCall
+                      ? "📞 Call in progress"
+                      : c.lastMessage?.kind === "CALL"
+                        ? "📞 Video call"
+                        : (c.lastMessage?.body ??
+                          (c.lastMessage?.attachments.length
+                            ? "📎 Attachment"
+                            : "No messages yet"))}
                   </p>
                 </div>
               </button>
@@ -412,6 +501,7 @@ function ChatThread({
               : "Direct message"}
           </div>
         </div>
+        <CallButton conversation={conversation} />
         {isGroup && (
           <GroupMembersSheet conversation={conversation} meId={meId} />
         )}
@@ -437,6 +527,23 @@ function ChatThread({
                   p.lastReadAt &&
                   p.lastReadAt >= m.createdAt,
               );
+            if (m.kind === "CALL") {
+              return (
+                <div key={m.id}>
+                  {newDay && (
+                    <div className="my-3 flex justify-center">
+                      <span className="rounded-md bg-background/80 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
+                        {dayLabel(m.createdAt)}
+                      </span>
+                    </div>
+                  )}
+                  <CallCard
+                    message={m}
+                    live={conversation.activeCall?.room === m.call?.room}
+                  />
+                </div>
+              );
+            }
             return (
               <div key={m.id}>
                 {newDay && (
