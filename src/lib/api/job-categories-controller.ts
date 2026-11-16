@@ -3,6 +3,8 @@ import { AdminBaseController } from "./base-controller";
 export type AdminJobCategory = {
   id: string;
   name: string;
+  /** Shown to businesses reading in English; null shows the French name. */
+  name_en: string | null;
   slug: string;
   description: string | null;
   icon: string | null;
@@ -19,6 +21,7 @@ export type AdminJobCategory = {
 
 export type CreateJobCategoryPayload = {
   name: string;
+  name_en?: string;
   slug: string;
   description?: string;
   icon?: string;
@@ -26,6 +29,8 @@ export type CreateJobCategoryPayload = {
 
 export type UpdateJobCategoryPayload = {
   name?: string;
+  /** "" clears it. */
+  name_en?: string;
   slug?: string;
   description?: string;
   icon?: string;

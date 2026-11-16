@@ -24,6 +24,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
+  nameEn: z.string().optional(),
   slug: z
     .string()
     .min(1, "Enter a web address name")
@@ -47,7 +48,7 @@ export function CreateCategoryModal({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", icon: "", description: "" },
+    defaultValues: { name: "", nameEn: "", slug: "", icon: "", description: "" },
   });
 
   function handleClose() {
@@ -72,6 +73,7 @@ export function CreateCategoryModal({
     mutationFn: (values: FormValues) =>
       createJobCategory({
         name: values.name,
+        name_en: values.nameEn?.trim() || undefined,
         slug: values.slug,
         icon: values.icon || undefined,
         description: values.description || undefined,
@@ -131,6 +133,25 @@ export function CreateCategoryModal({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="nameEn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      English name{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (shown to businesses reading in English)
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Cleaning" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
