@@ -10,6 +10,7 @@ import {
 const busy: AdminJobCategory = {
   id: "c-1",
   name: "Aide à domicile",
+  name_en: "Home help",
   slug: "aide-domicile",
   description: "Assistance aux personnes âgées ou à mobilité réduite",
   icon: "🏠",
