@@ -28,6 +28,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
+  nameEn: z.string().optional(),
   slug: z
     .string()
     .min(1, "Enter a web address name")
@@ -55,6 +56,7 @@ export function EditCategoryModal({
     resolver: zodResolver(schema),
     defaultValues: {
       name: category.name,
+      nameEn: category.name_en ?? "",
       slug: category.slug,
       icon: category.icon ?? "",
       description: category.description ?? "",
@@ -65,6 +67,7 @@ export function EditCategoryModal({
     if (open) {
       form.reset({
         name: category.name,
+        nameEn: category.name_en ?? "",
         slug: category.slug,
         icon: category.icon ?? "",
         description: category.description ?? "",
@@ -76,6 +79,8 @@ export function EditCategoryModal({
     mutationFn: (values: FormValues) =>
       updateJobCategory(category.id, {
         name: values.name,
+        // Sent even when empty: that is how an English name is removed.
+        name_en: values.nameEn?.trim() ?? "",
         slug: values.slug,
         icon: values.icon || undefined,
         description: values.description || undefined,
@@ -131,6 +136,25 @@ export function EditCategoryModal({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="nameEn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      English name{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (shown to businesses reading in English)
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Cleaning" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
