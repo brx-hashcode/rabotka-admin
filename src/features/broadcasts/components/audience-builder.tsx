@@ -33,7 +33,9 @@ const PROFILE_TYPES = [
 ] as const;
 
 const ACCOUNT_STATUSES = ["ACTIVE", "PENDING_ACTIVATION", "SUSPENDED"];
-const VERIFICATION_STATUSES = ["VERIFIED", "PENDING", "REJECTED"];
+// NOT_SUBMITTED: signed up without identity documents — the audience to
+// remind to send them.
+const VERIFICATION_STATUSES = ["VERIFIED", "PENDING", "REJECTED", "NOT_SUBMITTED"];
 
 /**
  * Does every word of the query start a word of the trade's name?

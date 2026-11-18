@@ -21,6 +21,8 @@ export const VERIFICATION_STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   VERIFIED: "Verified",
   REJECTED: "Rejected",
+  /** Signed up without identity documents: nothing to review yet. */
+  NOT_SUBMITTED: "Documents not sent",
 } as const;
 
 export const JOB_OFFER_STATUS_LABELS: Record<string, string> = {

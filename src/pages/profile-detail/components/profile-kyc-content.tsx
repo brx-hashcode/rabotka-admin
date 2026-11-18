@@ -98,18 +98,20 @@ export function ProfileKycContent({ profile, onPreviewDoc }: Readonly<Props>) {
 
       <div>
         <h3 className="mb-4 text-sm font-semibold uppercase">Documents</h3>
-        {profile.kycDocuments.length === 0 ? (
+        {(profile.kycDocuments ?? []).length === 0 ? (
           <Card className="py-8">
             <CardContent className="flex flex-col items-center justify-center text-center">
               <IconFileText className="text-muted-foreground mb-2 size-10" />
               <p className="text-muted-foreground text-sm">
-                No documents uploaded yet.
+                {profile.verificationStatus === "NOT_SUBMITTED"
+                  ? "This person signed up without identity documents. They can send them from the app; you will be notified when they do."
+                  : "No documents uploaded yet."}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid min-w-0 grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {profile.kycDocuments.map((doc) => (
+            {(profile.kycDocuments ?? []).map((doc) => (
               <KycDocumentCard
                 key={doc.id}
                 profileId={profile.id}

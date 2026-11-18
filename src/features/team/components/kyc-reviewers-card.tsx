@@ -51,7 +51,8 @@ function fullName(u: AdminUserListItem): string {
 
 /**
  * The KYC verification group: the few team members emailed each time a
- * profile is created, to review its documents. Picked person by person —
+ * profile sends its identity documents (or an organisation its papers), to
+ * review them. Picked person by person —
  * a role alone never puts anyone in it.
  */
 export function KycReviewersCard({
@@ -98,8 +99,8 @@ export function KycReviewersCard({
           <div className="min-w-0 space-y-1">
             <CardTitle>KYC verification group</CardTitle>
             <CardDescription>
-              These members get an email each time a profile is created, to
-              review its identity documents.
+              These members get an email each time a profile sends its identity
+              documents, or an organisation its papers, to review them.
             </CardDescription>
           </div>
         </div>
