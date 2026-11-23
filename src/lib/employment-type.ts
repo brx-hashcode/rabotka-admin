@@ -11,6 +11,10 @@ export const EMPLOYMENT_TYPE_VALUES = [
   "CDD",
   "CDI",
   "STAGE",
+  "CONSULTANT",
+  "INTERIM",
+  "APPRENTISSAGE",
+  "VOLONTARIAT",
 ] as const;
 
 export type EmploymentTypeValue = (typeof EMPLOYMENT_TYPE_VALUES)[number];
@@ -24,6 +28,10 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
   CDD: "CDD",
   CDI: "CDI",
   STAGE: "STAGE",
+  CONSULTANT: "CONSULTANT",
+  INTERIM: "INTÉRIM",
+  APPRENTISSAGE: "APPRENTISSAGE",
+  VOLONTARIAT: "VOLONTARIAT",
 };
 
 /**

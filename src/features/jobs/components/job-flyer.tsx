@@ -15,6 +15,10 @@ const FLYER_TYPE_LABELS: Record<EmploymentTypeValue, string> = {
   CDD: "CDD",
   CDI: "CDI",
   STAGE: "Stage",
+  CONSULTANT: "Consultant",
+  INTERIM: "Intérim",
+  APPRENTISSAGE: "Apprentissage",
+  VOLONTARIAT: "Volontariat",
 };
 
 /**
