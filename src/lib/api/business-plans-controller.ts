@@ -18,8 +18,6 @@ export type BusinessPlan = {
   cvBatchMax: number;
   /** Largest CV file, in MB. */
   cvFileMaxMb: number;
-  /** Days a screening keeps its files and contact details. */
-  cvRetentionDays: number;
   /** Questions a business may ask about one analysed CV (its chat). */
   cvChatQuestions: number;
   /** Offers the AI writes per period (« Rédiger avec l'IA »). Null: unlimited; 0: not included. */

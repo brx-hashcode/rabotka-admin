@@ -32,6 +32,7 @@ type FormState = {
   "business.renewal_reminder_days": string;
   "business.offer_expiry_reminder_days": string;
   "business.talent_pool_months": string;
+  "business.cv_limit_months": string;
 } & Record<`business.pack_${PackKey}_${"quantity" | "price_fcfa"}`, string>;
 
 const EMPTY: FormState = {
@@ -43,6 +44,7 @@ const EMPTY: FormState = {
   "business.renewal_reminder_days": "",
   "business.offer_expiry_reminder_days": "",
   "business.talent_pool_months": "",
+  "business.cv_limit_months": "",
   "business.pack_cv_quantity": "",
   "business.pack_cv_price_fcfa": "",
   "business.pack_offers_quantity": "",
@@ -207,6 +209,21 @@ export function BusinessPlansCard() {
             <p className="text-muted-foreground text-xs">
               How long a careers-page candidate who ticked « garder ma candidature » stays searchable in the
               business&apos;s « Mes profils », with their CV. 1 to 36; the candidate can withdraw at any time.
+            </p>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <FieldLabel>Longest CV retention (months)</FieldLabel>
+            <Input
+              type="number"
+              min={1}
+              max={60}
+              value={form["business.cv_limit_months"]}
+              onChange={(e) => set("business.cv_limit_months", e.target.value)}
+              placeholder="24"
+            />
+            <p className="text-muted-foreground text-xs">
+              CVs never expire while their offer recruits. After it closes, the business deletes them when it wants;
+              this is how long they stay otherwise. 1 to 60; businesses are told 30 days before.
             </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
