@@ -33,6 +33,8 @@ type FormState = {
   "business.offer_expiry_reminder_days": string;
   "business.talent_pool_months": string;
   "business.cv_limit_months": string;
+  "business.cv_grid_scoring": string;
+  "business.cv_rescore_limit": string;
 } & Record<`business.pack_${PackKey}_${"quantity" | "price_fcfa"}`, string>;
 
 const EMPTY: FormState = {
@@ -45,6 +47,8 @@ const EMPTY: FormState = {
   "business.offer_expiry_reminder_days": "",
   "business.talent_pool_months": "",
   "business.cv_limit_months": "",
+  "business.cv_grid_scoring": "false",
+  "business.cv_rescore_limit": "",
   "business.pack_cv_quantity": "",
   "business.pack_cv_price_fcfa": "",
   "business.pack_offers_quantity": "",
@@ -225,6 +229,32 @@ export function BusinessPlansCard() {
               CVs never expire while their offer recruits. After it closes, the business deletes them when it wants;
               this is how long they stay otherwise. 1 to 60; businesses are told 30 days before.
             </p>
+          </div>
+          <div className="space-y-1.5">
+            <FieldLabel>Re-analyses per job</FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              max={10}
+              value={form["business.cv_rescore_limit"]}
+              onChange={(e) => set("business.cv_rescore_limit", e.target.value)}
+            />
+            <p className="text-muted-foreground text-xs">
+              Free, after a job&apos;s criteria change (0 to 10). Each one is a model call per candidate.
+            </p>
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <FieldLabel>Score on the job&apos;s own criteria</FieldLabel>
+              <p className="text-muted-foreground text-xs">
+                New jobs only. Off: the previous method. A job already on its criteria stays on them.
+              </p>
+            </div>
+            <Switch
+              aria-label="Score on the job's own criteria"
+              checked={form["business.cv_grid_scoring"] === "true"}
+              onCheckedChange={(on) => set("business.cv_grid_scoring", on ? "true" : "false")}
+            />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <FieldLabel>Packs</FieldLabel>
