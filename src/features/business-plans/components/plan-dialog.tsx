@@ -95,7 +95,7 @@ const FEATURE_OPTIONS = [
   {
     name: "hrExports",
     label: "HR exports",
-    hint: "Excel/CSV of an offer's candidates, the staff register of hires, and the offers to declare to the ACPE.",
+    hint: "Excel/CSV of an offer's candidates, and the staff register of hires.",
   },
   {
     name: "videoInterviews",
