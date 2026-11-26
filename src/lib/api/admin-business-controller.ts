@@ -18,7 +18,11 @@ export type BusinessTeamMember = {
   invitedBy: string | null;
 };
 export type Places = { used: number; limit: number | null };
-export type BusinessTeam = { members: BusinessTeamMember[]; seats: { RECRUITER: Places; REVIEWER: Places } };
+export type BusinessTeam = {
+  members: BusinessTeamMember[];
+  /** ADMIN absent from a backend older than the field. */
+  seats: { ADMIN?: Places; RECRUITER: Places; REVIEWER: Places };
+};
 
 export type BusinessActivityItem = {
   id: string;

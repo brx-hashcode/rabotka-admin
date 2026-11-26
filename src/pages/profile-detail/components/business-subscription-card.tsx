@@ -336,6 +336,7 @@ export function BusinessSubscriptionCard({
               {usage(e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0), e.offerDraftsQuota)}
             </Row>
           )}
+          {e.admins !== undefined && <Row label="Administrators">{usage(e.admins, e.plan ? (e.adminsLimit ?? null) : 0)}</Row>}
           {e.recruiters !== undefined && <Row label="Recruiters">{usage(e.recruiters, e.plan ? (e.recruitersLimit ?? null) : 0)}</Row>}
           {e.reviewers !== undefined && <Row label="Reviewers">{usage(e.reviewers, e.plan ? (e.reviewersLimit ?? null) : 0)}</Row>}
           {e.trialLocked && e.trialLocked.length > 0 && (

@@ -203,6 +203,7 @@ function PlanUsageCard({ profileId, onOpen }: Readonly<{ profileId: string; onOp
             <Meter label="Offers published" used={e.offersPublished ?? e.activeOffers} quota={e.activeOffersLimit} />
             <Meter label="Contacts" used={e.unlocksUsed} quota={e.unlocksQuota} />
             <Meter label="CVs analysed" used={e.cvUsed ?? 0} quota={e.cvQuota} />
+            {e.adminsLimit !== undefined && <Meter label="Administrators" used={e.admins ?? 0} quota={e.adminsLimit} />}
             <Meter label="Recruiters" used={e.recruiters ?? 0} quota={e.recruitersLimit} />
             <Meter label="Reviewers" used={e.reviewers ?? 0} quota={e.reviewersLimit} />
             <div className="flex flex-wrap gap-1 pt-1">
