@@ -24,10 +24,10 @@ export type BusinessPlan = {
   /** Absent from a backend older than the field. */
   offerDraftsPerPeriod?: number | null;
   /**
-   * Team members a business may invite: its account holder is its one
-   * administrator. Null: unlimited; 0: not included. Absent from a backend
-   * older than the field.
+   * Team members a business may invite, its account holder aside. Null:
+   * unlimited; 0: not included. Absent from a backend older than the field.
    */
+  adminsLimit?: number | null;
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
   includesPreselection: boolean;
@@ -91,6 +91,8 @@ export type BusinessSubscriptionOverview = {
     cvQuota?: number | null;
     offerDraftsQuota?: number | null;
     offerDraftsRemaining?: number | null;
+    admins?: number;
+    adminsLimit?: number | null;
     recruiters?: number;
     recruitersLimit?: number | null;
     reviewers?: number;

@@ -96,8 +96,9 @@ export function BusinessTeamSection({ profileId }: Readonly<{ profileId: string 
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Members" value={String(members.filter((m) => m.status !== "REMOVED").length)} hint="Account holder included" />
+        {seats.ADMIN && <Stat label="Administrators" value={places(seats.ADMIN)} hint="Places from the plan, holder aside" />}
         <Stat label="Recruiters" value={places(seats.RECRUITER)} hint="Places from the plan" />
         <Stat label="Reviewers" value={places(seats.REVIEWER)} hint="Places from the plan" />
       </div>

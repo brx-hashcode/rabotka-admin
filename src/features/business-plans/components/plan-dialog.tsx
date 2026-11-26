@@ -63,6 +63,7 @@ const schema = z.object({
   cvFileMaxMb: z.coerce.number().int().min(1, "1 or more").max(10, "10 at most"),
   cvChatQuestions: z.coerce.number().int().min(0, "0 or more").max(200, "200 at most"),
   offerDraftsPerPeriod: quota,
+  adminsLimit: quota,
   recruitersLimit: quota,
   reviewersLimit: quota,
   includesPreselection: z.boolean(),
@@ -100,7 +101,7 @@ const FEATURE_OPTIONS = [
   {
     name: "videoInterviews",
     label: "Video interviews in Rabotka",
-    hint: "In-app visio: a link made in Rabotka, guests invited into the call, transcription. A Meet or Zoom link pasted by hand stays free for every plan.",
+    hint: "Calls with guests and transcription.",
   },
 ] as const;
 
@@ -156,6 +157,7 @@ const EMPTY: FormInput = {
   cvChatQuestions: 20,
   offerDraftsPerPeriod: 20,
   // No team until set: an empty field would mean unlimited.
+  adminsLimit: 0,
   recruitersLimit: 0,
   reviewersLimit: 0,
   includesPreselection: false,
@@ -278,6 +280,7 @@ function toForm(plan: BusinessPlan): FormInput {
     cvFileMaxMb: plan.cvFileMaxMb,
     cvChatQuestions: plan.cvChatQuestions,
     offerDraftsPerPeriod: plan.offerDraftsPerPeriod ?? "",
+    adminsLimit: plan.adminsLimit ?? "",
     recruitersLimit: plan.recruitersLimit ?? "",
     reviewersLimit: plan.reviewersLimit ?? "",
     includesPreselection: plan.includesPreselection,
@@ -332,7 +335,7 @@ export function PlanDialog({ open, onOpenChange, plan, forBusiness, template, on
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: FormValues) => {
-      const { offerDraftsPerPeriod, recruitersLimit, reviewersLimit, ...rest } = values;
+      const { offerDraftsPerPeriod, adminsLimit, recruitersLimit, reviewersLimit, ...rest } = values;
       const payload = {
         ...rest,
         description: values.description || null,
@@ -341,6 +344,7 @@ export function PlanDialog({ open, onOpenChange, plan, forBusiness, template, on
         // empty field there means « unknown », not « unlimited ».
         ...(isEdit && plan.offerDraftsPerPeriod === undefined ? {} : { offerDraftsPerPeriod }),
         ...(isEdit && plan.recruitersLimit === undefined ? {} : { recruitersLimit, reviewersLimit }),
+        ...(isEdit && plan.adminsLimit === undefined ? {} : { adminsLimit }),
         ...(!isEdit && forBusiness ? { businessId: forBusiness.id } : {}),
       };
       return isEdit ? updateBusinessPlan(plan.id, payload) : createBusinessPlan(payload);
@@ -512,9 +516,18 @@ export function PlanDialog({ open, onOpenChange, plan, forBusiness, template, on
               <Section
                 icon={<IconUsersGroup className="size-5" />}
                 title="Team"
-                description="Colleagues a business invites into its space. Its account holder is its only administrator."
+                description="Colleagues a business invites into its space, its account holder aside. The holder adds the administrators."
               >
-                <div className="grid items-start gap-4 sm:grid-cols-2">
+                <div className="grid items-start gap-4 sm:grid-cols-3">
+                  <NumberField
+                    control={form.control}
+                    name="adminsLimit"
+                    label="Administrators"
+                    suffix="people"
+                    min={0}
+                    placeholder="Unlimited"
+                    hint="Everything, including the plan, invoices and the team. 0 = not in this plan."
+                  />
                   <NumberField
                     control={form.control}
                     name="recruitersLimit"
