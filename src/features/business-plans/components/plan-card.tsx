@@ -235,10 +235,16 @@ export function PlanCard({ plan, canManage }: Readonly<PlanCardProps>) {
             {plan.recruitersLimit !== undefined && (
               <li className="flex items-center gap-2">
                 <Users className="size-3.5 shrink-0 text-foreground" />
-                {plan.recruitersLimit === 0 && plan.reviewersLimit === 0 ? (
+                {!plan.adminsLimit && plan.recruitersLimit === 0 && plan.reviewersLimit === 0 ? (
                   <span>No team members</span>
                 ) : (
                   <span>
+                    {plan.adminsLimit !== undefined && (
+                      <>
+                        <span className="font-medium text-foreground">{quotaLabel(plan.adminsLimit, "admins")}</span>
+                        {" · "}
+                      </>
+                    )}
                     <span className="font-medium text-foreground">{quotaLabel(plan.recruitersLimit ?? null, "recruiters")}</span>
                     {" · "}
                     <span className="font-medium text-foreground">{quotaLabel(plan.reviewersLimit ?? null, "reviewers")}</span>
