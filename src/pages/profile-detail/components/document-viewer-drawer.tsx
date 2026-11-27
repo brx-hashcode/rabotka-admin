@@ -26,6 +26,7 @@ import {
 
 import type { AdminKycDocumentItem } from "#/lib/api/profiles-controller";
 import { kycDocumentRawUrl } from "#/lib/api/profiles-controller";
+import { SAFE_DOCX_OPTIONS, makeDocxSafe } from "#/lib/safe-docx";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { Button } from "#/components/ui/button";
@@ -126,13 +127,19 @@ function LocalDocxViewer({ url, title }: Readonly<{ url: string; title: string }
         const blob = await fetchDocumentBlob(url);
         if (cancelled || !body.current) return;
         body.current.innerHTML = "";
-        const { renderAsync } = await import("docx-preview");
-        await renderAsync(blob, body.current, styles.current ?? undefined, {
+        const { parseAsync, renderDocument } = await import("docx-preview");
+        const options = {
           className: "docx",
           inWrapper: true,
           breakPages: true,
           ignoreLastRenderedPageBreak: true,
-        });
+          ...SAFE_DOCX_OPTIONS,
+        };
+        // Uploaded by candidates and businesses: cleaned of anything that
+        // could run in the admin page before a single element is drawn.
+        const document = makeDocxSafe(await parseAsync(blob, options));
+        if (cancelled || !body.current) return;
+        await renderDocument(document, body.current, styles.current ?? undefined, options);
         if (!cancelled) setState("ready");
       } catch {
         if (!cancelled) setState("failed");
