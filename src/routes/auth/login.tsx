@@ -28,18 +28,7 @@ import { getMe, totpLogin } from "#/lib/api/auth-controller";
 import { getQueryClient } from "#/app/providers";
 import { toast } from "sonner";
 import { friendlyError } from "#/lib/api/friendly-error";
-
-function getSafeRedirectTarget(raw: string): string | null {
-  if (!raw) return null;
-
-  try {
-    const url = new URL(raw, globalThis.location.origin);
-    if (url.origin !== globalThis.location.origin) return null;
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return null;
-  }
-}
+import { getSafeRedirectTarget } from "#/lib/safe-redirect";
 
 export const Route = createFileRoute("/auth/login")({
   validateSearch: (search: Record<string, unknown>) => ({
